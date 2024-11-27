@@ -1,0 +1,167 @@
+// Class definition
+
+var KTFormWidgets = function () {
+    // Private functions
+    var validator;
+    let grnXhr = true;
+    var formId = $( "#grn_form" )
+    $.validator.addMethod("valueNotEquals", function(value, element, arg){
+        return arg !== value;
+    }, "This field is required");
+    var initValidation = function () {
+        validator = formId.validate({
+            // define validation rules
+          //  debug: true,
+            rules: {
+                supplier_name: {
+                    required: true
+                },
+                grn_currency: {
+                    required: true,
+                    valueNotEquals: "0",
+                },
+                exchange_rate: {
+                    required: true
+                },
+                grn_store: {
+                    required: true,
+                    valueNotEquals: "0",
+                },
+                payment_type_id: {
+                    required: true,
+                    valueNotEquals: "0",
+                },
+                grn_bill_no: {
+                    required: true
+                },
+            },
+
+            //display error alert on form submit
+            invalidHandler: function(event, validator) {
+                var alert = $('#kt_form_1_msg');
+                alert.removeClass('kt--hide').show();
+                KTUtil.scrollTo('m_form_1_msg', -200);
+            },
+            beforeSend: function(form) {
+                swal.fire({
+                    title: js_msg.entry_is_exits,
+                    text: js_msg.are_you_sure_to_save_without_it,
+                    type: 'warning',
+                    showCancelButton: true,
+                    showConfirmButton: true
+                }).then(function(result){
+                    if(result.value){
+                        formClear()
+                    }
+                });
+            },
+            submitHandler: function (form) {
+                $("form").find(":submit").prop('disabled', true);
+                $('body').addClass('pointerEventsNone');
+                //form[0].submit(); // submit the form
+                var formData = new FormData(form);
+                var ajaxValidate = 1;
+                var title_msg = '';
+                var title_text = '';
+                if($('#product_barcode_id').val()){
+                    ajaxValidate = 0;
+                    title_msg = js_msg.entry_is_exits
+                    title_text = js_msg.are_you_sure_to_save_without_it
+                }
+                $('.erp_form__grid_body>tr').each(function(){
+                    if($(this).find('.tblGridCal_rate').val() == 0){
+                        ajaxValidate = 0;
+                        title_msg =  $(this).find('.pd_barcode').val();
+                        title_text = js_msg.value_is_zero;
+                        return false;
+                    }
+                });
+                if(ajaxValidate == 0){
+                    $('body').removeClass('pointerEventsNone');
+                    swal.fire({
+                        title: title_msg,
+                        text: title_text,
+                        type: 'warning',
+                        showCancelButton: true,
+                        showConfirmButton: true
+                    }).then(function(result){
+                        if(result.value){
+                            ajaxFunc(form,formData);
+                            formClear()
+                        }else {
+                            $("form").find(":submit").prop('disabled', false);
+                            $('#pd_barcode').focus();
+                        }
+                    });
+                }else{
+                    ajaxFunc(form,formData);
+                }
+            }
+        });
+    }
+    var ajaxFunc = function (form,formData){
+        if(grnXhr) {
+            grnXhr = false;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url         : form.action,
+                type        : form.method,
+                dataType	: 'json',
+                data        : formData,
+                cache       : false,
+                contentType : false,
+                processData : false,
+                beforeSend: function( xhr ) {
+                  //  $('body').addClass('pointerEventsNone');
+                },
+                success: function(response,status) {
+                    if(response.status == 'success'){
+                        toastr.success(response.message);
+                        setTimeout(function () {
+                            $("form").find(":submit").prop('disabled', false);
+                        }, 2000);
+                        if(response.data.form == 'new'){
+                            window.location.href = response.data.redirect;
+                        }else{
+                            $('.new-row').removeClass('new-row');
+                            $('body').removeClass('pointerEventsNone');
+                            grnXhr = true;
+                        }
+                    }else{
+                        toastr.error(response.message);
+                        setTimeout(function () {
+                            $("form").find(":submit").prop('disabled', false);
+                        }, 2000);
+                        $('body').removeClass('pointerEventsNone');
+                        grnXhr = true;
+                    }
+                    $('#pd_barcode').focus();
+                },
+                error: function(response,status) {
+                    // console.log(response.responseJSON);
+                    toastr.error(response?.responseJSON?.message);
+                    $('body').removeClass('pointerEventsNone');
+                    setTimeout(function () {
+                        $("form").find(":submit").prop('disabled', false);
+                    }, 2000);
+                    grnXhr = true;
+                },
+            });
+        }
+    }
+    function formClear(){
+
+    }
+    return {
+        // public functions
+        init: function() {
+            initValidation();
+        }
+    };
+}();
+
+jQuery(document).ready(function() {
+    KTFormWidgets.init();
+});

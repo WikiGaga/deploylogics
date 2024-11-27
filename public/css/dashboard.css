@@ -1,0 +1,27 @@
+.card.card-custom.bg-primary.gutter-b {
+    -webkit-box-shadow: 0px 0px 30px 0px rgba(82, 63, 105, 0.05);
+    box-shadow: 0px 0px 30px 0px rgba(82, 63, 105, 0.05);
+    border: 0;
+    background-color: #6993FF !important;
+}
+.card.card-custom.bg-primary.gutter-b > .card-body {
+    padding: 5px 2.25rem;
+}
+.card.card-custom.bg-primary.gutter-b>.card-body>.svg-icon.svg-icon-3x svg {
+    height: 3rem !important;
+    width: 3rem !important;
+}
+.card.card-custom.bg-primary.gutter-b>.card-body>.font-size-h2 {
+    font-size: 1.75rem !important;
+}
+.card.card-custom.bg-primary.gutter-b>.card-body>.text-inverse-primary {
+    color: #FFFFFF !important;
+}
+.card.card-custom.bg-primary.gutter-b>.card-body>.font-weight-bolder {
+    font-weight: 600 !important;
+}
+.card.card-custom.bg-primary.gutter-b>.card-body>.svg-icon.svg-icon-white svg g [fill] {
+    -webkit-transition: fill 0.3s ease;
+    transition: fill 0.3s ease;
+  /*  fill: #ffffff !important;*/
+}

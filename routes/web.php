@@ -1,0 +1,1489 @@
+<?php
+
+use App\Library\Utilities;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use App\Jobs\TrigerAutoDemandProcedure;
+use App\Http\Controllers\Development\ImportDataController;
+use App\Models\TblPurcProduct;
+use App\Models\TblPurcProductBarcode;
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+Route::get('/logout', 'Auth\LoginController@logout');
+Route::get('/', function () {
+    if(Auth::check()) {
+        return redirect('/home');
+    } else {
+        return view('auth.login');
+    }
+});
+// ->middleware('wan_access');
+Route::any('web-service/{str}','WelcomeController@webservice');
+
+// Barcode Price Checker
+Route::get('/price-check','BarcodeLabels\BarcodeLabelsController@priceCheck');
+Route::post('/get-price-check/{id?}','BarcodeLabels\BarcodeLabelsController@getBarcodeCheckPrice')->name('BarcodePriceCheck');
+
+Route::get('dashboard', function(){
+    return view('dashboard');
+});
+Route::get('pdf', function(){
+    return view('pages.pdf');
+});
+
+Auth::routes();
+
+Route::prefix('grn-noauth')->group(function () {
+    Route::get('form/{id}','Purchase\GRNRController@create');
+    Route::post('form/{id}','Purchase\GRNRController@store');
+});
+
+Route::prefix('sales-invoice-noauth')->group(function () {
+    Route::get('form/{id}','Sales\SalesInvoiceNoAuthController@create');
+    Route::post('form/{id}','Sales\SalesInvoiceNoAuthController@store')->name('sales_invoice_noauth');
+});
+
+Route::prefix('sale-return-noauth')->group(function () {
+    Route::get('form/{id}','Sales\SaleReturnNoAuthController@create');
+    Route::post('form/{id?}','Sales\SaleReturnNoAuthController@store')->name('sales_return_noauth');
+});
+
+Route::prefix('purchase-return-noauth')->group(function () {
+    Route::get('form/{id}','Purchase\PurchaseReturnNoAuthController@create');
+    Route::post('form/{id?}','Purchase\PurchaseReturnNoAuthController@store')->name('purchase_retur_noauth');
+});
+
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::get('/branch', 'HomeController@branchCreate')->name('branch');
+    Route::post('/branch', 'HomeController@branchStore');
+	Route::get('/backup', 'BackupController@createBackup');
+    Route::group(['middleware' => ['checkBranch']], function () {
+        Route::get('/home', 'HomeController@index')->name('home');
+        Route::get('/sale-dashboard', 'HomeController@saleDashboard');
+        Route::get('/si-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storeSIVoucher');
+        Route::get('/grn-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storeGRNVoucher');
+        Route::get('/pr-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storePRVoucher');
+
+
+        Route::prefix('db')->name('db.')->group(function () {
+            Route::get('list', 'HomeController@dbTable')->name('db_table');
+            Route::get('dtl/{tbl}', 'HomeController@dbTableDtl')->name('db_table_dtl');
+            Route::get('create/{tbl}', 'HomeController@dbTableCreateColumn')->name('dbTableCreateColumn');
+            Route::post('store/{tbl}', 'HomeController@dbTableStoreColumn')->name('dbTableStoreColumn');
+        });
+
+        Route::prefix('dashboard')->group(function(){
+            Route::get('/dummy/{str}', 'Dashboard\DashboardController@dummy');
+            Route::post('/get-sale-dashboard-detail', 'Dashboard\DashboardController@saleDashboard');
+            Route::post('/get-account-dashboard-detail', 'Dashboard\DashboardController@accountDashboard');
+            Route::post('/get-chart-data', 'Dashboard\DashboardController@getChartData');
+            Route::post('/get-chart-data2', 'Dashboard\DashboardController@getChartData2');
+            Route::post('/get-chart-data3', 'Dashboard\DashboardController@getChartData3');
+            Route::post('/get-chart-data4', 'Dashboard\DashboardController@getChartData4');
+        });
+        Route::prefix('staging')->group(function(){
+            Route::get('/list', 'StagingActivityController@index');
+            Route::get('/group/{module}', 'StagingActivityController@ModuleList');
+            Route::get('/group/{module}/{id}/form', 'StagingActivityController@create');
+        });
+
+        //=====================purchase=============================
+
+        Route::prefix('purchasing')->group(function () {
+            Route::get('form/{id?}','Purchase\PurchasingController@create');
+            Route::post('form/{id?}','Purchase\PurchasingController@store');
+            Route::post('delete/{id}','Purchase\PurchasingController@destroy');
+            Route::post('product_data','Purchase\PurchasingController@productData');
+            Route::post('product_data_edit','Purchase\PurchasingController@productDataEdit');
+        });
+        Route::prefix('supplier')->group(function () {
+            Route::get('form/{id?}','Purchase\SupplierController@create');
+            Route::get('view/{id}','Purchase\SupplierController@create');
+            Route::get('supplier-code/{id}','Purchase\SupplierController@supplierCode');
+            Route::post('form/{id?}','Purchase\SupplierController@store');
+            Route::post('delete/{id}','Purchase\SupplierController@destroy');
+        });
+        Route::prefix('demand-approve')->group(function () {
+            Route::get('form/{id?}','Purchase\PurchaseDemandApproveController@create');
+            Route::post('form/{id?}','Purchase\PurchaseDemandApproveController@store');
+            Route::get('print/{id}','Purchase\PurchaseDemandApproveController@print');
+            Route::post('delete/{id}','Purchase\PurchaseDemandApproveController@destroy');
+            Route::get('detail/{id}','Purchase\PurchaseDemandApproveController@DemandDetails');
+        });
+        Route::prefix('quotation')->group(function () {
+            Route::get('form/{id?}','Purchase\QuotationController@create');
+            Route::post('form/{id?}','Purchase\QuotationController@store');
+            Route::post('delete/{id}','Purchase\QuotationController@destroy');
+            Route::get('lpo','Purchase\QuotationController@lpo');
+        });
+        Route::prefix('comparative-quotation')->group(function () {
+            Route::get('form/{id?}','Purchase\ComparativeQuotationController@create');
+            Route::post('form/{id?}','Purchase\ComparativeQuotationController@store');
+            Route::post('delete/{id}','Purchase\ComparativeQuotationController@destroy');
+            Route::get('display-data/{id}','Purchase\ComparativeQuotationController@quotationData');
+        });
+        Route::prefix('lpo')->group(function () {
+            Route::get('form/{id?}','Purchase\LPOGenerationController@create');
+            Route::post('form/{id?}','Purchase\LPOGenerationController@store');
+            Route::post('delete/{id}','Purchase\LPOGenerationController@destroy');
+            Route::get('demand/{id}','Purchase\LPOGenerationController@demand');
+            Route::get('print/{id}','Purchase\LPOGenerationController@print');
+        });
+        Route::prefix('purchase-order')->group(function () {
+            Route::get('list','Purchase\PurchaseOrderController@index');
+            Route::get('form/{id?}','Purchase\PurchaseOrderController@create');
+            Route::post('form/{id?}','Purchase\PurchaseOrderController@store');
+            Route::post('delete/{id}','Purchase\PurchaseOrderController@destroy');
+            Route::get('print/{id}','Purchase\PurchaseOrderController@print');
+            Route::get('lpo/{lop_id}/{supplier_id}','Purchase\PurchaseOrderController@getLpo');
+            Route::get('ad/{ad_id}/{supplier_id?}','Purchase\PurchaseOrderController@getAutoDemand');
+            Route::get('quotation/{id}','Purchase\PurchaseOrderController@getQuotation');
+            Route::get('inventory/print/{id}/{type?}','Purchase\PurchaseOrderController@InventoryPrint')->name('inventory.po');
+        });
+        Route::prefix('purchase-order-draft')->group(function () {
+            Route::post('list-draft','Purchase\PurchaseOrderController@listDraft');
+            Route::post('create-draft/{id}','Purchase\PurchaseOrderController@createDraft');
+            Route::post('form/{id?}','Purchase\PurchaseOrderController@storeDraft');
+            Route::post('delete/{id}','Purchase\PurchaseOrderController@destroyDraft');
+        });
+        Route::prefix('grn')->group(function () {
+            Route::get('list','Purchase\GRNController@index');
+            Route::get('form/{id?}','Purchase\GRNController@create');
+            Route::post('form/{id?}','Purchase\GRNController@store');
+            Route::post('delete/{id}','Purchase\GRNController@destroy');
+            Route::get('print/{id}','Purchase\GRNController@print');
+            Route::get('po/{id}','Purchase\GRNController@getPO');
+            Route::post('barcode-price-tag/{id?}','Purchase\GRNController@barcodePriceTag');
+            Route::post('grn-price-tag/{id?}','Purchase\GRNController@barcodeGRNTag');
+            Route::post('update-product-price/{id?}','Purchase\GRNController@UpdateProductPrice');
+            Route::post('shelfbarcode-price-tag','Purchase\GRNController@shelfBarcodePriceTag');
+            Route::get('barcode-price-tag','Purchase\GRNController@barcodePriceTagView');
+            Route::get('shelfbarcode-price-tag','Purchase\GRNController@shelfBarcodePriceTagView');
+            Route::get('get-po-product/{barcode_id}/{po_id?}','Purchase\GRNController@getPOProduct');
+            Route::get('get-uom-list/{product_id}','Purchase\GRNController@UOMList');
+            Route::get('get-sup-prod/{barcode}/{sup_id}','Purchase\GRNController@getSupProd');
+            Route::post('barcode-sale-price', 'Purchase\GRNController@barcodeSalePrice');
+            Route::post('check-po/{id}','Purchase\GRNController@checkPO');
+        });
+        Route::prefix('purchase-return')->group(function () {
+            Route::get('form/{id?}','Purchase\PurchaseReturnController@create');
+            Route::post('form/{id?}','Purchase\PurchaseReturnController@store');
+            Route::post('delete/{id}','Purchase\PurchaseReturnController@destroy');
+            Route::get('print/{id}/{type?}','Purchase\PurchaseReturnController@print');
+            Route::get('grn/{id}','Purchase\PurchaseReturnController@getGRN');
+            Route::get('po/{id}','Purchase\PurchaseReturnController@getPO');
+            Route::post('pr/{id}','Purchase\PurchaseReturnController@getPR');
+        });
+        Route::prefix('auto-demand')->group(function(){
+            Route::get('form/{id?}' , 'Purchase\AutoDemandController@create');
+            Route::post('store/{id?}' , 'Purchase\AutoDemandController@store');
+            Route::post('triger-procedure/{id}' , 'Purchase\AutoDemandController@triggerAutoDemandProcedure');
+            Route::post('delete/{id}','Purchase\AutoDemandController@destroy');
+            Route::get('print/{id}/{type?}','Purchase\AutoDemandController@print');
+            Route::post('load-inner-grid/{id}' , 'Purchase\AutoDemandController@loadInnerGrid');
+        });
+        Route::prefix('batch-expiry')->group(function(){
+            Route::get('form/{id?}' , 'Inventory\BatchExpiryController@create');
+            Route::post('store/{id?}' , 'Inventory\BatchExpiryController@store');
+            Route::post('delete/{id}','Inventory\BatchExpiryController@destroy');
+        });
+        Route::prefix('purchase-return-temp')->group(function () {
+            Route::get('form/{id?}','Purchase\PurchaseReturnTempController@create');
+            Route::post('form/{id?}','Purchase\PurchaseReturnTempController@store');
+            Route::post('delete/{id}','Purchase\PurchaseReturnTempController@destroy');
+            Route::get('print/{id}/{type?}','Purchase\PurchaseReturnTempController@print');
+            Route::get('po/{id}','Purchase\PurchaseReturnTempController@getPO');
+        });
+
+        Route::prefix('price-difference-screen')->group(function () {
+            Route::get('form/{id?}','Purchase\PriceDifferenceScreenController@create');
+            Route::post('form/{id?}','Purchase\PriceDifferenceScreenController@store');
+            Route::post('delete/{id}','Purchase\PriceDifferenceScreenController@destroy');
+            Route::get('print/{id}/{type?}','Purchase\PriceDifferenceScreenController@print');
+        });
+        Route::prefix('brand')->group(function () {
+            Route::get('form/{id?}','Purchase\BrandController@create');
+            Route::post('form/{id?}','Purchase\BrandController@store');
+            Route::post('delete/{id}','Purchase\BrandController@destroy');
+        });
+        Route::prefix('manufacturer')->group(function () {
+            Route::get('form/{id?}','Purchase\ManufacturerController@create');
+            Route::post('form/{id?}','Purchase\ManufacturerController@store');
+            Route::post('delete/{id}','Purchase\ManufacturerController@destroy');
+        });
+        Route::prefix('supplier-type')->group(function () {
+            Route::get('form/{id?}','Purchase\SupplierTypeController@create');
+            Route::post('form/{id?}','Purchase\SupplierTypeController@store');
+            Route::post('delete/{id}','Purchase\SupplierTypeController@destroy');
+        });
+        Route::prefix('product-group')->group(function () {
+            Route::get('form/{id?}','Purchase\GroupitemController@create');
+            Route::post('form/{id?}','Purchase\GroupitemController@store');
+            Route::post('delete/{id}','Purchase\GroupitemController@destroy');
+            Route::get('max-code/{id}','Purchase\GroupitemController@PGroupCode');
+        });
+
+        Route::prefix('stock-location')->group(function () {
+            Route::get('form/{id?}','Purchase\StockLocationController@create');
+            Route::post('form/{id?}','Purchase\StockLocationController@store');
+            Route::post('delete/{id}','Purchase\StockLocationController@destroy');
+            Route::get('max-code/{id}','Purchase\StockLocationController@PGroupCode');
+        });
+        Route::prefix('supcontract')->group(function () {
+            Route::get('form/{id?}','Purchase\SupplierContracController@create');
+            Route::post('form/{id?}','Purchase\SupplierContracController@store');
+            Route::post('delete/{id}','Purchase\SupplierContracController@destroy');
+        });
+        Route::prefix('demand')->group(function () {
+            Route::get('form/{id?}','Purchase\PurchaseDemandController@create');
+            Route::post('form/{id?}','Purchase\PurchaseDemandController@store');
+            Route::get('print/{id}','Purchase\PurchaseDemandController@print');
+            Route::post('delete/{id}','Purchase\PurchaseDemandController@destroy');
+            Route::get('items','Purchase\PurchaseDemandController@items');
+            Route::get('itembarcode/{id}/{type?}/{store?}','Purchase\PurchaseDemandController@BarcodeDtl');
+            Route::get('produom/{id}','Purchase\PurchaseDemandController@ProdUOM');
+            Route::get('prodrate/{id}','Purchase\PurchaseDemandController@ProdRate');
+            Route::get('ajax-get-detail/{id}','Purchase\PurchaseDemandController@ajaxGetDemandItems')->name('demandAJAXItems');
+        });
+        Route::prefix('business')->group(function () {
+            Route::get('form/{id?}','Purchase\BusinessController@create');
+            Route::post('form/{id?}','Purchase\BusinessController@store');
+            Route::post('delete/{id}','Purchase\BusinessController@destroy');
+        });
+        Route::prefix('change-rate')->group(function () {
+            Route::get('form/{id?}','Purchase\ChangeRate@create');
+            Route::post('form/{id?}','Purchase\ChangeRate@store');
+            Route::get('print/{id?}','Purchase\ChangeRate@print');
+            Route::get('grn/{id}' , 'Purchase\ChangeRate@getGRNData');
+            Route::get('stock-receiving/{id}' , 'Purchase\ChangeRate@getStockReceivingData');
+        });
+        Route::prefix('re-order-stock')->group(function () {
+            Route::get('form','Purchase\ReOrderStockController@create');
+            //Route::post('form','Purchase\ReOrderStockController@store');
+            //Route::get('print/{id?}','Purchase\ReOrderStockController@print');
+            //Route::get('grn/{id}' , 'Purchase\ReOrderStockController@getGRNData');
+            Route::post('get-acc-data','Purchase\ReOrderStockController@getAccData');
+            Route::post('del-acc-data','Purchase\ReOrderStockController@delSupData');
+            Route::post('generate-purchase-order','Purchase\ReOrderStockController@generatePurchaseOrder');
+        });
+        Route::prefix('product-type')->group(function () {
+            Route::get('form/{id?}','Purchase\ProductTypeController@create');
+            Route::post('form/{id?}','Purchase\ProductTypeController@store');
+            Route::post('delete/{id}','Purchase\ProductTypeController@destroy');
+        });
+        Route::prefix('supplier-product')->group(function () {
+            Route::get('form/{id?}','Purchase\SupplierProductController@create');
+            Route::post('form/{id?}','Purchase\SupplierProductController@store');
+            Route::post('delete/{id}','Purchase\SupplierProductController@destroy');
+            Route::get('print/{id}/{type?}','Purchase\SupplierProductController@print');
+        });
+         //=======================sale===========================
+
+         Route::prefix('customer')->group(function () {
+            //Route::get('list','Sales\CustomerController@index');
+            Route::get('form/{id?}','Sales\CustomerController@create');
+            Route::post('form/{id?}','Sales\CustomerController@store')->name('storeCustomer');
+            Route::post('get-custom-by-phone' , 'Sales\CustomerController@getByPhone')->name('get-customer-by-phone');
+            Route::post('delete/{id}','Sales\CustomerController@destroy');
+        });
+        Route::prefix('member-inquery')->group(function () {
+           Route::get('form/{id?}',function($id =null){
+                return redirect('/member-inquery/new');
+            });
+            Route::get('new','Sales\MemberInqueryController@create');
+            Route::post('get-member-inquery' , 'Sales\MemberInqueryController@getByCard');
+        });
+        Route::prefix('sales-invoice')->group(function () {
+            Route::get('form/{id?}','Sales\SalesInvoiceController@create');
+            Route::post('form/{id?}','Sales\SalesInvoiceController@store')->name('sales_invoice');
+            Route::get('print/{type}/{id}','Sales\SalesInvoiceController@print')->name('prints.sale_invoice_thermal_print.blade');
+            Route::post('delete/{id}','Sales\SalesInvoiceController@destroy');
+        });
+
+        Route::prefix('sales-delivery')->group(function () {
+            Route::get('form/{id?}','Sales\SalesDeliveryController@create');
+            Route::post('form/{id?}','Sales\SalesDeliveryController@store');
+            Route::get('print/{id}','Sales\SalesDeliveryController@print')->name('prints.sale_delivery_print.blade');
+            Route::post('delete/{id}','Sales\SalesDeliveryController@destroy');
+            Route::get('sale-invoice/{id}','Sales\SalesDeliveryController@SIDtl');
+        });
+
+        Route::prefix('sale-schemes')->group(function () {
+            Route::get('form/{id?}','Sales\SaleSchemesController@create');
+            Route::post('form/{id?}','Sales\SaleSchemesController@store');
+            Route::get('print/{id}','Sales\SaleSchemesController@print');
+            Route::post('delete/{id}','Sales\SaleSchemesController@destroy');
+        });
+
+        Route::prefix('pos-sales-invoice')->group(function () {
+            Route::get('form/{id?}','Sales\SalesInvoiceController@create');
+            Route::post('form/{id?}','Sales\SalesInvoiceController@store')->name('pos_sales_invoice');
+            Route::get('print/{type}/{id}','Sales\SalesInvoiceController@print')->name('prints.sale_invoice_thermal_print.blade');
+            Route::post('delete/{id}','Sales\SalesInvoiceController@destroy');
+        });
+        Route::prefix('sale-return')->group(function () {
+            Route::get('form/{id?}','Sales\SaleReturnController@create');
+            Route::post('form/{id?}','Sales\SaleReturnController@store')->name('sales_return');
+            Route::post('delete/{id}','Sales\SaleReturnController@destroy');
+            Route::get('print/{id}','Sales\SaleReturnController@print');
+        });
+        Route::prefix('pos-sales-return')->group(function () {
+            Route::get('form/{id?}','Sales\SaleReturnController@create');
+            Route::post('form/{id?}','Sales\SaleReturnController@store')->name('pos_sales_return');
+            Route::post('delete/{id}','Sales\SaleReturnController@destroy');
+            //Route::get('print/{id}','Sales\SaleReturnController@print');
+            Route::get('print/{type}/{id}','Sales\SaleReturnController@print')->name('prints.sale_invoice_thermal_print.blade');
+        });
+        Route::prefix('sales-order')->group(function () {
+            Route::get('form/{id?}','Sales\SalesOrderController@create');
+            Route::post('form/{id?}','Sales\SalesOrderController@store');
+            Route::post('delete/{id}','Sales\SalesOrderController@destroy');
+        });
+        Route::prefix('sales-quotation')->group(function () {
+            Route::get('form/{id?}','Sales\SalesQuotationController@create');
+            Route::post('form/{id?}','Sales\SalesQuotationController@store');
+            Route::post('delete/{id}','Sales\SalesQuotationController@destroy');
+            Route::get('print/{id}/{type?}','Sales\SalesQuotationController@print');
+            Route::post('get-sales-qutation-dtl','Sales\SalesQuotationController@getSalesQutationDtlData');
+        });
+        Route::prefix('request-quotation')->group(function () {
+            Route::get('form/{id?}','Sales\RequestQuotationController@create');
+            Route::post('form/{id?}','Sales\RequestQuotationController@store');
+            Route::post('delete/{id}','Sales\RequestQuotationController@destroy');
+            Route::get('print/{id}/{type?}','Sales\RequestQuotationController@print');
+            Route::post('get-sales-qutation-dtl','Sales\RequestQuotationController@getSalesQutationDtlData');
+        });
+        Route::prefix('customer-sales-order')->group(function () {
+            Route::get('form/{id?}','Sales\CustomerSalesOrderController@create');
+            Route::post('form/{id?}','Sales\CustomerSalesOrderController@store');
+            Route::post('delete/{id}','Sales\CustomerSalesOrderController@destroy');
+            Route::get('print/{id}','Sales\CustomerSalesOrderController@print');
+        });
+        Route::prefix('sales-contract')->group(function () {
+            Route::get('form/{id?}','Sales\SalesContractController@create');
+            Route::post('form/{id?}','Sales\SalesContractController@store');
+            Route::post('delete/{id}','Sales\SalesContractController@destroy');
+            Route::get('print/{id}','Sales\SalesContractController@print');
+        });
+        Route::prefix('customer-type')->group(function () {
+            Route::get('form/{id?}','Sales\CustomerTypeController@create');
+            Route::post('form/{id?}','Sales\CustomerTypeController@store');
+            Route::post('delete/{id}','Sales\CustomerTypeController@destroy');
+        });
+        Route::prefix('barcode-price-tag')->group(function () {
+            Route::get('form/{id?}','Sales\BarcodePriceTagController@create');
+            Route::post('form/{id?}','Sales\BarcodePriceTagController@store');
+            Route::get('print/{id}','Sales\BarcodePriceTagController@print')->name('prints.barcode_price_tag_print.blade');
+        });
+        Route::prefix('day/{type}')->group(function () {
+            Route::get('form/{id?}','Sales\DayController@create');
+            Route::post('form/{id?}','Sales\DayController@store');
+            Route::post('delete/{id}','Sales\DayController@destroy');
+            Route::get('print/{id}','Sales\DayController@print');
+        });
+        Route::prefix('day')->group(function () {
+            Route::post('get-pos-shift','Sales\DayController@getPosShiftData')->name('getPosShiftData');
+        });
+        Route::prefix('bank-distribution')->group(function () {
+            Route::get('form/{id?}','Sales\BankDistributionController@create');
+            Route::post('form/{id?}','Sales\BankDistributionController@store');
+            Route::post('delete/{id}','Sales\BankDistributionController@destroy');
+        });
+
+        Route::prefix('consumer-protection')->group(function () {
+            Route::get('form/{id?}','Sales\ConsumerProtectionController@create');
+            Route::post('form/{id?}','Sales\ConsumerProtectionController@store');
+            Route::get('print/{id}','Sales\ConsumerProtectionController@print');
+            Route::post('delete/{id}','Sales\ConsumerProtectionController@destroy');
+        });
+
+        Route::prefix('sales-fee')->group(function () {
+            Route::get('form/{id?}','Sales\SalesFeeController@create');
+            Route::post('form/{id?}','Sales\SalesFeeController@store');
+            Route::get('print/{id}','Sales\SalesFeeController@print');
+            Route::post('delete/{id}','Sales\SalesFeeController@destroy');
+        });
+        Route::prefix('display-rent-fee')->group(function () {
+            Route::get('form/{id?}','Sales\DisplayRentFeeController@create');
+            Route::post('form/{id?}','Sales\DisplayRentFeeController@store');
+            Route::get('print/{id}/{type?}','Sales\DisplayRentFeeController@print');
+            Route::post('delete/{id}','Sales\DisplayRentFeeController@destroy');
+        });
+
+        Route::prefix('rebate-invoice')->group(function () {
+            Route::get('form/{id?}','Sales\RebateInvoiceController@create');
+            Route::post('form/{id?}','Sales\RebateInvoiceController@store');
+            Route::get('print/{id}/{type?}','Sales\RebateInvoiceController@print');
+            Route::post('delete/{id}','Sales\RebateInvoiceController@destroy');
+        });
+
+        Route::prefix('sale-payment-mode')->group(function () {
+            Route::get('list','Sales\PaymentModeController@index');
+            Route::get('form/{id?}','Sales\PaymentModeController@create');
+            Route::post('form/{id?}','Sales\PaymentModeController@store');
+            Route::post('sale-invoice-tax-post','Sales\PaymentModeController@fbrSaleInvoiceTaxPost');
+            Route::get('print/{type}/{id}','Sales\PaymentModeController@print')->name('prints.sale_invoice_thermal_print.blade');
+
+        });
+
+//==================reporting=======================
+
+        Route::prefix('report')->group(function () {
+            Route::any('criteria-list',function(\Illuminate\Http\Request $request){
+                $data = $request;
+                if(!isset($request->code_val) && empty($request->code_val)){
+                    $productDetail = TblPurcProductBarcode::where('product_id' , $request->product_id)->with('product')->first();
+
+                    $data['code_val'] = $productDetail->product_barcode_barcode;
+                    $data['name_val'] = $productDetail->product->product_name;
+                }
+                return view('reports.apply_criteria_list',compact('data'));
+            });
+            Route::get('form/{id?}','Report\ReportController@create');
+            Route::post('form/{id?}','Report\ReportController@store');
+            Route::get('get-columns/{table}','Report\ReportController@getColumns');
+            Route::get('get-filed-conditions/{table}/{field}','Report\ReportController@getFiledConditions');
+            Route::get('get-filed-metric/{table}/{field}','Report\ReportController@getFiledMetric');
+            Route::get('user-report-list/{casetype}','Report\UserReportController@reportList');
+            Route::get('user-report/{casetype}/{id?}','Report\UserReportController@create');
+            Route::post('user-report/{id?}','Report\UserReportController@store');
+            Route::get('dayclosing','Report\UserReportController@DayClosing');
+            Route::get('get-filed-type/{table}/{field}','Report\UserReportController@getFiledTypes');
+            Route::post('delete/{id}','Report\ReportController@destroy');
+        });
+        Route::prefix('reports')->group(function () {
+            Route::get('form/{id?}','Report\ReportsController@create');
+            Route::post('form/{id?}','Report\ReportsController@store');
+            Route::get('report-list/{casetype}','Report\UserReportsController@reportList');
+            Route::get('report-create/{reportType}/{caseType}/{id?}','Report\UserReportsController@create');
+            Route::post('report-create/{reportType}/dynamic/{id?}','Report\UserReportsController@dynamicStore');
+            Route::post('report-create/{reportType}/static/{id?}','Report\UserReportsController@staticStore');
+            Route::get('view-report','Report\UserReportsController@ViewReport')->name('reports.view_report');
+           // Route::get('view-report','Report\UserReportsController@ViewStaticReport')->name('reports.view_static_report');
+            Route::get('get-store-by-name','Report\UserReportsController@getStoreByName');
+            Route::get('get-display-location-name-string-by-name','Report\UserReportsController@getDisplayLocationNameStringByName');
+            Route::post('get-column-conditions','Report\UserReportsController@getColumnConditions');
+            Route::get('get-supplier-by-name','Report\UserReportsController@getSupplierByName');
+            Route::get('get-product-type-by-name','Report\UserReportsController@getproductTypeByName');
+            Route::get('get-customer-by-name','Report\UserReportsController@getCustomerByName');
+            Route::get('get-product-by-name','Report\UserReportsController@getProductByName');
+            Route::get('get-product-by-id','Report\UserReportsController@getProductById');
+            Route::get('get-customer-by-id','Report\UserReportsController@getCustomerById');
+            Route::get('get-marchant-by-id','Report\UserReportsController@getMarchantById');
+            Route::get('get-supplier-by-id','Report\UserReportsController@getSupplierById');
+            Route::get('get-chart-account-by-name','Report\UserReportsController@getChartAccountByName');
+            Route::post('verify-closing-day-report' , 'Report\UserReportsController@verifyClosingDayReport');
+        });
+        Route::prefix('user-report')->group(function () {
+            Route::get('view','Report\UserReportController@reportView')->name('report.report_view');
+            Route::get('sale-invoice','Report\UserReportController@reportSaleInvoice')->name('report.report_sale_invoice');
+            Route::get('accounting-ledger','Report\UserReportController@reportAccountingLedger')->name('report.report_accounting_ledger');
+            Route::get('sale-type-wise','Report\UserReportController@reportSaleTypeWise')->name('report.report_sale_type_wise');
+            Route::get('day-closing','Report\UserReportController@DayClosing')->name('report.daily_closing_report');
+            Route::get('daily-activity','Report\UserReportController@reportDailyActivity')->name('report.daily_activity_report');
+        });
+
+//======================setting=====================
+
+        Route::prefix('constants')->group(function () {
+            Route::get('form/{id?}','Setting\ConstantsController@create');
+            Route::post('form/{id?}','Setting\ConstantsController@store');
+        });
+        Route::prefix('flavour')->group(function () {
+            Route::get('form/{id?}','Setting\FlavourController@create');
+            Route::post('form/{id?}','Setting\FlavourController@store');
+            Route::post('delete/{id}','Setting\FlavourController@destroy');
+        });
+        Route::prefix('season')->group(function () {
+            Route::get('form/{id?}','Setting\SeasonController@create');
+            Route::post('form/{id?}','Setting\SeasonController@store');
+            Route::post('delete/{id}','Setting\SeasonController@destroy');
+        });
+        Route::prefix('variant')->group(function () {
+            Route::get('form/{id?}','Setting\VariantController@create');
+            Route::post('form/{id?}','Setting\VariantController@store');
+            Route::post('delete/{id}','Setting\VariantController@destroy');
+        });
+        Route::prefix('weight')->group(function () {
+            Route::get('form/{id?}','Setting\WeightController@create');
+            Route::post('form/{id?}','Setting\WeightController@store');
+            Route::post('delete/{id}','Setting\WeightController@destroy');
+        });
+        Route::prefix('merchant')->group(function () {
+            Route::get('form/{id?}','Setting\MerchantController@create');
+            Route::post('form/{id?}','Setting\MerchantController@store');
+            Route::post('delete/{id}','Setting\MerchantController@destroy');
+        });
+        Route::prefix('tax-group')->group(function () {
+            Route::get('form/{id?}','Setting\TaxGroupController@create');
+            Route::post('form/{id?}','Setting\TaxGroupController@store');
+            Route::post('delete/{id}','Setting\TaxGroupController@destroy');
+        });
+        Route::prefix('tax-type')->group(function () {
+            Route::get('form/{id?}','Setting\TaxTypeController@create');
+            Route::post('form/{id?}','Setting\TaxTypeController@store');
+            Route::post('delete/{id}','Setting\TaxTypeController@destroy');
+        });
+        Route::prefix('contact-type')->group(function () {
+            Route::get('form/{id?}','Setting\ContactTypeController@create');
+            Route::post('form/{id?}','Setting\ContactTypeController@store');
+            Route::post('delete/{id}','Setting\ContactTypeController@destroy');
+        });
+        Route::prefix('incentive-type')->group(function () {
+            Route::get('form/{id?}','Setting\IncentiveTypeController@create');
+            Route::post('form/{id?}','Setting\IncentiveTypeController@store');
+            Route::post('delete/{id}','Setting\IncentiveTypeController@destroy');
+        });
+        Route::prefix('membership-type')->group(function () {
+            Route::get('form/{id?}','Setting\MembershipTypeController@create');
+            Route::post('form/{id?}','Setting\MembershipTypeController@store');
+            Route::post('delete/{id}','Setting\MembershipTypeController@destroy');
+        });
+        Route::prefix('wht')->group(function () {
+            Route::get('form/{id?}','Setting\WHTController@create');
+            Route::post('form/{id?}','Setting\WHTController@store');
+            Route::post('delete/{id}','Setting\WHTController@destroy');
+        });
+        Route::prefix('city')->group(function () {
+            Route::get('form/{id?}','Setting\CityController@create');
+            Route::post('form/{id?}','Setting\CityController@store');
+            Route::post('delete/{id}','Setting\CityController@destroy');
+        });
+        Route::prefix('ip')->group(function () {
+            Route::get('form/{id?}','Setting\IPAddressController@create');
+            Route::post('form/{id?}','Setting\IPAddressController@store');
+            Route::post('delete/{id}','Setting\IPAddressController@destroy');
+        });
+        Route::prefix('area')->group(function () {
+            Route::get('form/{id?}','Setting\AreaController@create');
+            Route::post('form/{id?}','Setting\AreaController@store');
+            Route::post('delete/{id}','Setting\AreaController@destroy');
+            Route::post('get-area-by-city','Setting\AreaController@getAreaByCity')->name('getAreaByCityId');
+        });
+        Route::prefix('delivery-types')->group(function () {
+            Route::get('form/{id?}','Setting\DeliveryTypesController@create');
+            Route::post('form/{id?}','Setting\DeliveryTypesController@store');
+            Route::post('delete/{id}','Setting\DeliveryTypesController@destroy');
+        });
+        Route::prefix('order-status')->group(function () {
+            Route::get('form/{id?}','Setting\OrderStatusController@create');
+            Route::post('form/{id?}','Setting\OrderStatusController@store');
+            Route::post('delete/{id}','Setting\OrderStatusController@destroy');
+        });
+        Route::prefix('delivery-charges')->group(function () {
+            Route::get('form/{id?}','Setting\DeliveryChargesController@create');
+            Route::post('form/{id?}','Setting\DeliveryChargesController@store');
+            Route::post('delete/{id}','Setting\DeliveryChargesController@destroy');
+            Route::post('get-delivery-charges-dtl-data','Setting\DeliveryChargesController@getDeliveryChargesDtlData');
+        });
+        Route::prefix('color')->group(function () {
+            Route::get('form/{id?}','Setting\ColorController@create');
+            Route::post('form/{id?}','Setting\ColorController@store');
+            Route::post('delete/{id}','Setting\ColorController@destroy');
+        });
+        Route::prefix('size')->group(function () {
+            Route::get('form/{id?}','Setting\SizeController@create');
+            Route::post('form/{id?}','Setting\SizeController@store');
+            Route::post('delete/{id}','Setting\SizeController@destroy');
+        });
+        Route::prefix('bank')->group(function () {
+            Route::get('form/{id?}','Setting\BankController@create');
+            Route::post('form/{id?}','Setting\BankController@store');
+            Route::post('delete/{id}','Setting\BankController@destroy');
+        });
+        Route::prefix('origin')->group(function () {
+            Route::get('form/{id?}','Setting\OriginController@create');
+            Route::post('form/{id?}','Setting\OriginController@store');
+            Route::post('delete/{id}','Setting\OriginController@destroy');
+        });
+        Route::prefix('uom')->group(function () {
+            Route::get('form/{id?}','Setting\UomController@create');
+            Route::post('form/{id?}','Setting\UomController@store');
+            Route::post('delete/{id}','Setting\UomController@destroy');
+        });
+        Route::prefix('tag')->group(function () {
+            Route::get('form/{id?}','Setting\TagsController@create');
+            Route::post('form/{id?}','Setting\TagsController@store');
+            Route::post('delete/{id}','Setting\TagsController@destroy');
+        });
+        Route::prefix('currency')->group(function () {
+            Route::get('form/{id?}','Setting\CurrencyController@create');
+            Route::post('form/{id?}','Setting\CurrencyController@store');
+            Route::post('delete/{id}','Setting\CurrencyController@destroy');
+        });
+        Route::prefix('country')->group(function () {
+            Route::get('form/{id?}','Setting\CountryController@create');
+            Route::post('form/{id?}','Setting\CountryController@store');
+            Route::post('delete/{id}','Setting\CountryController@destroy');
+        });
+        Route::prefix('location')->group(function () {
+            Route::get('form/{id?}','Setting\DisplayLocationController@create');
+            Route::post('form/{id?}','Setting\DisplayLocationController@store');
+            Route::post('delete/{id}','Setting\DisplayLocationController@destroy');
+            Route::post('get-store-locations','Setting\DisplayLocationController@getStoreLocations');
+        });
+        Route::prefix('reason')->group(function () {
+            Route::get('form/{id?}','Setting\ReasonController@create');
+            Route::post('form/{id?}','Setting\ReasonController@store');
+            Route::post('delete/{id}','Setting\ReasonController@destroy');
+        });
+        Route::prefix('user_account')->group(function () {
+            Route::get('form/{id?}','Setting\UserAccountController@create');
+            Route::post('form/{id?}','Setting\UserAccountController@store');
+            Route::post('delete/{id}','Setting\UserAccountController@destroy');
+        });
+        Route::prefix('branch-profile')->group(function () {
+            Route::get('form/{id?}','Setting\BranchController@create');
+            Route::post('form/{id?}','Setting\BranchController@store');
+            Route::post('delete/{id}','Setting\BranchController@destroy');
+        });
+        Route::prefix('store')->group(function () {
+            Route::get('form/{id?}','Setting\StoreController@create');
+            Route::post('form/{id?}','Setting\StoreController@store');
+            Route::post('delete/{id}','Setting\StoreController@destroy');
+        });
+        Route::prefix('password')->group(function () {
+            Route::get('form/{id?}','Setting\PasswordController@create');
+            Route::post('form/{id?}','Setting\PasswordController@store');
+        });
+        Route::prefix('pos-password')->group(function () {
+            Route::get('form/{id?}','Setting\PasswordController@createPos');
+            Route::post('form/{id?}','Setting\PasswordController@storePos');
+        });
+        Route::prefix('change-password')->group(function () {
+            Route::get('form/{id}','Setting\PasswordController@createChangePass');
+            Route::post('form/{id}','Setting\PasswordController@storeChangePass');
+        });
+        Route::prefix('new_change_password')->group(function () {
+            Route::get('form/{id?}','Setting\PasswordController@newChangecreate');
+            Route::post('form/{id?}','Setting\PasswordController@newChangestore');
+        });
+        Route::prefix('new_pos_change_password')->group(function () {
+            Route::get('form/{id?}','Setting\PasswordController@newPosChangecreate');
+            Route::post('form/{id?}','Setting\PasswordController@newPosChangestore');
+        });
+        Route::prefix('change-branch')->group(function () {
+            Route::get('form','HomeController@branchChange');
+        });
+        Route::prefix('expense-accounts')->group(function () {
+            Route::get('form/{id?}','Setting\ExpenseAccountsController@create');
+            Route::post('form/{id?}','Setting\ExpenseAccountsController@store');
+        });
+        Route::prefix('configuration')->group(function () {
+            Route::get('form/{id?}','Setting\ConfigurationController@create');
+            Route::post('form/{id?}','Setting\ConfigurationController@store');
+        });
+        Route::prefix('pos-terminal')->group(function () {
+            Route::get('form/{id?}','Setting\POSTerminalController@create');
+            Route::post('form/{id?}','Setting\POSTerminalController@store');
+            Route::post('delete/{id}','Setting\POSTerminalController@destroy');
+        });
+        Route::prefix('pos-setting')->group(function () {
+            Route::get('form/{id?}','Setting\POSSettingController@create');
+            Route::post('form/{id?}','Setting\POSSettingController@store');
+            Route::post('delete/{id}','Setting\POSSettingController@destroy');
+        });
+        Route::prefix('role')->group(function () {
+            Route::get('form/{id?}','Setting\RoleController@create');
+            Route::post('form/{id?}','Setting\RoleController@store');
+            Route::post('delete/{id}','Setting\RoleController@destroy');
+        });
+
+        Route::prefix('voucher-sequance')->group(function () {
+            Route::get('form','Setting\VoucherSequanceController@create');
+            Route::post('store','Setting\VoucherSequanceController@store');
+        });
+
+        Route::prefix('brochure')->group(function () {
+            Route::get('form/{id?}', 'Setting\BrochureController@create');
+            Route::post('form/{id?}', 'Setting\BrochureController@store');
+            Route::post('delete/{id}', 'Setting\BrochureController@destroy');
+            Route::get('view/{id}', 'Setting\BrochureController@show');
+            Route::get('print/{id}/{type?}','Setting\BrochureController@print');
+
+        });
+//=====================Payr Department====================
+
+
+    Route::prefix('designation')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\DesignationController@create');
+        Route::post('form/{id?}','PayrDepartment\DesignationController@store');
+        Route::post('delete/{id}','PayrDepartment\DesignationController@destroy');
+    });
+
+    Route::prefix('insurance-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\InsuranceTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\InsuranceTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\InsuranceTypeController@destroy');
+    });
+
+    Route::prefix('department')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\DepartmentController@create');
+        Route::post('form/{id?}','PayrDepartment\DepartmentController@store');
+        Route::post('delete/{id}','PayrDepartment\DepartmentController@destroy');
+    });
+
+    Route::prefix('section')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\SectionController@create');
+        Route::post('form/{id?}','PayrDepartment\SectionController@store');
+        Route::post('delete/{id}','PayrDepartment\SectionController@destroy');
+    });
+
+    Route::prefix('job-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\JobTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\JobTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\JobTypeController@destroy');
+    });
+
+    Route::prefix('visa-types')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\VisaTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\VisaTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\VisaTypeController@destroy');
+    });
+
+    Route::prefix('religion')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\ReligionController@create');
+        Route::post('form/{id?}','PayrDepartment\ReligionController@store');
+        Route::post('delete/{id}','PayrDepartment\ReligionController@destroy');
+    });
+
+    Route::prefix('qualification')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\QualificationController@create');
+        Route::post('form/{id?}','PayrDepartment\QualificationController@store');
+        Route::post('delete/{id}','PayrDepartment\QualificationController@destroy');
+    });
+
+    Route::prefix('grade')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\GradeController@create');
+        Route::post('form/{id?}','PayrDepartment\GradeController@store');
+        Route::post('delete/{id}','PayrDepartment\GradeController@destroy');
+    });
+
+    Route::prefix('leave-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\LeaveTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\LeaveTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\LeaveTypeController@destroy');
+    });
+
+    Route::prefix('employee-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\EmployeeTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\EmployeeTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\EmployeeTypeController@destroy');
+    });
+
+    Route::prefix('retirement-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\RetirementTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\RetirementTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\RetirementTypeController@destroy');
+    });
+
+    Route::prefix('sponsorship')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\SponsorShipController@create');
+        Route::post('form/{id?}','PayrDepartment\SponsorShipController@store');
+        Route::post('delete/{id}','PayrDepartment\SponsorShipController@destroy');
+    });
+
+    // Route::prefix('cost-centre')->group(function(){
+    //     Route::get('form/{id?}','PayrDepartment\CostCentreController@create');
+    //     Route::post('form/{id?}','PayrDepartment\CostCentreController@store');
+    //     Route::post('delete/{id}','PayrDepartment\CostCentreController@destroy');
+    // });
+
+    Route::prefix('gender')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\GenderController@create');
+        Route::post('form/{id?}','PayrDepartment\GenderController@store');
+        Route::post('delete/{id}','PayrDepartment\GenderController@destroy');
+    });
+
+    Route::prefix('nationality')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\NationalityController@create');
+        Route::post('form/{id?}','PayrDepartment\NationalityController@store');
+        Route::post('delete/{id}','PayrDepartment\NationalityController@destroy');
+    });
+
+    // Route::prefix('leave_scheme')->group(function(){
+    //     Route::get('form/{id?}','PayrDepartment\LeaveSchemeController@create');
+    //     Route::post('form/{id?}','PayrDepartment\LeaveSchemeController@store');
+    //     Route::post('delete/{id}','PayrDepartment\LeaveSchemeController@destroy');
+
+    // });
+
+    // Route::prefix('year_month')->group(function(){
+    //     Route::get('form/{id?}','PayrDepartment\YearMonthController@create');
+    //     Route::post('form/{id?}','PayrDepartment\YearMonthController@store');
+    //     Route::post('delete/{id}','PayrDepartment\YearMonthController@destroy');
+    // });
+
+    Route::prefix('documents')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\DocumentsController@create');
+        Route::post('form/{id?}','PayrDepartment\DocumentsController@store');
+        Route::post('delete/{id}','PayrDepartment\DocumentsController@destroy');
+
+    });
+
+    Route::prefix('skills')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\SkillsController@create');
+        Route::post('form/{id?}','PayrDepartment\SkillsController@store');
+        Route::post('delete/{id}','PayrDepartment\SkillsController@destroy');
+
+    });
+
+    Route::prefix('asset-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\AssetTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\AssetTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\AssetTypeController@destroy');
+
+    });
+
+    Route::prefix('check-list')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\CheckListController@create');
+        Route::post('form/{id?}','PayrDepartment\CheckListController@store');
+        Route::post('delete/{id}','PayrDepartment\CheckListController@destroy');
+
+    });
+
+    Route::prefix('advance-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\AdvanceTypeController@create');
+        Route::post('form/{id?}','PayrDepartment\AdvanceTypeController@store');
+        Route::post('delete/{id}','PayrDepartment\AdvanceTypeController@destroy');
+
+    });
+
+    Route::prefix('loan-configuration')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\LoanConfigurationController@create');
+        Route::post('form/{id?}','PayrDepartment\LoanConfigurationController@store');
+        Route::post('delete/{id}','PayrDepartment\LoanConfigurationController@destroy');
+    });
+
+    Route::prefix('loan')->group(function () {
+        Route::get('form/{id?}', 'PayrDepartment\LoanController@create');
+        Route::post('form/{id?}', 'PayrDepartment\LoanController@store');
+        Route::post('delete/{id}', 'PayrDepartment\LoanController@destroy');
+    });
+    Route::prefix('expense-head')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\ExpenseHeadController@create');
+        Route::post('form/{id?}','PayrDepartment\ExpenseHeadController@store');
+        Route::post('delete/{id}','PayrDepartment\ExpenseHeadController@destroy');
+
+    });
+
+    Route::prefix('cost-of-hiring')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\CostOfHiringController@create');
+        Route::post('form/{id?}','PayrDepartment\CostOfHiringController@store');
+        Route::post('delete/{id}','PayrDepartment\CostOfHiringController@destroy');
+
+    });
+
+    Route::prefix('allowance-deduction-type')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\AllowanceDeductionController@create');
+        Route::post('form/{id?}','PayrDepartment\AllowanceDeductionController@store');
+        Route::post('delete/{id}','PayrDepartment\AllowanceDeductionController@destroy');
+
+    });
+    Route::prefix('leave-policy')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\LeavePolicyController@create');
+        Route::post('form/{id?}','PayrDepartment\LeavePolicyController@store');
+        Route::post('delete/{id}','PayrDepartment\LeavePolicyController@destroy');
+    });
+    Route::prefix('shift')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\ShiftController@create');
+        Route::post('form/{id?}','PayrDepartment\ShiftController@store');
+        Route::post('delete/{id}','PayrDepartment\ShiftController@destroy');
+    });
+    Route::prefix('language')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\LanguageController@create');
+        Route::post('form/{id?}','PayrDepartment\LanguageController@store');
+        Route::post('delete/{id}','PayrDepartment\LanguageController@destroy');
+    });
+    Route::prefix('payroll-computation')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\PayrollComputation@create');
+        Route::post('form/{id?}','PayrDepartment\PayrollComputation@store');
+        Route::post('delete/{id}','PayrDepartment\PayrollComputation@destroy');
+        Route::post('open-formula-modal','PayrDepartment\PayrollComputation@calculateFormula');
+    });
+
+        Route::prefix('employee')->group(function () {
+            Route::get('form/{id?}','PayrDepartment\EmployeeController@create');
+            Route::post('form/{id?}','PayrDepartment\EmployeeController@store');
+            Route::post('delete/{id}','PayrDepartment\EmployeeController@destroy');
+            Route::post('getLeavePolicy','PayrDepartment\EmployeeController@getLeavePolicy');
+            Route::get('getCurrentCity/{countryCurrent}','PayrDepartment\EmployeeController@CityCurrent');
+            //Route::get('getCity/{country}','Setting\EmployeeController@City');
+        });
+
+        Route::prefix('insurance-company')->group(function(){
+            Route::get('form/{id?}','PayrDepartment\InsuranceCompanyController@create');
+            Route::post('form/{id?}','PayrDepartment\InsuranceCompanyController@store');
+            Route::post('delete/{id}','PayrDepartment\InsuranceCompanyController@destroy');
+        });
+
+
+//=====================accounts=========================
+
+        Route::prefix('payment-term')->group(function () {
+            Route::get('form/{id?}','Accounts\PaymentTermController@create');
+            Route::post('form/{id?}','Accounts\PaymentTermController@store');
+            Route::post('delete/{id}','Accounts\PaymentTermController@destroy');
+        });
+        Route::prefix('cheque-book')->group(function () {
+            Route::get('form/{id?}','Accounts\ChequeBookController@create');
+            Route::post('form/{id?}','Accounts\ChequeBookController@store');
+            Route::post('delete/{id}','Accounts\ChequeBookController@destroy');
+        });
+
+        Route::prefix('cheque-management')->group(function () {
+            Route::get('form/{id?}','Accounts\ChequeManagmentController@create');
+            Route::post('form/{id?}','Accounts\ChequeManagmentController@store');
+            Route::post('delete/{id}','Accounts\ChequeManagmentController@destroy');
+        });
+
+        Route::prefix('coa')->group(function () {
+            Route::get('form/{id?}','Accounts\CoaController@create');
+            Route::post('form/{id?}','Accounts\CoaController@store');
+            Route::post('delete/{id}','Accounts\CoaController@destroy');
+            Route::get('coa-data/{radioValue}','Accounts\CoaController@coaDisplayData');
+            Route::get('coa-max/{radioValue}/{parent_account_value}','Accounts\CoaController@coaDisplayMaxData');
+            Route::get('coa-max-code/{radioValue}/{parent_account_value}','Accounts\CoaController@getMaxAccountCode');
+            Route::get('coa-taxtype/{DataValue}','Accounts\CoaController@coaDisplayTaxData');
+        });
+        Route::prefix('budget')->group(function () {
+            Route::get('form/{id?}','Accounts\BudgetController@create');
+            Route::post('form/{id?}','Accounts\BudgetController@store');
+            Route::post('delete/{id}','Accounts\BudgetController@destroy');
+        });
+        Route::prefix('accounts/{type}')->group(function () {
+            // jv (journal) // rv (cash receipt voucher,bank receipt voucher) // pv (cash payment voucher,bank payment voucher)
+            Route::get('form/{id?}','Accounts\VoucherController@create');
+            Route::post('rv-store/{id?}','Accounts\VoucherController@rvstore');
+            Route::post('pv-store/{id?}','Accounts\VoucherController@pvstore');
+            Route::post('jv-store/{id?}','Accounts\VoucherController@jvStore');
+            Route::post('pve-store/{id?}','Accounts\VoucherController@pveStore');
+            Route::post('brpv-store/{id?}','Accounts\VoucherController@brpvstore');
+            Route::post('brrv-store/{id?}','Accounts\VoucherController@brrvstore');
+            Route::post('vpv-store/{id?}','Accounts\VoucherController@vpvstore');
+            Route::post('received-voucher-store/{id?}','Accounts\VoucherController@receivedVoucherStore');
+            Route::post('ipv-store/{id?}','Accounts\VoucherController@ipvstore');
+            Route::post('irv-store/{id?}','Accounts\VoucherController@irvstore');
+            Route::post('delete/{id}','Accounts\VoucherController@destroy');
+            Route::get('print/{id}','Accounts\VoucherController@print');
+            Route::post('Posted/{id?}','Accounts\VoucherController@VoucherPosted');
+            Route::post('UnPosted/{id?}','Accounts\VoucherController@VoucherUnPosted');
+        });
+
+        Route::prefix('accounts/list')->group(function () {
+            Route::get('pv','Accounts\VoucherListController@pvList');
+        });
+
+        Route::prefix('accounts')->group(function () {
+            Route::get('coa-tree-view',array('as'=>'jquery.treeview','uses'=>'Accounts\TreeController@treeView'));
+            Route::get('get-coa-tree','Accounts\TreeController@getAccTree');
+            Route::post('get-bill-list','Accounts\VoucherController@getBillListdata');
+            Route::post('get-inv-detail','Accounts\VoucherController@getInvDetails');
+            Route::post('get-Receive-inv-detail','Accounts\VoucherController@getReceiveInvDetails');
+            Route::post('set-session-voucher','Accounts\VoucherController@setSessionVoucherNo');
+            Route::post('get-terminal-by-saleman','Accounts\VoucherController@getTerminalBySaleman');
+            Route::post('voucher-post','Accounts\VoucherController@voucherpost');
+            Route::post('get-acc-by-terminal','Accounts\VoucherController@getAccByTerminal');
+        });
+
+        Route::prefix('accounts-tree')->group(function () {
+            Route::post('tree-form/{id?}','Accounts\CoaController@create');
+        });
+
+        Route::prefix('cash-voucher-posting')->group(function () {
+            Route::get('form/{id?}','Accounts\PostingCashVoucherController@create');
+            Route::post('form/{id?}','Accounts\PostingCashVoucherController@store');
+        });
+        Route::prefix('pos-voucher')->group(function () {
+            Route::get('form/{id?}','Accounts\POSVoucherController@create');
+            Route::post('form/{id?}','Accounts\POSVoucherController@store');
+        });
+        Route::prefix('bank-reconciliation')->group(function () {
+            Route::get('form/{id?}','Accounts\BankReconciliationController@create');
+            Route::post('form/{id?}','Accounts\BankReconciliationController@store');
+            Route::post('delete/{id}','Accounts\BankReconciliationController@destroy');
+            Route::post('get-acc-data','Accounts\BankReconciliationController@getAccData');
+            Route::get('print/{id}','Accounts\BankReconciliationController@print');
+        });
+//==================development=========================
+        Route::prefix('menu-maker')->group(function () {
+            Route::get('form/{id?}','Development\MenuMakerController@create');
+            Route::post('form/{id?}','Development\MenuMakerController@store');
+            Route::post('delete/{id}','Development\MenuMakerController@destroy');
+        });
+        Route::prefix('action')->group(function () {
+            Route::get('form/{id?}','Development\ActionController@create');
+            Route::post('form/{id?}','Development\ActionController@store');
+            Route::post('delete/{id}','Development\ActionController@destroy');
+        });
+        Route::prefix('flow')->group(function () {
+            Route::get('form/{id?}','Development\FlowController@create');
+            Route::post('form/{id?}','Development\FlowController@store');
+            Route::post('delete/{id}','Development\FlowController@destroy');
+        });
+        Route::prefix('event')->group(function () {
+            Route::get('form/{id?}','Development\EventController@create');
+            Route::post('form/{id?}','Development\EventController@store');
+            Route::post('delete/{id}','Development\EventController@destroy');
+        });
+        Route::prefix('user-management')->group(function () {
+            Route::get('form/{id?}','Development\UserManagementSystemController@create');
+            Route::post('form/{id?}','Development\UserManagementSystemController@store');
+        });
+
+        Route::prefix('listing-studio')->group(function () {
+            Route::get('form/{id?}','Development\ListingStudioController@create');
+            Route::post('form/{id?}','Development\ListingStudioController@store');
+            Route::post('delete/{id}','Development\ListingStudioController@destroy');
+            Route::get('get-filed-conditions/{casetype}/{field}','Development\ListingStudioController@getFiledConditions');
+            Route::get('get-filed-data/{casName}','Development\ListingStudioController@getFiledData');
+        });
+//==================inventory=========================
+
+        Route::prefix('stock/{type}')->group(function () {
+            Route::get('form/{id?}','Inventory\StockController@create');
+            Route::post('form/{id?}','Inventory\StockController@store');
+            Route::post('delete/{id}','Inventory\StockController@destroy');
+            Route::get('print/{id}','Inventory\StockController@print');
+            Route::get('from-stock-print/{id}','Inventory\StockController@fromStockPrint');
+            Route::post('get-location-by-store','Inventory\StockController@getLocationByStore');
+            Route::get('import', 'Inventory\StockController@importFile');
+            Route::post('import', 'Inventory\StockController@importExcle')->name('import');
+            Route::post('get-stock-request-dtl-data', 'Inventory\StockController@getStockRequestDtlData');
+            Route::post('get-formulation-request-dtl-data', 'Inventory\StockController@getFormulationRequestData');
+            Route::post('get-stock-transfer-dtl-data', 'Inventory\StockController@getStockTransferDtlData');
+            Route::post('get-grn-dtl-data', 'Inventory\StockController@getGRNDtlData');
+        });
+
+        Route::prefix('deal-setup')->group(function () {
+            Route::get('form/{id?}','Inventory\DealSetupController@create');
+            Route::post('form/{id?}','Inventory\DealSetupController@store');
+            Route::post('delete/{id}','Inventory\DealSetupController@destroy');
+            Route::get('print/{id}','Inventory\DealSetupController@print');
+            Route::get('from-stock-print/{id}','Inventory\DealSetupController@fromStockPrint');
+            Route::post('get-location-by-store','Inventory\StockController@getLocationByStore');
+            Route::get('import', 'Inventory\DealSetupController@importFile');
+            Route::post('import', 'Inventory\DealSetupController@importExcle')->name('import');
+            Route::post('get-stock-request-dtl-data', 'Inventory\DealSetupController@getStockRequestDtlData');
+            Route::post('get-formulation-request-dtl-data', 'Inventory\DealSetupController@getFormulationRequestData');
+            Route::post('get-stock-transfer-dtl-data', 'Inventory\DealSetupController@getStockTransferDtlData');
+            Route::post('get-grn-dtl-data', 'Inventory\DealSetupController@getGRNDtlData');
+        });
+
+        Route::prefix('stock-audit-adjustment')->group(function () {
+            Route::get('form/{id?}','Inventory\StockAuditAdjustmentController@create');
+            Route::post('form/{id?}','Inventory\StockAuditAdjustmentController@store');
+            Route::post('delete/{id}','Inventory\StockAuditAdjustmentController@destroy');
+            Route::get('print/{id}','Inventory\StockAuditAdjustmentController@print');
+            Route::post('product-item-tax-insert','Inventory\StockAuditAdjustmentController@storeProductItemTax');
+            Route::post('product-item-tax-product-list','Inventory\StockAuditAdjustmentController@productListProductItemTax');
+
+        });
+
+
+
+        Route::prefix('stock-audit/{type}')->group(function () {
+            Route::get('form/{id?}','Inventory\StockAuditController@create');
+            Route::post('form/{id?}','Inventory\StockAuditController@store');
+
+            Route::post('delete/{id}','Inventory\StockAuditController@destroy');
+            Route::get('print/{id}','Inventory\StockAuditController@print');
+            Route::post('adjustment/{id?}','Inventory\StockAuditController@adjustmentTag');
+            Route::post('AuditClose/{id?}','Inventory\StockAuditController@AuditCloseTag');
+            //Route::post('AuditSuspend/{id?}','Inventory\StockAuditController@AuditSuspendTag');
+            Route::post('AuditComplete/{id?}','Inventory\StockAuditController@AuditCompleteTag');
+            Route::post('UnPost/{id?}','Inventory\StockAuditController@AuditUnPostTag');
+
+            //Route::get('product-item-tax','Inventory\StockAuditController@viewProductItemTax');
+            Route::post('product-item-tax-insert','Inventory\StockAuditController@storeProductItemTax');
+            Route::post('product-item-tax-product-list','Inventory\StockAuditController@productListProductItemTax');
+        });
+
+
+
+        Route::prefix('formulation')->group(function () {
+            Route::get('form/{id?}','Inventory\ItemFormulationController@create');
+            Route::post('form/{id?}','Inventory\ItemFormulationController@store');
+            Route::post('delete/{id}','Inventory\ItemFormulationController@destroy');
+            Route::get('print/{id}','Inventory\ItemFormulationController@print');
+        });
+        Route::prefix('stock-request')->group(function () {
+            Route::get('form/{id?}','Inventory\StockRequestController@create');
+            Route::post('form/{id?}','Inventory\StockRequestController@store');
+            Route::post('delete/{id}','Inventory\StockRequestController@destroy');
+            Route::get('print/{id}','Inventory\StockRequestController@print');
+        });
+        Route::prefix('mb-stock-transfer')->group(function () {
+            Route::get('form/{id?}','Inventory\MBStockTransferController@create');
+            Route::post('form/{id?}','Inventory\MBStockTransferController@store');
+            Route::post('delete/{id}','Inventory\MBStockTransferController@destroy');
+            Route::get('print/{id}','Inventory\MBStockTransferController@print');
+            Route::post('get-stock-purchasing','Inventory\MBStockTransferController@getStockPurchasing');
+            Route::post('get-stock-purchasing-edit','Inventory\MBStockTransferController@getStockPurchasingDtl');
+        });
+        Route::prefix('slow-moving-items')->group(function () {
+            Route::get('form/{id?}','Inventory\InsertSlowMovingItemsController@create');
+            Route::post('form/{id?}','Inventory\InsertSlowMovingItemsController@store');
+        });
+//==================Dashboard Studio=========================
+        Route::prefix('graph-bar')->group(function () {
+            Route::get('form/{id?}','Dashboard\DashboardStudioGraphBar@create');
+            Route::post('form/{id?}','Dashboard\DashboardStudioGraphBar@store');
+            Route::post('delete/{id}','Dashboard\DashboardStudioGraphBar@destroy');
+        });
+
+        Route::prefix('change-product-group')->group(function () {
+            Route::get('/form', function(){
+                $data['permission'] = '246-create';
+                return view('inventory.change_product_group.form' , compact('data'));
+            });
+            Route::post('/form', 'Inventory\StockController@changeProductGroup');
+        });
+
+        Route::prefix('badge')->group(function () {
+            Route::get('form/{id?}','Dashboard\DashboardStudioBadges@create');
+            Route::post('form/{id?}','Dashboard\DashboardStudioBadges@store');
+            Route::post('delete/{id}','Dashboard\DashboardStudioBadges@destroy');
+        });
+
+        Route::prefix('barcode')->group(function () {
+            Route::post('get-barcode-detail/{id?}','Purchase\BarcodeController@getBarcodeDetail');
+            Route::get('uom-list/{product_id}','Purchase\BarcodeController@UOMList');
+            Route::post('get-barcode-detail-by-uom','Purchase\BarcodeController@getBarcodeDetailByUOM');
+            Route::post('get-barcode-rate-os-table','Purchase\BarcodeController@getBarcodeOSRate');
+            Route::post('get-barcode-rate-grn-table','Purchase\BarcodeController@getBarcodeGRNRate');
+            Route::post('barcode-rate','Purchase\BarcodeController@getBarcodeRate');
+            Route::post('change-grid-item-rate','Purchase\BarcodeController@changeGridItemRate');
+            Route::post('get-supplier-foc','Purchase\BarcodeController@getSupplierFoc');
+        });
+
+        /*********************************************/
+
+        Route::get('dynamic-barcode-labels','BarcodeLabels\BarcodeLabelsController@dynamicBarcodeLabels');
+        Route::post('store-dynamic-barcode-labels','BarcodeLabels\BarcodeLabelsController@storeDynamicBarcodeLabels');
+        Route::get('dynamic-barcode-labels-print/{id}','BarcodeLabels\BarcodeLabelsController@dynamicPrint')->name('dynamic_barcode_labels_print');
+
+        Route::prefix('barcode-labels/{type}')->group(function () {
+            Route::get('form/{id?}','BarcodeLabels\BarcodeLabelsController@create');
+            Route::post('form/{id?}','BarcodeLabels\BarcodeLabelsController@store');
+            Route::post('delete/{id}','BarcodeLabels\BarcodeLabelsController@destroy');
+            Route::get('print/{id}','BarcodeLabels\BarcodeLabelsController@print')->name('barcode_labels_print');
+        });
+        Route::prefix('product-merged')->group(function () {
+            Route::get('form','Purchase\ProductMergedController@create');
+            Route::post('form','Purchase\ProductMergedController@store');
+        });
+
+        Route::prefix('smart-product')->group(function () {
+            Route::post('product-item-tax-popup','Purchase\ProductSmartController@openModalProductFilter');
+            Route::post('product-group-tree-popup','Purchase\ProductSmartController@openModalProductGroup');
+
+            Route::get('alternate-barcode','Purchase\ProductSmartController@viewAlternateBarcode');
+            Route::post('alternate-barcode-product','Purchase\ProductSmartController@getAlternateBarcodeProduct');
+            Route::post('alternate-barcode-store','Purchase\ProductSmartController@storeAlternateBarcode');
+            Route::post('alternate-barcode-remove','Purchase\ProductSmartController@removeAlternateBarcode');
+
+            Route::get('product-item-tax','Purchase\ProductSmartController@viewProductItemTax');
+            Route::post('product-item-tax-insert','Purchase\ProductSmartController@storeProductItemTax');
+            Route::post('product-item-tax-product-list','Purchase\ProductSmartController@productListProductItemTax');
+
+            Route::get('product-item-shelf-stock','Purchase\ProductSmartController@viewProductShelfStock');
+            Route::post('store-product-item-shelf-stock','Purchase\ProductSmartController@storeProductShelfStock');
+
+            Route::get('product-discount-setup/list','Purchase\ProductDiscountController@index');
+            Route::get('product-discount-setup/all/{id}','Purchase\ProductDiscountController@allGroupItemAdded');
+            Route::get('product-discount-setup/form/{id?}','Purchase\ProductDiscountController@viewProductDiscountSetup');
+            Route::post('store-product-discount-setup/{id?}','Purchase\ProductDiscountController@storeProductDiscountSetup');
+            Route::post('product-discount-setup/delete/{id?}','Purchase\ProductDiscountController@destroy');
+
+            Route::get('vendor-wise-product-detail','Purchase\ProductSmartController@viewSupplierWiseProductDetail');
+            Route::post('get-vendor-wise-product-list','Purchase\ProductSmartController@getSupplierWiseProductDetail');
+
+            Route::get('tp-analysis','Purchase\ProductSmartController@viewProductTPAnalysis');
+            Route::post('get-products-tp-analysis','Purchase\ProductSmartController@getProductsTpAnalysis');
+        });
+
+        Route::prefix('product')->group(function () {
+
+            Route::get('form/{id?}','Purchase\ProductCardController@create');
+            Route::post('form/{id?}','Purchase\ProductCardController@store');
+            Route::get('view/{id}','Purchase\ProductCardController@create');
+            Route::post('delete/{id}','Purchase\ProductCardController@destroy');
+            Route::get('log-print/{id}','Purchase\ProductCardController@logPrintProduct');
+            Route::post('auto-barcode-generate','Purchase\ProductCardController@autoBarcodeGenerate');
+
+            /*Route::get('form/{id?}',function($id =null){
+                if(isset($id)){
+                    return redirect('/product/edit/'.$id);
+                }else{
+                    return redirect('/product/new');
+                }
+            });
+            Route::get('listing', 'Purchase\ProductController@index');
+            Route::get('new','Purchase\ProductController@create');
+            Route::post('store','Purchase\ProductController@store');
+            Route::get('edit/{id}','Purchase\ProductController@edit');
+            Route::post('update/{id}','Purchase\ProductController@update');
+            Route::get('view/{id}','Purchase\ProductController@edit');
+            Route::post('delete/{id}','Purchase\ProductController@destroy');*/
+
+            Route::get('check-barcode/{id}','Purchase\ProductController@CheckBarcode');
+            Route::get('form-itemtype-data/{id}','Purchase\ProductController@FormItemtype');
+            Route::get('form-saleman-data/{id}','Purchase\ProductController@FormSaleman');
+            Route::post('barcode-tag-print', 'Purchase\ProductController@BarcodeTagPrintGenerate');
+            Route::get('barcode-tag-print', 'Purchase\ProductController@BarcodeTagPrint')->name('barcode_tag_print');
+            Route::get('import', 'Purchase\ProductController@importFile');
+            Route::post('import', 'Purchase\ProductController@importExcleInsertPurcRate')->name('product_import');
+            Route::post('items-by-group', 'Purchase\ProductController@countProductByGroupId');
+        });
+
+        Route::prefix('flow-criteria')->group(function () {
+            Route::get('form/{id?}',function($id =null){
+                if(isset($id)){
+                    return redirect('/flow-criteria/edit/'.$id);
+                }else{
+                    return redirect('/flow-criteria/new');
+                }
+            });
+            Route::get('new','Development\FlowCriteriaController@create');
+            Route::post('store','Development\FlowCriteriaController@store');
+            Route::get('menu-data/{formtable}','Development\FlowCriteriaController@getAjaxData');
+        });
+
+        Route::prefix('formdisplay')->group(function () {
+            Route::get('form/{id?}',function($id =null){
+                if(isset($id)){
+                    return redirect('/formdisplay/edit/'.$id);
+                }else{
+                    return redirect('/formdisplay/new');
+                }
+            });
+            Route::get('new','Development\FormDisplayController@create');
+            Route::get('form-display-data/{formtble}','Development\FormDisplayController@FormDisplayData');
+            Route::post('update','Development\FormDisplayController@update');
+        });
+
+        // common
+        Route::prefix('common')->group(function () {
+            Route::any('inline-help/{helpType}/{str?}/{view_type?}','Common\DataTableController@inlineHelpOpen');
+            Route::any('formulation-inline-help/{helpType}/{id?}/{str?}','Common\DataTableController@formulationHelpWithId');
+            Route::get('help-open/{helpType}','Common\DataTableController@helpOpen');
+            Route::any('modal-help-open/{helpType}','Common\DataTableController@modalHelpOpen');
+            Route::get('help/{helpType}','Common\DataTableController@help');
+            Route::get('supplier','Common\GetAllData@supplier');
+            Route::get('suppliergrid','Common\GetAllData@suppliergrid');
+            Route::get('product','Common\GetAllData@productList');
+            Route::get('quotation','Common\GetAllData@Quotation');
+            Route::get('accounts','Common\GetAllData@accountList');
+            Route::get('cheqbook','Common\GetAllData@cheqbookList');
+            Route::get('format/{code}','Common\GetAllData@maskingFormat');
+            Route::get('currency/{id}','Common\GetAllData@ExRate');
+            Route::get('get-menu-dtl','Common\GetAllData@getMenuDtl');
+            Route::get('parentitemgroup','Common\GetAllData@treeView');
+            Route::get('open-listing-user-filter\{case_name}','Common\ListingController@openListingUserFilterModal');
+            Route::get('get-product-detail/{type}/{product_id?}','Common\GetAllData@getProductDetail');
+            Route::post('open-tree', 'Common\GetAllData@openTree');
+            Route::post('user-page-setting', 'Common\GetAllData@userPageSetting');
+            Route::post('user-report-setting', 'Common\GetAllData@userReportSetting');
+            Route::post('chart-of-products', 'Purchase\ProductTreeController@chartOfProducts');
+
+            Route::post('select-multiple-products', 'Common\GetAllData@selectMultipleProducts');
+            Route::get('select-multiple-products-data/{caseType}', 'Common\GetAllData@selectMultipleProductsData');
+        });
+        Route::prefix('product-tree-chart')->group(function () {
+            Route::get('chart-of-products-view', 'Purchase\ProductTreeController@index');
+            Route::get('chart-of-product-group-list', 'Purchase\ProductTreeController@productGroupTreeList');
+            Route::post('create-product-group/{id?}', 'Purchase\GroupitemController@create');
+            Route::get('chart-of-product-list/{id?}', 'Purchase\ProductTreeController@productTreeList');
+        });
+
+        Route::prefix('modal-help')->group(function () {
+            Route::post('po-help','Common\ModalLgHelpController@poHelp');
+        });
+        // pages
+        Route::prefix('pages')->group(function () {
+            Route::get('chat', 'Common\ChatController@index');
+            Route::get('web-data','Common\PagesController@WebDataRocks');
+            Route::get('form-layout','Common\PagesController@BasicFormLayout');
+            Route::get('calender','PayrDepartment\CalendarEventsController@create');
+            Route::get('grid/{id?}','Common\PagesController@TableGridTesting');
+            Route::get('grid2/{id?}','Common\PagesController@girdNew');
+        });
+
+        // Route::get('listing/{caseType}/{subType?}', 'Common\ListingController@index');
+        Route::get('listing/{caseType}/{subType?}', 'Common\ListingAdvanceController@index');
+        Route::get('select-items/{str1?}/{str2?}', 'Common\GetAllData@selectItems');
+
+        // Importing Data
+        Route::prefix('import-data')->name('import.')->group(function(){
+            Route::get('/' , [ImportDataController::class , 'index']);
+            Route::post('selected-csv' , [ImportDataController::class , 'getCsvOnSelect'])->name('selected');
+            Route::post('store/{id?}' , [ImportDataController::class , 'store'])->name('store');
+            Route::post('get-primary-key' , [ImportDataController::class , 'getPrimaryKey'])->name('primarykey');
+        });
+
+        // Import Excel Data
+        Route::prefix('import-stock')->group(function()
+        {
+            Route::get('/', 'Development\ImportExcelDataController@importFile');
+            Route::post('import', 'Development\ImportExcelDataController@importExcle2')->name('stock_import');
+		});
+        Route::prefix('import-customer')->group(function()
+        {
+            Route::get('/', 'Development\ImportCustomerController@importFile');
+            Route::post('import', 'Development\ImportCustomerController@importExcle2')->name('customer_import');
+		});
+        Route::prefix('import-product')->group(function()
+        {
+            Route::get('/', 'Development\ImportProductController@importFile');
+            Route::post('import', 'Development\ImportProductController@importExcle2')->name('product_import');
+		});
+        Route::prefix('import-rate')->group(function()
+        {
+            Route::get('/', 'Development\ImportRateController@importFile');
+            Route::post('import', 'Development\ImportRateController@importExcle2')->name('rate_import');
+		});
+
+        Route::prefix('import-alternate-barcode')->group(function()
+        {
+            Route::get('/', 'Development\ImportAlternateBarcodeController@importFile');
+            Route::post('import', 'Development\ImportAlternateBarcodeController@importExcle2')->name('alternate_barcode_import');
+		});
+
+        Route::get('/auto-p', 'Development\UserManagementSystemController@corePermission');
+        Route::get('/notification', 'Common\GetAllData@openNotification');
+        Route::get('get-data/{caseType}/{searchStr}', 'Common\GetAllData@getAjaxData');
+        //    Route::get('/{moduleName}/{caseType}', 'Common\GetAllData@ReceiptAccountData');
+
+
+        Route::post('log-print-modal', 'Setting\UserActivityLogController@openModal');
+        Route::post('upload-document', 'Common\DocumentsUploadController@create');
+        Route::post('verify-document', 'Common\DocumentsUploadController@verifyDocument');
+        Route::post('verify-document-view', 'Common\DocumentsUploadController@verifyDocumentView');
+        Route::post('form-upload-document-files', 'Common\DocumentsUploadController@store');
+        Route::post('form-upload-document-bank', 'Common\DocumentsUploadController@uploadBankDistrDoc');
+        Route::post('form-upload-document-attach', 'Common\DocumentsUploadController@uploadDocumentAttachment');
+        Route::post('remove-document-files/{id}', 'Common\DocumentsUploadController@destroy');
+
+    });
+
+    /*************** E Services **********************/
+    Route::prefix('manage-schedule')->group(function () {
+        Route::get('form/{id?}','EServices\ManageScheduleController@create');
+        Route::post('form/{id?}','EServices\ManageScheduleController@store');
+        Route::post('delete/{id}','EServices\ManageScheduleController@destroy');
+        Route::post('get-data','EServices\ManageScheduleController@getData')->name('getScheduleData');
+    });
+    Route::prefix('delivery-schedule')->group(function () {
+        Route::get('form/{id?}','EServices\DeliverScheduleController@create');
+        Route::post('form/{id?}','EServices\DeliverScheduleController@store');
+        Route::post('delete/{id}','EServices\DeliverScheduleController@destroy');
+        Route::post('get-data','EServices\DeliverScheduleController@getData')->name('getDeliveryScheduleData');
+    });
+    Route::prefix('services-update-status')->group(function () {
+        Route::get('form/{id?}','EServices\UpdateStatusController@create');
+        Route::post('form/{id?}','EServices\UpdateStatusController@store');
+        Route::post('delete/{id}','EServices\UpdateStatusController@destroy');
+    });
+    Route::prefix('services-sales-order')->group(function () {
+        Route::get('form/{id?}/{quotId?}','EServices\ServicesSalesOrderController@create')->name('createServicesOrder');
+        Route::post('form/{id?}','EServices\ServicesSalesOrderController@store');
+        Route::post('delete/{id}','EServices\ServicesSalesOrderController@destroy');
+        Route::get('print/{id}/{type?}','EServices\ServicesSalesOrderController@print');
+        Route::post('get-services-order-dtl','EServices\ServicesSalesOrderController@getServicesOrderDtlData');
+    });
+    Route::prefix('sales-invoice-c')->group(function () {
+        Route::get('form/{id?}/{orderId?}','EServices\ServicesInvoiceController@create')->name('createServicesInvoice');
+        Route::post('form/{id?}','EServices\ServicesInvoiceController@store')->name('sales_invoice-c');
+        Route::get('print/{id}/{type?}','EServices\ServicesInvoiceController@print')->name('prints.sale_invoice_thermal_print.blade');
+        Route::post('delete/{id}','EServices\ServicesInvoiceController@destroy');
+    });
+
+    Route::prefix('wa-group')->group(function () {
+        Route::get('form/{id?}','WhatsApp\WAGroupController@create');
+        Route::post('form/{id?}','WhatsApp\WAGroupController@store');
+        Route::post('delete/{id}','WhatsApp\WAGroupController@destroy');
+    });
+
+    Route::prefix('wa-contact')->group(function () {
+        Route::get('form/{id?}','WhatsApp\WAContactController@create');
+        Route::post('form/{id?}','WhatsApp\WAContactController@store');
+        Route::post('delete/{id}','WhatsApp\WAContactController@destroy');
+    });
+
+    Route::prefix('wa-words')->group(function () {
+        Route::get('form/{id?}','WhatsApp\WAWordController@create');
+        Route::post('form/{id?}','WhatsApp\WAWordController@store');
+        Route::post('delete/{id}','WhatsApp\WAWordController@destroy');
+    });
+
+    Route::prefix('wa-messages')->group(function () {
+        Route::get('form/{id?}','WhatsApp\WAMessagesController@create');
+        Route::post('form/{id?}','WhatsApp\WAMessagesController@store');
+        Route::post('getparmaters/{id}','WhatsApp\WAMessagesController@parameters');
+        Route::post('upload-attachment', 'WhatsApp\WAMessagesController@uploadAttachment')->name('wa.whatsappAttachment');
+        Route::post('remove-document-files/{id}', 'WhatsApp\WAMessagesController@removeAttachment')->name('wa.removeWAttachment');
+        Route::post('delete/{id}','WhatsApp\WAMessagesController@destroy');
+    });
+
+    Route::prefix('whatsapp')->group(function () {
+        Route::get('customer-support','WhatsApp\WhatsAppChatController@index');
+        Route::post('get-customer-chat/{phoneNo}','WhatsApp\WhatsAppChatController@getChatWindow')->name('chat.getChatWindow');
+        Route::post('send-customer-message/{phoneNo}','WhatsApp\WhatsAppChatController@sendCustomerMessage')->name('chat.sendCustomerMessage');
+        Route::post('create-whatsapp-group','WhatsApp\WhatsAppChatController@createWhatsAppGroup')->name('chat.createWhatsAppGroup');
+        Route::post('get-customer-groups/{phoneNo}','WhatsApp\WhatsAppChatController@getCustomerGroups')->name('chat.getUserGroups');
+
+        Route::post('get-group-contacts/{groupId}','WhatsApp\WhatsAppChatController@getGroupContacts')->name('chat.getGroupContacts');
+        Route::post('get-contacts--of-group/{groupId}','WhatsApp\WhatsAppChatController@getContactsofGroup')->name('chat.getContactsofGroup');
+        Route::post('mark-message-read/{phoneNo}','WhatsApp\WhatsAppChatController@markMessageRead')->name('chat.markMessageRead');
+        Route::post('add-contact-to-group','WhatsApp\WhatsAppChatController@addContactInGroup')->name('chat.addContactInGroup');
+        Route::post('save-whatsapp-location','WhatsApp\WhatsAppChatController@storeLocation')->name('chat.storeLocation');
+        Route::post('send-location-message','WhatsApp\WhatsAppChatController@sendLocationMessage')->name('chat.sendLocationMessage');
+    });
+
+    Route::prefix('coupons')->group(function () {
+        Route::get('form/{id?}','Sales\SaleCouponsController@create');
+        Route::post('form/{id?}','Sales\SaleCouponsController@store');
+        Route::get('print/{id}','Sales\SaleCouponsController@print');
+        Route::post('delete/{id}','Sales\SaleCouponsController@destroy');
+        Route::get('get-latest-code','Sales\SaleCouponsController@getLatestCode');
+    });
+
+    // Rent Module Routes
+    // Rent Location
+    Route::prefix('rent-location')->group(function () {
+        Route::get('form/{id?}','Rent\RentLocationController@create');
+        Route::post('form/{id?}','Rent\RentLocationController@store');
+        Route::post('delete/{id}','Rent\RentLocationController@destroy');
+        Route::get('max-code/{id}','Rent\RentLocationController@RPLocationCode');
+    });
+    // Create Rent Party Profile
+    Route::prefix('rent-party-profile')->group(function () {
+        Route::get('form/{id?}','Rent\RentPartyProfileController@create');
+        Route::post('form/{id?}','Rent\RentPartyProfileController@store');
+        Route::post('print/{id?}','Rent\RentPartyProfileController@print');
+        Route::post('get-rent-party-profile/{id}','Rent\RentPartyProfileController@getRentPartyProfile')->name('getRentPartyProfile');
+        Route::post('delete/{id}','Rent\RentPartyProfileController@destroy');
+    });
+    // Rent Agreement
+    Route::prefix('rent-agreement')->group(function () {
+        Route::get('form/{id?}','Rent\RentAgreementController@create');
+        Route::post('form/{id?}','Rent\RentAgreementController@store');
+        Route::get('print/{id?}','Rent\RentAgreementController@print');
+        Route::post('delete/{id}','Rent\RentAgreementController@destroy');
+        Route::post('redirect-voucher-screen','Rent\RentAgreementController@redirectVoucherScreen');
+        Route::post('already-entered-voucher','Rent\RentAgreementController@alreadyEnterdVoucher');
+    });
+});
+

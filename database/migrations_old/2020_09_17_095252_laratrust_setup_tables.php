@@ -1,0 +1,113 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class LaratrustSetupTables extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return  void
+     */
+    public function up()
+    {
+        // Create table for storing module
+        Schema::create('permission_headings', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name')->index()->default('');
+            $table->string('display_name')->default('');
+            $table->string('icon')->default('');
+            $table->timestamps();
+        });
+
+        // Create table for storing module
+        Schema::create('modules', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name')->index()->default('');
+            $table->integer('sort_order')->default('0');
+            $table->integer('parent_id')->unsigned()->index()->default('0');
+            $table->timestamps();
+        });
+
+        // Create table for storing role
+        Schema::create('roles', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name')->unique();
+            $table->string('display_name')->nullable();
+            $table->string('description')->nullable();
+            $table->timestamps();
+        });
+
+        // Create table for storing permission
+        Schema::create('permissions', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('module_id');
+            $table->string('name')->unique();
+            $table->string('display_name')->nullable();
+            $table->string('description')->nullable();
+            $table->timestamps();
+
+            $table->foreign('module_id')->references('id')->on('modules')
+                ->onUpdate('cascade')->onDelete('cascade');
+        });
+
+        // Create table for associating role to user and teams (Many To Many Polymorphic)
+        Schema::create('role_user', function (Blueprint $table) {
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_type');
+
+            $table->foreign('role_id')->references('id')->on('roles')
+                ->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')
+                ->onUpdate('cascade')->onDelete('cascade');
+
+            $table->primary(['user_id', 'role_id', 'user_type']);
+        });
+
+        // Create table for associating permission to user (Many To Many Polymorphic)
+        Schema::create('permission_user', function (Blueprint $table) {
+            $table->unsignedBigInteger('permission_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_type');
+
+            $table->foreign('permission_id')->references('id')->on('permissions')
+                ->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')
+                ->onUpdate('cascade')->onDelete('cascade');
+
+            $table->primary(['user_id', 'permission_id', 'user_type']);
+        });
+
+        // Create table for associating permission to role (Many-to-Many)
+        Schema::create('permission_role', function (Blueprint $table) {
+            $table->unsignedBigInteger('permission_id');
+            $table->unsignedBigInteger('role_id');
+
+            $table->foreign('permission_id')->references('id')->on('permissions')
+                ->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('role_id')->references('id')->on('roles')
+                ->onUpdate('cascade')->onDelete('cascade');
+
+            $table->primary(['permission_id', 'role_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return  void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('permission_headings');
+        Schema::dropIfExists('modules');
+        Schema::dropIfExists('roles');
+        Schema::dropIfExists('permissions');
+        Schema::dropIfExists('role_user');
+        Schema::dropIfExists('permission_user');
+        Schema::dropIfExists('permission_role');
+    }
+}

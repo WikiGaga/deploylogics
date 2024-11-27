@@ -1,0 +1,180 @@
+body{
+    font-family: verdana !important;
+    font-size: 10px;
+}
+#kt_portlet_table{
+    margin-bottom: 0 !important;
+}
+#kt_portlet_table .kt-portlet__head{
+    padding:10px 36px 36px 36px;
+}
+table {
+
+}
+
+td, th {
+    padding: 2px 2px !important;
+    font-size:  10px;
+    color:#000;
+}
+th, th>span {
+    font-size:  10px;
+    color: #000 !important;
+    font-family: verdana !important;
+    font-weight: 500 !important;
+}
+td,td>a,
+td,td>span{
+    font-size:  10px;
+    color: #000000 !important;
+    font-family: verdana !important;
+    font-weight: 400 !important;
+}
+.kt-portlet__head-toolbar{
+    text-align: center;
+}
+a:hover{
+    font-weight: 500 !important;
+}
+.bt-datatable>tr:hover {
+    background: #fff9eb !important;
+}
+.table-bordered {
+    border: 1.4px solid #bbbbbb !important;
+    /* border: 1px solid #777777 !important;*/
+}
+.table tr th {
+    border-bottom: 1px solid #777777 !important;
+    cursor: pointer;
+}
+tr:nth-child(even)>td {
+    border-bottom: 1px solid #c7c7c7 !important;
+}
+tr:nth-child(odd)>td{
+    border-bottom: 1px solid #ead8b1 !important;
+}
+table#rep_sale_invoice_datatable {
+    border: 0 !important;
+}
+table#rep_sale_invoice_datatable tr>th:first-child,
+table#rep_sale_invoice_datatable tr>td:first-child {
+    border-left: 0 !important;
+}
+table#rep_sale_invoice_datatable tr>th:last-child,
+table#rep_sale_invoice_datatable tr>td:last-child {
+    border-right: 0 !important;
+}
+table#rep_sale_invoice_datatable tr>th{
+    border-top: 2px solid #777777 !important;
+    border-bottom: 2px solid #777777 !important;
+    cursor: default;
+}
+table.static_report_table>tbody>tr.sub_total>td {
+    background: #f0f8ff;
+}
+table.static_report_table .rep-font-bold,
+table.data_table_rows_total .rep-font-bold,
+table#dynamic_report_table .rep-font-bold,
+table#rep_sale_invoice_datatable .rep-font-bold {
+    font-weight: 500 !important;
+}
+table.static_report_table .total>td,
+table.data_table_rows_total .total>td,
+table#rep_sale_invoice_datatable .total>td{
+    border-top: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+}
+table.static_report_table .sub_total>td,
+table.data_table_rows_total .sub_total>td,
+table#dynamic_report_table .sub_total>td,
+table#rep_sale_invoice_datatable .sub_total>td{
+    border-bottom: 1px solid #000000 !important;
+}
+table.static_report_table .grand_total>td,
+table.data_table_rows_total .grand_total>td,
+table#dynamic_report_table .grand_total>td,
+table#rep_sale_invoice_datatable .grand_total>td{
+    border-bottom: 2px solid #969696 !important;
+    border-top: 2px solid #cecece !important;
+    background-color: #f7f8fa;
+    font-size:  10px;
+}
+.sale_invoice_footer{
+    background: #f7f8fa;
+}
+.sale_invoice_footer .date{
+    color: #FE21BE;
+}
+.date {
+    font-size:  10px;
+    text-align: right;
+    color: #7d7d7d;
+    font-family: verdana !important;
+    font-weight: 400;
+}
+.date>span {
+    color: #000000;
+    font-family: verdana !important;
+}
+.row.row-block {
+    margin: 10px 0 !important;
+    padding: 0 !important;
+}
+a.report_link{
+    color: #fd397a !important;
+    text-decoration: underline;
+}
+a.report_link:hover{
+    color: #fd397a !important;
+    text-decoration: underline !important;
+    font-weight: unset !important;
+}
+@media print{
+    #user_settings{
+        display: none !important;
+    }
+    h6.kt-invoice__criteria>span {
+        font-size:  10px;
+    }
+    @page {
+        size: auto !important;
+    }
+}
+
+span.acc_ledger_report:hover,
+span.generate_report:hover{
+    cursor: pointer !important;
+    color: #fd397a !important;
+    text-decoration: underline !important;
+}
+.sticky-header{
+    position: sticky;
+    top: 0;
+    background-color: #f7f8fa;
+}
+
+.phpdebugbar {
+    display: none;
+}
+
+.outer_total>td {
+    font-size:12px;
+    background: #f7f8fa;
+}
+.inner_total>td{
+    font-size:12px;
+    background: #f0f8ff;
+}
+
+.first_group_title>td {
+    font-size:12px;
+    background: #c2c2c2;
+}
+.second_group_title>td{
+    font-size:12px;
+    background: #e7e7e7;
+}
+.third_group_title>td{
+    font-size:12px;
+    /*background: #eef5ff;*/
+}

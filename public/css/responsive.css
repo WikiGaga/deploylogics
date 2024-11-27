@@ -1,0 +1,55 @@
+@media (min-width: 1025px){
+    .kt-container {
+        padding: 0 10px !important;
+    }
+    .kt-header {
+        height: 50px;
+    }
+    .kt-content {
+        padding: 10px 0;
+    }
+}
+@media (min-width: 1024px) {
+    .modal-md{
+        max-width: 700px;
+    }
+}
+@media (max-width: 1024px) {
+
+    #inLineHelp>div>div>table>thead>tr>th:nth-child(3),
+    #inLineHelp>div>div>table>thead>tr>th:nth-child(4),
+    #inLineHelp>div>div>table>thead>tr>th:nth-child(5),
+    #inLineHelp>div>div>table>tbody>tr>td:nth-child(3),
+    #inLineHelp>div>div>table>tbody>tr>td:nth-child(4),
+    #inLineHelp>div>div>table>tbody>tr>td:nth-child(5){
+        display: none;
+    }
+    #inLineHelp {
+        width: 80% !important;
+        left: 35px;
+       /* margin-top: -25px;*/
+    }
+    .open-modal-group>div#inLineHelp {
+        left: unset;
+        margin-top: unset;
+        width: 100% !important;
+        position: absolute;
+    }
+    #mobOpenInlineSupplierHelp{
+        display: block;
+    }
+    #mobOpenInlineHelp{
+        display: inline-block !important;
+        padding: 0 0 0 3px;
+        margin-left: 10px;
+    }
+    table.tableTotal>tbody>tr:last-child>td {
+        padding-bottom: 0 !important;
+    }
+    .table_ERP_grid_row{
+        padding: 0 10px;
+    }
+    .kt-portlet__body{
+        padding: 10px 10px !important;
+    }
+}
