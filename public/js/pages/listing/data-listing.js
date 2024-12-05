@@ -44,7 +44,7 @@ var KTDatatableRemoteAjaxDemo = function() {
             autoHide: false,
             template: function(row)
             {
-                console.log(row);
+                // console.log(row);
                 var key_id = row[table_id];
                 var voucher_status = row['voucher_status'];
                 var dropdownLink = false;
@@ -52,7 +52,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 var btnEdit = "";
                 var btnDel = "";
                 var btnPrint = "";
-                
+
                 if(btnPrintView){
                     if(casetype != 'pos-sales-invoice' && casetype != 'pos-sales-return' && casetype != 'stock-audit-adjustment')
                     {
@@ -85,14 +85,14 @@ var KTDatatableRemoteAjaxDemo = function() {
                     dropdownLink = true;
                 }
                 if(btnpostView){
-                    if(casetype == 'pve' || 
-                        casetype == 'pv' || 
-                        casetype == 'cpv' || 
-                        casetype == 'crv'|| 
-                        casetype == 'lv'|| 
-                        casetype == 'jv'|| 
-                        casetype == 'rv'|| 
-                        casetype == 'brpv'|| 
+                    if(casetype == 'pve' ||
+                        casetype == 'pv' ||
+                        casetype == 'cpv' ||
+                        casetype == 'crv'||
+                        casetype == 'lv'||
+                        casetype == 'jv'||
+                        casetype == 'rv'||
+                        casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
                         if(voucher_status == 'Un-Posted')
@@ -104,14 +104,14 @@ var KTDatatableRemoteAjaxDemo = function() {
                     dropdownLink = true;
                 }
                 if(btnEditView){
-                    if(casetype == 'pve' || 
-                        casetype == 'pv' || 
-                        casetype == 'cpv' || 
-                        casetype == 'crv'|| 
-                        casetype == 'lv'|| 
-                        casetype == 'jv'|| 
-                        casetype == 'rv'|| 
-                        casetype == 'brpv'|| 
+                    if(casetype == 'pve' ||
+                        casetype == 'pv' ||
+                        casetype == 'cpv' ||
+                        casetype == 'crv'||
+                        casetype == 'lv'||
+                        casetype == 'jv'||
+                        casetype == 'rv'||
+                        casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
                         if(voucher_status == "Un-Posted")
@@ -127,14 +127,14 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                 }
                 if(btnDelView){
-                    if(casetype == 'pve' || 
-                        casetype == 'pv' || 
-                        casetype == 'cpv' || 
-                        casetype == 'crv'|| 
-                        casetype == 'lv'|| 
-                        casetype == 'jv'|| 
-                        casetype == 'rv'|| 
-                        casetype == 'brpv'|| 
+                    if(casetype == 'pve' ||
+                        casetype == 'pv' ||
+                        casetype == 'cpv' ||
+                        casetype == 'crv'||
+                        casetype == 'lv'||
+                        casetype == 'jv'||
+                        casetype == 'rv'||
+                        casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
                         if(voucher_status == "Un-Posted")
@@ -195,7 +195,7 @@ var KTDatatableRemoteAjaxDemo = function() {
             // layout definition
             layout: {
                 scroll: true,
-                height: 400,
+                height: 500,
                 footer: false,
             },
 
@@ -226,7 +226,8 @@ var KTDatatableRemoteAjaxDemo = function() {
         $('body').on('submit', 'form[name="getRecordsByDateFilter"]', function(event) {
             event.preventDefault();
             var filterData = {};
-            var date_type = $(document).find('form input[name="radioDate"]:checked').val();
+            var date_type = $(document).find('form select[name="radioDate"]').val();
+
             filterData.date = date_type;
 
             filterData.time_from = $(document).find('form input[name="time_from"]').val();
@@ -403,4 +404,15 @@ jQuery(document).ready(function() {
             inline_filter_data[key] = val;
         });
     })
+});
+
+
+$('body').on('click', '#export_csv, #export_pdf', function () {
+    let exportType = $(this).attr('id') === 'export_csv' ? 'csv' : 'pdf';
+
+    let $form = $('form[name="getRecordsByDateFilter"]');
+    $form.find('input[name="export_type"]').remove(); // Ensure no duplicate fields
+    $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
+
+    $form.trigger('submit');
 });

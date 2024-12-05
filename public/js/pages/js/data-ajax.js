@@ -226,7 +226,7 @@ var KTDatatableRemoteAjaxDemo = function() {
         $('body').on('submit', 'form[name="getRecordsByDateFilter"]', function(event) {
             event.preventDefault();
             var filterData = {};
-            var date_type = $(document).find('form input[name="radioDate"]:checked').val()
+            var date_type = $(document).find('form input[name="radioDate"]').val()
             filterData.date = date_type;
             filterData.time_from = $(document).find('form input[name="time_from"]').val();;
             filterData.time_to = $(document).find('form input[name="time_to"]').val();;
