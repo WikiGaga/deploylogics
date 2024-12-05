@@ -185,23 +185,6 @@
                             </ul>
                         </div>
                         <div class="dropdown dropdown-inline">
-                            <button type="button" class="btn btn-danger btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="flaticon-download"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
-                                <li>
-                                    <a href="javascript:void(0);" id="export_csv" class="export-option">
-                                        CSV
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" id="export_pdf" class="export-option">
-                                        PDF
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown dropdown-inline">
                             <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="flaticon-more"></i>
                             </button>
