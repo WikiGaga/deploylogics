@@ -31,6 +31,31 @@
                 Post
             </a>
         @endif
+        {{-- @if($data['form_type'] == 'pos-sales-invoice') --}}
+            <font class="tTip" color="" title="Click Here to Send via Whatsapp!">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-success padding-3 margin-0 dropdown-toggle btn-sm" id="whatsappmessagebtn" data-toggle="dropdown" aria-expanded="false">
+                    {{-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="15" fill="currentColor" viewBox="0 0 32 32">
+    <path d="M16.02 0C7.183 0 .042 7.143 0 15.962a15.93 15.93 0 0 0 2.6 8.735L.062 32l7.479-2.49a16.056 16.056 0 0 0 8.48 2.19H16C24.82 31.7 32 24.556 32 15.78A15.985 15.985 0 0 0 16.02 0zm8.934 23.42c-.371.98-1.89 1.813-3.106 2.01-.824.137-1.866.248-5.422-1.162a19.12 19.12 0 0 1-8.935-7.88 10.022 10.022 0 0 1-2.087-4.986c-.35-2.31.927-3.404 1.717-3.472a4.85 4.85 0 0 1 1.185.152c.37.093.876-.223 1.38.986.49 1.165 1.247 2.883 1.355 3.092.112.222.183.49.037.79-.14.296-.209.478-.414.74-.206.258-.441.577-.63.777-.208.222-.425.463-.183.878a13.31 13.31 0 0 0 2.425 3.063 12.327 12.327 0 0 0 3.918 2.487c.488.223.868.194 1.191-.06.37-.31 1.563-1.811 1.99-2.437.27-.371.524-.31.896-.185.37.12 2.408 1.14 2.822 1.346.415.207.684.308.79.48.115.185.115 1.054-.255 2.033z"/>
+    </svg> --}}
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:24px;height:22px;">
+                        <span class="caret"></span>
+
+                        {{-- @php
+                        $message_sent =  getvalue("SELECT Entry_Code FROM whatsapp_log where Entry_Code = '".$_REQUEST['major']."' ");
+                        @endphp
+                        @if($message_sent)
+                        <i class="icon wb-check" aria-hidden="true"></i>
+                        @endif --}}
+
+                    </button>
+                    <ul class="dropdown-menu pull-right" aria-labelledby="exampleIconDropdown1" role="menu">
+                        <li role="presentation"><a href="javascript:void(0)" role="menuitem" onclick="sendWhatsAppMessage()">Send</a></li>
+                    </ul>
+                </div>
+            </font>
+        {{-- @endif --}}
+
     </div>
 </div>
 <div class="kt-portlet__head-toolbar">
@@ -65,4 +90,23 @@
         </div>
     </div>
 </div>
+
+<script>
+function formatPakPhoneNumber(phone) {
+    phone = phone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+        phone = '+92' + phone.slice(1);
+    } else {
+        phone = '+92' + phone;
+    }
+    return phone;
+}
+
+function formatOmanPhoneNumber(phone) {
+    phone = phone.replace(/[^0-9]/g, '');
+    phone = '+968' + phone;
+    return phone;
+}
+
+</script>
 

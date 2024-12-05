@@ -196,7 +196,7 @@ class SalesInvoiceController extends Controller
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
         }
         if($request->pro_tot <= 0 && $type[1] != "pos-sales-invoice"){
-            dd('In the Condotop');
+            // dd('In the Condotop');
             return $this->returnjsonerror("Please Enter Product Detail",201);
         }
         if(isset($request->pdsm)){
@@ -622,7 +622,7 @@ class SalesInvoiceController extends Controller
         $data['currency'] = TblDefiCurrency::where('currency_id',$data['current']->currency_id)->where(Utilities::currentBC())->first();
         $data['payment_type'] = TblDefiPaymentType::where('payment_type_entry_status',1)->where(Utilities::currentBC())->where('payment_type_id',$data['current']->sales_sales_type)->first();
         $data['terminal'] = TblSoftPOSTerminal::where(Utilities::currentBC())->where('terminal_id',$data['current']->terminal_id)->first();
-       
+
         $data['invoice_headings'] = TblSoftPosInvoiceHeadings::pluck('heading_arabic_name','heading_key');
 
         if($type == 'html'){
@@ -670,4 +670,6 @@ class SalesInvoiceController extends Controller
         DB::commit();
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
+
+
 }

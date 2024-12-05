@@ -30,6 +30,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Sale\WhatsappLog;
 
 class CustomerController extends Controller
 {
@@ -38,7 +39,7 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    
+
     public static $page_title = 'Customer';
     public static $redirect_url = 'customer';
     public static $menu_dtl_id = '41';
@@ -72,7 +73,7 @@ class CustomerController extends Controller
             "issue_date",
             "expiry_date"
         ];
-        
+
         if($request->ajax()){
                 $tbl_1 = " tbl_1";
                 $table = " vw_sale_customer $tbl_1 ";
@@ -86,8 +87,8 @@ class CustomerController extends Controller
                 $time_from = '12:00:00 am';
                 $time_to = '11:59:59 pm';
                 $global_filter_bollean = false;
-            
-                if (isset($request['query']['globalFilters'])) 
+
+                if (isset($request['query']['globalFilters']))
                 {
                     $globalFilters = $request['query']['globalFilters'];
                     $global_search = false;
@@ -155,7 +156,7 @@ class CustomerController extends Controller
                         $global_filter_bollean = true;
                     }
 
- 
+
                     if(isset($globalFilters['inline']))
                     {
                         $inline_filter = $globalFilters['inline'];
@@ -206,9 +207,9 @@ class CustomerController extends Controller
 
                 $total  = DB::selectOne("select count(*) count from $table $where");
                 $total  = isset($total->count)?$total->count:0;
-               
+
                 // $perpage 0; get all data
-                if($perpage > 0) 
+                if($perpage > 0)
                 {
                     $pages  = ceil($total / $perpage); // calculate total pages
                     $page   = max($page, 1); // get 1 page when $_REQUEST['page'] <= 0
@@ -219,7 +220,7 @@ class CustomerController extends Controller
                     }
                     //$data = array_slice($data, $offset, $perpage, true);
                 }
- 
+
                 $orderby = " ORDER BY $tbl_1.$sortField $sortDirection ";
                 $limit = "OFFSET $offset ROWS FETCH NEXT $perpage ROWS ONLY";
                 $qry = "select $columns from $table $where $orderby $limit";
@@ -232,7 +233,7 @@ class CustomerController extends Controller
                     'perpage' => $perpage,
                     'total'   => $total
                 ];
- 
+
                 $result = [
                     'meta' => $meta + [
                         'sort'  => $sortDirection,
@@ -242,7 +243,7 @@ class CustomerController extends Controller
                 ];
             return response()->json($result);
         }
-            
+
         return view('sales.customer.list',compact('data'));
     }
     */
@@ -354,7 +355,7 @@ class CustomerController extends Controller
                 return $this->jsonErrorResponse($data, 'This Card Number Already Exist..', 422);
             }
         }
-        
+
         DB::beginTransaction();
         try{
             $cust_type = TblSaleCustomerType::where('customer_type_id',$request->customer_type)->where(Utilities::currentBC())->first();
@@ -369,7 +370,7 @@ class CustomerController extends Controller
             if(isset($id)){
                 $customer =TblSaleCustomer::where('customer_id',$id)->where(Utilities::currentBC())->first();
                 /*if(isset($request->member_status)){
-                    
+
                 }*/
                 $acc_id = $customer->customer_account_id;
                 if(empty($acc_id)){
@@ -706,4 +707,101 @@ class CustomerController extends Controller
         DB::commit();
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
+
+    public function fetchCustomerInfo(Request $request){
+
+        $custCode = $request->query('cust_code');
+        if (!$custCode) {
+            return response()->json(['error' => 'Customer code is required'], 400);
+        }
+        $customerPhone = TblSaleCustomer::where('CUSTOMER_ID', $custCode)->first()->customer_phone_1;
+        if (!$customerPhone) {
+            return response()->json(['error' => 'Customer not found'], 404);
+        }
+
+        return response()->json([
+            'phone' => $customerPhone
+        ]);
+
+    }
+
+    public function sendWhatsappMsg(Request $request) {
+
+        $to = $request->to;
+        $message = $request->message;
+        $filePath = $request->filePath;
+        $invoiceNumber = $request->invoiceNumber;
+        $title = $request->title;
+
+        $curl = curl_init();
+
+        if($filePath == '' || $filePath == null) {
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://whatsintelligent.com/api/create-message',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+            'appkey' => '2fa4c714-9a38-4f81-851b-3470c758c18b',
+            'authkey' => 'yy3fbHr1GdTaP5D8Tte9w4BlvAmOk0yddf7s8tz0F8L4cZc1iA',
+            'to' => $to,
+            'message' => $message,
+            'sandbox' => 'false'
+            ),
+            ));
+
+        } else {
+
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => 'http://whatsintelligent.com/api/create-message',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => array(
+        'appkey' => '2fa4c714-9a38-4f81-851b-3470c758c18b',
+        'authkey' => 'yy3fbHr1GdTaP5D8Tte9w4BlvAmOk0yddf7s8tz0F8L4cZc1iA',
+        'to' => $to,
+        'message' => $message,
+        'sandbox' => 'false',
+        'file' => $filePath
+            ),
+        ));
+
+        }
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        $responseData = @json_decode($response, true);
+
+        if ($responseData) {
+        if (isset($responseData['message_status']) && $responseData['message_status'] == 'Success') {
+                echo json_encode(['success' => 'Message sent successfully!']);
+
+                WhatsappLog::create([
+                    'user_id' => session('user_id'),
+                    'form_name' => $title,
+                    'entry_code' => $invoiceNumber,
+                    'created_at' => now()->format('Y-m-d H:i:s'),
+                ]);
+
+        } else {
+            echo json_encode(['error' => 'Message sending failed. API returned: ' . $responseData['message_status']]);
+        }
+        } else {
+        echo json_encode(['error' => 'Invalid JSON response or empty response.', 'raw_response' => $response]);
+        }
+
+    }
+
+
 }

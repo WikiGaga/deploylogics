@@ -9,7 +9,7 @@
         <form method="get" name="getRecordsByDateFilter">
             <div class="row">
                 <div class="col-md-10">
-                    <div class="kt-radio-inline list-radio-filter">
+                    <div class="kt-radio-inline list-radio-filter d-flex justify-content-between">
                         <label style="background: #e4e4e4;">
                             <span class="input-group-text time_block" style="padding: 0px 5px 0px 5px;" >
                                 <input type="checkbox" class="time_checkbox">

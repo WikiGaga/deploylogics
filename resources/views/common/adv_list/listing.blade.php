@@ -58,7 +58,7 @@
         $un_post_module = $data['menu_dtl_id'].'-un_post_module';
         $post_module = $data['menu_dtl_id'].'-post';
       //  dd($data['table_columns']);
-      
+
      // dd($changePass);
     @endphp
     <script>
@@ -99,25 +99,25 @@
         var btnPrintView = true;
     </script>
     @endpermission
-    
+
     @permission($complete_module)
     <script>
         var btnCompleteAuditView = true;
     </script>
     @endpermission
-    
+
     @permission($close_module)
     <script>
         var btnCloseAuditView = true;
     </script>
     @endpermission
-    
+
     @permission($un_post_module)
     <script>
         var btnunpostAuditView = true;
     </script>
     @endpermission
-    
+
     @permission($post_module)
     <script>
         var btnpostView = true;
@@ -126,16 +126,16 @@
     @permission($view)
     <!-- begin:: Content -->
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid backgroud_img">
-        <div class="kt-portlet kt-portlet--mobile" style="margin-bottom: 5px;">
+        <div class="kt-portlet kt-portlet--mobile" style="margin-bottom: 0px;">
             <div class="kt-portlet__body">
                 <!--begin: Search Form -->
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5 class="kt-portlet__head-title">
                             {{$data['title']}}
                         </h5>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="kt-input-icon kt-input-icon--left">
                             <input type="text" class="form-control form-control-sm" placeholder="Search..." id="generalSearch" autofocus>
                             <span class="kt-input-icon__icon kt-input-icon__icon--left">
@@ -143,12 +143,64 @@
                             </span>
                         </div>
                     </div>
-                    <div class="col-md-4 text-right">
+                    <div class="col-md-6 text-right">
                         @permission($create)
-                        <a href="{{$data['create-form']}}" id="btn-create" class="btn-create btn btn-success btn-elevate btn-sm btn-icon-sm">
+                        <a href="{{$data['create-form']}}" id="btn-create" class="btn-create btn btn-success btn-elevate btn-sm btn-icon-sm mr-4">
                             <i class="la la-plus"></i>
                         </a>
                         @endpermission
+                        <button type="button" data-url="{{ action('Common\ListingController@openListingUserFilterModal',$data['case']) }}" class="btn btn-bold btn-label-brand btn-sm" data-toggle="modal" id="listing_user_filter" data-target="#kt_modal_1">
+                            <i class="fa fa-filter"></i>
+                        </button>
+                        <form method="get" name="getRecordsByDateFilter" class="form-group d-inline-block">
+                            <div class="form-group d-inline-block">
+                                <select class="form-select btn btn-sm btn-primary" name="radioDate" style="padding: 0.545rem 0.75rem;">
+                                    <option value="all">All</option>
+                                    <option value="today" selected>Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="last_7_days">Last 70 Days</option>
+                                    <option value="last_30_days">Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Button group with nested dropdown">
+                                <button type="submit" class="btn btn-sm btn-warning" id="getRecordsByDateFilter">Get Records</button>
+                                {{-- <button type="button" class="btn btn-sm btn-primary" onclick="window.location.href=window.location.href">Reset Filter</button> --}}
+                            </div>
+                        </form>
+                        <div class="dropdown dropdown-inline">
+                            <button type="button" class="btn btn-danger btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="flaticon-download"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
+                                <li>
+                                    <a href="javascript:void(0);" id="export_csv" class="export-option">
+                                        CSV
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" id="export_pdf" class="export-option">
+                                        PDF
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="dropdown dropdown-inline">
+                            <button type="button" class="btn btn-danger btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="flaticon-download"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
+                                <li>
+                                    <a href="javascript:void(0);" id="export_csv" class="export-option">
+                                        CSV
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" id="export_pdf" class="export-option">
+                                        PDF
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                         <div class="dropdown dropdown-inline">
                             <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="flaticon-more"></i>
@@ -174,16 +226,42 @@
             </div>
         </div>
 
-        @include('partial_script.date_filter_listing')
+        {{-- @include('partial_script.date_filter_listing') --}}
+
+        @if($data['case'] == 'pv' ||
+            $data['case'] == 'cpv' ||
+            $data['case'] == 'crv'||
+            $data['case'] == 'pve'||
+            $data['case'] == 'lv'||
+            $data['case'] == 'jv'||
+            $data['case'] == 'brpv'||
+            $data['case'] == 'brrv'||
+            $data['case'] == 'ipv'||
+            $data['case'] == 'irv'||
+            $data['case'] == 'rv'||
+            $data['case'] == 'obv' ||
+            $data['case'] == 'product-discount-setup' )
 
         @include('partial_script.custom_filter_listing')
+
+        @endif
 
         <div class="kt-portlet__body kt-portlet__body--fit">
             <!--begin: Datatable -->
             <style>
                 .kt-datatable>.kt-datatable__table{
-                    max-height: 450px !important;
+                    /* max-height: 500px !important; */
                 }
+                /* .portlet__body--fit {
+                    height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .kt-datatable {
+                    flex-grow: 1;
+                    overflow: auto;
+                } */
                 .ps > .ps__rail-x {
                     height: 10px !important;
                 }
@@ -219,6 +297,9 @@
                 .kt-datatable.kt-datatable--default > .kt-datatable__pager{
                     padding: 10px 25px !important;
                 }
+                .kt-datatable__head body{
+                    line-height: 1.2;
+                }
             </style>
             <div class="kt-datatable ajax_data_table listing_data_table" data-url="{{ $data['data_url'] }}" id="dynamic_ajax_data"></div>
             <!--end: Datatable -->
@@ -247,6 +328,11 @@
         </div>
     </div>
     <script>
+        $('#listing_user_filter').on('click',function(e){
+            var data_url = $(this).attr('data-url');
+            $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
+        });
+
         $(document).on('click','.generateTags', function(){
 
             var formData = {};
@@ -319,7 +405,7 @@
                 error: function(response, status) {}
             });
         });
-        
+
         $(document).on('click','.AuditSuspend', function(){
 
             var formData = {};
@@ -343,7 +429,7 @@
                 error: function(response, status) {}
             });
         });
-        
+
         $(document).on('click','.AuditComplete', function(){
 
             var formData = {};
@@ -367,7 +453,7 @@
                 error: function(response, status) {}
             });
         });
-        
+
         $(document).on('click','.UnPost', function(){
             var formData = {};
             formData.data = [];
@@ -390,7 +476,7 @@
                 error: function(response, status) {}
             });
         });
-        
+
         $(document).on('click','.UnPosted', function(){
             var formData = {};
             formData.data = [];
@@ -413,7 +499,7 @@
                 error: function(response, status) {}
             });
         });
-        
+
         $(document).on('click','.Posted', function(){
             var formData = {};
             formData.data = [];

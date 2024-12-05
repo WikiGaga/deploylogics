@@ -977,6 +977,108 @@
             }
         });
 
+
+
+function sendWhatsAppMessage() {
+
+    var button = document.getElementById("whatsappmessagebtn");
+    if (button) {
+        buttonIcons = button.innerHTML;
+        button.disabled = true;
+        button.textContent = 'Sending..';
+    }
+
+    var cust_code = $('#customer_id').val();
+    var amount = $('#pro_tot').val();
+    var title = <?= $page_data['title'] ?>;
+
+    $.ajax({
+        url: 'fetch-customer-info',
+        type: 'GET',
+        data: {
+            cust_code: cust_code
+        },
+        success: function(response) {
+            const data = JSON.parse(response);
+
+            if (!data || !data.phone) {
+                toastr.error("Customer phone number not found");
+                if (button) {
+                    button.innerHTML = buttonIcons;
+                    button.disabled = false;
+                }
+                return;
+            }
+
+            var to = formatOmanPhoneNumber(data.phone);
+            const invoiceNumber = <?= $code ?>;
+            const invoiceDate = EntryDate;
+
+            // to = formatPakPhoneNumber('03097274927');
+            // to = formatOmanPhoneNumber('9156 4500');
+
+            // generatePdfAttachment(CODE, 'SI', EntryDate, ReportType, CompCode, function(filePath) {
+            //     if (!filePath) {
+            //         console.error("Error generating PDF");
+            //         filePath = '';
+            //     }
+
+
+            // });
+
+                    filePath = '';
+            const message = `Thank you for your valued order\n(*Order no # ${invoiceNumber}*, Dated ${invoiceDate}, Amount: OMR ${amount}).\n\nThank you and regards,\nwww.zaeemandpartnersintl.com`;
+
+                $.ajax({
+                    url: 'whatsapp_message_sending_code.php',
+                    type: 'POST',
+                    data: {
+                        to: to,
+                        message: message,
+                        filePath: filePath,
+                        invoiceNumber: invoiceNumber,
+                        title: title,
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            toastr.success("WhatsApp message sent at " + to);
+                            if (button) {
+                            button.innerHTML = buttonIcons + '<i class="icon wb-check" aria-hidden="true"></i>';
+                            button.disabled = false;
+                            }
+                        } else {
+                            toastr.error("Failed to send message check connection");
+                            if (button) {
+                            button.innerHTML = buttonIcons;
+                            button.disabled = false;
+                            }
+                        }
+
+
+                    },
+                    error: function() {
+                        toastr.error("Failed to send WhatsApp message.");
+                        if (button) {
+                        button.innerHTML = buttonIcons;
+                        button.disabled = false;
+                        }
+                    }
+                });
+        },
+        error: function() {
+            toastr.error("Failed to fetch customer data.");
+            if (button) {
+            button.innerHTML = buttonIcons;
+            }
+        }
+
+    });
+
+}
+
+
+
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v=').time() }}" type="text/javascript"></script>

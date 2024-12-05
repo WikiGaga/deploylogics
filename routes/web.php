@@ -296,7 +296,11 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('form/{id?}','Sales\CustomerController@store')->name('storeCustomer');
             Route::post('get-custom-by-phone' , 'Sales\CustomerController@getByPhone')->name('get-customer-by-phone');
             Route::post('delete/{id}','Sales\CustomerController@destroy');
+        Route::get('fetch-customer-info','Sales\CustomerController@fetchCustomerInfo');
+        Route::post('whatsapp-message-sending','Sales\CustomerController@sendWhatsappMsg');
         });
+
+
         Route::prefix('member-inquery')->group(function () {
            Route::get('form/{id?}',function($id =null){
                 return redirect('/member-inquery/new');

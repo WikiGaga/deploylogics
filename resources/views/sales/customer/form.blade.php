@@ -64,7 +64,7 @@
                 $mode_of_payment = $data['current']->customer_mode_of_payment;
                 $can_scale = $data['current']->customer_can_scale;
                 $additional_tax = $data['current']->customer_additional_tax;
-                
+
                 $bank_name = $data['current']->customer_bank_name;
                 $loyalty_opnening = $data['current']->loyalty_opnening;
                 $bank_account_no = $data['current']->customer_bank_account_no;
@@ -660,6 +660,120 @@
             }
         ];
         var  arr_customer_hidden_field = ['customer_id'];
+
+
+
+
+function sendWhatsAppMessage() {
+
+var button = document.getElementById("whatsappmessagebtn");
+if (button) {
+    buttonIcons = button.innerHTML;
+    button.disabled = true;
+    button.textContent = 'Sending..';
+}
+
+// var cust_code = $('#customer_id').val();
+var cust_code = @json($id);
+// var amount = $('#pro_tot').val();
+var title = @json($data['page_data']['title']);
+
+ console.log(cust_code);
+//  console.log(amount);
+ console.log(title);
+
+
+$.ajax({
+    url: '/customer/fetch-customer-info',
+    type: 'GET',
+    data: {
+        cust_code: cust_code
+    },
+    success: function(response) {
+        const data = response;
+
+        if (!data || !data.phone) {
+            toastr.error("Customer phone number not found");
+            if (button) {
+                button.innerHTML = buttonIcons;
+                button.disabled = false;
+            }
+            return;
+        }
+
+        var to = formatPakPhoneNumber(data.phone);
+        const invoiceNumber = @json($code);
+        // const invoiceDate = EntryDate;
+
+        // console.log(to);
+        // return false;
+
+        to = formatPakPhoneNumber('03097274927');
+        // to = formatOmanPhoneNumber('9156 4500');
+
+        // generatePdfAttachment(CODE, 'SI', EntryDate, ReportType, CompCode, function(filePath) {
+        //     if (!filePath) {
+        //         console.error("Error generating PDF");
+        //         filePath = '';
+        //     }
+        // });
+
+                filePath = '';
+        const message = `Thank you for your valued order\n(*Order no # ${invoiceNumber}*.\n\nThank you and regards,\nwww.deploylogics.com`;
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: '/customer/whatsapp-message-sending',
+                type: 'POST',
+                data: {
+                    to: to,
+                    message: message,
+                    filePath: filePath,
+                    invoiceNumber: invoiceNumber,
+                    title: title,
+                },
+                success: function(response) {
+                    response = JSON.parse(response);
+                    if (response.success) {
+                        toastr.success("WhatsApp message sent at " + to);
+                        if (button) {
+                        button.innerHTML = buttonIcons + '<i class="icon wb-check" aria-hidden="true"></i>';
+                        button.disabled = false;
+                        }
+                    } else {
+                        toastr.error("Failed to send message check connection");
+                        if (button) {
+                        button.innerHTML = buttonIcons;
+                        button.disabled = false;
+                        }
+                    }
+
+                },
+                error: function() {
+                    toastr.error("Failed to send WhatsApp message.");
+                    if (button) {
+                    button.innerHTML = buttonIcons;
+                    button.disabled = false;
+                    }
+                }
+            });
+    },
+    error: function() {
+        toastr.error("Failed to fetch customer data.");
+        if (button) {
+        button.innerHTML = buttonIcons;
+        }
+    }
+
+});
+
+}
+
+
+
+
     </script>
     <script src="{{ asset('js/pages/js/sale/customer_row_repeat.js') }}" type="text/javascript"></script>
     {{-- <script src="{{ asset('js/pages/js/add-row-repeated.js') }}" type="text/javascript"></script>  --}}
