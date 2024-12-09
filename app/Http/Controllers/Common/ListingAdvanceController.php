@@ -128,8 +128,6 @@ class ListingAdvanceController extends Controller
             $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy;
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
             $totalEntries = DB::select($qry);
-            dd($totalEntries);
-
             $total  = count($totalEntries);
 
             $meta    = [];
@@ -153,6 +151,7 @@ class ListingAdvanceController extends Controller
             $limit = "OFFSET $offset ROWS FETCH NEXT $perpage ROWS ONLY";
             $qry  = 'select '.$columns.' '.$metric.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' '.$limit;
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
+            dd($qry);
             $entries = DB::select($qry);
 //            dump($qry);
             $meta = [
