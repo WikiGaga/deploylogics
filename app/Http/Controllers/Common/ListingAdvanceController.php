@@ -12,7 +12,7 @@ use App\Models\TblSoftFilterType;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\TblSoftListingStudio;
-use App\Jobs\GenerateReport\GenerateReport;
+use App\Jobs\GenerateReport;
 
 // db and Validator
 use Illuminate\Support\Facades\Auth;
