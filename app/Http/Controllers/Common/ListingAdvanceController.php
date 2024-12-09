@@ -125,7 +125,7 @@ class ListingAdvanceController extends Controller
             if(isset($customColumns['columns'])){ $columns = $customColumns['columns']; }
             if(isset($customColumns['groupBy'])){ $groupBy =$customColumns['groupBy']; }
 
-            if ()
+            // if ()
             $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' ';
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
             $totalEntries = DB::select($qry);
