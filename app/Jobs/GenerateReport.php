@@ -1,11 +1,19 @@
 <?php
 
 namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade as PDF;
 
-class GenerateReport extends Job
+class GenerateReport implements ShouldQueue
 {
+    use InteractsWithQueue, Queueable, SerializesModels;
+
     protected $qry;
     protected $fileName;
 
@@ -59,7 +67,7 @@ class GenerateReport extends Job
     private function generatePdf($results)
     {
         // Use a PDF package like `barryvdh/laravel-dompdf` for generating PDFs.
-        $pdf = \PDF::loadView('reports.report', ['results' => $results]);
+        $pdf = PDF::loadView('reports.report', ['results' => $results]);
 
         // Save the file to storage
         $pdf->save(storage_path('app/reports/' . $this->fileName));
