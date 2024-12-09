@@ -2,6 +2,8 @@
 var inline_filter_data = {};
 // Class definition
 
+var downloadClicked = false;
+
 var KTDatatableRemoteAjaxDemo = function() {
     // Private functions
 
@@ -227,8 +229,12 @@ var KTDatatableRemoteAjaxDemo = function() {
             event.preventDefault();
             var filterData = {};
             var date_type = $(document).find('form select[name="radioDate"]').val();
-
             filterData.date = date_type;
+
+            filterData.download = '';
+            if(downloadClicked != false) {
+                filterData.download = downloadClicked;
+            }
 
             filterData.time_from = $(document).find('form input[name="time_from"]').val();
             filterData.time_to = $(document).find('form input[name="time_to"]').val();
@@ -409,10 +415,9 @@ jQuery(document).ready(function() {
 
 $('body').on('click', '#export_csv, #export_pdf', function () {
     let exportType = $(this).attr('id') === 'export_csv' ? 'csv' : 'pdf';
-
+    downloadClicked = exportType;
     let $form = $('form[name="getRecordsByDateFilter"]');
-    $form.find('input[name="export_type"]').remove(); // Ensure no duplicate fields
-    $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
-    console.log($form.serialize());
+    // $form.find('input[name="export_type"]').remove(); // Ensure no duplicate fields
+    // $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
     $form.trigger('submit');
 });
