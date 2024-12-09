@@ -268,6 +268,7 @@ var KTDatatableRemoteAjaxDemo = function() {
             localStorage.removeItem('ajax_data-1-meta');
 
             datatable.search(filterData, 'globalFilters');
+            downloadClicked = false;
         });
 
         $('.listing_dropdown>li>label>input[type="checkbox"]').on('click', function(e) {
