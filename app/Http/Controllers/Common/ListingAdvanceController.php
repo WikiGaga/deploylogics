@@ -28,7 +28,7 @@ class ListingAdvanceController extends Controller
 {
 
     public function index(Request $request,$caseType,$subType = null){
-    //    dd($request->all());
+       dd($request->all());
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
@@ -125,10 +125,9 @@ class ListingAdvanceController extends Controller
             if(isset($customColumns['columns'])){ $columns = $customColumns['columns']; }
             if(isset($customColumns['groupBy'])){ $groupBy =$customColumns['groupBy']; }
 
+            if ()
             $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' ';
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
-            dd($qry);
-
             $totalEntries = DB::select($qry);
             $total  = count($totalEntries);
 
