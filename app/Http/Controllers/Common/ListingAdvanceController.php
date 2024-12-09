@@ -125,10 +125,17 @@ class ListingAdvanceController extends Controller
             if(isset($customColumns['columns'])){ $columns = $customColumns['columns']; }
             if(isset($customColumns['groupBy'])){ $groupBy =$customColumns['groupBy']; }
 
-            $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy;
-            $qry = str_replace('$user_id$',Auth::user()->id,$qry);
-            $totalEntries = DB::select($qry);
-            $total  = count($totalEntries);
+            // $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy;
+            // $qry = str_replace('$user_id$',Auth::user()->id,$qry);
+            // $totalEntries = DB::select($qry);
+            // $total  = count($totalEntries);
+
+            $qryForCount = 'SELECT COUNT(*) as total FROM ' . $table_name_alias . ' ' . $where.' '.$groupBy;
+            $qryForCount = str_replace('$user_id$',Auth::user()->id,$qryForCount);
+            $totalEntries = DB::select($qryForCount);
+            $total  = $totalEntries[0]->total;
+
+            dd($total);
 
             $meta    = [];
             $page  = ($request->has('pagination.page') && $request->filled('pagination.page'))? $request->input('pagination.page') : 1;
@@ -151,7 +158,6 @@ class ListingAdvanceController extends Controller
             $limit = "OFFSET $offset ROWS FETCH NEXT $perpage ROWS ONLY";
             $qry  = 'select '.$columns.' '.$metric.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' '.$limit;
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
-            dd($qry);
             $entries = DB::select($qry);
 //            dump($qry);
             $meta = [
