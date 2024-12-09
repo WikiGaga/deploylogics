@@ -184,6 +184,7 @@
                                 </li>
                             </ul>
                         </div>
+
                         <div class="dropdown dropdown-inline">
                             <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="flaticon-more"></i>

@@ -411,7 +411,6 @@ $('body').on('click', '#export_csv, #export_pdf', function () {
     let exportType = $(this).attr('id') === 'export_csv' ? 'csv' : 'pdf';
 
     console.log(exportType);
-
     let $form = $('form[name="getRecordsByDateFilter"]');
     $form.find('input[name="export_type"]').remove(); // Ensure no duplicate fields
     $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
