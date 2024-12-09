@@ -134,8 +134,7 @@ class ListingAdvanceController extends Controller
                 // Define file name based on the download type
                 $fileName = 'report_' . time() . '.' . $download;
 
-                // Dispatch the job to the queue
-                GenerateReport::dispatch($qry, $fileName);
+                dispatch(new GenerateReport($qry, $fileName));
 
                 // Return a response to the user indicating the report is being generated
                 return response()->json([

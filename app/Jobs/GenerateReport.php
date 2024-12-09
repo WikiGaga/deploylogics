@@ -1,8 +1,8 @@
 <?php
 
-// namespace App\Jobs\GenerateReport;
+namespace App\Jobs\GenerateReport;
 
-namespace App\Jobs\GenerateReport\GenerateReport;
+// namespace App\Jobs\GenerateReport\GenerateReport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
