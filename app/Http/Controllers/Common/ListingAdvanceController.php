@@ -12,6 +12,7 @@ use App\Models\TblSoftFilterType;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\TblSoftListingStudio;
+use App\Jobs\GenerateReport;
 
 // db and Validator
 use Illuminate\Support\Facades\Auth;
@@ -126,11 +127,20 @@ class ListingAdvanceController extends Controller
             if(isset($customColumns['groupBy'])){ $groupBy =$customColumns['groupBy']; }
 
             $download = $request['query']['globalFilters']['download'] ?? '';
-            if ($download != '') {
+            if ($download == 'pdf' || $download == 'csv') {
+                $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' ';
+                $qry = str_replace('$user_id$', Auth::user()->id, $qry);
 
-            $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' ';
-            $qry = str_replace('$user_id$',Auth::user()->id,$qry);
+                // Define file name based on the download type
+                $fileName = 'report_' . time() . '.' . $download;
 
+                // Dispatch the job to the queue
+                GenerateReport::dispatch($qry, $fileName);
+
+                // Return a response to the user indicating the report is being generated
+                return response()->json([
+                    'message' => 'Your report is being generated. You will be notified once it is ready for download.',
+                ]);
             }
 
 
