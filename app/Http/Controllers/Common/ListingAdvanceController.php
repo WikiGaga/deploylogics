@@ -28,7 +28,7 @@ class ListingAdvanceController extends Controller
 {
 
     public function index(Request $request,$caseType,$subType = null){
-        dd($request->query('globalFilters.download'));
+        dd($request->query('globalFilters'));
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
