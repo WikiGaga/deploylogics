@@ -127,15 +127,16 @@ class ListingAdvanceController extends Controller
 
             $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy;
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
+            dd($qry);
+
             $totalEntries = DB::select($qry);
             $total  = count($totalEntries);
 
-            // $qryForCount = 'SELECT COUNT(*) as total FROM ' . $table_name_alias . ' ' . $where.' '.$groupBy;
-            // $qryForCount = str_replace('$user_id$',Auth::user()->id,$qryForCount);
-            // $totalEntries = DB::select($qryForCount);
-            // $total  = $totalEntries[0]->total;
 
-            dd($total);
+            $qryForCount = 'SELECT COUNT(*) as total FROM ' . $table_name_alias . ' ' . $where.' '.$groupBy;
+            $qryForCount = str_replace('$user_id$',Auth::user()->id,$qryForCount);
+            $totalEntries = DB::select($qryForCount);
+            $total  = $totalEntries[0]->total;
 
             $meta    = [];
             $page  = ($request->has('pagination.page') && $request->filled('pagination.page'))? $request->input('pagination.page') : 1;
