@@ -1491,5 +1491,15 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('redirect-voucher-screen','Rent\RentAgreementController@redirectVoucherScreen');
         Route::post('already-entered-voucher','Rent\RentAgreementController@alreadyEnterdVoucher');
     });
+
+    Route::get('listing-file-download/{filename}', function ($filename) {
+        $path = storage_path('app/reports/' . $filename);
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->download($path);
+    })->name('download');
 });
 
