@@ -15,21 +15,27 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($downloads as $download)
-                <tr>
-                    <td>{{ $download->FILE_NAME }}</td>
-                    <td>{{ $download->USER_ID }}</td>
-                    <td>{{ \Carbon\Carbon::parse($download->CREATED_AT)->format('Y-m-d H:i:s') }}</td>
-                    <td>
-                        <a href="{{ asset('storage/reports/' . $download->FILE_NAME) }}" class="btn btn-success btn-sm" download>
-                            Download
-                        </a>
-                        <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
+            @if($downloads && $downloads->count() > 0)
+                @foreach($downloads as $download)
+                    <tr>
+                        <td>{{ $download->FILE_NAME }}</td>
+                        <td>{{ $download->USER_ID }}</td>
+                        <td>{{ \Carbon\Carbon::parse($download->CREATED_AT)->format('Y-m-d H:i:s') }}</td>
+                        <td>
+                            <a href="{{ asset('storage/reports/' . $download->FILE_NAME) }}" class="btn btn-success btn-sm" download>
+                                Download
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+            @else
+            <tr>
+                <td colspan="4" class="text-center">No downloads available</td>
+            </tr>
+            @endif
         </tbody>
     </table>
 </div>
