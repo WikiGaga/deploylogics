@@ -1297,6 +1297,15 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('parentitemgroup','Common\GetAllData@treeView');
             Route::get('open-listing-user-filter\{case_name}','Common\ListingController@openListingUserFilterModal');
             Route::get('listing-downloads\{case_name}','Common\ListingController@openListingDownloads');
+            Route::get('listing-file-download/{filename}', function ($filename) {
+                $path = storage_path('app/reports/' . $filename);
+
+                if (!file_exists($path)) {
+                    abort(404, 'File not found');
+                }
+
+                return response()->download($path);
+            })->name('listing-file-download');
             Route::delete('/listing-downloads/delete/{id}', 'Common\ListingController@deleteListingDownload');
             Route::get('get-product-detail/{type}/{product_id?}','Common\GetAllData@getProductDetail');
             Route::post('open-tree', 'Common\GetAllData@openTree');
@@ -1494,14 +1503,4 @@ Route::group(['middleware' => ['auth']], function () {
 
 });
 
-
-Route::get('listing-file-download/{filename}', function ($filename) {
-    $path = storage_path('app/reports/' . $filename);
-
-    if (!file_exists($path)) {
-        abort(404, 'File not found');
-    }
-
-    return response()->download($path);
-})->name('download');
 
