@@ -9,7 +9,7 @@
         <thead>
             <tr>
                 <th>File Name</th>
-                <th>User ID</th>
+                <th>User</th>
                 <th>Created Date</th>
                 <th>Actions</th>
             </tr>
@@ -22,7 +22,7 @@
                         <td>{{ $download->user->name ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
                         <td>
-                            <a href="{{ asset('storage/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
+                            <a href="{{ asset('storage/app/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
                                 Download
                             </a>
                             <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
@@ -55,7 +55,7 @@ $(document).on('click', '.delete-download', function () {
             success: function (response) {
                 if (response.status === 'success') {
                     toastr.success(response.message);
-                    $('#listing_user_downloads').trigger('click'); // Refresh the modal content
+                    $('#listing_user_downloads').trigger('click');
                 } else {
                     toastr.error(response.message);
                 }

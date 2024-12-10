@@ -445,14 +445,13 @@ class ListingController extends Controller
 
     if ($download) {
 
-        $filePath = 'reports/' . $download->FILE_NAME;
+        $filePath = 'app/reports/' . $download->file_name;
 
-        // Check if the file exists and delete it
         if (Storage::exists($filePath)) {
             Storage::delete($filePath);
         }
 
-        DB::table('tbl_listing_downloads')->where('id', $id)->update(['DELETED' => 1]);
+        DB::table('tbl_listing_downloads')->where('id', $id)->update(['deleted' => 1]);
 
         return response()->json([
             'status' => 'success',
