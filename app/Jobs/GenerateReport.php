@@ -66,42 +66,44 @@ class GenerateReport implements ShouldQueue
     }
 
     private function generatePdf($results)
-{
-    // Prepare the HTML content for the PDF
-    // $html = '<h1>Report</h1>';
-    // $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
-    // $html .= '<thead><tr>';
+    {
+        $html = '<h1>Report</h1>';
 
-    // // Add table headers
-    // if (count($results) > 0) {
-    //     foreach (array_keys((array) $results[0]) as $header) {
-    //         $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
-    //     }
-    // }
+        $chunkSize = 100; // Number of rows per page
+        $chunks = array_chunk($results, $chunkSize);
 
-    // $html .= '</tr></thead>';
-    // $html .= '<tbody>';
+        foreach ($chunks as $pageIndex => $chunk) {
+            $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
+            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
+            $html .= '<thead><tr>';
 
-    // // Add table rows
-    // foreach ($results as $row) {
-    //     $html .= '<tr>';
-    //     foreach ((array) $row as $cell) {
-    //         $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
-    //     }
-    //     $html .= '</tr>';
-    // }
+            if (count($chunk) > 0) {
+                foreach (array_keys((array) $chunk[0]) as $header) {
+                    $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
+                }
+            }
 
-    // $html .= '</tbody>';
-    // $html .= '</table>';
+            $html .= '</tr></thead>';
+            $html .= '<tbody>';
 
-    $html = '<h1>Simple Report</h1><p>This is a test PDF.</p>';
+            foreach ($chunk as $row) {
+                $html .= '<tr>';
+                foreach ((array) $row as $cell) {
+                    $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
+                }
+                $html .= '</tr>';
+            }
 
-    // Generate the PDF using the HTML content
-    $pdf = PDF::loadHTML($html);
+            $html .= '</tbody>';
+            $html .= '</table>';
+            $html .= '<div style="page-break-after: always;"></div>'; // Add page break
+        }
 
-    // Save the file to storage
-    $filePath = storage_path('app/reports/' . $this->fileName);
-    $pdf->save($filePath);
-}
+        $pdf = PDF::loadHTML($html);
+
+        $filePath = storage_path('app/reports/' . $this->fileName);
+        $pdf->save($filePath);
+    }
+
 
 }
