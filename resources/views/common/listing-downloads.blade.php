@@ -47,7 +47,7 @@ $(document).on('click', '.delete-download', function () {
 
     if (confirm('Are you sure you want to delete this download?')) {
         $.ajax({
-            url: '/listing-downloads/delete/' + downloadId,
+            url: '/common/listing-downloads/delete/' + downloadId,
             type: 'DELETE',
             data: {
                 _token: $('meta[name="csrf-token"]').attr('content')
