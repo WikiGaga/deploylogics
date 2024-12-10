@@ -431,10 +431,11 @@ class ListingController extends Controller
     }
 
     public function openListingDownloads($case_name){
-        $downloads = TblListingDownload::with('user')
-        ->where('LISTING_CASE', $case_name)
+        $downloads = TblListingDownload::where('LISTING_CASE', $case_name)
         ->where('DELETED', 0)
         ->get();
+
+        $downloads
 
     return view('common.listing-downloads', compact('downloads'));
     }

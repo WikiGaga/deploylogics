@@ -10,7 +10,7 @@ class TblListingDownload extends Model
 
     public function user()
 {
-    return $this->belongsTo(User::class, 'USER_ID', 'id');
+    return $this->belongsTo(User::class, 'id', 'id');
 }
 
 }
