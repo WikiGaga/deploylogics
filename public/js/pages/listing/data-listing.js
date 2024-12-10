@@ -179,6 +179,10 @@ var KTDatatableRemoteAjaxDemo = function() {
                         // sample custom headers
                         // headers: {'x-my-custom-header': 'some value', 'x-test-header': 'the value'},
                         map: function(raw) {
+                            if (raw.downloadMessage) {
+                                toastr.success(raw.downloadMessage);
+                            }
+
                             // sample data mapping
                             var dataSet = raw;
                             console.log(dataSet);

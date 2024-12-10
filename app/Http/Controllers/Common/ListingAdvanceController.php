@@ -127,6 +127,7 @@ class ListingAdvanceController extends Controller
             if(isset($customColumns['groupBy'])){ $groupBy =$customColumns['groupBy']; }
 
             $download = $request['query']['globalFilters']['download'] ?? '';
+            $downloadMessage = null;
             if ($download == 'pdf' || $download == 'csv') {
                 $qry  = 'select '.$columns.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' ';
                 $qry = str_replace('$user_id$', Auth::user()->id, $qry);
@@ -136,10 +137,7 @@ class ListingAdvanceController extends Controller
 
                 dispatch(new GenerateReport($qry, $fileName));
 
-                // Return a response to the user indicating the report is being generated
-                return response()->json([
-                    'message' => 'Your report is being generated. You will be notified once it is ready for download.',
-                ]);
+                $downloadMessage = 'Your report is being generated. You will be notified once it is ready for download.';
             }
 
 
@@ -184,6 +182,7 @@ class ListingAdvanceController extends Controller
                         'field' => $sortField,
                     ],
                 'data' => $entries,
+                'downloadMessage' => $downloadMessage,
             ];
             return response()->json($result);
         }
