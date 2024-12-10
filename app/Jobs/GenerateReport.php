@@ -66,58 +66,65 @@ class GenerateReport implements ShouldQueue
     }
 
     private function generatePdf($results)
-{
-    // Initialize dompdf instance
-    $pdf = PDF::getFacadeRoot(); // dompdf instance
+    {
+        $chunkSize = 100; // Number of rows per page (adjust based on your needs)
+        $chunks = array_chunk($results, $chunkSize);
 
-    // Add page to start the PDF
-    $pdf->addPage();
+        // Start by preparing the first part of the HTML (for the title, etc.)
+        $html = '<h1>Report</h1>';
 
-    // Table headers (this will be added on the first page)
-    $html = '<h1>Report</h1>';
-    $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
-    $html .= '<thead><tr>';
+        // Initialize a variable to store the final PDF content
+        $pdf = null;
 
-    if (count($results) > 0) {
-        foreach (array_keys((array) $results[0]) as $header) {
-            $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
-        }
-    }
+        // Loop through each chunk of data and generate the corresponding PDF
+        foreach ($chunks as $pageIndex => $chunk) {
+            $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
+            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
+            $html .= '<thead><tr>';
 
-    $html .= '</tr></thead>';
-    $html .= '<tbody>';
-
-    // Chunk the results and process them
-    $chunkSize = 500; // Number of rows per chunk
-    $chunks = array_chunk($results, $chunkSize);
-
-    foreach ($chunks as $pageIndex => $chunk) {
-        // Add the data rows for the current chunk
-        foreach ($chunk as $row) {
-            $html .= '<tr>';
-            foreach ((array) $row as $cell) {
-                $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
+            // Add headers (use the keys of the first row of the chunk as headers)
+            if (count($chunk) > 0) {
+                foreach (array_keys((array) $chunk[0]) as $header) {
+                    $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
+                }
             }
-            $html .= '</tr>';
+
+            $html .= '</tr></thead>';
+            $html .= '<tbody>';
+
+            // Add rows
+            foreach ($chunk as $row) {
+                $html .= '<tr>';
+                foreach ((array) $row as $cell) {
+                    $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
+                }
+                $html .= '</tr>';
+            }
+
+            $html .= '</tbody>';
+            $html .= '</table>';
+
+            // Add a page break after each chunk (for multiple pages)
+            if ($pageIndex < count($chunks) - 1) {
+                $html .= '<div style="page-break-after: always;"></div>';
+            }
+
+            // Generate the PDF for the current chunk and append it to the final PDF
+            if ($pdf === null) {
+                $pdf = PDF::loadHTML($html); // For the first chunk, initialize the PDF
+            } else {
+                $pdf->addPage(); // Add a new page for subsequent chunks
+                $pdf->loadHTML($html);
+            }
+
+            // Reset the HTML content for the next chunk to free memory
+            $html = ''; // Empty the HTML variable after processing each chunk
         }
 
-        // Write the current chunk to the PDF
-        $pdf->loadHTML($html);
-        $html = ''; // Reset the HTML content for the next chunk
-
-        // Add a page break after each chunk except for the last one
-        if ($pageIndex < count($chunks) - 1) {
-            $pdf->addPage();
-        }
+        // Save the final PDF file
+        $filePath = storage_path('app/reports/' . $this->fileName);
+        $pdf->save($filePath);
     }
-
-    $html .= '</tbody></table>';
-
-    // Save the generated PDF to a file
-    $filePath = storage_path('app/reports/' . $this->fileName);
-    $pdf->save($filePath);
-}
-
 
 
 }
