@@ -19,7 +19,7 @@
                 @foreach($downloads as $download)
                     <tr>
                         <td>{{ $download->file_name }}</td>
-                        <td>{{ $download->user_id }}</td>
+                        <td>{{ $download->user->name ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
                         <td>
                             <a href="{{ asset('storage/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
