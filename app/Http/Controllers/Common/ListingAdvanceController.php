@@ -135,7 +135,7 @@ class ListingAdvanceController extends Controller
                 // Define file name based on the download type
                 $fileName = 'listing_'. $case_name . '_' . time() . '.' . $download;
 
-                dispatch(new GenerateReport($qry, $fileName));
+                dispatch(new GenerateReport($qry, $fileName, $case_name, Auth::user()->id));
 
                 $downloadMessage = 'Your report is being generated. You will be notified once it is ready for download.';
             }
