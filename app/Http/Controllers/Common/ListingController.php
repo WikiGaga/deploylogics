@@ -441,7 +441,7 @@ class ListingController extends Controller
 
     public function deleteListingDownload($id)
 {
-    $download = DB::table('tbl_listing_downloads')->where('id', $id)->first();
+    $download = TblListingDownload::where('id', $id)->first();
 
     if ($download) {
 
