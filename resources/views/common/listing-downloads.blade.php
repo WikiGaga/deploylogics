@@ -18,11 +18,11 @@
             @if($downloads && $downloads->count() > 0)
                 @foreach($downloads as $download)
                     <tr>
-                        <td>{{ $download->FILE_NAME }}</td>
-                        <td>{{ $download->USER_ID }}</td>
-                        <td>{{ \Carbon\Carbon::parse($download->CREATED_AT)->format('Y-m-d H:i:s') }}</td>
+                        <td>{{ $download->file_name }}</td>
+                        <td>{{ $download->user_id }}</td>
+                        <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
                         <td>
-                            <a href="{{ asset('storage/reports/' . $download->FILE_NAME) }}" class="btn btn-success btn-sm" download>
+                            <a href="{{ asset('storage/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
                                 Download
                             </a>
                             <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">

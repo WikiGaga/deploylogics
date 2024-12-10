@@ -137,7 +137,7 @@ class ListingAdvanceController extends Controller
 
                 dispatch(new GenerateReport($qry, $fileName, $case_name, Auth::user()->id));
 
-                $downloadMessage = 'Your report is being generated. You will be notified once it is ready for download.';
+                $downloadMessage = 'Your report is being generated.';
             }
 
 
