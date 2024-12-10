@@ -435,8 +435,6 @@ class ListingController extends Controller
         ->where('DELETED', 0)
         ->get();
 
-        $downloads
-
     return view('common.listing-downloads', compact('downloads'));
     }
 
