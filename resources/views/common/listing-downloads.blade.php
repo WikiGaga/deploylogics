@@ -22,7 +22,7 @@
                         <td>{{ $download->user->name ?? 'N/A' }}</td>
                         <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
                         <td>
-                            <a href="{{ asset('storage/app/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
+                            <a href="{{ url('storage/app/reports/' . $download->file_name) }}" class="btn btn-success btn-sm" download>
                                 Download
                             </a>
                             <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
