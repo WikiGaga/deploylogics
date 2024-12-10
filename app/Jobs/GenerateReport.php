@@ -68,31 +68,33 @@ class GenerateReport implements ShouldQueue
     private function generatePdf($results)
 {
     // Prepare the HTML content for the PDF
-    $html = '<h1>Report</h1>';
-    $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
-    $html .= '<thead><tr>';
+    // $html = '<h1>Report</h1>';
+    // $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
+    // $html .= '<thead><tr>';
 
-    // Add table headers
-    if (count($results) > 0) {
-        foreach (array_keys((array) $results[0]) as $header) {
-            $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
-        }
-    }
+    // // Add table headers
+    // if (count($results) > 0) {
+    //     foreach (array_keys((array) $results[0]) as $header) {
+    //         $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
+    //     }
+    // }
 
-    $html .= '</tr></thead>';
-    $html .= '<tbody>';
+    // $html .= '</tr></thead>';
+    // $html .= '<tbody>';
 
-    // Add table rows
-    foreach ($results as $row) {
-        $html .= '<tr>';
-        foreach ((array) $row as $cell) {
-            $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
-        }
-        $html .= '</tr>';
-    }
+    // // Add table rows
+    // foreach ($results as $row) {
+    //     $html .= '<tr>';
+    //     foreach ((array) $row as $cell) {
+    //         $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
+    //     }
+    //     $html .= '</tr>';
+    // }
 
-    $html .= '</tbody>';
-    $html .= '</table>';
+    // $html .= '</tbody>';
+    // $html .= '</table>';
+
+    $html = '<h1>Simple Report</h1><p>This is a test PDF.</p>';
 
     // Generate the PDF using the HTML content
     $pdf = PDF::loadHTML($html);
