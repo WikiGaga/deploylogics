@@ -1296,6 +1296,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('get-menu-dtl','Common\GetAllData@getMenuDtl');
             Route::get('parentitemgroup','Common\GetAllData@treeView');
             Route::get('open-listing-user-filter\{case_name}','Common\ListingController@openListingUserFilterModal');
+            Route::get('open-listing-downloads\{case_name}','Common\ListingController@openListingDownloads');
             Route::get('get-product-detail/{type}/{product_id?}','Common\GetAllData@getProductDetail');
             Route::post('open-tree', 'Common\GetAllData@openTree');
             Route::post('user-page-setting', 'Common\GetAllData@userPageSetting');

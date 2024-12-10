@@ -428,6 +428,31 @@ class ListingController extends Controller
         return view('common.listing-user-filter',compact('data'));
     }
 
+    public function openListingDownloads($case_name){
+        $data = [];
+        $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
+        dd($listing);
+        $data['UserFilter'] = TblSoftListingStudioUserFilter::where('listing_studio_id',$listing->listing_studio_id)->get();
+        $UserFilterSaveExists = TblSoftListingUserFilterSave::where('listing_user_filter_save_user_id',auth()->user()->id)
+            ->where('listing_studio_id',$listing->listing_studio_id)->exists();
+        if($UserFilterSaveExists){
+            $UserFilterSave = TblSoftListingUserFilterSave::where('listing_user_filter_save_user_id',auth()->user()->id)
+                ->where('listing_studio_id',$listing->listing_studio_id)->first();
+            $data['queryArray'] = unserialize($UserFilterSave->listing_user_filter_save_query);
+            // dd($data['queryArray']);
+            $max = [];
+            foreach ($data['queryArray'] as $queryArrayMax) {
+                $max[] = $queryArrayMax->sr_no;
+            }
+            if(!empty($max)){
+                $data['max'] = max($max);
+            }
+        }
+
+      //  dd($data);
+        return view('common.listing-user-filter',compact('data'));
+    }
+
     /**
      * Show the form for creating a new resource.
      *

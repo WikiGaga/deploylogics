@@ -174,13 +174,18 @@
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
                                     <a href="javascript:void(0);" id="export_csv" class="export-option">
-                                        CSV
+                                        Export CSV
                                     </a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" id="export_pdf" class="export-option">
-                                        PDF
+                                        Export PDF
                                     </a>
+                                </li>
+                                <li>
+                                    <button type="button" data-url="{{ action('Common\ListingController@openListingDownloads',$data['case']) }}" class="btn btn-bold btn-label-brand btn-sm" data-toggle="modal" id="listing_user_downloads" data-target="#kt_modal_1">
+                                        View Downloads
+                                    </button>
                                 </li>
                             </ul>
                         </div>
@@ -313,6 +318,10 @@
     </div>
     <script>
         $('#listing_user_filter').on('click',function(e){
+            var data_url = $(this).attr('data-url');
+            $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
+        });
+        $('#listing_user_downloads').on('click',function(e){
             var data_url = $(this).attr('data-url');
             $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
         });
