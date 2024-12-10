@@ -22,6 +22,7 @@ use App\Models\TblSoftListingStudioJoinTable;
 use App\Models\TblSoftListingStudioUserFilter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Storage;
 
 class ListingController extends Controller
 {
@@ -429,29 +430,41 @@ class ListingController extends Controller
     }
 
     public function openListingDownloads($case_name){
-        $data = [];
-        $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
-        dd($listing);
-        $data['UserFilter'] = TblSoftListingStudioUserFilter::where('listing_studio_id',$listing->listing_studio_id)->get();
-        $UserFilterSaveExists = TblSoftListingUserFilterSave::where('listing_user_filter_save_user_id',auth()->user()->id)
-            ->where('listing_studio_id',$listing->listing_studio_id)->exists();
-        if($UserFilterSaveExists){
-            $UserFilterSave = TblSoftListingUserFilterSave::where('listing_user_filter_save_user_id',auth()->user()->id)
-                ->where('listing_studio_id',$listing->listing_studio_id)->first();
-            $data['queryArray'] = unserialize($UserFilterSave->listing_user_filter_save_query);
-            // dd($data['queryArray']);
-            $max = [];
-            foreach ($data['queryArray'] as $queryArrayMax) {
-                $max[] = $queryArrayMax->sr_no;
-            }
-            if(!empty($max)){
-                $data['max'] = max($max);
-            }
+        $downloads = DB::table('tbl_listing_downloads')
+        ->where('LISTING_CASE', $case_name)
+        ->where('DELETED', 0) // Ensure only active downloads are fetched
+        ->get();
+
+    return view('common.listing-downloads', compact('downloads'));
+    }
+
+    public function deleteListingDownload($id)
+{
+    $download = DB::table('tbl_listing_downloads')->where('id', $id)->first();
+
+    if ($download) {
+
+        $filePath = 'reports/' . $download->FILE_NAME;
+
+        // Check if the file exists and delete it
+        if (Storage::exists($filePath)) {
+            Storage::delete($filePath);
         }
 
-      //  dd($data);
-        return view('common.listing-user-filter',compact('data'));
+        DB::table('tbl_listing_downloads')->where('id', $id)->update(['DELETED' => 1]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'File deleted successfully.'
+        ]);
     }
+
+    return response()->json([
+        'status' => 'error',
+        'message' => 'File not found.'
+    ]);
+}
+
 
     /**
      * Show the form for creating a new resource.

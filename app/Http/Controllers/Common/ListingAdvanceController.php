@@ -133,7 +133,7 @@ class ListingAdvanceController extends Controller
                 $qry = str_replace('$user_id$', Auth::user()->id, $qry);
 
                 // Define file name based on the download type
-                $fileName = 'report_' . time() . '.' . $download;
+                $fileName = 'listing_'. $case_name . '_' . time() . '.' . $download;
 
                 dispatch(new GenerateReport($qry, $fileName));
 

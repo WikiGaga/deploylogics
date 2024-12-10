@@ -15,13 +15,17 @@ class GenerateReport implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $qry;
-    protected $fileName;
+    private $qry;
+    private $fileName;
+    private $listingCase;
+    private $userId;
 
-    public function __construct($qry, $fileName)
+    public function __construct($qry, $fileName, $listingCase, $userId)
     {
         $this->qry = $qry;
         $this->fileName = $fileName;
+        $this->listingCase = $listingCase;
+        $this->userId = $userId;
     }
 
     /**
@@ -40,6 +44,15 @@ class GenerateReport implements ShouldQueue
         } elseif (strpos($this->fileName, '.pdf') !== false) {
             $this->generatePdf($results);
         }
+
+        DB::table('tbl_listing_downloads')->insert([
+            'LISTING_CASE' => $this->listingCase,
+            'FILE_NAME' => $this->fileName,
+            'USER_ID' => $this->userId,
+            'CREATED_AT' => now(),
+            'DELETED' => 0,
+        ]);
+
     }
 
     private function generateCsv($results)
@@ -63,6 +76,7 @@ class GenerateReport implements ShouldQueue
 
         // Save the file
         Storage::disk('local')->put('reports/' . $this->fileName, file_get_contents($filePath));
+
     }
     private function generatePdf($results)
     {

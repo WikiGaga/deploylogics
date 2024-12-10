@@ -183,7 +183,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <button type="button" data-url="{{ action('Common\ListingController@openListingDownloads',$data['case']) }}"  data-toggle="modal" id="listing_user_downloads" data-target="#kt_modal_1">
+                                    <button type="button" data-url="{{ action('Common\ListingController@openListingDownloads',$data['case']) }}" class="btn btn-default btn-sm" data-toggle="modal" id="listing_user_downloads" data-target="#kt_modal_1">
                                         View Downloads
                                     </button>
                                 </li>
