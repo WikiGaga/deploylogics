@@ -20,6 +20,7 @@ use App\Models\TblSoftListingUserFilterSave;
 use App\Models\TblSoftListingStudioDimension;
 use App\Models\TblSoftListingStudioJoinTable;
 use App\Models\TblSoftListingStudioUserFilter;
+use App\Models\TblListingDownload;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Storage;
@@ -430,9 +431,9 @@ class ListingController extends Controller
     }
 
     public function openListingDownloads($case_name){
-        $downloads = DB::table('tbl_listing_downloads')
+        $downloads = TblListingDownload::with('user')
         ->where('LISTING_CASE', $case_name)
-        ->where('DELETED', 0) // Ensure only active downloads are fetched
+        ->where('DELETED', 0)
         ->get();
 
     return view('common.listing-downloads', compact('downloads'));
