@@ -87,7 +87,7 @@ class GenerateReport implements ShouldQueue
 
         foreach ($chunks as $pageIndex => $chunk) {
             // $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
-            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;font-size: 10px;">';
+            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;font-size: 6px;">';
             $html .= '<thead><tr>';
 
             if (count($chunk) > 0) {
