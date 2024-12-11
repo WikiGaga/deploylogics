@@ -144,7 +144,10 @@ class ListingAdvanceController extends Controller
             $qryForCount = 'SELECT COUNT(*) as total FROM ' . $table_name_alias . ' ' . $where.' '.$groupBy;
             $qryForCount = str_replace('$user_id$',Auth::user()->id,$qryForCount);
             $totalEntries = DB::select($qryForCount);
-            $total  = $totalEntries[0]->total ?? [];
+            $total = 0;
+            if (!empty($totalEntries) && isset($totalEntries[0]->total)) {
+                $total = $totalEntries[0]->total;
+            }
 
             $meta    = [];
             $page  = ($request->has('pagination.page') && $request->filled('pagination.page'))? $request->input('pagination.page') : 1;
