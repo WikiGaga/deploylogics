@@ -42,7 +42,7 @@
 
 <script>
 
-$(document).on('click', '.delete-download', function () {
+$(document).off('click', '.delete-download').on('click', '.delete-download', function () {
     var downloadId = $(this).data('id');
 
     if (confirm('Are you sure you want to delete this download?')) {
