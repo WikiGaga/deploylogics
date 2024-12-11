@@ -144,6 +144,7 @@ class ListingAdvanceController extends Controller
             $qryForCount = 'SELECT COUNT(*) as total FROM ' . $table_name_alias . ' ' . $where.' '.$groupBy;
             $qryForCount = str_replace('$user_id$',Auth::user()->id,$qryForCount);
             $totalEntries = DB::select($qryForCount);
+            dd($totalEntries);
             $total  = $totalEntries[0]->total;
 
             $meta    = [];
