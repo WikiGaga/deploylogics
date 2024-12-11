@@ -448,7 +448,6 @@ class ListingController extends Controller
         $filePath = 'reports/' . $download->file_name;
 
         $fullPath = storage_path('app/' . $filePath);
-        dd($fullPath);
         if (file_exists($fullPath)) {
             unlink($fullPath);
         }
