@@ -5,43 +5,40 @@
     </button>
 </div>
 <div class="modal-body">
-    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-        <table class="table table-striped table-bordered" style="margin-bottom: 0;">
-            <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-                <tr>
-                    <th>File Name</th>
-                    <th>User</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($downloads && $downloads->count() > 0)
-                    @foreach($downloads as $download)
-                        <tr>
-                            <td>{{ $download->file_name }}</td>
-                            <td>{{ $download->user->name ?? 'N/A' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
-                            <td>
-                                <a href="{{ route('listing-file-download', ['filename' => $download->file_name]) }}" class="btn btn-success btn-sm">
-                                    Download
-                                </a>
-                                <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                @else
-                <tr>
-                    <td colspan="4" class="text-center">No downloads available</td>
-                </tr>
-                @endif
-            </tbody>
-        </table>
-    </div>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>User</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if($downloads && $downloads->count() > 0)
+                @foreach($downloads as $download)
+                    <tr>
+                        <td>{{ $download->file_name }}</td>
+                        <td>{{ $download->user->name ?? 'N/A' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($download->created_at)->format('Y-m-d H:i:s') }}</td>
+                        <td>
+                            <a href="{{ route('listing-file-download', ['filename' => $download->file_name]) }}" class="btn btn-success btn-sm">
+                                Download
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm delete-download" data-id="{{ $download->id }}">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+            @else
+            <tr>
+                <td colspan="4" class="text-center">No downloads available</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
 </div>
-
 
 <script>
 
