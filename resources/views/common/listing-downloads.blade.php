@@ -55,7 +55,8 @@ $(document).off('click', '.delete-download').on('click', '.delete-download', fun
             success: function (response) {
                 if (response.status === 'success') {
                     toastr.success(response.message);
-                    $('#listing_user_downloads').trigger('click');
+                    $('button[data-id="' + downloadId + '"]').closest('tr').remove();
+                    // $('#listing_user_downloads').trigger('click');
                 } else {
                     toastr.error(response.message);
                 }
