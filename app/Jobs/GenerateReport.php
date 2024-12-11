@@ -80,19 +80,19 @@ class GenerateReport implements ShouldQueue
     }
     private function generatePdf($results)
     {
-        $html = '<h1>Report</h1>';
+        $html = '<h1 style="font-size: 16px; text-align: center;">Report</h1>';
 
-        $chunkSize = 400; // Number of rows per page
+        $chunkSize = 200; // Number of rows per page
         $chunks = array_chunk($results, $chunkSize);
 
         foreach ($chunks as $pageIndex => $chunk) {
-            $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
-            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;">';
+            // $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
+            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;font-size: 10px;">';
             $html .= '<thead><tr>';
 
             if (count($chunk) > 0) {
                 foreach (array_keys((array) $chunk[0]) as $header) {
-                    $html .= '<th style="padding: 5px; text-align: left;">' . htmlspecialchars($header) . '</th>';
+                    $html .= '<th style="padding: 5px; text-align: left; background-color: #f2f2f2;">' . htmlspecialchars($header) . '</th>';
                 }
             }
 
@@ -102,7 +102,7 @@ class GenerateReport implements ShouldQueue
             foreach ($chunk as $row) {
                 $html .= '<tr>';
                 foreach ((array) $row as $cell) {
-                    $html .= '<td style="padding: 5px;">' . htmlspecialchars($cell) . '</td>';
+                    $html .= '<td style="padding: 5px; text-align: left; word-wrap: break-word;">' . htmlspecialchars($cell) . '</td>';
                 }
                 $html .= '</tr>';
             }
