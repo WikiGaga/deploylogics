@@ -445,11 +445,16 @@ class ListingController extends Controller
 
     if ($download) {
 
-        $filePath = 'app/reports/' . $download->file_name;
+        $filePath = 'reports/' . $download->file_name;
 
-        if (Storage::exists($filePath)) {
-            Storage::delete($filePath);
+        $fullPath = storage_path('app/' . $filePath);
+        dd($fullPath);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
         }
+        // if (Storage::exists($filePath)) {
+        //     Storage::delete($filePath);
+        // }
 
         DB::table('tbl_listing_downloads')->where('id', $id)->update(['deleted' => 1]);
 
