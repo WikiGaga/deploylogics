@@ -434,6 +434,7 @@ class ListingController extends Controller
         $downloads = TblListingDownload::with('user')
         ->where('LISTING_CASE', $case_name)
         ->where('DELETED', 0)
+        ->orderBy('created_at', 'desc')
         ->get();
 
     return view('common.listing-downloads', compact('downloads'));

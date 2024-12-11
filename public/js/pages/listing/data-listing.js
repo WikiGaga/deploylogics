@@ -426,3 +426,10 @@ $('body').on('click', '#export_csv, #export_pdf', function () {
     // $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
     $form.trigger('submit');
 });
+
+$(document).on('keypress', 'input', function(e) {
+    if (e.which === 13) {
+        e.preventDefault();
+        $('#getRecordsByDateFilter').click(); // Trigger the form submit
+    }
+});

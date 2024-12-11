@@ -202,11 +202,11 @@
                                         </label>
                                     </li>
                                 @endforeach
-                                <li >
+                                {{-- <li >
                                     <label>
                                         <input value="actions" type="checkbox" checked> Actions
                                     </label>
-                                </li>
+                                </li> --}}
                             </ul>
                         </div>
                     </div>
