@@ -36,7 +36,7 @@ class PusherNotifyEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('user.' . $this->userId);
+        return new PrivateChannel('App.User.' . $this->userId);
     }
 
     public function broadcastWith()

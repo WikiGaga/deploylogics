@@ -49847,17 +49847,36 @@ module.exports = __webpack_require__(/*! C:\xampp\htdocs\Royal Versions\royalerp
 
 /******/ });
 
-
+/*
 Echo.private(`App.User.${userId}`)
     .listen('PusherNotifyEvent', (event) => {
         // Show notification
         alert(event.message); // Or use Toastr or another library for better notifications
-        console.log('Download Link:', event.url);
+        console.log('Download Link:', event.messageUrl);
 
         const downloadLink = document.createElement('a');
-        downloadLink.href = event.url;
+        downloadLink.href = event.messageUrl;
         downloadLink.textContent = 'Download Report';
         downloadLink.target = '_blank';
         document.body.appendChild(downloadLink);
 
     });
+*/
+
+window.Echo.private(`App.User.${userId}`)
+    .listen('PusherNotifyEvent', (event) => {
+        console.log('Event received:', event); // Log the event to confirm it's coming through
+        alert(event.message); // Show the message
+        console.log('Download Link:', event.messageUrl);
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = event.messageUrl;
+        downloadLink.textContent = 'Download Report';
+        downloadLink.target = '_blank';
+        document.body.appendChild(downloadLink);
+    })
+    .error((error) => {
+        console.error('Pusher connection error:', error); // This will log any connection issues
+    });
+
+

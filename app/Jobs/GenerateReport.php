@@ -54,7 +54,9 @@ class GenerateReport implements ShouldQueue
             'DELETED' => 0,
         ]);
 
-        event(new PusherNotifyEvent($this->userId, 'Your report is ready to download.', $this->fileName));
+        // event(new PusherNotifyEvent($this->userId, 'Your report is ready to download.', $this->fileName));
+        broadcast(new PusherNotifyEvent($this->userId,'Test message', 'https://example.com/report'));
+
 
     }
 
