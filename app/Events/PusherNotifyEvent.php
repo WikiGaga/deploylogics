@@ -7,11 +7,13 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class PusherNotifyEvent implements ShouldBroadcast
+// class PusherNotifyEvent implements ShouldBroadcast
+class PusherNotifyEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -28,6 +30,11 @@ class PusherNotifyEvent implements ShouldBroadcast
         $this->userId = $userId;
         $this->message = $message;
         $this->messageUrl = $messageUrl;
+        Log::info('Event Instantiated', [
+            'userId' => $userId,
+            'message' => $message,
+            'messageUrl' => $messageUrl,
+        ]);
     }
 
     /**
@@ -43,7 +50,7 @@ class PusherNotifyEvent implements ShouldBroadcast
 
     public function broadcastWith()
     {
-        \Log::info('Broadcasting Data', [
+        Log::info('Broadcasting Data', [
             'message' => $this->message,
             'url' => $this->messageUrl,
         ]);
