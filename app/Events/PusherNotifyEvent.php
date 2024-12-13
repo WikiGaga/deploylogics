@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class PusherNotifyEvent implements ShouldBroadcast
 {
@@ -42,9 +43,13 @@ class PusherNotifyEvent implements ShouldBroadcast
 
     public function broadcastWith()
     {
-        return [
+        \Log::info('Broadcasting Data', [
             'message' => $this->message,
             'url' => $this->messageUrl,
+        ]);
+        return [
+            'message' => $this->message,
+            'messageUrl' => $this->messageUrl,
         ];
     }
 
