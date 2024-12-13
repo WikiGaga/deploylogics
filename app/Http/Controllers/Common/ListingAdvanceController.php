@@ -24,12 +24,17 @@ use App\Models\TblSoftListingStudioJoinTable;
 use App\Models\TblSoftListingStudioUserFilter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Events\PusherNotifyEvent;
 
 class ListingAdvanceController extends Controller
 {
 
     public function index(Request $request,$caseType,$subType = null){
     //    dd($request['query']['globalFilters']['download']);
+
+    event(new PusherNotifyEvent('17580923022021','hello world','https://example.com/report'));
+
+
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();

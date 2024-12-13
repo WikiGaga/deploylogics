@@ -47,7 +47,6 @@
 @endsection
 @section('content')
     @php
-    event(new PusherNotifyEvent('hello world'));
         $view = $data['menu_dtl_id'].'-view';
         $create = $data['menu_dtl_id'].'-create';
         $edit = $data['menu_dtl_id'].'-edit';
