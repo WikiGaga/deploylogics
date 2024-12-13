@@ -34,8 +34,6 @@ class ListingAdvanceController extends Controller
 
     event(new PusherNotifyEvent('17580923022021','hello world','https://example.com/report'));
 
-        return response()->json('the end');
-
 
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
