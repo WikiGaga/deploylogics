@@ -25,6 +25,7 @@ use App\Models\TblSoftListingStudioUserFilter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Events\PusherNotifyEvent;
+use Illuminate\Support\Facades\Log;
 
 class ListingAdvanceController extends Controller
 {
@@ -32,7 +33,9 @@ class ListingAdvanceController extends Controller
     public function index(Request $request,$caseType,$subType = null){
     //    dd($request['query']['globalFilters']['download']);
 
-    event(new PusherNotifyEvent('17580923022021','hello world','https://example.com/report'));
+    \Log::info('Firing Pusher Event');
+    event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
+    \Log::info('Event Fired');
 
 
         $data = [];
