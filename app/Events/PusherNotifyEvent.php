@@ -46,4 +46,9 @@ class PusherNotifyEvent implements ShouldBroadcast
             'url' => $this->messageUrl,
         ];
     }
+
+    public function broadcastAs()
+    {
+        return 'PusherNotifyEvent';
+    }
 }
