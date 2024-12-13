@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade as PDF;
+use App\Events\PusherNotifyEvent;
 
 class GenerateReport implements ShouldQueue
 {
@@ -52,6 +53,8 @@ class GenerateReport implements ShouldQueue
             'CREATED_AT' => now(),
             'DELETED' => 0,
         ]);
+
+        event(new PusherNotifyEvent($this->userId, 'Your report is ready to download.', $this->fileName));
 
     }
 

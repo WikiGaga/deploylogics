@@ -11,7 +11,7 @@
                 <li class="kt-menu__item kt-menu__item--open kt-menu__item--here kt-menu__item--submenu kt-menu__item--rel kt-menu__item--active kt-menu__item--open-dropdown header_change_zindex" data-ktmenu-submenu-toggle="click" aria-haspopup="true">
                     <a href="javascript:;" id="Favourites" class="kt-menu__link kt-menu__toggle">
                         <span class="kt-menu__link-text">
-                            <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>Fav</span>
+                            <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>Favourites</span>
                         </span>
                     </a>
                     <!--<div id="fav_menu" class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--left">

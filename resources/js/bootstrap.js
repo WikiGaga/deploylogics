@@ -1,12 +1,13 @@
 window._ = require('lodash');
 
 import Echo from "laravel-echo";
- 
+
 window.Pusher = require('pusher-js');
- 
+
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: '0a5abd811263e868cd1a'
+    key: process.env.MIX_PUSHER_APP_KEY,
+    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
 });
 
 /**

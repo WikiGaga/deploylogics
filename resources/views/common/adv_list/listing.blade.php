@@ -317,6 +317,8 @@
         </div>
     </div>
     <script>
+        var userId = @json(Auth::user()->id);
+
         $('#listing_user_filter').on('click',function(e){
             var data_url = $(this).attr('data-url');
             $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
