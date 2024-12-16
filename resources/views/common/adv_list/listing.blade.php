@@ -169,17 +169,17 @@
                         </form>
                         <div class="dropdown dropdown-inline">
                             <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="flaticon-download"></i> Download
+                                <i class="la la-download"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
                                     <a href="javascript:void(0);" id="export_csv" class="export-option">
-                                        <img src="{{asset('images/excel.svg')}}" alt="CSV"> CSV
+                                        <img src="{{asset('public/assets/images/excel.svg')}}" alt="CSV"> CSV
                                     </a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" id="export_pdf" class="export-option">
-                                        <img src="{{asset('images/pdf.svg')}}" alt="CSV"> PDF
+                                        <img src="{{asset('public/assets/images/pdf.svg')}}" alt="CSV"> PDF
                                     </a>
                                 </li>
                                 <li>
