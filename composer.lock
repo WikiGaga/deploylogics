@@ -268,16 +268,6 @@
                 "php": ">=7.0.0"
             },
             "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Meneses\\LaravelMpdf\\LaravelMpdfServiceProvider"
-                    ],
-                    "aliases": {
-                        "PDF": "Meneses\\LaravelMpdf\\Facades\\LaravelMpdf"
-                    }
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Meneses\\LaravelMpdf\\": "src/LaravelMpdf"
