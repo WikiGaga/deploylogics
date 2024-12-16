@@ -173,13 +173,13 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
-                                    <a href="javascript:void(0);" id="export_csv" class="export-option btn-icon-md">
-                                        <img src="{{asset('assets/images/excel.svg')}}" alt="CSV"> CSV
+                                    <a href="javascript:void(0);" id="export_csv" class="export-option">
+                                        <img  src="{{asset('assets/images/excel.svg')}}" alt="CSV" style="width: 16px; height: 16px;"> CSV
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" id="export_pdf" class="export-option btn-icon-md">
-                                        <img src="{{asset('assets/images/pdf.svg')}}" alt="CSV"> PDF
+                                    <a href="javascript:void(0);" id="export_pdf" class="export-option">
+                                        <img src="{{asset('assets/images/pdf.svg')}}" alt="CSV" style="width: 16px; height: 16px;"> PDF
                                     </a>
                                 </li>
                                 <li>
