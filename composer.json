@@ -27,7 +27,7 @@
         "league/csv": "^9.7",
         "maatwebsite/excel": "^3.1",
         "predis/predis": "^1.1",
-        "pusher/pusher-php-server": "~4.0",
+        "pusher/pusher-php-server": "^5.0",
         "santigarcor/laratrust": "^6.2",
         "theumar98/barcode": "dev-main",
         "tymon/jwt-auth": "^1.0",

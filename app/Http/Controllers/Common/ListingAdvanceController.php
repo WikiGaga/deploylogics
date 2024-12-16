@@ -32,7 +32,7 @@ class ListingAdvanceController extends Controller
     public function index(Request $request,$caseType,$subType = null){
     //    dd($request['query']['globalFilters']['download']);
 
-    event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
+    // event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
 
         // event(new PusherNotifyEvent('test', 'Test Message', 'https://example.com'));
 
