@@ -149,12 +149,12 @@
                             <i class="la la-plus"></i>
                         </a>
                         @endpermission
-                        <button type="button" data-url="{{ action('Common\ListingController@openListingUserFilterModal',$data['case']) }}" class="btn btn-bold btn-label-brand btn-sm" data-toggle="modal" id="listing_user_filter" data-target="#kt_modal_1">
+                        <button type="button" data-url="{{ action('Common\ListingController@openListingUserFilterModal',$data['case']) }}" class="btn btn-bold btn-label-brand btn-md" data-toggle="modal" id="listing_user_filter" data-target="#kt_modal_1">
                             <i class="fa fa-filter"></i>
                         </button>
                         <form method="get" name="getRecordsByDateFilter" class="form-group d-inline-block">
                             <div class="form-group d-inline-block">
-                                <select class="form-select btn btn-sm btn-primary" name="radioDate" style="padding: 0.545rem 0.75rem;">
+                                <select class="form-select btn btn-md btn-default" name="radioDate" style="padding: 0.545rem 0.75rem;">
                                     <option value="all">All</option>
                                     <option value="today" selected>Today</option>
                                     <option value="yesterday">Yesterday</option>
@@ -163,23 +163,24 @@
                                 </select>
                             </div>
                             <div class="btn-group btn-group-sm" role="group" aria-label="Button group with nested dropdown">
-                                <button type="submit" class="btn btn-sm btn-warning" id="getRecordsByDateFilter">Get Records</button>
+                                <button type="submit" class="btn btn-md btn-default" id="getRecordsByDateFilter">
+                                <i class="la la-filter"></i>Filter</button>
                                 {{-- <button type="button" class="btn btn-sm btn-primary" onclick="window.location.href=window.location.href">Reset Filter</button> --}}
                             </div>
                         </form>
                         <div class="dropdown dropdown-inline">
-                            <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="la la-download"></i> Export
+                            <button type="button" class="btn btn-default btn-icon btn-md btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="la la-download"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
                                     <a href="javascript:void(0);" id="export_csv" class="export-option">
-                                        <img  src="{{asset('assets/images/excel.svg')}}" alt="CSV" style="width: 16px; height: 16px;"> CSV
+                                        <img  src="{{asset('assets/images/excel.svg')}}" alt="CSV" style="width: 16px; height: 16px;" class="mr-2"> CSV
                                     </a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" id="export_pdf" class="export-option">
-                                        <img src="{{asset('assets/images/pdf.svg')}}" alt="CSV" style="width: 16px; height: 16px;"> PDF
+                                        <img src="{{asset('assets/images/pdf.svg')}}" alt="CSV" style="width: 16px; height: 16px;" class="mr-2"> PDF
                                     </a>
                                 </li>
                                 <li>
@@ -191,7 +192,7 @@
                         </div>
 
                         <div class="dropdown dropdown-inline">
-                            <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-default btn-icon btn-md btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="flaticon-more"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
