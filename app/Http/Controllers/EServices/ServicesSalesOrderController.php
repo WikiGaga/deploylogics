@@ -31,7 +31,7 @@ use ArPHP\I18N\Arabic;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Validator as FacadesValidator;
-use Meneses\LaravelMpdf\LaravelMpdf;
+// use Meneses\LaravelMpdf\LaravelMpdf;
 
 class ServicesSalesOrderController extends Controller
 {
@@ -76,7 +76,7 @@ class ServicesSalesOrderController extends Controller
                     $data['current'] = TblSaleSalesOrder::with('dtls','expense','customer','sales_contract','sale_booking')->where(Utilities::currentBCB())->where('sales_order_id',$quotId)->first();
 
                     $data['areas'] = TblDefiArea::where('city_id' , $data['current']->city_id)->where('area_entry_status' , 1)->get();
-            
+
                     $doc_data = [
                         'biz_type'          => 'branch',
                         'model'             => 'TblSaleSalesOrder',
@@ -217,15 +217,15 @@ class ServicesSalesOrderController extends Controller
             $sales_order->branch_id = auth()->user()->branch_id;
             $sales_order->sales_order_user_id = auth()->user()->id;
             $sales_order->sales_order_code_type = self::$type;
-            
+
             // Check If the Quotation is Scheduled Then Order is also Scheduled
             $sStatus = TblSaleSalesOrder::where('sales_order_id' , $request->sales_request_quotation_id);
             if($sStatus->count() > 0){
-                $sStatus->first('schedule_status')->schedule_status == 1 ? $scheduled = 1  : $scheduled = 0;    
+                $sStatus->first('schedule_status')->schedule_status == 1 ? $scheduled = 1  : $scheduled = 0;
             }else{
                 $scheduled = 0;
             }
-            
+
             $sales_order->schedule_status = $scheduled;
             $sales_order->save();
 
@@ -237,7 +237,7 @@ class ServicesSalesOrderController extends Controller
                 // Update Scheduled Quotation Records
                 if($scheduled == 1){
                     TblServManageSchedule::where('request_quotation_id' , $request->sales_request_quotation_id)->update([
-                        'sales_order_id' => $sales_order->sales_order_id,            
+                        'sales_order_id' => $sales_order->sales_order_id,
                     ]);
                 }
             }
