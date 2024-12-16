@@ -138,7 +138,7 @@
                     <div class="col-md-3">
                         <div class="kt-input-icon kt-input-icon--left">
                             <input type="text" class="form-control form-control-sm" placeholder="Search..." id="generalSearch" autofocus>
-                            <span class="kt-input-icon__icon kt-input-icon__icon--left" >
+                            <span class="kt-input-icon__icon kt-input-icon__icon--left search-icon-bg">
                                 <span><i class="la la-search"></i></span>
                             </span>
                         </div>
@@ -239,8 +239,15 @@
         <div class="kt-portlet__body kt-portlet__body--fit">
             <!--begin: Datatable -->
             <style>
-                .kt-input-icon__icon {
-                    background-color: #838383;
+                .search-icon-bg {
+                background-color: #343a40; /* Dark background */
+                color: #fff; /* White icon color */
+                border-radius: 4px; /* Optional: Rounded corners */
+                padding: 5px; /* Optional: Add padding for better spacing */
+                }
+
+                .search-icon-bg i {
+                color: #fff; /* Ensure the icon stays white */
                 }
                 .dropdown-menu > li:hover {
                     background-color: #EBEDF1;
