@@ -164,13 +164,13 @@
                             </div>
                             <div class="btn-group btn-group-md" role="group" aria-label="Button group with nested dropdown">
                                 <button type="submit" class="btn btn-md btn-default" id="getRecordsByDateFilter">
-                                <i class="la la-filter-list"></i>Filter</button>
+                                <i class="la la-th-list"></i>Filter</button>
                                 {{-- <button type="button" class="btn btn-sm btn-primary" onclick="window.location.href=window.location.href">Reset Filter</button> --}}
                             </div>
                         </form>
                         <div class="dropdown dropdown-inline">
                             <button type="button" class="btn btn-default btn-md " data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="la la-download mr-1"></i> Export
+                                <i class="la la-download"></i> Export
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
@@ -192,8 +192,8 @@
                         </div>
 
                         <div class="dropdown dropdown-inline">
-                            <button type="button" class="btn btn-default btn-icon btn-md btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="la la-table mr-1"></i> Columns
+                            <button type="button" class="btn btn-default btn-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="la la-table"></i> Columns
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 @foreach($data['table_columns'] as $key=>$heading)
