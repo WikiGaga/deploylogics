@@ -138,8 +138,8 @@
                     <div class="col-md-3">
                         <div class="kt-input-icon kt-input-icon--left">
                             <input type="text" class="form-control form-control-sm" placeholder="Search..." id="generalSearch" autofocus>
-                            <span class="kt-input-icon__icon kt-input-icon__icon--left search-icon-bg">
-                                <span><i class="la la-search mr-2"></i></span>
+                            <span class="kt-input-icon__icon kt-input-icon__icon--left search-icon-bg mr-1">
+                                <span><i class="la la-search"></i></span>
                             </span>
                         </div>
                     </div>
@@ -240,7 +240,7 @@
             <!--begin: Datatable -->
             <style>
                 .search-icon-bg {
-                    background-color: #787b7f;
+                    background-color: #b3b8bf;
                     color: #fff; /* White icon color */
                     border-radius: 4px; /* Optional: Rounded corners */
                     padding: 5px; /* Optional: Add padding for better spacing */
