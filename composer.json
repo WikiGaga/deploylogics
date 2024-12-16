@@ -10,7 +10,6 @@
     "require": {
         "php": "^7.2.5",
         "barryvdh/laravel-dompdf": "^0.9.0",
-        "carlos-meneses/laravel-mpdf": "^2.1",
         "cyber-duck/laravel-excel": "^2.1",
         "doctrine/dbal": "^2.10",
         "dompdf/dompdf": "^1.0",

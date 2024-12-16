@@ -55,8 +55,8 @@ class PusherNotifyEvent implements ShouldBroadcastNow
             'url' => $this->messageUrl,
         ]);
         return [
-            'message' => $this->message,
-            'messageUrl' => $this->messageUrl,
+            'message' => $this->message ?? 'Default message',
+        'messageUrl' => $this->messageUrl ?? 'Default URL',
         ];
     }
 

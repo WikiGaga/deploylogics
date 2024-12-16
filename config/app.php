@@ -182,7 +182,7 @@ return [
         App\Providers\BladeServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
-        Meneses\LaravelMpdf\LaravelMpdfServiceProvider::class,
+        // Meneses\LaravelMpdf\LaravelMpdfServiceProvider::class,
     ],
 
     /*
@@ -236,7 +236,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'Image' => Intervention\Image\Facades\Image::class,
         'Laratrust'   => Laratrust\LaratrustFacade::class,
-        'PDF' => Meneses\LaravelMpdf\Facades\LaravelMpdf::class,
+        // 'PDF' => Meneses\LaravelMpdf\Facades\LaravelMpdf::class,
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
