@@ -168,18 +168,18 @@
                             </div>
                         </form>
                         <div class="dropdown dropdown-inline">
-                            <button type="button" class="btn btn-danger btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa-solid fa-download"></i>
+                            <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="flaticon-download"></i> Download
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" aria-labelledby="dropdownMenu1">
                                 <li>
                                     <a href="javascript:void(0);" id="export_csv" class="export-option">
-                                        Export CSV
+                                        <i class="flaticon-excel"></i> CSV
                                     </a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" id="export_pdf" class="export-option">
-                                        Export PDF
+                                        <i class="flaticon-pdf"></i>PDF
                                     </a>
                                 </li>
                                 <li>
