@@ -138,7 +138,7 @@
                     <div class="col-md-3">
                         <div class="kt-input-icon kt-input-icon--left">
                             <input type="text" class="form-control form-control-sm" placeholder="Search..." id="generalSearch" autofocus>
-                            <span class="kt-input-icon__icon kt-input-icon__icon--left btn-secondary">
+                            <span class="kt-input-icon__icon kt-input-icon__icon--left" >
                                 <span><i class="la la-search"></i></span>
                             </span>
                         </div>
@@ -239,6 +239,12 @@
         <div class="kt-portlet__body kt-portlet__body--fit">
             <!--begin: Datatable -->
             <style>
+                .kt-input-icon__icon {
+                    background-color: #838383;
+                }
+                .dropdown-menu > li:hover {
+                    background-color: #EBEDF1;
+                }
                 .kt-datatable>.kt-datatable__table{
                     /* max-height: 500px !important; */
                 }
