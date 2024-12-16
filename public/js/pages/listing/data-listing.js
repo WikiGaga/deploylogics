@@ -118,7 +118,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     ){
                         if(voucher_status == "Un-Posted")
                         {
-                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
+                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-warning" title="Edit">\
                                 <i class="la la-edit"></i>\
                             </a>';
                         }
