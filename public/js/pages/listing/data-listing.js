@@ -118,12 +118,12 @@ var KTDatatableRemoteAjaxDemo = function() {
                     ){
                         if(voucher_status == "Un-Posted")
                         {
-                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm" title="Edit">\
+                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm btn-warning" title="Edit">\
                                 <i class="la la-edit"></i>\
                             </a>';
                         }
                     }else{
-                        var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm" title="Edit">\
+                        var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm btn-warning" title="Edit">\
                             <i class="la la-edit"></i>\
                         </a>';
                     }
@@ -141,19 +141,19 @@ var KTDatatableRemoteAjaxDemo = function() {
                     ){
                         if(voucher_status == "Un-Posted")
                         {
-                            var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm mlr" title="Delete">\
+                            var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
                             </button>';
                         }
                     }else{
-                        var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm mlr" title="Delete">\
+                        var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                             <i class="la la-trash"></i>\
                         </button>';
                     }
                 }
                 if(dropdownLink){
                     var btnDropdownLink = '<div class="dropdown">'+
-                        '<a href="javascript:;" class="btn btn-sm btn-soft btn-icon btn-icon-sm" data-toggle="dropdown">'+
+                        '<a href="javascript:;" class="btn btn-sm btn-soft btn-icon btn-icon-sm btn-success" data-toggle="dropdown">'+
                         '<i class="la la-bars"></i>'+
                         '</a>'+
                         '<div class="dropdown-menu dropdown-menu-right">'+

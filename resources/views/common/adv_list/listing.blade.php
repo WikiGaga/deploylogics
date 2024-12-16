@@ -3,6 +3,19 @@
 
 @section('pageCSS')
     <style>
+        .search-icon-bg {
+            background-color: #b3b8bf;
+            color: #fff !important; /* White icon color */
+            border-radius: 4px; /* Optional: Rounded corners */
+            padding: 5px; /* Optional: Add padding for better spacing */
+        }
+
+        .search-icon-bg i {
+            color: #fff !important;
+        }
+        .dropdown-menu > li:hover {
+            background-color: #EBEDF1;
+        }
         .color-white{
             color: #fff !important;
         }
@@ -242,19 +255,6 @@
         <div class="kt-portlet__body kt-portlet__body--fit">
             <!--begin: Datatable -->
             <style>
-                .search-icon-bg {
-                    background-color: #b3b8bf;
-                    color: #fff !important; /* White icon color */
-                    border-radius: 4px; /* Optional: Rounded corners */
-                    padding: 5px; /* Optional: Add padding for better spacing */
-                }
-
-                .search-icon-bg i {
-                    color: #fff !important;
-                }
-                .dropdown-menu > li:hover {
-                    background-color: #EBEDF1;
-                }
                 .kt-datatable>.kt-datatable__table{
                     /* max-height: 500px !important; */
                 }
@@ -275,13 +275,13 @@
                     height: 10px !important;
                 }
                 .kt-datatable .ps > .ps__rail-y > .ps__thumb-y:hover, .kt-datatable .ps > .ps__rail-y > .ps__thumb-y:focus, .kt-datatable .ps > .ps__rail-x > .ps__thumb-x:hover, .kt-datatable .ps > .ps__rail-x > .ps__thumb-x:focus{
-                    /* background: #f44336 !important; */
+                    background: #737272 !important;
                 }
                 .kt-datatable .ps > .ps__rail-y > .ps__thumb-y, .kt-datatable .ps > .ps__rail-x > .ps__thumb-x {
-                    /* background: #f44336 !important; */
+                    background: #737272 !important;
                 }
                 .ps > .ps__rail-x > .ps__thumb-x:hover, .ps > .ps__rail-x > .ps__thumb-x:focus {
-                    /* background: #f44336 !important;; */
+                    background: #737272 !important;;
                     height: 10px !important;
                 }
                 .ps > .ps__rail-x > .ps__thumb-x {
