@@ -138,7 +138,7 @@
                     <div class="col-md-3">
                         <div class="kt-input-icon kt-input-icon--left">
                             <input type="text" class="form-control form-control-sm" placeholder="Search..." id="generalSearch" autofocus>
-                            <span class="kt-input-icon__icon kt-input-icon__icon--left">
+                            <span class="kt-input-icon__icon kt-input-icon__icon--left btn-secondary">
                                 <span><i class="la la-search"></i></span>
                             </span>
                         </div>
@@ -149,7 +149,7 @@
                             <i class="la la-plus"></i>
                         </a>
                         @endpermission
-                        <button type="button" data-url="{{ action('Common\ListingController@openListingUserFilterModal',$data['case']) }}" class="btn btn-bold btn-label-brand btn-md" data-toggle="modal" id="listing_user_filter" data-target="#kt_modal_1">
+                        <button type="button" data-url="{{ action('Common\ListingController@openListingUserFilterModal',$data['case']) }}" class="btn btn-bold btn-label-brand btn-sm" data-toggle="modal" id="listing_user_filter" data-target="#kt_modal_1">
                             <i class="fa fa-filter"></i>
                         </button>
                         <form method="get" name="getRecordsByDateFilter" class="form-group d-inline-block">

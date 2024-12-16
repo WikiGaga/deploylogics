@@ -325,7 +325,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     className = 'class="'+data_field+' kt_datepicker_inline"';
                 }
                 // for 2nd tr th // newTr.append('<th class="kt-datatable__cell"><span style="'+widthPx+'"><input type="text" name="'+data_field+'" '+className+' value="'+val+'" style="width: 100%;"/></span></th>');
-                thix.html('<span style="'+widthPx+'">'+name_title+'<input type="text" name="'+data_field+'" '+className+' value="'+val+'" style="width: 100%;"/></span>');
+                thix.html('<span style="'+widthPx+'">'+name_title+'<input type="text" name="'+data_field+'" '+className+' value="'+val+'" placeholder="Search..." style="width: 100%;"/></span>');
 
             });
             // for 2nd tr th // $('.kt-datatable thead tr.inline_filter th:last-child').find('span').html("");

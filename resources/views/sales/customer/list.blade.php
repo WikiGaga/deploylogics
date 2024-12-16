@@ -327,7 +327,7 @@
                     if(!valueEmpty(card_number)){
                         filterData.inline.card_number = card_number;
                     }
-                    
+
                     // $('.kt-container').css({'pointer-events':'none','opacity':'0.5'});
                     localStorage.removeItem('ajax_data-1-meta');
 
