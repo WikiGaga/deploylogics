@@ -514,7 +514,7 @@ class Pusher implements LoggerAwareInterface, PusherInterface
         $post_params['data'] = $data_encoded;
         $post_params['channels'] = array_values($channels);
 
-        $params = $params ?: []; // Ensure $params is an array if null or undefined
+        // $params = $params ?: [];
         $all_params = array_merge($post_params, $params);
 
         $post_value = json_encode($all_params);
