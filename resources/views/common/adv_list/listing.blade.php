@@ -268,6 +268,13 @@
                     flex-grow: 1;
                     overflow: auto;
                 } */
+                .listing_data_table {
+                    height: calc(100vh - 100px); /* Adjust 100px to account for headers, margins, etc. */
+                    width: 100%; /* Full width of the screen */
+                    overflow: auto; /* Enable scrolling inside the container */
+                    border: 1px solid #ccc; /* Optional: Add border for a fixed look */
+                    box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+                }
                 .ps > .ps__rail-x {
                     height: 10px !important;
                 }
