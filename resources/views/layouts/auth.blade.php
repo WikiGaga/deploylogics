@@ -39,14 +39,14 @@
         .login.login-1.login-signin-on .login-signin{display:block;}
         @media (min-width: 992px){
             .login.login-1 .login-aside{width:100%;max-width:600px;}
-            .login.login-1 .login-content{width:100%;max-width:500px;}
-            .login.login-1 .login-content .login-form{width:100%;max-width:450px;}
+            .login.login-1 .login-content{width:100%;max-width:400px;}
+            .login.login-1 .login-content .login-form{width:100%;max-width:350px;}
         }
         @media (min-width: 992px) and (max-width: 1399.98px){
             .login.login-1 .login-aside{width:100%;max-width:450px;}
         }
         @media (max-width: 991.98px){
-            .login.login-1 .login-content .login-form{width:100%;max-width:400px;}
+            .login.login-1 .login-content .login-form{width:100%;max-width:300px;}
         }
         @media (max-width: 575.98px){
             .login.login-1 .aside-img{min-height:300px!important;background-size:400px;}
@@ -311,13 +311,13 @@
             <!--end::Aside Top-->
 
             <!--begin::Aside Bottom-->
-            <div class="aside-img d-flex flex-row-fluid bgi-no-repeat bgi-position-y-bottom bgi-position-x-center" style="background-image: url(assets7/media/svg/illustrations/auth-bg.png)"></div>
+            <div class="aside-img d-flex flex-row-fluid bgi-no-repeat bgi-position-y-bottom" style="background-image: url(assets7/media/svg/illustrations/auth-bg.png)"></div>
             <!--end::Aside Bottom-->
         </div>
         <!--begin::Aside-->
 
         <!--begin::Content-->
-        <div class="login-content flex-row-fluid d-flex flex-column justify-content-center position-relative overflow-hidden p-7 mx-auto">
+        <div class="login-content flex-row-fluid d-flex flex-column justify-content-center position-relative overflow-hidden p-1 mx-auto">
             <!--begin::Content body-->
             <div class="d-flex flex-column-fluid flex-center">
                 @yield('content')
