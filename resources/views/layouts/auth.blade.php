@@ -291,7 +291,7 @@
             height: 100vh; /* Make the element fill the viewport height */
             width: 100%; /* Ensure full width of the parent container */
             background-size: cover; /* Scale the background image to cover the entire container */
-            background-position: center; /* Center the image in the container */
+            /* background-position: center;  */
             background-repeat: no-repeat; /* Prevent the image from repeating */
         }
     </style>
