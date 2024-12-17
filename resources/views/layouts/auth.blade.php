@@ -287,6 +287,13 @@
         .phpdebugbar {
             display: none;
         }
+        .aside-img {
+            height: 100vh; /* Make the element fill the viewport height */
+            width: 100%; /* Ensure full width of the parent container */
+            background-size: cover; /* Scale the background image to cover the entire container */
+            background-position: center; /* Center the image in the container */
+            background-repeat: no-repeat; /* Prevent the image from repeating */
+        }
     </style>
 </head>
 <!--end::Head-->
@@ -311,7 +318,7 @@
             <!--end::Aside Top-->
 
             <!--begin::Aside Bottom-->
-            <div class="aside-img d-flex flex-row-fluid bgi-no-repeat bgi-position-y-bottom" style="background-image: url(assets7/media/svg/illustrations/auth-bg.png)"></div>
+            <div class="aside-img d-flex flex-row-fluid bgi-no-repeat" style="background-image: url(assets7/media/svg/illustrations/auth-bg.png)"></div>
             <!--end::Aside Bottom-->
         </div>
         <!--begin::Aside-->
