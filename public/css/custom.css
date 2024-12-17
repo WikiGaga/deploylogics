@@ -940,7 +940,7 @@ a#btn-back {
 }
 
 .ajax_data_table>table>thead>tr>th {
-    padding: 10px 4px !important;
+    padding: 5px 4px !important;
     position: sticky;
     top: 0;
     background-color: #fcfcfc;
@@ -952,13 +952,13 @@ a#btn-back {
     box-shadow: inset 0px 5px 10px -4px rgba(0, 0, 0, 0.1);
 }
 
-.ajax_data_table>table>tbody>tr:nth-child(odd) {
+/* .ajax_data_table>table>tbody>tr:nth-child(odd) {
     background-color: #ffffff;
 }
 
 .ajax_data_table>table>tbody>tr:nth-child(even) {
     background-color: #f8f9fb;
-}
+} */
 
 .ajax_data_table>table>tbody>tr>td {
     padding: 3px !important;
@@ -988,7 +988,7 @@ a#btn-back {
 }
 
 .ajax_data_table>table>tbody>tr:hover {
-    background-color: #fffce0;
+    background-color: #f8f9fb;
     cursor: pointer;
 }
 
