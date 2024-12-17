@@ -201,7 +201,7 @@ var KTDatatableRemoteAjaxDemo = function() {
             // layout definition
             layout: {
                 scroll: true,
-                height: 500,
+                height: auto,
                 footer: false,
             },
 
