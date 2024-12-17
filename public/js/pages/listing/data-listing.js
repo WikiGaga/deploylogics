@@ -201,7 +201,7 @@ var KTDatatableRemoteAjaxDemo = function() {
             // layout definition
             layout: {
                 scroll: true,
-                height: auto,
+                height: adjustTableHeight(),
                 footer: false,
             },
 
@@ -228,6 +228,11 @@ var KTDatatableRemoteAjaxDemo = function() {
             // columns definition
             columns: dataColumns,
         });
+
+        function adjustTableHeight() {
+            const availableHeight = window.innerHeight - document.getElementById('tableContainer').getBoundingClientRect().top - 20; // Adjust -20 as needed for padding/margins
+            return availableHeight > 0 ? availableHeight : 500; // Ensure minimum height of 500px
+        }
 
         $('body').on('submit', 'form[name="getRecordsByDateFilter"]', function(event) {
             event.preventDefault();
