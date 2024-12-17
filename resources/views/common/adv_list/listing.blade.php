@@ -307,7 +307,7 @@
                     line-height: 1.2;
                 }
             </style>
-            <div class="kt-datatable ajax_data_table listing_data_table" data-url="{{ $data['data_url'] }}" id="dynamic_ajax_data"></div>
+            <div class="kt-datatable ajax_data_table listing_data_table" style="height:100%" data-url="{{ $data['data_url'] }}" id="dynamic_ajax_data"></div>
             <!--end: Datatable -->
 
             @if(in_array($data['case'],['purchase-order','grn','purchase-return','pv']))
