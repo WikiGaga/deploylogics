@@ -271,6 +271,12 @@
                 .ps > .ps__rail-x {
                     height: 10px !important;
                 }
+                .dynamic-table {
+                    height: calc(100vh - 150px); /* Adjust the 150px for header, footer, or other offsets */
+                    overflow-y: auto; /* Enable vertical scrolling */
+                    overflow-x: auto; /* Enable horizontal scrolling if needed */
+                    display: block; /* Ensure block-level element for proper height adjustment */
+                }
                 .ps > .ps__rail-x:hover, .ps > .ps__rail-x:focus {
                     height: 10px !important;
                 }
@@ -307,7 +313,7 @@
                     line-height: 1.2;
                 }
             </style>
-            <div class="kt-datatable ajax_data_table listing_data_table" style="height:100%" data-url="{{ $data['data_url'] }}" id="dynamic_ajax_data"></div>
+            <div class="kt-datatable ajax_data_table listing_data_table dynamic-table" style="height:100%" data-url="{{ $data['data_url'] }}" id="dynamic_ajax_data"></div>
             <!--end: Datatable -->
 
             @if(in_array($data['case'],['purchase-order','grn','purchase-return','pv']))
