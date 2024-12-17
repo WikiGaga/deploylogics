@@ -39,7 +39,7 @@
         .login.login-1.login-signin-on .login-signin{display:block;}
         @media (min-width: 992px){
             .login.login-1 .login-aside{width:100%;max-width:600px;}
-            .login.login-1 .login-content{width:40%;max-width:400px;}
+            .login.login-1 .login-content{width:100%;max-width:400px;}
             .login.login-1 .login-content .login-form{width:100%;max-width:350px;}
         }
         @media (min-width: 992px) and (max-width: 1399.98px){
