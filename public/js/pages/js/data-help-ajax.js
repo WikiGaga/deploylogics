@@ -184,7 +184,7 @@ function highlight(tableIndex) {
             $('.kt-datatable tbody tr').removeClass('highlight kt-datatable__row--hover');
         }
         // Highlight your target
-        $('.kt-datatable tbody tr:eq('+tableIndex+')').addClass('highlight kt-datatable__row--hover');
+        // $('.kt-datatable tbody tr:eq('+tableIndex+')').addClass('highlight kt-datatable__row--hover');
     }
 }
 
