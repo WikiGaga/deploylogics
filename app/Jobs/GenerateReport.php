@@ -84,6 +84,7 @@ class GenerateReport implements ShouldQueue
         Storage::disk('local')->put('reports/' . $this->fileName, file_get_contents($filePath));
 
     }
+
     // private function generatePdf($results)
     // {
     //     $html = '<h1 style="font-size: 16px; text-align: center;">Report</h1>';
@@ -161,7 +162,9 @@ class GenerateReport implements ShouldQueue
 
     $mpdf = new \Mpdf\Mpdf(['tempDir' => '/tmp']);
     $mpdf->WriteHTML($html);
-    $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE); // Save file to disk
+    $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE);
+
+    return response()->download($filePath);
 }
 
 
