@@ -156,7 +156,7 @@ class GenerateReport implements ShouldQueue
 
     $filePath = storage_path('app/reports/' . $this->fileName);
 
-    $mpdf = new Mpdf();
+    $mpdf = new Mpdf(['tempDir' => '/tmp']);
     $mpdf->WriteHTML($html);
     $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE); // Save file to disk
 }
