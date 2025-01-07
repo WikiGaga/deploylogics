@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade as PDF;
 use App\Events\PusherNotifyEvent;
-use Mpdf\Mpdf;
+// use Mpdf\Mpdf;
 
 class GenerateReport implements ShouldQueue
 {
@@ -156,7 +156,7 @@ class GenerateReport implements ShouldQueue
 
     $filePath = storage_path('app/reports/' . $this->fileName);
 
-    $mpdf = new Mpdf(['tempDir' => '/tmp']);
+    $mpdf = new \Mpdf\Mpdf(['tempDir' => '/tmp']);
     $mpdf->WriteHTML($html);
     $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE); // Save file to disk
 }
