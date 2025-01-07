@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade as PDF;
 use App\Events\PusherNotifyEvent;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class GenerateReport implements ShouldQueue
 {
@@ -83,46 +84,77 @@ class GenerateReport implements ShouldQueue
         Storage::disk('local')->put('reports/' . $this->fileName, file_get_contents($filePath));
 
     }
+    // private function generatePdf($results)
+    // {
+    //     $html = '<h1 style="font-size: 16px; text-align: center;">Report</h1>';
+
+    //     $chunkSize = 200; // Number of rows per page
+    //     $chunks = array_chunk($results, $chunkSize);
+
+    //     foreach ($chunks as $pageIndex => $chunk) {
+    //         // $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
+    //         $html .= '<table border="1" style="width: 100%; border-collapse: collapse;font-size: 6px;">';
+    //         $html .= '<thead><tr>';
+
+    //         if (count($chunk) > 0) {
+    //             foreach (array_keys((array) $chunk[0]) as $header) {
+    //                 $html .= '<th style="padding: 5px; text-align: left; background-color: #f2f2f2;">' . htmlspecialchars($header) . '</th>';
+    //             }
+    //         }
+
+    //         $html .= '</tr></thead>';
+    //         $html .= '<tbody>';
+
+    //         foreach ($chunk as $row) {
+    //             $html .= '<tr>';
+    //             foreach ((array) $row as $cell) {
+    //                 $html .= '<td style="padding: 5px; text-align: left; word-wrap: break-word;">' . htmlspecialchars($cell) . '</td>';
+    //             }
+    //             $html .= '</tr>';
+    //         }
+
+    //         $html .= '</tbody>';
+    //         $html .= '</table>';
+    //         $html .= '<div style="page-break-after: always;"></div>'; // Add page break
+    //     }
+
+    //     // Generate PDF from HTML
+    //     $pdf = PDF::loadHTML($html);
+
+    //     $filePath = storage_path('app/reports/' . $this->fileName);
+    //     $pdf->save($filePath);
+    // }
+
     private function generatePdf($results)
-    {
-        $html = '<h1 style="font-size: 16px; text-align: center;">Report</h1>';
+{
+    $chunks = array_chunk($results, 50); // Adjust chunk size
+    $html = '<h1>Report</h1>';
 
-        $chunkSize = 200; // Number of rows per page
-        $chunks = array_chunk($results, $chunkSize);
+    foreach ($chunks as $chunk) {
+        $html .= '<table><thead><tr>';
 
-        foreach ($chunks as $pageIndex => $chunk) {
-            // $html .= "<h2>Page " . ($pageIndex + 1) . "</h2>";
-            $html .= '<table border="1" style="width: 100%; border-collapse: collapse;font-size: 6px;">';
-            $html .= '<thead><tr>';
-
-            if (count($chunk) > 0) {
-                foreach (array_keys((array) $chunk[0]) as $header) {
-                    $html .= '<th style="padding: 5px; text-align: left; background-color: #f2f2f2;">' . htmlspecialchars($header) . '</th>';
-                }
+        if (count($chunk) > 0) {
+            foreach (array_keys((array) $chunk[0]) as $header) {
+                $html .= '<th>' . htmlspecialchars($header) . '</th>';
             }
-
-            $html .= '</tr></thead>';
-            $html .= '<tbody>';
-
-            foreach ($chunk as $row) {
-                $html .= '<tr>';
-                foreach ((array) $row as $cell) {
-                    $html .= '<td style="padding: 5px; text-align: left; word-wrap: break-word;">' . htmlspecialchars($cell) . '</td>';
-                }
-                $html .= '</tr>';
-            }
-
-            $html .= '</tbody>';
-            $html .= '</table>';
-            $html .= '<div style="page-break-after: always;"></div>'; // Add page break
         }
 
-        // Generate PDF from HTML
-        $pdf = PDF::loadHTML($html);
+        $html .= '</tr></thead><tbody>';
 
-        $filePath = storage_path('app/reports/' . $this->fileName);
-        $pdf->save($filePath);
+        foreach ($chunk as $row) {
+            $html .= '<tr>';
+            foreach ((array) $row as $cell) {
+                $html .= '<td>' . htmlspecialchars($cell) . '</td>';
+            }
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody></table><div style="page-break-after: always;"></div>';
     }
+
+    $filePath = storage_path('app/reports/' . $this->fileName);
+    SnappyPdf::loadHTML($html)->save($filePath);
+}
 
 
 }
