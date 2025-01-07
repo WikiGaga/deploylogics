@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade as PDF;
 use App\Events\PusherNotifyEvent;
-use Barryvdh\Snappy\Facades\SnappyPdf;
+use Mpdf\Mpdf;
 
 class GenerateReport implements ShouldQueue
 {
@@ -127,15 +127,16 @@ class GenerateReport implements ShouldQueue
 
     private function generatePdf($results)
 {
-    $chunks = array_chunk($results, 50); // Adjust chunk size
-    $html = '<h1>Report</h1>';
+    $html = '<h1 style="text-align: center;">Report</h1>';
+    $chunks = array_chunk($results, 50); // Adjust chunk size for performance
 
     foreach ($chunks as $chunk) {
-        $html .= '<table><thead><tr>';
+        $html .= '<table border="1" style="width: 100%; border-collapse: collapse; font-size: 10px;">';
+        $html .= '<thead><tr>';
 
         if (count($chunk) > 0) {
             foreach (array_keys((array) $chunk[0]) as $header) {
-                $html .= '<th>' . htmlspecialchars($header) . '</th>';
+                $html .= '<th style="background-color: #f2f2f2; padding: 5px;">' . htmlspecialchars($header) . '</th>';
             }
         }
 
@@ -144,16 +145,20 @@ class GenerateReport implements ShouldQueue
         foreach ($chunk as $row) {
             $html .= '<tr>';
             foreach ((array) $row as $cell) {
-                $html .= '<td>' . htmlspecialchars($cell) . '</td>';
+                $html .= '<td style="padding: 5px; word-wrap: break-word;">' . htmlspecialchars($cell) . '</td>';
             }
             $html .= '</tr>';
         }
 
-        $html .= '</tbody></table><div style="page-break-after: always;"></div>';
+        $html .= '</tbody></table>';
+        $html .= '<div style="page-break-after: always;"></div>';
     }
 
     $filePath = storage_path('app/reports/' . $this->fileName);
-    SnappyPdf::loadHTML($html)->save($filePath);
+
+    $mpdf = new Mpdf();
+    $mpdf->WriteHTML($html);
+    $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE); // Save file to disk
 }
 
 
