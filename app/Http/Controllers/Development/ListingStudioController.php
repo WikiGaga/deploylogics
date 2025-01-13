@@ -296,6 +296,8 @@ class ListingStudioController extends Controller
             // $table_name
             if(isset($request->listing_studio_table_name)){
                 $table_name .= $request->listing_studio_table_name.' '.$tbl_1;
+            dd($request->listing_studio_table_name);
+
                 $modelName = Utilities::getModelFromTable($request->listing_studio_table_name);
             }
             // join tbl column
