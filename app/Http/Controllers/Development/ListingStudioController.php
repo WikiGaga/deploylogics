@@ -293,8 +293,6 @@ class ListingStudioController extends Controller
             $metric = '';
             $groupBy = '';
 
-            dd($request->listing_studio_table_name);
-
             // $table_name
             if(isset($request->listing_studio_table_name)){
                 $table_name .= $request->listing_studio_table_name.' '.$tbl_1;

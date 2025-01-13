@@ -301,6 +301,7 @@ class Utilities
         $classes = (new static)->getClassesList(app_path('Models'));
         foreach ($classes as $class){
             $model = new $class->classname;
+            dd($model);
             if ($model->getTable() === $table){
                 return $class->classname;
             }
