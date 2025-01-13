@@ -311,7 +311,6 @@ class Utilities
     public static function getClassesList($dir)
     {
         $classes = \File::allFiles($dir);
-        dd($classes);
         foreach ($classes as $class) {
             $class->classname = str_replace(
                 [app_path(), '/', '.php'],
