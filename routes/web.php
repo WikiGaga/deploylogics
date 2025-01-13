@@ -1126,13 +1126,16 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('product-item-tax-product-list','Inventory\StockAuditController@productListProductItemTax');
         });
 
-
-
         Route::prefix('formulation')->group(function () {
             Route::get('form/{id?}','Inventory\ItemFormulationController@create');
             Route::post('form/{id?}','Inventory\ItemFormulationController@store');
             Route::post('delete/{id}','Inventory\ItemFormulationController@destroy');
             Route::get('print/{id}','Inventory\ItemFormulationController@print');
+        });
+        Route::prefix('production-consumption')->group(function () {
+            Route::get('form/{id?}','Inventory\ProductionConsumptionController@create');
+            Route::post('form/{id?}','Inventory\ProductionConsumptionController@store');
+            Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
         });
         Route::prefix('stock-request')->group(function () {
             Route::get('form/{id?}','Inventory\StockRequestController@create');

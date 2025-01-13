@@ -67,7 +67,7 @@ class ItemFormulationController extends Controller
             ];
             $data['document_code'] = Utilities::documentCode($doc_data);
         }
-       
+
         $arr = [
             'biz_type' => 'branch',
             'code' => $data['document_code'],
