@@ -299,6 +299,7 @@ class Utilities
     public static function getModelFromTable($table)
     {
         $classes = (new static)->getClassesList(app_path('Models'));
+        dd($classes);
         foreach ($classes as $class){
             $model = new $class->classname;
             if ($model->getTable() === $table){
