@@ -302,7 +302,6 @@ class Utilities
         foreach ($classes as $class){
             $model = new $class->classname;
             if ($model->getTable() === $table){
-            dd($model->getTable());
                 return $class->classname;
             }
         }
