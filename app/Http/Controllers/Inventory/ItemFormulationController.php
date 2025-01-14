@@ -194,7 +194,7 @@ class ItemFormulationController extends Controller
         DB::commit();
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());

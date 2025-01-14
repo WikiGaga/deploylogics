@@ -140,8 +140,20 @@ class ProductionConsumptionController extends Controller
 
             DB::commit();
 
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url; // Adjust the redirect route
-            return $this->jsonSuccessResponse($data, $id ? 'Record Updated Successfully' : 'Record Created Successfully', 200);
+            if(isset($id)){
+                $data = array_merge($data, Utilities::returnJsonEditForm());
+                $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
+                return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+            }else{
+                $data = array_merge($data, Utilities::returnJsonNewForm());
+                $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$code;
+                return $this->jsonSuccessResponse($data, trans('message.create'), 200);
+            }
+
+
+            // $data['redirect'] = $this->prefixIndexPage.self::$redirect_url.'/form';
+            // return $this->jsonSuccessResponse($data, $id ? 'Record Updated Successfully' : 'Record Created Successfully', 200);
+
         } catch (Exception $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 500);
