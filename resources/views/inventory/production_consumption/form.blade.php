@@ -123,6 +123,7 @@
                             </div>
                         </div>
                         <div class="col-lg-4">
+                            <div class="row">
                             <label class="col-lg-6 erp-col-form-label">Cancel:</label>
                             <div class="col-lg-6">
                                 <div class="form-check">
@@ -135,6 +136,7 @@
                                         {{ isset($cancel) && $cancel == 1 ? 'checked' : '' }}
                                     >
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </div>
