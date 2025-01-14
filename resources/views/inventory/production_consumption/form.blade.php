@@ -170,8 +170,22 @@
                                                     <i class="la la-barcode"></i>
                                                 </button>
                                             </div>
-                                            <div class="erp_form__grid_th_input">
-                                                <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                            <div class="erp_form__grid_th_input d-flex align-items-center">
+                                                <input
+                                                    id="pd_barcode"
+                                                    type="text"
+                                                    class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"
+                                                    data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}"
+                                                >
+                                                <button
+                                                    type="button"
+                                                    id="triggerHelp"
+                                                    class="btn btn-info btn-sm ms-2"
+                                                    onclick="simulateF2KeyPress()"
+                                                    title="Trigger Help"
+                                                >
+                                                    <i class="la la-question-circle"></i>
+                                                </button>
                                             </div>
                                         </th>
                                         <th scope="col">
@@ -345,6 +359,23 @@
             },
         ];
         var arr_hidden_field = ['product_id','product_barcode_id','uom_id','constants_id'];
+
+
+        function simulateF2KeyPress() {
+            console.log('hello');
+            // Create a new KeyboardEvent
+            const f2Event = new KeyboardEvent('keydown', {
+                key: 'F2',            // The key to simulate
+                keyCode: 113,         // Keycode for F2
+                code: 'F2',           // Code for F2
+                bubbles: true,        // Allow the event to bubble up
+                cancelable: true      // Allow the event to be canceled
+            });
+
+            // Dispatch the event on the input field or document as needed
+            const inputField = document.getElementById('pd_barcode');
+            inputField.dispatchEvent(f2Event);
+        }
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
