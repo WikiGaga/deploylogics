@@ -74,15 +74,13 @@ class ProductionConsumptionController extends Controller
 
     public function store(Request $request, $id = null)
     {
-        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:Y-m-d',
-            'type'              => 'required|string|max:50',
             'pd'           => 'required|array',
             'pd.*.sr_no'   => 'required|integer',
-            'pd.*.item_code' => 'required|string|max:50',
-            'pd.*.stock_type' => 'required|string|max:50',
+            'pd.*.pd_barcode' => 'required|string|max:50',
+            // 'pd.*.stock_type' => 'required|string|max:50',
             'pd.*.qty'     => 'required|numeric',
             'pd.*.rate'    => 'required|numeric',
             'pd.*.amount'  => 'required|numeric',
@@ -98,25 +96,28 @@ class ProductionConsumptionController extends Controller
 
         try {
             $recordDate = $request->record_date;
-            $type = $request->type;
 
-            // For update, delete existing records for the given ID and type
             if ($id) {
-                DB::table('your_table_name')
+                DB::table('tblproductionconsumption')
                     ->where('code', $id)
-                    ->where('type', $type)
                     ->delete();
             }
 
-            // Insert new records
+            $doc_data = [
+                'biz_type'          => 'branch',
+                'model'             => 'TblProductionConsumption',
+                'code_field'        => 'code',
+                'code_prefix'       => strtoupper('pc')
+            ];
+
             foreach ($request->entries as $entry) {
-                DB::table('your_table_name')->insert([
-                    'code'          => $id ?? Utilities::generateCode('your_table_prefix'),
+                DB::table('tblproductionconsumption')->insert([
+                    'code'          => $id ?? Utilities::documentCode($doc_data),
                     'record_date'   => $recordDate,
-                    'type'          => $type,
+                    'type'          => 'PC',
                     'sr_no'         => $entry['sr_no'],
-                    'stock_type'    => $entry['stock_type'],
-                    'item_code'     => $entry['item_code'],
+                    // 'stock_type'    => $entry['stock_type'],
+                    'item_code'     => $entry['pd_barcode'],
                     'qty'           => $entry['qty'],
                     'rate'          => $entry['rate'],
                     'amount'        => $entry['amount'],
@@ -137,7 +138,7 @@ class ProductionConsumptionController extends Controller
 
             DB::commit();
 
-            $data['redirect'] = route('your_route_name.index'); // Adjust the redirect route
+            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url; // Adjust the redirect route
             return $this->jsonSuccessResponse($data, $id ? 'Record Updated Successfully' : 'Record Created Successfully', 200);
         } catch (Exception $e) {
             DB::rollback();

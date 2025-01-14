@@ -63,7 +63,7 @@
                                 <label class="col-lg-6 erp-col-form-label">Date:</label>
                                 <div class="col-lg-6">
                                     <div class="input-group date">
-                                        <input type="text" name="formulation_date" class="form-control erp-form-control-sm c-date-p" readonly value="{{isset($date)?$date:""}}" id="kt_datepicker_3" />
+                                        <input type="text" name="record_date" class="form-control erp-form-control-sm c-date-p" readonly value="{{isset($date)?$date:""}}" id="kt_datepicker_3" />
                                         <div class="input-group-append">
                                             <span class="input-group-text">
                                                 <i class="la la-calendar"></i>
