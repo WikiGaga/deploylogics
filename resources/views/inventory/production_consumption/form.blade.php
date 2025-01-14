@@ -297,7 +297,7 @@
                                                 <input value="0.000" readonly type="text" id="total_qty" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                             </td>
                                             <td></td>
-                                            <td class="total_grid_cost">
+                                            <td class="total_grid_amount">
                                                 <input value="0.000" readonly type="text" id="total_qty" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                             </td>
                                             <td></td>

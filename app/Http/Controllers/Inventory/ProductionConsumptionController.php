@@ -30,19 +30,11 @@ class ProductionConsumptionController extends Controller
 
     public function create(Request $request, $id = null)
     {
-        $business_id = $request['business_id'];
-        $branch_id = $request['branch_id'];
         $data['page_data'] = [];
         $data['form_type'] = 'production-consumption';
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage . self::$redirect_url;
         $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
-
-        $currentBCB = [
-            ['business_id', $business_id],
-            ['company_id',$business_id],
-            ['branch_id',$branch_id]
-        ];
 
         if (isset($id)) {
             if (TblProductionConsumption::where('code', 'LIKE', $id)->exists()) {
@@ -75,13 +67,14 @@ class ProductionConsumptionController extends Controller
             'col_code'   => 'code',
         ];
 
-        $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where($currentBCB)->get();
+        $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where(Utilities::currentBCB())->get();
 
         return view('inventory.production_consumption.form', compact('data'));
     }
 
     public function store(Request $request, $id = null)
     {
+        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:Y-m-d',
