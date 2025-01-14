@@ -124,7 +124,7 @@ class ProductionConsumptionController extends Controller
                     'qty'           => $entry['qty'],
                     'rate'          => $entry['rate'],
                     'amount'        => $entry['amount'],
-                    'remarks'       => $entry['remarks'] ?? null,
+                    'remarks'       => $request->remarks ?? null,
                     'user_id'       => auth()->user()->id,
                     'transfer_from' => $request->transfer_from ?? null,
                     'transfer_to'   => $request->transfer_to ?? null,

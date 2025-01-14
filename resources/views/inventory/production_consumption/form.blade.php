@@ -98,7 +98,7 @@
                                             <option value="0">Select</option>
                                             @php $transferTo = isset($transferTo)?$transferTo:'' @endphp
                                             @foreach($data['store'] as $store)
-                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}}</option>
+                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}} {{$store->store_id}}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -112,7 +112,7 @@
                                 <label class="col-lg-6 erp-col-form-label">Status: <span class="required">*</span></label>
                                 <div class="col-lg-6">
                                     <div class="erp-select2">
-                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="transfer_to" name="transfer_to">
+                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="status" name="status">
                                             <option value="0">Select</option>
                                             @php $status = isset($status)?$status:'' @endphp
                                                 <option value="1" {{$status == 1 ?'selected':''}}>Draft</option>
