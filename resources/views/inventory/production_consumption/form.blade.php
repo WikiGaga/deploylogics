@@ -180,11 +180,11 @@
                                                 <button
                                                     type="button"
                                                     id="triggerHelp"
-                                                    class="btn btn-info btn-sm ms-2"
+                                                    class="btn btn-default btn-sm"
                                                     onclick="simulateF2KeyPress()"
                                                     title="Trigger Help"
                                                 >
-                                                    <i class="la la-question-circle"></i>
+                                                    <i class="la la-search"></i>
                                                 </button>
                                             </div>
                                         </th>
@@ -362,20 +362,24 @@
 
 
         function simulateF2KeyPress() {
-            console.log('hello');
-            // Create a new KeyboardEvent
-            const f2Event = new KeyboardEvent('keydown', {
-                key: 'F2',            // The key to simulate
-                keyCode: 113,         // Keycode for F2
-                code: 'F2',           // Code for F2
-                bubbles: true,        // Allow the event to bubble up
-                cancelable: true      // Allow the event to be canceled
-            });
+    console.log('hello');
 
-            // Dispatch the event on the input field or document as needed
-            const inputField = document.getElementById('pd_barcode');
-            inputField.dispatchEvent(f2Event);
-        }
+    // Focus the input field (ensures event is properly directed)
+    const inputField = document.getElementById('pd_barcode');
+    inputField.focus();
+
+    // Create a new KeyboardEvent
+    const f2Event = new KeyboardEvent('keydown', {
+        key: 'F2',            // The key to simulate
+        keyCode: 113,         // Keycode for F2
+        code: 'F2',           // Code for F2
+        bubbles: true,        // Allow the event to bubble up
+        cancelable: true      // Allow the event to be canceled
+    });
+
+    // Dispatch the event on the focused input field
+    inputField.dispatchEvent(f2Event);
+}
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
