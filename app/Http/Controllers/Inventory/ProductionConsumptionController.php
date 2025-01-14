@@ -110,7 +110,7 @@ class ProductionConsumptionController extends Controller
                 'code_prefix'       => strtoupper('pc')
             ];
 
-            foreach ($request->entries as $entry) {
+            foreach ($request->pd as $entry) {
                 DB::table('tblproductionconsumption')->insert([
                     'code'          => $id ?? Utilities::documentCode($doc_data),
                     'record_date'   => $recordDate,
