@@ -74,7 +74,6 @@ class ProductionConsumptionController extends Controller
 
     public function store(Request $request, $id = null)
     {
-        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:d-m-Y',
