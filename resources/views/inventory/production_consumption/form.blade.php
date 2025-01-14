@@ -98,7 +98,7 @@
                                             <option value="0">Select</option>
                                             @php $transferTo = isset($transferTo)?$transferTo:'' @endphp
                                             @foreach($data['store'] as $store)
-                                                <option value="{{$store->store_id}}" {{$store->store_id == transferTo ?'selected':''}}>{{$store->store_name}}</option>
+                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}}</option>
                                             @endforeach
                                         </select>
                                     </div>
