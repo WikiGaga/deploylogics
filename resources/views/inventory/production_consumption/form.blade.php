@@ -124,7 +124,7 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="row">
-                            <label class="col-lg-6 erp-col-form-label">Cancel:</label>
+                            <label class="col-lg-6 erp-col-form-label text-center">Cancel:</label>
                             <div class="col-lg-6">
                                 <div class="form-check">
                                     <input
@@ -229,19 +229,19 @@
                                         <th scope="col">
                                             <div class="erp_form__grid_th_title">Qty</div>
                                             <div class="erp_form__grid_th_input">
-                                                <input id="quantity" type="text" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                <input id="qty" type="text" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col">
                                             <div class="erp_form__grid_th_title">Rate</div>
                                             <div class="erp_form__grid_th_input">
-                                                <input id="purchase_unit" type="text" class="tblGridCal_purchase_unit validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                <input id="rate" type="text" class="tblGridCal_rate validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col">
                                             <div class="erp_form__grid_th_title">Amount</div>
                                             <div class="erp_form__grid_th_input">
-                                                <input id="cost_price" type="text" class="tblGridCal_cost_price validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                <input id="amount" type="text" class="tblGridCal_amount validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col" width="48">
@@ -273,9 +273,9 @@
                                                     </select>
                                                 </td>
                                                 <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][packing]" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
-                                                <td><input type="text" data-id="quantity" name="pd[{{$loop->iteration}}][qty]" value="{{$dtl->qty}}" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" data-id="purchase_unit" name="pd[{{$loop->iteration}}][purchase_unit]" value="{{$dtl->rate}}" class="tblGridCal_purchase_unit tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" data-id="cost_price" name="pd[{{$loop->iteration}}][cost_price]" value="{{$dtl->item_formulation_dtl_cost_price}}" class="tblGridCal_cost_price tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" data-id="qty" name="pd[{{$loop->iteration}}][qty]" value="{{$dtl->qty}}" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{$dtl->rate}}" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{$dtl->item_formulation_dtl_amount}}" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
 
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
@@ -362,16 +362,16 @@
                 'readonly':true
             },
             {
-                'id':'quantity',
+                'id':'qty',
                 'fieldClass':'tblGridCal_qty validNumber validOnlyNumber tb_moveIndex'
             },
             {
-                'id':'purchase_unit',
-                'fieldClass':'tblGridCal_purchase_unit validNumber validOnlyNumber tb_moveIndex'
+                'id':'rate',
+                'fieldClass':'tblGridCal_rate validNumber validOnlyNumber tb_moveIndex'
             },
             {
-                'id':'cost_price',
-                'fieldClass':'tblGridCal_cost_price validNumber validOnlyNumber tb_moveIndex',
+                'id':'amount',
+                'fieldClass':'tblGridCal_amount validNumber validOnlyNumber tb_moveIndex',
                 'require':true,
                 'message':'Enter Product Cost',
             },
@@ -398,6 +398,22 @@
     // Dispatch the event on the focused input field
     inputField.dispatchEvent(f2Event);
 }
+
+$(document).ready(function () {
+    function calculateAmount() {
+        let qty = parseFloat($("#qty").val()) || 0;
+        let rate = parseFloat($("#rate").val()) || 0;
+
+        let amount = qty * rate;
+
+        $("#amount").val(amount.toFixed(3));
+    }
+
+    $("#qty, #rate").on("input", function () {
+        calculateAmount();
+    });
+});
+
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
