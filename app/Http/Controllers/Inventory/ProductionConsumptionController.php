@@ -76,7 +76,7 @@ class ProductionConsumptionController extends Controller
     {
         $data = [];
         $validator = Validator::make($request->all(), [
-            'record_date'       => 'required|date_format:Y-m-d',
+            'record_date'       => 'required|date_format:d-m-Y',
             'pd'           => 'required|array',
             'pd.*.sr_no'   => 'required|integer',
             'pd.*.pd_barcode' => 'required|string|max:50',
@@ -95,7 +95,7 @@ class ProductionConsumptionController extends Controller
         DB::beginTransaction();
 
         try {
-            $recordDate = $request->record_date;
+            $recordDate = date('Y-m-d', strtotime($request->record_date));
 
             if ($id) {
                 DB::table('tblproductionconsumption')

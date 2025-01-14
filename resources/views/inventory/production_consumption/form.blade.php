@@ -195,7 +195,7 @@
                                                     class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"
                                                     data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}"
                                                 >
-                                                <button
+                                                {{-- <button
                                                     type="button"
                                                     id="triggerHelp"
                                                     class="btn btn-sm"
@@ -203,7 +203,7 @@
                                                     title="Trigger Help"
                                                 >
                                                     <i class="la la-search"></i>
-                                                </button>
+                                                </button> --}}
                                             </div>
                                         </th>
                                         <th scope="col">
