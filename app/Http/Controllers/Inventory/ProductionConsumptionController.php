@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TblProductionConsumption;
 use App\Library\Utilities;
+use App\Models\TblDefiStore;
 use App\Models\Defi\TblDefiConstants;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -27,13 +28,21 @@ class ProductionConsumptionController extends Controller
     public static $redirect_url = 'production-consumption';
 
 
-    public function create($id = null)
+    public function create(Request $request, $id = null)
     {
+        $business_id = $request['business_id'];
+        $branch_id = $request['branch_id'];
         $data['page_data'] = [];
         $data['form_type'] = 'production-consumption';
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage . self::$redirect_url;
         $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
+
+        $currentBCB = [
+            ['business_id', $business_id],
+            ['company_id',$business_id],
+            ['branch_id',$branch_id]
+        ];
 
         if (isset($id)) {
             if (TblProductionConsumption::where('code', 'LIKE', $id)->exists()) {
@@ -66,8 +75,83 @@ class ProductionConsumptionController extends Controller
             'col_code'   => 'code',
         ];
 
+        $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where($currentBCB)->get();
+
         return view('inventory.production_consumption.form', compact('data'));
     }
+
+    public function store(Request $request, $id = null)
+    {
+        $data = [];
+        $validator = Validator::make($request->all(), [
+            'record_date'       => 'required|date_format:Y-m-d',
+            'type'              => 'required|string|max:50',
+            'pd'           => 'required|array',
+            'pd.*.sr_no'   => 'required|integer',
+            'pd.*.item_code' => 'required|string|max:50',
+            'pd.*.stock_type' => 'required|string|max:50',
+            'pd.*.qty'     => 'required|numeric',
+            'pd.*.rate'    => 'required|numeric',
+            'pd.*.amount'  => 'required|numeric',
+            'pd.*.remarks' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $data['validator_errors'] = $validator->errors();
+            return $this->jsonErrorResponse($data, 'Validation Failed', 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $recordDate = $request->record_date;
+            $type = $request->type;
+
+            // For update, delete existing records for the given ID and type
+            if ($id) {
+                DB::table('your_table_name')
+                    ->where('code', $id)
+                    ->where('type', $type)
+                    ->delete();
+            }
+
+            // Insert new records
+            foreach ($request->entries as $entry) {
+                DB::table('your_table_name')->insert([
+                    'code'          => $id ?? Utilities::generateCode('your_table_prefix'),
+                    'record_date'   => $recordDate,
+                    'type'          => $type,
+                    'sr_no'         => $entry['sr_no'],
+                    'stock_type'    => $entry['stock_type'],
+                    'item_code'     => $entry['item_code'],
+                    'qty'           => $entry['qty'],
+                    'rate'          => $entry['rate'],
+                    'amount'        => $entry['amount'],
+                    'remarks'       => $entry['remarks'] ?? null,
+                    'user_id'       => auth()->user()->id,
+                    'transfer_from' => $request->transfer_from ?? null,
+                    'transfer_to'   => $request->transfer_to ?? null,
+                    'business_id'   => auth()->user()->business_id,
+                    'company_id'    => auth()->user()->company_id,
+                    'branch_id'     => auth()->user()->branch_id,
+                    'status'        => $request->status ?? 1,
+                    'posted'        => $request->posted ?? 0,
+                    'cancel'        => $request->cancel ?? 0,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            $data['redirect'] = route('your_route_name.index'); // Adjust the redirect route
+            return $this->jsonSuccessResponse($data, $id ? 'Record Updated Successfully' : 'Record Created Successfully', 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 500);
+        }
+    }
+
 
 
 }
