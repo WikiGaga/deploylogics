@@ -29,6 +29,7 @@
                 // $product_barcode = $data['current']->product_barcode_barcode;
                 $transferFrom = $data['current'][0]->transfer_from;
                 $transferTo = $data['current'][0]->transfer_to;
+                $status = $data['current'][0]->status;
                 $remarks = $data['current'][0]->remarks;
                 $dtls = isset($data['current'])? $data['current'] :[];
             }
@@ -112,9 +113,9 @@
                                     <div class="erp-select2">
                                         <select class="moveIndex form-control erp-form-control-sm kt-select2" id="transfer_to" name="transfer_to">
                                             <option value="0">Select</option>
-                                            @php $storeid = isset($storeid)?$storeid:'' @endphp
-                                                <option value="{{$data['current']->status}}" {{$data['current']->status == 1 ?'selected':''}}>Draft</option>
-                                                <option value="{{$data['current']->status}}" {{$data['current']->status == 2 ?'selected':''}}>Submitted</option>
+                                            @php $status = isset($status)?$status:'' @endphp
+                                                <option value="1" {{$status == 1 ?'selected':''}}>Draft</option>
+                                                <option value="2" {{$status == 2 ?'selected':''}}>Submitted</option>
                                         </select>
                                     </div>
                                 </div>
