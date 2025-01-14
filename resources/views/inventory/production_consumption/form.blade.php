@@ -30,6 +30,7 @@
                 $transferFrom = $data['current'][0]->transfer_from;
                 $transferTo = $data['current'][0]->transfer_to;
                 $status = $data['current'][0]->status;
+                $cancel = $data['current'][0]->cancel;
                 $remarks = $data['current'][0]->remarks;
                 $dtls = isset($data['current'])? $data['current'] :[];
             }
@@ -108,7 +109,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label text-center">Status: <span class="required">*</span></label>
+                                <label class="col-lg-6 erp-col-form-label">Status: <span class="required">*</span></label>
                                 <div class="col-lg-6">
                                     <div class="erp-select2">
                                         <select class="moveIndex form-control erp-form-control-sm kt-select2" id="transfer_to" name="transfer_to">
@@ -118,6 +119,22 @@
                                                 <option value="2" {{$status == 2 ?'selected':''}}>Submitted</option>
                                         </select>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <label class="col-lg-6 erp-col-form-label">Cancel:</label>
+                            <div class="col-lg-6">
+                                <div class="form-check">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input"
+                                        id="cancel_checkbox"
+                                        name="cancel"
+                                        value="1"
+                                        {{ isset($cancel) && $cancel == 1 ? 'checked' : '' }}
+                                    >
+                                    <label class="form-check-label" for="cancel_checkbox">Cancel</label>
                                 </div>
                             </div>
                         </div>
@@ -180,7 +197,7 @@
                                                 <button
                                                     type="button"
                                                     id="triggerHelp"
-                                                    class="btn btn-default btn-sm"
+                                                    class="btn btn-sm"
                                                     onclick="simulateF2KeyPress()"
                                                     title="Trigger Help"
                                                 >
