@@ -134,7 +134,6 @@
                                         value="1"
                                         {{ isset($cancel) && $cancel == 1 ? 'checked' : '' }}
                                     >
-                                    <label class="form-check-label" for="cancel_checkbox">Cancel</label>
                                 </div>
                             </div>
                         </div>
