@@ -74,6 +74,7 @@ class ProductionConsumptionController extends Controller
 
     public function store(Request $request, $id = null)
     {
+        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:d-m-Y',
@@ -110,9 +111,11 @@ class ProductionConsumptionController extends Controller
                 'code_prefix'       => strtoupper('pc')
             ];
 
+            $code = Utilities::documentCode($doc_data);
+
             foreach ($request->pd as $entry) {
                 DB::table('tblproductionconsumption')->insert([
-                    'code'          => $id ?? Utilities::documentCode($doc_data),
+                    'code'          => $id ?? $code,
                     'record_date'   => $recordDate,
                     'type'          => 'PC',
                     'sr_no'         => $entry['sr_no'],
