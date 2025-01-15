@@ -41,7 +41,7 @@ class ProductionConsumptionController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = TblProductionConsumption::where('code', $id)->first();
+                $data['current'] = TblProductionConsumption::where('code', $id)->get();
                 $data['document_code'] = $data['current']->code;
             } else {
                 abort(404);

@@ -13,7 +13,6 @@
 @section('content')
     <!--begin::Form-->
     @php
-    dd($data);
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             if($case == 'new'){
                 $code = $data['document_code'];
