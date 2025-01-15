@@ -22,7 +22,7 @@
                 if (isset($data['current'][0])) {
                     // Multiple records case
                     $id = $data['current'][0]->code;
-                    $code = $data['current'][0];
+                    $code = $data['current'][0]['code'];
                     dd($code);
                     $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current'][0]->record_date))));
                     $product_barcode_id = $data['current'][0]->item_code;
