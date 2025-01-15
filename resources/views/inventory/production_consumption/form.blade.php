@@ -20,20 +20,31 @@
                 $date =  date('d-m-Y');
             }
             if($case == 'edit'){
-                $id = $data['current'][0]->code;
-                $code = $data['current'][0]->code;
-                $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current'][0]->record_date))));
-                //  $product_name = isset($data['current']->product->product_name)?$data['current']->product->product_name:"";
-                // $product_name = $data['current']->product->product_name;
-                $product_barcode_id = $data['current']->item_code;
-                // $product_barcode_packing = $data['current']->product_barcode_packing;
-                // $product_barcode = $data['current']->product_barcode_barcode;
-                $transferFrom = $data['current'][0]->transfer_from;
-                $transferTo = $data['current'][0]->transfer_to;
-                $status = $data['current'][0]->status;
-                $cancel = $data['current'][0]->cancel;
-                $remarks = $data['current'][0]->remarks;
-                $dtls = isset($data['current'])? $data['current'] :[];
+                if (isset($data['current'][0])) {
+                    // Multiple records case
+                    $id = $data['current'][0]->code;
+                    $code = $data['current'][0]->code;
+                    $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current'][0]->record_date))));
+                    $product_barcode_id = $data['current'][0]->item_code;
+                    $transferFrom = $data['current'][0]->transfer_from;
+                    $transferTo = $data['current'][0]->transfer_to;
+                    $status = $data['current'][0]->status;
+                    $cancel = $data['current'][0]->cancel;
+                    $remarks = $data['current'][0]->remarks;
+                    $dtls = $data['current']; // All records
+                } else {
+                    // Single record case
+                    $id = $data['current']->code;
+                    $code = $data['current']->code;
+                    $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->record_date))));
+                    $product_barcode_id = $data['current']->item_code;
+                    $transferFrom = $data['current']->transfer_from;
+                    $transferTo = $data['current']->transfer_to;
+                    $status = $data['current']->status;
+                    $cancel = $data['current']->cancel;
+                    $remarks = $data['current']->remarks;
+                    $dtls = [$data['current']]; // Wrap the single record in an array for consistency
+                }
             }
             $form_type = $data['form_type'];
     @endphp
