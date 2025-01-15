@@ -21,6 +21,7 @@
             if($case == 'edit'){
                 if (isset($data['current'][0])) {
                     // Multiple records case
+                    dd($data['current']);
                     $id = $data['current'][0]->code;
                     $code = $data['current'][0]->code;
                     $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current'][0]->record_date))));
@@ -109,7 +110,7 @@
                                             <option value="0">Select</option>
                                             @php $transferTo = isset($transferTo)?$transferTo:'' @endphp
                                             @foreach($data['store'] as $store)
-                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}} {{$store->store_id}}</option>
+                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}}</option>
                                             @endforeach
                                         </select>
                                     </div>
