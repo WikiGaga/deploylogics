@@ -16,7 +16,7 @@ class TblProductionConsumption extends Model
         return $this->belongsTo(TblPurcProduct::class, 'item_code');
     }
     function barcode(){
-        return $this->belongsTo(TblPurcProductBarcode::class, 'product_barcode_id');
+        return $this->belongsTo(TblPurcProductBarcode::class, 'item_code');
     }
     function uom(){
         return $this->belongsTo(TblDefiUom::class, 'uom_id');
