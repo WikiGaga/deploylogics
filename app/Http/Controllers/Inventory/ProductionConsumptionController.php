@@ -42,7 +42,11 @@ class ProductionConsumptionController extends Controller
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
                 $data['current'] = TblProductionConsumption::where('code', $id)->get();
-                $data['document_code'] = $data['current']->code;
+                if (isset($data['current'][0])) {
+                    $data['document_code'] = $data['current'][0]->code;
+                } else {
+                    $data['document_code'] = $data['current']->code;
+                }
             } else {
                 abort(404);
             }
