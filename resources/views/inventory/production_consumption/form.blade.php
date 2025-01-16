@@ -23,7 +23,7 @@
                     // Multiple records case
                     $id = $data['current'][0]->code;
                     $code = $data['current'][0]->code;
-                    dd($data['current'][0]);
+                    // dd($data['current'][0]);
                     $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current'][0]->record_date))));
                     $product_barcode_id = $data['current'][0]->item_code;
                     $transferFrom = $data['current'][0]->transfer_from;
