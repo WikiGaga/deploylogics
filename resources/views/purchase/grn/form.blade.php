@@ -227,10 +227,12 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Payment Type:<span
-                                            class="required">*</span></label>
+                                    <label class="col-lg-6 col-form-label">Payment Type:
+                                        {{-- <span class="required">*</span> --}}
+                                    </label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
                                             <select class="form-control kt-select2 erp-form-control-sm moveIndex"
