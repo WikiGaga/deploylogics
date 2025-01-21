@@ -29,7 +29,7 @@
     @php $id = isset($data['current']->grn_id)?$data['current']->grn_id:'';  @endphp
     <form id="pr_form" class="kt-form" method="post" action="{{ action('Purchase\PurchaseReturnController@store' , $id) }}">
         <input type="hidden" value='{{$form_type}}' id="form_type">
-        <input type="hidden" value='{{$menu_id}}' id="menu_id">
+        {{-- <input type="hidden" value='{{$menu_id}}' id="menu_id"> --}}
         <input type="hidden" value='{{isset($id)?$id:""}}' id="form_id">
         @csrf
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
