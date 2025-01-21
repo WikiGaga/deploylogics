@@ -2,8 +2,6 @@
 @section('title', 'GRN')
 
 @section('pageCSS')
-<link href="/assets/plugins/custom/jstree/jstree.bundle.css" rel="stylesheet" type="text/css" />
-
     <style>
         .grn_green {
             background: #4c9a2a !important;
@@ -1030,3 +1028,274 @@
                     tr.find('.expense_perc').val(value.toFixed(3));
                 }
                 TotalExpenseAmount()
+            }
+            if (val == 0) {
+                tr.find('.expense_perc').val('');
+            }
+        });
+
+        $(document).on('keyup', '.tblGridCal_rate', function() {
+            changeRateColor($(this))
+        })
+
+        function changeRateColor(thix) {
+            var val = thix.val();
+            var po_val = thix.parents('tr').find('.grn_dtl_po_rate').val();
+            thix.removeClass('grn_green grn_red grn_yellow')
+            if (val == po_val) {
+                thix.addClass('grn_green')
+            }
+            if (val > po_val && po_val != "") {
+                thix.addClass('grn_red')
+            }
+            if (val < po_val) {
+                thix.addClass('grn_yellow')
+            }
+        }
+
+        function TotalExpenseAmount() {
+            var tot_amount = 0;
+            var gtot_amount = 0;
+            var pro_toal = 0;
+            for (var i = 0; $('#repeated_datasm>tr').length > i; i++) {
+                var amount = $('#repeated_datasm').find("tr:eq(" + i + ")").find("td>input.expense_amount").val();
+                amount = (amount == '' || amount == undefined) ? 0 : amount.replace(/,/g, '');
+                if ($('#repeated_datasm').find("tr:eq(" + i + ")").find("td>input.expense_plus_minus").val() == '+') {
+                    tot_amount = (parseFloat(tot_amount) + parseFloat(amount));
+                } else {
+                    tot_amount = (parseFloat(tot_amount) - parseFloat(amount));
+                }
+
+            }
+            pro_toal = $("#pro_tot").val();
+            gtot_amount = (parseFloat(tot_amount) + parseFloat(pro_toal));
+            tot_amount = tot_amount.toFixed(3);
+            gtot_amount = gtot_amount.toFixed(3);
+            $("#total_amountsm").html(gtot_amount);
+            $("#tot_expenses").html(tot_amount);
+            $("#TotExpen").val(tot_amount);
+            $("#TotalAmtSM").val(gtot_amount);
+        }
+        TotalExpenseAmount();
+
+        $('#generatePriceTags').click(function() {
+
+            var formData = {};
+            formData.data = [];
+            $('.erp_form__grid>tbody.erp_form__grid_body>tr').each(function() {
+                var thix = $(this)
+                var v = thix.find('input[data-id="production_date"]').val();
+                var w = thix.find('input[data-id="expiry_date"]').val();
+
+                var production_date = (v == "") ? "" : v.slice(0, 2) + "-" + v.slice(2, 4) + "-" + v.slice(
+                    4);
+                var expiry_date = (w == "") ? "" : w.slice(0, 2) + "-" + w.slice(2, 4) + "-" + w.slice(4);
+
+                var tr = {
+                    'barcode_id': thix.find('input[data-id="product_barcode_id"]').val(),
+                    'qty': thix.find('input[data-id="quantity"]').val(),
+                    'packing_date': production_date,
+                    'expiry_date': expiry_date,
+                }
+                formData.data.push(tr);
+            });
+            console.log(formData);
+            var url = '/grn/barcode-price-tag';
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                type: "POST",
+                url: url,
+                dataType: 'json',
+                data: formData,
+                success: function(response, data) {
+                    var win = window.open(url, "generateBarcodeTags");
+                    win.location.reload();
+                    if (response) {
+                    }
+                },
+                error: function(response, status) {}
+            });
+        })
+
+        $('#generateShelfPriceTags').click(function() {
+            var formData = {};
+            formData.data = [];
+            if($('.erp_form__grid>tbody.erp_form__grid_body>tr').length < 1){
+                toastr.error('Add Some Products');
+                return false;
+            }
+            $('.erp_form__grid>tbody.erp_form__grid_body>tr').each(function() {
+                var thix = $(this);
+                var tr = {
+                    'barcode_id': thix.find('input[data-id="product_barcode_id"]').val(),
+                    'qty': thix.find('input[data-id="quantity"]').val(),
+                    'gross_amount' : thix.find('input[data-id="gross_amount"]').val(),
+                }
+
+                formData.data.push(tr);
+            });
+            console.log(formData);
+            var url = '/grn/shelfbarcode-price-tag';
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                type: "POST",
+                url: url,
+                dataType: 'json',
+                data: formData,
+                success: function(response, data) {
+                    var win = window.open(url, "generateShelfBarcodeTags");
+                    win.location.reload();
+                    if (response) {
+                    }
+                },
+                error: function(response, status) {}
+            });
+        })
+
+        //change sale rate
+        $('.sale_rate_barcode').click(function() {
+            var barcodeData = {};
+            barcodeData.data = [];
+            var sale_rate = $('.erp_form__grid>thead.erp_form__grid_header>tr').find('#product_barcode_id').val();
+            if (sale_rate) {
+                barcodeData.data.push(sale_rate);
+            }
+            if ($('.erp_form__grid>tbody.erp_form__grid_body>tr').length > 0) {
+                $('.erp_form__grid>tbody.erp_form__grid_body>tr').each(function() {
+                    var thix = $(this)
+                    var barcode = thix.find('input[data-id="product_barcode_id"]').val();
+                    barcodeData.data.push(barcode);
+                });
+            }
+            if (barcodeData.data.length > 0) {
+                var url = '/grn/barcode-sale-price';
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    type: "POST",
+                    url: url,
+                    dataType: 'json',
+                    data: barcodeData,
+                    success: function(response, data) {
+                        if (response['status'] == 'success') {
+                            toastr.success('Sale Rate Updated');
+                            var products = response.product_barcode;
+                            products.forEach(element => {
+                                var parent = $('input[value="' + element.product_barcode_id +'"]').parents('tr');
+                                var value = parseFloat(element.product_barcode_sale_rate_rate).toFixed(3);
+                                parent.find('input[data-id="sale_rate"]').val(value);
+                            });
+                        }
+                    },
+                    error: function(response, status) {}
+                });
+            }
+        });
+
+
+        // Select Multiple Products Functionalities
+        $('#makePD').click(function(){
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            var formData = {
+                supplier_id : $('#supplier_id').val(),
+                form_type : $('#form_type').val(),
+            }
+            var data_url = '/common/select-multiple-products';
+            $('#kt_modal_xl').modal('show').find('.modal-content').load(data_url,formData);
+        });
+        $(document).on('click','.btn_add',function(e){
+            e.preventDefault();
+            var thix = $(this);
+            addRow(thix)
+
+        })
+        function addRow(thix){
+            var parentTr = thix.parents('tr');
+            if(!parentTr.find('.grn_qty').val())
+            {
+                alert("Please add Qty");
+            }else
+            {
+                var item_duplicate = false;
+                $(document).find('#smp_selected_products table tbody tr').each(function(){
+                    if($(this).find('td[data-field="product_barcode_barcode"]>span').text() == parentTr.find('td[data-field="product_barcode_barcode"]>span').text()){
+                        toastr.warning("Item alread added.");
+                        item_duplicate = true;
+                    }
+                })
+                if(item_duplicate == true){
+                    return true;
+                }
+                var tr = thix.parents('tr').clone();
+                var thead = $(document).find('#smp_products table thead>tr').clone();
+                $(document).find('#smp_selected_products table thead').html(thead);
+                $(document).find('#smp_selected_products table tbody').append(tr);
+                $(document).find('#smp_selected_products .ajax_data_table').removeClass('kt-datatable--error');
+                $(document).find('#smp_selected_products table tbody>.kt-datatable--error').remove();
+                var lastTd = "<span>";
+                lastTd += "<input type='checkbox' style='height: 16px;width: 16px;' checked>";
+                lastTd += "<i class='la la-times del_row' style='position: relative;background: #f44336;padding: 2px 2px;color: #fff;margin-left: 3px;top: -3px;'></i>";
+                lastTd += "</span>";
+                $(document).find('#smp_selected_products table tbody tr:last-child td:last-child').html(lastTd);
+                toastr.success("Item added.");
+            }
+        }
+        $(document).on('click','.del_row',function(e){
+            e.preventDefault();
+            $(this).parents('tr').remove();
+        })
+        $(document).on('click','.close',function(e){
+            e.preventDefault();
+            $('.modal').find('.modal-content').empty();
+            $('.modal').find('.modal-content').html(' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>');
+            $('.modal').modal('hide');
+        })
+        $(document).on('click','#add_selected_products',function(e){
+            e.preventDefault();
+            if($(document).find('#smp_selected_products table tbody tr').length == 0){
+                toastr.warning("Please first select items");
+                return true;
+            }
+            $(this).attr('disabled',true);
+            $('.modal').find('.modal-header>button').attr('disabled',true);
+            $('.modal').find('.modal-content').prepend('<div style="position: absolute;left: 50%;" class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span style="margin-left: 30px;">insert data,please wait..</span></div>');
+            $(document).find('#smp_selected_products table input').attr('readonly',true)
+            $(document).find('#smp_selected_products table tbody tr').each(function(){
+                var thix = $(this);
+                var barcode = thix.find('td[data-field="product_barcode_barcode"]>span').text();
+                var demand_qty = thix.find('td[data-field="grn_qty"] input.grn_qty').val();
+                var keycodeNo = 13;
+                var tr = $(document).find('.erp_form__grid>.erp_form__grid_header>tr');
+                var form_type = $('#form_type').val();
+                var formData = {
+                    form_type : form_type,
+                    val : barcode,
+                    demand_qty : demand_qty,
+                    selection : "multi",
+                }
+                initBarcode(keycodeNo,tr,form_type,formData);
+            });
+            $(document).ajaxStop(function(e,d) {
+                // place code to be executed on completion of last outstanding ajax call here
+                $('.modal').find('.modal-content').empty();
+                $('.modal').find('.modal-content').html(' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>');
+                $('.modal').modal('hide');
+                $(document).unbind("ajaxStop");
+            });
+        });
+
+    </script>
+    <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v=1') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+    {{--<script src="{{ asset('js/pages/js/common/user-form-setting.js') }}" type="text/javascript"></script>--}}
+@endsection
