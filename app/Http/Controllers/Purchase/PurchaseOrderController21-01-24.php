@@ -412,16 +412,39 @@ class PurchaseOrderController extends Controller
             'payment_mode' => 'nullable|numeric',
             'exchange_rate' => 'required',
             'po_currency' => 'required|numeric',
-            'po_notes' => 'nullable|max:255'
+            'po_notes' => 'nullable|max:255',
+            'pd.*.product_id' => 'nullable|numeric',
+            'pd.*.product_barcode_id' => 'nullable|numeric',
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
         }
+
+        /*if(!isset($id))
+        {
+            if(TblPurcPurchaseOrder::where('supplier_id','=',$request->supplier_id)
+            ->where('purchase_order_entry_date','=',date('Y-m-d' ,strtotime($request->po_date)))
+            ->where('purchase_order_total_net_amount','=',$request->overall_net_amount)->exists())
+            {
+                return $this->jsonErrorResponse($data, 'Already Exist This PO.', 422);
+            }
+        }*/
+
+
         DB::beginTransaction();
         try {
+            if(isset($request->po_draft_id) && !empty($request->po_draft_id)){
+                DraftPurcPurchaseOrderDtl::where('purchase_order_id',$request->po_draft_id)->delete();
+                DraftPurcPurchaseOrder::where('purchase_order_id',$request->po_draft_id)->delete();
+            }
             if(isset($id)){
                 $po = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                $po->update_by_user_id = Auth::id();
+                $data['already_exits'] = false;
+                if(TblPurcGrn::where('purchase_order_id',$id)->exists()){
+                    return $this->jsonErrorResponse($data, 'PO already have been used in GRN', 200);
+                }
             }else{
                 $po = new TblPurcPurchaseOrder();
                 $po->purchase_order_id = Utilities::uuid();
@@ -432,15 +455,23 @@ class PurchaseOrderController extends Controller
                     'code_prefix'       => strtoupper('po')
                 ];
                 $po->purchase_order_code = Utilities::documentCode($doc_data);
+                $po->create_by_user_id = Auth::id();
             }
             $form_id = $po->purchase_order_id;
             $po->purchase_order_entry_date = date('Y-m-d', strtotime($request->po_date));;
+            $po->purchase_order_delivery_date = date('Y-m-d', strtotime($request->po_delivery_date));;
             $po->payment_mode_id = $request->payment_terms;
             $po->purchase_order_credit_days = $request->payment_mode;
             $po->lpo_id = $request->lpo_generation_no_id;
             $po->supplier_id = $request->supplier_id;
             $po->currency_id = $request->po_currency;
             $po->purchase_order_exchange_rate = $request->exchange_rate;
+            // $po->payment_mode_id = $request->payment_mode_id;
+            $po->purchase_order_overall_discount = $request->overall_discount_perc;
+            $po->purchase_order_overall_disc_amount = $request->overall_disc_amount;
+            $po->priority_value = $request->priority_id;
+            $po->shipment_provided_id = $request->shipment_provided_id;
+            $po->auto_demand_id = $request->auto_demand_id;
             $po->purchase_order_remarks = $request->po_notes;
             $po->comparative_quotation_id = $request->comparative_quotation_id;
             $po->purchase_order_entry_status = "1";
@@ -448,6 +479,16 @@ class PurchaseOrderController extends Controller
             $po->company_id = auth()->user()->company_id;
             $po->branch_id = auth()->user()->branch_id;
             $po->purchase_order_user_id = auth()->user()->id;
+            $po->purchase_order_total_items = $request->summary_total_item;
+            $po->purchase_order_total_qty = $request->summary_qty_wt;
+            $po->purchase_order_total_amount = $request->summary_amount;
+            $po->purchase_order_total_disc_amount = $request->summary_disc_amount;
+            $po->purchase_order_total_gst_amount = $request->summary_gst_amount;
+            $po->purchase_order_total_fed_amount = $request->summary_fed_amount;
+            $po->purchase_order_total_spec_disc_amount = $request->summary_spec_disc_amount;
+            $po->purchase_order_total_gross_net_amount = $request->summary_net_amount;
+            $po->purchase_order_total_net_amount = $request->overall_net_amount;
+            //dump($po->toArray());
             $po->save();
 
             if(isset($id)){
@@ -455,9 +496,10 @@ class PurchaseOrderController extends Controller
             }
             if(isset($request->pd)){
                 $sr_no = 1;
-                foreach($request->pd as $pd){
+                foreach($request->pd as $k=>$pd){
+
                     $dtl = new TblPurcPurchaseOrderDtl();
-                    if(isset($pd['purchase_order_dtl_id'])){
+                    if(isset($pd['purchase_order_dtl_id']) && !empty($pd['purchase_order_dtl_id'])){
                         $dtl->purchase_order_dtl_id = $pd['purchase_order_dtl_id'];
                         $dtl->purchase_order_id = $id;
                     }else{
@@ -473,20 +515,41 @@ class PurchaseOrderController extends Controller
                     $dtl->uom_id = $pd['uom_id'];
                     $dtl->purchase_order_dtlpacking = isset($pd['pd_packing'])?$pd['pd_packing']:"";
                     $dtl->purchase_order_dtl_remarks = isset($pd['remarks'])?$pd['remarks']:"";
-                    $dtl->purchase_order_dtlquantity = $this->addNo($pd['quantity']);
-                    $dtl->purchase_order_dtlfoc_quantity = $this->addNo($pd['foc_qty']);
-                    $dtl->purchase_order_dtlfc_rate = $this->addNo($pd['fc_rate']);
-                    $dtl->purchase_order_dtlrate = $this->addNo($pd['rate']);
-                    $dtl->purchase_order_dtlamount = $this->addNo($pd['amount']);
-                    $dtl->purchase_order_dtldisc_percent = $this->addNo($pd['dis_perc']);
-                    $dtl->purchase_order_dtldisc_amount = $this->addNo($pd['dis_amount']);
-                    $dtl->purchase_order_dtlvat_percent = $this->addNo($pd['vat_perc']);
-                    $dtl->purchase_order_dtlvat_amount = $this->addNo($pd['vat_amount']);
-                    $dtl->purchase_order_dtltotal_amount = $this->addNo($pd['gross_amount']);
+                    $dtl->purchase_order_dtlquantity = Utilities::NumFormat($pd['quantity']);
+                    $dtl->purchase_order_dtlsys_quantity = Utilities::NumFormat($pd['sys_qty']);
+                    $dtl->purchase_order_dtlfc_rate = Utilities::NumFormat($pd['fc_rate']);
+                    $dtl->purchase_order_dtlrate = Utilities::NumFormat($pd['rate']);
+                    $dtl->purchase_order_dtlsale_rate = Utilities::NumFormat($pd['sale_rate']);
+                    $dtl->purchase_order_dtlmrp = Utilities::NumFormat($pd['mrp']);
+                    $dtl->purchase_order_dtldisc_percent = Utilities::NumFormat($pd['dis_perc']);
+                    $dtl->purchase_order_dtldisc_amount = Utilities::NumFormat($pd['dis_amount']);
+                    $dtl->purchase_order_dtlafter_dis_amount = Utilities::NumFormat($pd['after_dis_amount']);
+                    $dtl->purchase_order_dtltax_on = $pd['pd_tax_on'];
+                    $dtl->purchase_order_dtldisc_on = $pd['pd_disc'];
+                    $dtl->purchase_order_dtlvat_percent = Utilities::NumFormat($pd['gst_perc']);
+                    $dtl->purchase_order_dtlvat_amount = Utilities::NumFormat($pd['gst_amount']);
+                    $dtl->purchase_order_dtlfed_perc = Utilities::NumFormat($pd['fed_perc']);
+                    $dtl->purchase_order_dtlfed_amount = Utilities::NumFormat($pd['fed_amount']);
+                    $dtl->purchase_order_dtlspec_disc_perc = Utilities::NumFormat($pd['spec_disc_perc']);
+                    $dtl->purchase_order_dtlspec_disc_amount = Utilities::NumFormat($pd['spec_disc_amount']);
+
+                    $dtl->purchase_order_dtlamount = Utilities::NumFormat($pd['cost_amount']);
+                    $dtl->purchase_order_dtlgross_amount = Utilities::NumFormat($pd['gross_amount']);
+                    $dtl->purchase_order_dtltotal_amount = Utilities::NumFormat($pd['net_amount']);
+
+                    $dtl->purchase_order_dtlnet_tp = Utilities::NumFormat($pd['net_tp']);
+                    $dtl->purchase_order_dtllast_tp = Utilities::NumFormat($pd['last_tp']);
+                    $dtl->purchase_order_dtlvend_last_tp = Utilities::NumFormat($pd['vend_last_tp']);
+                    $dtl->purchase_order_dtltp_diff = Utilities::NumFormat($pd['tp_diff']);
+                    $dtl->purchase_order_dtlgp_perc = Utilities::NumFormat($pd['gp_perc']);
+                    $dtl->purchase_order_dtlgp_amount = Utilities::NumFormat($pd['gp_amount']);
+                    // $dtl->purchase_order_dtlvat_percent = Utilities::NumFormat($pd['vat_perc']);
+                    // $dtl->purchase_order_dtlvat_amount = Utilities::NumFormat($pd['vat_amount']);
                     $dtl->business_id = auth()->user()->business_id;
                     $dtl->company_id = auth()->user()->company_id;
                     $dtl->branch_id = auth()->user()->branch_id;
                     $dtl->purchase_order_dtluser_id = auth()->user()->id;
+                    //    dd($dtl->toArray());
                     $dtl->save();
 
                 }
@@ -508,6 +571,7 @@ class PurchaseOrderController extends Controller
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
             $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $data['purchase_order_id'] = $id;
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());

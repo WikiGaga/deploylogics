@@ -13,7 +13,7 @@
             $currencySymbol = 'OMR';
         }
         if($case == 'edit'){
-            $menu_id = $data['menu_id'];
+            // $menu_id = $data['menu_id'];
             $expense_dtls = isset($data['current']->grn_expense)? $data['current']->grn_expense :[];
             $length = count($expense_dtls);
             $retRef_code = isset($data['current']->refPurcReturn->grn_code) ?  $data['current']->refPurcReturn->grn_code : "";
