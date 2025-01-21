@@ -433,7 +433,7 @@ class GRNController extends Controller
             'grn_store' => 'required|numeric',
             'grn_ageing_term_id' => 'nullable|numeric',
             'grn_ageing_term_value' => 'nullable|numeric',
-            'payment_type_id' => 'required|numeric',
+            // 'payment_type_id' => 'required|numeric',
             'grn_notes' => 'nullable|max:255',
             'pd.*.product_id' => 'nullable|numeric',
             'pd.*.product_barcode_id' => 'nullable|numeric',
@@ -510,7 +510,7 @@ class GRNController extends Controller
             }
             $form_id = $grn->grn_id;
             $grn->grn_exchange_rate = $request->exchange_rate;
-            $grn->payment_type_id = $request->payment_type_id;
+            // $grn->payment_type_id = $request->payment_type_id;
             $grn->grn_date = date('Y-m-d', strtotime($request->grn_date));
             $grn->supplier_id = $request->supplier_id;
             $grn->purchase_order_id = $request->purchase_order_id;
