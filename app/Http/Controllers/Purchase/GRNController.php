@@ -644,7 +644,7 @@ class GRNController extends Controller
                     $grnDtl->tbl_purc_grn_dtl_production_date = date('Y-m-d', strtotime($dtl['production_date']));
                     $grnDtl->tbl_purc_grn_dtl_expiry_date = date('Y-m-d', strtotime($dtl['expiry_date']));
                     $grnDtl->tbl_purc_grn_dtl_total_amount = $this->addNo($dtl['gross_amount']);
-                    $grnDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
+                    // $grnDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
                     $grnDtl->business_id = auth()->user()->business_id;
                     $grnDtl->company_id = auth()->user()->company_id;
                     $grnDtl->branch_id = auth()->user()->branch_id;
