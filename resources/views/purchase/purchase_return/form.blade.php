@@ -9,7 +9,7 @@
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
         if($case == 'new'){
             $length = 0;
-            $menu_id = $data['menu_id'];
+            // $menu_id = $data['menu_id'];
             $currencySymbol = 'OMR';
         }
         if($case == 'edit'){
