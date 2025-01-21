@@ -2,6 +2,8 @@
 @section('title', 'GRN')
 
 @section('pageCSS')
+<link href="/assets/plugins/custom/jstree/jstree.bundle.css" rel="stylesheet" type="text/css" />
+
     <style>
         .grn_green {
             background: #4c9a2a !important;
