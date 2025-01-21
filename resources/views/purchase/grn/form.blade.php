@@ -228,16 +228,15 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-4">
+                            {{-- <div class="col-lg-4">
                                 <div class="row">
                                     <label class="col-lg-6 col-form-label">Payment Type:
-                                        {{-- <span class="required">*</span> --}}
+                                        <span class="required">*</span>
                                     </label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
                                             <select class="form-control kt-select2 erp-form-control-sm moveIndex"
                                                 id="payment_type_id" name="payment_type_id">
-                                                {{-- <option value="0">Select</option> --}}
                                                 @foreach ($data['payment_type'] as $payment_type)
                                                     @if (isset($data['id']))
                                                         @php $payment_type_id = isset($data['current']->payment_type_id)?$data['current']->payment_type_id:''; @endphp
@@ -252,7 +251,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="row form-group-block">
                             <div class="col-lg-4">
