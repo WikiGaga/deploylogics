@@ -21,7 +21,6 @@ function display_help(that, table_block, table_block__table) {
         $('#inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
-        console.log('hi baby');
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
             var offsetTop = that.parents('tr').height();
             if ((that.offset().left + help_width) > body_width) {
