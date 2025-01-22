@@ -20,7 +20,7 @@
             $retRef_id = isset($data['current']->refPurcReturn->grn_id) ?  $data['current']->refPurcReturn->grn_id : "";
             $ref_supplier_id = isset($data['current']->refPurcReturn->supplier_id) ? $data['current']->refPurcReturn->supplier_id : "";
             $currencySymbol = $data['current']->currency->currency_symbol ?? 'OMR';
-            $grn_status = $data['current']->grn_status ?? '';
+            // $grn_status = $data['current']->grn_status ?? '';
         }
         $form_type = $data['form_type'];
     @endphp
@@ -248,7 +248,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    {{-- <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label">Status: <span class="required">*</span></label>
                             <div class="col-lg-6">
@@ -262,7 +262,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="row">
                     <div class="col-lg-12 text-right">

@@ -216,7 +216,7 @@ class PurchaseReturnController extends Controller
             'grn_currency' => 'required|numeric',
             'exchange_rate' => 'required|numeric',
             'grn_store' => 'required|numeric',
-            'grn_status' => 'required',
+            // 'grn_status' => 'required',
             'grn_ageing_term_id' => 'nullable|numeric',
             'grn_ageing_term_value' => 'nullable|numeric',
             // 'payment_type_id' => 'required|numeric',
@@ -313,7 +313,7 @@ class PurchaseReturnController extends Controller
             $pr->purchase_order_id = $request->purchase_order_id;
             //$pr->grn_receiving_date = date('Y-m-d', strtotime($request->grn_receiving_date));
             $pr->store_id = $request->grn_store;
-            $pr->grn_status = $request->grn_status;
+            // $pr->grn_status = $request->grn_status;
             $pr->grn_ageing_term_id = $request->grn_ageing_term_id;
             $pr->grn_ageing_term_value = $request->grn_ageing_term_value;
             $pr->grn_freight = $request->grn_freight;
