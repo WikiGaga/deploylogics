@@ -13,12 +13,12 @@ function display_help(that, table_block, table_block__table) {
     if (that.parents('.open-modal-group').length != 0) {
         var help_left = table_block.find('#inLineHelp').offset().left;
 
-        if ((body_width - help_left) > help_width) {
-            var cssLeft = 0;
-        } else {
-            var cssLeft = body_width - (help_left + help_width);
-        }
-        $('#inLineHelp').css({ left: cssLeft + 'px' });
+        // if ((body_width - help_left) > help_width) {
+        //     var cssLeft = 0;
+        // } else {
+        //     var cssLeft = body_width - (help_left + help_width);
+        // }
+        // $('#inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
