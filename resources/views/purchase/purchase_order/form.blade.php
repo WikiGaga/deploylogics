@@ -108,11 +108,11 @@
                                         </div>
                                         <input type="text" value="{{isset($supplier_code)?$supplier_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','supplierHelp')}}" id="supplier_name" name="supplier_name" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                         <input type="hidden" id="supplier_id" name="supplier_id" value="{{isset($supplier_id)?$supplier_id:''}}"/>
-                                        <div class="input-group-append">
+                                        {{-- <div class="input-group-append"> --}}
                                                 <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
                                                 <i class="la la-search"></i>
                                                 </span>
-                                        </div>
+                                        {{-- </div> --}}
                                     </div>
                                 </div>
                             </div>
