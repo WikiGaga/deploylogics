@@ -114,9 +114,9 @@
                                                 </span>
                                         </div>
                                         <div class="input-group-append">
-                                                <button type="button" class="input-group-text" id="OpenInlineSupplierHelp">
+                                                <span class="input-group-text btn-open-mob-help" id="OpenInlineSupplierHelp">
                                                 <i class="la la-search"></i>
-                                                </button>
+                                                </span>
                                         </div>
                                     </div>
                                     </div>
