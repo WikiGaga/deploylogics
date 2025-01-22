@@ -95,7 +95,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    {{-- <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label">Supplier:<span class="required">*</span></label>
                             <div class="col-lg-6">
@@ -108,16 +108,16 @@
                                         </div>
                                         <input type="text" value="{{isset($supplier_code)?$supplier_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','supplierHelp')}}" id="supplier_name" name="supplier_name" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                         <input type="hidden" id="supplier_id" name="supplier_id" value="{{isset($supplier_id)?$supplier_id:''}}"/>
-                                        {{-- <div class="input-group-append"> --}}
+                                        <div class="input-group-append">
                                                 <button class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
                                                 <i class="la la-search"></i>
                                                 </button>
-                                        {{-- </div> --}}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="row form-group-block">
                     <div class="col-lg-4">
