@@ -718,18 +718,18 @@ class GRNController extends Controller
                                 'product_barcode_purchase_rate'=> $barcodePurcRate,
                             ]);
 
-                        TblProductRateDetail::updateOrCreate([
-                            'product_barcode_id' => $item->product_barcode_id,
-                            'branch_id' =>  auth()->user()->branch_id
-                        ],[
-                            'rates_id' => Utilities::uuid(),
-                            'product_barcode_barcode' => $item->product_barcode_barcode,
-                            'product_purchase_rate' => $barcodePurcRate,
-                            'product_cost_rate' =>  $barcodeRate,
-                            'company_id' => auth()->user()->branch_id,
-                            'business_id' => auth()->user()->business_id,
-                            'user_id' => auth()->user()->id,
-                        ]);
+                        // TblProductRateDetail::updateOrCreate([
+                        //     'product_barcode_id' => $item->product_barcode_id,
+                        //     'branch_id' =>  auth()->user()->branch_id
+                        // ],[
+                        //     'rates_id' => Utilities::uuid(),
+                        //     'product_barcode_barcode' => $item->product_barcode_barcode,
+                        //     'product_purchase_rate' => $barcodePurcRate,
+                        //     'product_cost_rate' =>  $barcodeRate,
+                        //     'company_id' => auth()->user()->branch_id,
+                        //     'business_id' => auth()->user()->business_id,
+                        //     'user_id' => auth()->user()->id,
+                        // ]);
 
                         // Update Product Update ID
                         $updateId = TblPurcProduct::where('product_id' , $dtl['product_id'])->first();
