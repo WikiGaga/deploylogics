@@ -687,7 +687,14 @@
     <script src="{{ asset('js/pages/js/purchase-order.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
+
     <script>
+
+function Pull_left()
+{
+    $(".inLineHelp").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
+}
+
         function selectComparativeQuotation() {
             $('#help_datatable_comparativeQuotationHelp').on('click', 'tbody>tr', function(e) {
                 $('#repeated_data>tr').each(function() {
@@ -1433,9 +1440,6 @@
             }
         });
 
-        function Pull_left()
-{
-    $(".inLineHelp").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
-}
+
     </script>
 @endsection
