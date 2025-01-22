@@ -40,6 +40,7 @@ function display_help(that, table_block, table_block__table) {
     }
 }
 $(document).on('keyup', '.open_inline__help, #OpenInlineSupplierHelp', function(e) {
+    console.log('hello');
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
