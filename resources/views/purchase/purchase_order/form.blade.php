@@ -113,6 +113,11 @@
                                                 <i class="la la-search"></i>
                                                 </button>
                                         </div>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text btn-minus-selected-data">
+                                                <i class="la la-minus-circle"></i>
+                                            </span>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
