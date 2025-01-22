@@ -125,13 +125,13 @@
                                                     placeholder="Enter here">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
-                                                {{-- <div class="input-group-append">
+                                                <div class="input-group-append">
                                                     <button type="button" class="input-group-text btn-open-mob-help"
                                                         id="OpenInlineSupplierHelp"
-                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
+                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}" onclick="Pull_left()">
                                                         <i class="la la-search"></i>
                                                     </button>
-                                                </div> --}}
+                                                </div>
                                                 {{-- <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help"
                                                         id="mobOpenInlineSupplierHelp">
@@ -1432,5 +1432,11 @@
                 });
             }
         });
+
+        function Pull_left()
+{
+    $(".inline_help").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
+}
+
     </script>
 @endsection
