@@ -467,7 +467,7 @@ class PurchaseReturnController extends Controller
                 Session::get('dataSession')->purchase_stock,
                 Session::get('dataSession')->purchase_vat
             ];
-            $response = $this->ValidateCharCode($ChartArr);
+            $response = $this->ValidateCharAccCodeIds($ChartArr);
             if($response == false){
                 return $this->returnjsonerror("voucher Account Code not correct",404);
             }
