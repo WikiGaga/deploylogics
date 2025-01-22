@@ -125,13 +125,13 @@
                                                     placeholder="Enter here">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
-                                                <div class="input-group-append">
-                                                    <button type="button" class="input-group-text btn-open-mob-help"
+                                                {{-- <div class="input-group-append"> --}}
+                                                    <button type="button" class="input-group-append input-group-text btn-open-mob-help"
                                                         id="OpenInlineSupplierHelp"
                                                         data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
                                                         <i class="la la-search"></i>
                                                     </button>
-                                                </div>
+                                                {{-- </div> --}}
                                                 {{-- <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help"
                                                         id="mobOpenInlineSupplierHelp">
