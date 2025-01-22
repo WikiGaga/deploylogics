@@ -1435,8 +1435,7 @@
 
         function Pull_left()
 {
-    $(".inline_help").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
+    $(".inLineHelp").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
 }
-
     </script>
 @endsection
