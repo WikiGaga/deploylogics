@@ -13,7 +13,6 @@ function display_help(that, table_block, table_block__table) {
     if (that.parents('.open-modal-group').length != 0) {
         var help_left = table_block.find('#inLineHelp').offset().left;
 
-        console.log(help_left);
         if ((body_width - help_left) > help_width) {
             var cssLeft = 0;
         } else {
@@ -310,6 +309,7 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
         }
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
+            console.log(display_help(that, table_block, table_block__table));
             var inLineHelp = table_block.find('.inLineHelp');
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
