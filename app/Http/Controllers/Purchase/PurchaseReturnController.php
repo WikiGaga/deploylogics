@@ -219,7 +219,7 @@ class PurchaseReturnController extends Controller
             'grn_status' => 'required',
             'grn_ageing_term_id' => 'nullable|numeric',
             'grn_ageing_term_value' => 'nullable|numeric',
-            'payment_type_id' => 'required|numeric',
+            // 'payment_type_id' => 'required|numeric',
             'grn_notes' => 'nullable|max:255',
             'pd.*.product_id' => 'nullable|numeric',
             'pd.*.product_barcode_id' => 'nullable|numeric',
