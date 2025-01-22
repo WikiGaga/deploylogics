@@ -378,7 +378,7 @@ class PurchaseReturnController extends Controller
                     $prDtl->tbl_purc_grn_dtl_production_date = date('Y-m-d', strtotime($dtl['production_date']));
                     $prDtl->tbl_purc_grn_dtl_expiry_date = date('Y-m-d', strtotime($dtl['expiry_date']));
                     $prDtl->tbl_purc_grn_dtl_total_amount = $this->addNo($dtl['gross_amount']);
-                    $prDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
+                    // $prDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
                     $prDtl->business_id = auth()->user()->business_id;
                     $prDtl->company_id = auth()->user()->company_id;
                     $prDtl->branch_id = auth()->user()->branch_id;
