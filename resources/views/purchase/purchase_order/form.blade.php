@@ -114,7 +114,7 @@
                                                 </button>
                                         </div>
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text btn-minus-selected-data">
+                                            <span class="input-group-text btn-minus-selected-data" id="mobOpenInlineSupplierHelp">
                                                 <i class="la la-search"></i>
                                             </span>
                                     </div>
