@@ -13,11 +13,11 @@ function display_help(that, table_block, table_block__table) {
     if (that.parents('.open-modal-group').length != 0) {
         var help_left = table_block.find('#inLineHelp').offset().left;
 
-        // if ((body_width - help_left) > help_width) {
-        //     var cssLeft = 0;
-        // } else {
+        if ((body_width - help_left) > help_width) {
+            var cssLeft = 0;
+        } else {
             var cssLeft = body_width - (help_left + help_width);
-        // }
+        }
         $('#inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
@@ -45,7 +45,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    if (e.which === 113 || ($(this).is('#OpenInlineSupplierHelp') && e.type === 'click') ) { //F2
+    if (e.which === 113 ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number
