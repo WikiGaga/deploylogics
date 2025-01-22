@@ -40,7 +40,6 @@ function display_help(that, table_block, table_block__table) {
     }
 }
 $(document).on('keyup', '.open_inline__help', function(e) {
-    console.log('hello');
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
@@ -57,6 +56,8 @@ $(document).on('keyup', '.open_inline__help', function(e) {
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
+            console.log(inLineHelp);
+
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
                 var product_id = $('#f_barcode').val();
@@ -292,7 +293,6 @@ $(document).on('keyup', '.open_inline__help', function(e) {
 });
 
 $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
-    console.log('hello');
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
@@ -309,6 +309,7 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
+            console.log(inLineHelp);
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
                 var product_id = $('#f_barcode').val();
