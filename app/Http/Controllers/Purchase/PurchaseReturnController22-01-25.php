@@ -212,14 +212,7 @@ class PurchaseReturnController extends Controller
         $validator = Validator::make($request->all(), [
             'supplier_name' => 'required',
             'supplier_id' => 'required|numeric',
-            'purchase_order_id' => 'nullable|numeric',
-            'grn_currency' => 'required|numeric',
-            'exchange_rate' => 'required|numeric',
             'grn_store' => 'required|numeric',
-            'grn_status' => 'required',
-            'grn_ageing_term_id' => 'nullable|numeric',
-            'grn_ageing_term_value' => 'nullable|numeric',
-            'payment_type_id' => 'required|numeric',
             'grn_notes' => 'nullable|max:255',
             'pd.*.product_id' => 'nullable|numeric',
             'pd.*.product_barcode_id' => 'nullable|numeric',
@@ -242,58 +235,14 @@ class PurchaseReturnController extends Controller
                 }
             }
         }
-
-        if(isset($request->pd)){
-            foreach($request->pd as $dtl){
-                $purchase_order_id = isset($dtl['purchase_order_id'])?$dtl['purchase_order_id']:"";
-                $product = $dtl['product_id'];
-                $product_barcode = $dtl['product_barcode_id'];
-                $uom_id = $dtl['uom_id'];
-                if($purchase_order_id != ""){
-                    $exist_barcode = false;
-                    $purchase_order_barcodes = TblPurcPurchaseOrderDtl::where('purchase_order_id',$purchase_order_id)->where(Utilities::currentBCB())->get();
-                    foreach ($purchase_order_barcodes as $barcode){
-                        if($barcode['product_id'] == $product && $barcode['uom_id'] == $uom_id && $barcode['product_barcode_id'] == $product_barcode){
-                            $exist_barcode = true;
-                        }
-                    }
-                    if($exist_barcode == false){
-                        return $this->jsonErrorResponse($data, trans('message.not_barcode'), 422);
-                    }
-                    $purchase_order_id = "";
-                }else{
-                    if(TblPurcProduct::where('product_id','LIKE',$product)->where(Utilities::currentBC())->exists()){
-                        $product_data = TblPurcProduct::with('product_barcode')->where('product_id',$product)->where(Utilities::currentBC())->first();
-                        if(count($product_data->product_barcode) != 0){
-                            $exist_barcode = false;
-                            foreach ($product_data->product_barcode as $barcode){
-                                if($product_barcode == $barcode['product_barcode_id']){
-                                    if($uom_id == $barcode['uom']['uom_id']){
-                                        $exist_barcode = true;
-                                    }
-                                }
-                            }
-                            if($exist_barcode == false){
-                                return $this->jsonErrorResponse($data, trans('message.not_barcode'), 422);
-                            }
-                        }else{
-                            return $this->jsonErrorResponse($data, trans('message.not_barcode'), 422);
-                        }
-                    }else{
-                        return $this->jsonErrorResponse($data, trans('message.not_product'), 422);
-                    }
-                }
-            }
-        }else{
-            return $this->returnjsonerror(" Enter Product Detail",201);
-        }
         DB::beginTransaction();
         try{
             if(isset($id)){
-                $pr = TblPurcGrn::where('grn_type','PR')->where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                $grn = TblPurcGrn::where('grn_type','PR')->where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                $grn->update_by_user_id = Auth::id();
             }else{
-                $pr = new TblPurcGrn();
-                $pr->grn_id = Utilities::uuid();
+                $grn = new TblPurcGrn();
+                $grn->grn_id = Utilities::uuid();
                 $doc_data = [
                     'biz_type'          => 'branch',
                     'model'             => 'TblPurcGrn',
@@ -302,33 +251,49 @@ class PurchaseReturnController extends Controller
                     'code_type_field'   => 'grn_type',
                     'code_type'         => strtoupper('pr'),
                 ];
-                $pr->grn_code = Utilities::documentCode($doc_data);
+                $grn->grn_code = Utilities::documentCode($doc_data);
+                $grn->create_by_user_id = Auth::id();
             }
-            $form_id = $pr->grn_id;
-            $pr->grn_type = 'PR';
-            $pr->grn_exchange_rate = $request->exchange_rate;
-            $pr->payment_type_id = $request->payment_type_id;
-            $pr->grn_date = date('Y-m-d', strtotime($request->grn_date));
-            $pr->supplier_id = $request->supplier_id;
-            $pr->purchase_order_id = $request->purchase_order_id;
-            //$pr->grn_receiving_date = date('Y-m-d', strtotime($request->grn_receiving_date));
-            $pr->store_id = $request->grn_store;
-            $pr->grn_status = $request->grn_status;
-            $pr->grn_ageing_term_id = $request->grn_ageing_term_id;
-            $pr->grn_ageing_term_value = $request->grn_ageing_term_value;
-            $pr->grn_freight = $request->grn_freight;
-            $pr->currency_id = $request->grn_currency;
-            $pr->grn_bill_no = $request->grn_bill_no;
-            $pr->grn_other_expense = $request->grn_other_expenses;
-            $pr->purc_return_ref = isset($request->retqty_id) ? $request->retqty_id : "";
-            $pr->grn_remarks = $request->grn_notes;
-            $pr->business_id = auth()->user()->business_id;
-            $pr->company_id = auth()->user()->company_id;
-            $pr->branch_id = auth()->user()->branch_id;
-            $pr->grn_user_id = auth()->user()->id;
-            $pr->save();
+            $form_id = $grn->grn_id;
+            $grn->grn_type = 'PR';
+            $grn->grn_exchange_rate = $request->exchange_rate;
+            $grn->payment_type_id = $request->payment_type_id;
+            $grn->grn_date = date('Y-m-d', strtotime($request->grn_date));
+            $grn->supplier_id = $request->supplier_id;
+            $grn->purchase_order_id = $request->purchase_order_id;
+            //$grn->grn_receiving_date = date('Y-m-d', strtotime($request->grn_receiving_date));
+            $grn->store_id = $request->grn_store;
+            $grn->grn_ageing_term_id = $request->grn_ageing_term_id;
+            $grn->grn_ageing_term_value = $request->grn_ageing_term_value;
+            $grn->grn_freight = $request->grn_freight;
+            $grn->currency_id = $request->grn_currency;
+            $grn->grn_bill_no = $request->grn_bill_no;
+            $grn->grn_other_expense = $request->grn_other_expenses;
+            $grn->purc_return_ref = isset($request->retqty_id) ? $request->retqty_id : "";
+            $grn->grn_remarks = $request->po_notes;
 
-            $pr_dtls = TblPurcGrnDtl::where('grn_id',$pr->grn_id)->where('grn_type','PR')->where(Utilities::currentBCB())->get();
+            $grn->grn_total_items = $request->summary_total_item;
+            $grn->grn_total_qty = $request->summary_qty_wt;
+            $grn->grn_total_amount = $request->summary_amount;
+            $grn->grn_total_disc_amount = $request->summary_disc_amount;
+            $grn->grn_total_gst_amount = $request->summary_gst_amount;
+            $grn->grn_total_fed_amount = $request->summary_fed_amount;
+            $grn->grn_total_spec_disc_amount = $request->summary_spec_disc_amount;
+            $grn->grn_total_gross_net_amount = $request->summary_net_amount;
+            $grn->grn_overall_discount = $request->overall_discount_perc;
+            $grn->grn_overall_disc_amount = $request->overall_disc_amount;
+            $grn->grn_advance_tax_perc = $request->overall_vat_perc;
+            $grn->grn_advance_tax_amount = $request->overall_vat_amount;
+            $grn->grn_total_net_amount = $request->overall_net_amount;
+
+            $grn->business_id = auth()->user()->business_id;
+            $grn->company_id = auth()->user()->company_id;
+            $grn->branch_id = auth()->user()->branch_id;
+            $grn->grn_user_id = auth()->user()->id;
+            $grn->grn_device_id = 1;
+            $grn->save();
+
+            $pr_dtls = TblPurcGrnDtl::where('grn_id',$grn->grn_id)->where('grn_type','PR')->where(Utilities::currentBCB())->get();
             foreach($pr_dtls as $pr_dtl){
                 TblPurcGrnDtl::where('purc_grn_dtl_id',$pr_dtl->purc_grn_dtl_id)->where(Utilities::currentBCB())->delete();
             }
@@ -336,8 +301,10 @@ class PurchaseReturnController extends Controller
             $amount_total = 0;
             $vat_amount_total = 0;
             $disc_amount_total = 0;
-            $TotalExpAmount = 0;
             $total_gross_amount = 0;
+            $net_amount = 0;
+            $spec_disc_amount = 0;
+            $fed_total_amount = 0;
             if(isset($request->pd)){
                 $sr_no = 1;
                 foreach($request->pd as $dtl){
@@ -347,202 +314,245 @@ class PurchaseReturnController extends Controller
                         $prDtl->purc_grn_dtl_id = $account['purc_grn_dtl_id'];
                     }else{
                         $prDtl->purc_grn_dtl_id = Utilities::uuid();
-                        $prDtl->grn_id  = $pr->grn_id;
+                        $prDtl->grn_id  = $grn->grn_id;
                     }
                     $prDtl->grn_type = 'PR';
                     $prDtl->sr_no = $sr_no;
                     $sr_no = $sr_no+1;
                     $prDtl->purchase_order_id = isset($dtl['purchase_order_id'])?$dtl['purchase_order_id']:"";
-                    $prDtl->supplier_id = $dtl['grn_supplier_id'];
+                    // $prDtl->supplier_id = $dtl['grn_supplier_id'];
                     $prDtl->product_id = $dtl['product_id'];
                     $prDtl->product_barcode_id = $dtl['product_barcode_id'];
-                    $prDtl->uom_id  = $dtl['uom_id'];
-                    $prDtl->tbl_purc_grn_dtl_packing = $dtl['pd_packing'];
-                    $prDtl->qty_base_unit = (isset($dtl['pd_packing'])?$dtl['pd_packing']:'0') * ((isset($dtl['quantity'])?$dtl['quantity']:'0')+(isset($dtl['foc_qty'])?$dtl['foc_qty']:'0'));
-                    $prDtl->tbl_purc_grn_dtl_supplier_barcode = $dtl['grn_supplier_barcode'];
+                    // $prDtl->uom_id  = $dtl['uom_id'];
+                    // $prDtl->tbl_purc_grn_dtl_packing = $dtl['pd_packing'];
+                    // $prDtl->qty_base_unit = (isset($dtl['pd_packing'])?$dtl['pd_packing']:'0') * ((isset($dtl['quantity'])?$dtl['quantity']:'0')+(isset($dtl['foc_qty'])?$dtl['foc_qty']:'0'));
+                    // $prDtl->tbl_purc_grn_dtl_supplier_barcode = $dtl['grn_supplier_barcode'];
                     $prDtl->product_barcode_barcode = $dtl['pd_barcode'];
+                    $prDtl->qty_base_unit = $dtl['quantity'];
                     $prDtl->tbl_purc_grn_dtl_quantity = $dtl['quantity'];
-                    $prDtl->tbl_purc_grn_dtl_retpend_qty = $dtl['rtrnpending_quantity'];
-                    $prDtl->tbl_purc_grn_dtl_collected_qty = $dtl['returnable_quantity'];
-                    $prDtl->tbl_purc_grn_dtl_returnable_qty = $dtl['returnable_quantity'];
-                    $prDtl->tbl_purc_grn_dtl_foc_quantity = $dtl['foc_qty'];
-                    $prDtl->tbl_purc_grn_dtl_fc_rate = $this->addNo($dtl['fc_rate']);
                     $prDtl->tbl_purc_grn_dtl_rate = $this->addNo($dtl['rate']);
-                    $prDtl->tbl_purc_grn_dtl_amount = $this->addNo($dtl['amount']);
+                    $prDtl->tbl_purc_grn_dtl_sale_rate = $this->addNo($dtl['sale_rate']);
+                    $prDtl->tbl_purc_grn_dtl_sys_quantity = $this->addNo($dtl['sys_qty']);
+                    $prDtl->tbl_purc_grn_dtl_mrp = $this->addNo($dtl['mrp']);
+                    $prDtl->tbl_purc_grn_dtl_amount = $this->addNo($dtl['cost_amount']);
                     $prDtl->tbl_purc_grn_dtl_disc_percent = $this->addNo($dtl['dis_perc']);
                     $prDtl->tbl_purc_grn_dtl_disc_amount = $this->addNo($dtl['dis_amount']);
-                    $prDtl->tbl_purc_grn_dtl_gst_percent = '';//$this->addNo($dtl['grn_gst']);
-                    $prDtl->tbl_purc_grn_dtl_vat_percent = $this->addNo($dtl['vat_perc']);
-                    $prDtl->tbl_purc_grn_dtl_vat_amount = $this->addNo($dtl['vat_amount']);
-                    $prDtl->tbl_purc_grn_dtl_batch_no = $dtl['batch_no'];
-                    $prDtl->tbl_purc_grn_dtl_production_date = date('Y-m-d', strtotime($dtl['production_date']));
-                    $prDtl->tbl_purc_grn_dtl_expiry_date = date('Y-m-d', strtotime($dtl['expiry_date']));
-                    $prDtl->tbl_purc_grn_dtl_total_amount = $this->addNo($dtl['gross_amount']);
-                    $prDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
+                    $prDtl->tbl_purc_grn_dtl_after_dis_amount = $this->addNo($dtl['after_dis_amount']);
+                    $prDtl->tbl_purc_grn_dtl_tax_on = isset($dtl['pd_tax_on'])?$dtl['pd_tax_on']:'';
+                    $prDtl->tbl_purc_grn_dtl_vat_percent = $this->addNo($dtl['gst_perc']);
+                    $prDtl->tbl_purc_grn_dtl_vat_amount = $this->addNo($dtl['gst_amount']);
+                    $prDtl->tbl_purc_grn_dtl_fed_percent = $this->addNo($dtl['fed_perc']);
+                    $prDtl->tbl_purc_grn_dtl_fed_amount = $this->addNo($dtl['fed_amount']);
+                    $prDtl->tbl_purc_grn_dtl_disc_on = isset($dtl['pd_disc'])?$dtl['pd_disc']:'';
+                    $prDtl->tbl_purc_grn_dtl_spec_disc_perc = $this->addNo($dtl['spec_disc_perc']);
+                    $prDtl->tbl_purc_grn_dtl_spec_disc_amount = $this->addNo($dtl['spec_disc_amount']);
+                    $prDtl->tbl_purc_grn_dtl_gross_amount = $this->addNo($dtl['gross_amount']);
+                    $prDtl->tbl_purc_grn_dtl_total_amount = $this->addNo($dtl['net_amount']);
+                    $prDtl->tbl_purc_grn_dtl_net_tp = $this->addNo($dtl['net_tp']);
+                    $prDtl->tbl_purc_grn_dtl_last_tp = $this->addNo($dtl['last_tp']);
+                    $prDtl->tbl_purc_grn_dtl_vend_last_tp = $this->addNo($dtl['vend_last_tp']);
+                    $prDtl->tbl_purc_grn_dtl_tp_diff = $this->addNo($dtl['tp_diff']);
+                    $prDtl->tbl_purc_grn_dtl_gp_perc = $this->addNo($dtl['gp_perc']);
+                    $prDtl->tbl_purc_grn_dtl_gp_amount = $this->addNo($dtl['gp_amount']);
+                    $prDtl->tbl_purc_grn_dtl_remarks = $dtl['remarks'];
+                    $prDtl->tbl_purc_grn_dtl_fc_rate = $this->addNo($dtl['fc_rate']);
                     $prDtl->business_id = auth()->user()->business_id;
                     $prDtl->company_id = auth()->user()->company_id;
                     $prDtl->branch_id = auth()->user()->branch_id;
                     $prDtl->tbl_purc_grn_dtl_user_id = auth()->user()->id;
 
-                    $barcode = TblPurcProductBarcode::where('product_barcode_id',$dtl['product_barcode_id'])
-                        ->where('product_id',$dtl['product_id'])->first();
-
-                    if($dtl['foc_qty'] > 0){
-                        $amount = $this->addNo($dtl['amount']);
-                        $quantity = $this->addNo($dtl['quantity']);
-                        $foc_qty = $this->addNo($dtl['foc_qty']);
-                        $barcode_packing = $barcode->product_barcode_packing;
-                        $rate_inc_foc = ((float)$amount / ((float) $quantity + (float) $foc_qty )) / (float)$barcode_packing;
-                    }else{
-                        $rate = $this->addNo($dtl['rate']);
-                        $rate_inc_foc = (float)$rate/(float)$barcode->product_barcode_packing;
-                    }
-                    $prDtl->tbl_purc_grn_dtl_rate_inc_foc = $rate_inc_foc;
-
-
                     $prDtl->save();
-                    $net_total += $this->addNo($dtl['gross_amount']);
-                    $total_gross_amount += $this->addNo($dtl['gross_amount']);
-                    $amount_total += $this->addNo($dtl['amount']);
-                    $vat_amount_total += $this->addNo($dtl['vat_amount']);
-                    $disc_amount_total += $this->addNo($dtl['dis_amount']);
-                }
-            }
-            if(isset($id)){
-                $del_Dtls = TblPurcGrnExpense::where('grn_id',$id)->where(Utilities::currentBCB())->get();
-                foreach ($del_Dtls as $del_Dtls){
-                    TblPurcGrnExpense::where('grn_expense_id',$del_Dtls->grn_expense_id)->where(Utilities::currentBCB())->delete();
-                }
-            }
-            if(isset($request->pdsm)){
-                foreach($request->pdsm as $expense){
-                    if(isset($expense['expense_amount'])){
-                        $expenseDtl = new TblPurcGrnExpense();
-                        $expenseDtl->grn_expense_id = Utilities::uuid();
-                        if(isset($id)){
-                            $expenseDtl->grn_id = $id;
-                        }else{
-                            $expenseDtl->grn_id = $pr->grn_id;
-                        }
-                        $expenseDtl->chart_account_id = $expense['account_id'];
-                        $expenseDtl->grn_expense_account_code = $expense['account_code'];
-                        $expenseDtl->grn_expense_account_name = $expense['account_name'];
-                        $expenseDtl->grn_expense_amount = $this->addNo($expense['expense_amount']);
-                        $expenseDtl->business_id = auth()->user()->business_id;
-                        $expenseDtl->company_id = auth()->user()->company_id;
-                        $expenseDtl->branch_id = auth()->user()->branch_id;
-                        $expenseDtl->grn_expense_user_id = auth()->user()->id;
-                        $expenseDtl->save();
-                        $net_total += $this->addNo($expense['expense_amount']);
-                        $TotalExpAmount += $this->addNo($expense['expense_amount']);
-                    }
+                    $net_total += Utilities::NumFormat($dtl['gross_amount']);
+                    $total_gross_amount += Utilities::NumFormat($dtl['gross_amount']);
+                    $amount_total += Utilities::NumFormat($dtl['cost_amount']);
+                    $vat_amount_total += Utilities::NumFormat($dtl['gst_amount']);
+                    $disc_amount_total += Utilities::NumFormat($dtl['dis_amount']);
+                    $net_amount += Utilities::NumFormat($dtl['net_amount']);
+                    $spec_disc_amount += Utilities::NumFormat($dtl['spec_disc_amount']);
+                    $fed_total_amount += Utilities::NumFormat($dtl['fed_amount']);
                 }
             }
 
-            $prTotal = TblPurcGrn::where('grn_id',$pr->grn_id)->where('grn_type','PR')->where(Utilities::currentBCB())->first();
-            $prTotal->grn_total_amount = $total_gross_amount;
-            $prTotal->grn_total_expense_amount = $TotalExpAmount;
-            $prTotal->grn_total_net_amount = $total_gross_amount - $TotalExpAmount;
-            $prTotal->save();
-            // insert update grn voucher
             $table_name = 'tbl_acco_voucher';
             if(isset($id)){
                 $action = 'update';
-                $pr_id = $id;
-                $grn = TblPurcGrn::where('grn_id',$pr_id)->where(Utilities::currentBCB())->first();
-                $voucher_id = $grn->voucher_id;
+                $grn_id = $id;
+                $grn = TblPurcGrn::where('grn_id',$grn_id)->where(Utilities::currentBCB())->first();
+                if(!empty($grn->voucher_id)){
+                    $voucher_id = $grn->voucher_id;
+                }else{
+                    $voucher_id = Utilities::uuid();
+                }
             }else{
                 $action = 'add';
-                $pr_id = $pr->grn_id;
+                $grn_id = $grn->grn_id;
                 $voucher_id = Utilities::uuid();
             }
-            $where_clause = '';
             $supplier = TblPurcSupplier::where('supplier_id',$request->supplier_id)->where(Utilities::currentBC())->first();
-            $supplier_chart_account_id = (int)$supplier->supplier_account_id;
 
-            //check account code
+            $supplier_ca_id = (int)$supplier->supplier_account_id;
+
+
+            $gst_ca_id = ''; // '3-01-05-0009';
+            $amount_ca_id = ''; // '6-01-01-0001';
+            $fed_ca_id = ''; //  '6-01-01-0001';
+            $adv_tax_ca_id = ''; // '6-01-10-0001';
+            $round_of_amt_ca_id = ''; // '7-01-01-0003';
+            $discount_ca_id = ''; // '7-01-02-0002';
+            $spec_disc_ca_id = ''; // '7-01-02-0002';
+            $order_disc_ca_id = ''; // '7-01-02-0002';
+
+            $allChartAcc = TblAccCoa::whereIn('chart_code',['3-01-05-0009','6-01-01-0001','6-01-10-0001','7-01-01-0003','7-01-02-0002'])->select('chart_account_id','chart_code','chart_name')->get();
+            foreach ($allChartAcc as $oneChartAcc){
+                if($oneChartAcc->chart_code == '3-01-05-0009'){
+                    $gst_ca_id = $oneChartAcc->chart_account_id;
+                }
+                if($oneChartAcc->chart_code == '6-01-01-0001'){
+                    $amount_ca_id = $oneChartAcc->chart_account_id;
+                    $fed_ca_id = $oneChartAcc->chart_account_id;
+                }
+                if($oneChartAcc->chart_code == '6-01-10-0001'){
+                    $adv_tax_ca_id = $oneChartAcc->chart_account_id;
+                }
+                if($oneChartAcc->chart_code == '7-01-01-0003'){
+                    $round_of_amt_ca_id = $oneChartAcc->chart_account_id;
+                }
+                if($oneChartAcc->chart_code == '7-01-02-0002'){
+                    $discount_ca_id = $oneChartAcc->chart_account_id;
+                    $spec_disc_ca_id = $oneChartAcc->chart_account_id;
+                    $order_disc_ca_id = $oneChartAcc->chart_account_id;
+                }
+            }
+
             $ChartArr = [
-                $supplier_chart_account_id,
-                Session::get('dataSession')->purchase_discount,
-                Session::get('dataSession')->purchase_stock,
-                Session::get('dataSession')->purchase_vat
+                $supplier_ca_id,
+                $amount_ca_id,
+                $discount_ca_id,
+                $spec_disc_ca_id,
+                $order_disc_ca_id,
+                $gst_ca_id,
+                $adv_tax_ca_id,
+                $fed_ca_id,
+                $round_of_amt_ca_id,
             ];
-            $response = $this->ValidateCharCode($ChartArr);
-            if($response == false){
-                return $this->returnjsonerror("voucher Account Code not correct",404);
+            $response = $this->ValidateCharAccCodeIds($ChartArr);
+            if(isset($response['error']) && empty($response['error'])){
+                return $this->jsonErrorResponse($data,"Account Code not correct",200);
             }
 
             //voucher start
             $data = [
                 'voucher_id'            =>  $voucher_id,
-                'voucher_document_id'   =>  $pr_id,
-                'voucher_no'            =>  $pr->grn_code,
+                'voucher_document_id'   =>  $grn_id,
+                'voucher_no'            =>  $grn->grn_code,
                 'voucher_date'          =>  date('Y-m-d', strtotime($request->grn_date)),
-                'voucher_descrip'       =>  'Purchase Return: '.$pr->grn_remarks.' - Ref:'.$request->grn_bill_no,
+                'voucher_descrip'       =>  'Purchase: '.$grn->grn_remarks .' - Ref:'.$request->grn_bill_no,
                 'voucher_type'          =>  'PR',
+                'voucher_posted'         =>  1,
                 'branch_id'             =>  auth()->user()->branch_id,
                 'business_id'           =>  auth()->user()->business_id,
                 'company_id'            =>  auth()->user()->company_id,
                 'voucher_user_id'       =>  auth()->user()->id,
-                'document_ref_account'  =>  (int)$supplier->supplier_account_id,
-                'vat_amount'            =>  $vat_amount_total,
             ];
-            $data['chart_account_id'] = $supplier_chart_account_id;
-            $data['voucher_debit'] = abs($net_total);
+            $voucher_sr_no = 1;
+            $overall_net_amount = $request->overall_net_amount;
+            $data['chart_account_id'] = $supplier_ca_id;
+            $data['voucher_posted'] = 1;
             $data['voucher_credit'] = 0;
-            $data['voucher_sr_no'] = 1;
-            // for debit entry net_total
-            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+            $data['voucher_debit'] = abs($overall_net_amount);
+            $data['voucher_sr_no'] = $voucher_sr_no++;
+            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
 
             $action = 'add';
-            $discount_chart_account_id = Session::get('dataSession')->purchase_discount;
-            $data['chart_account_id'] = $discount_chart_account_id;
-            $data['voucher_debit'] =  abs($disc_amount_total);
-            $data['voucher_credit'] = 0;
-            $data['voucher_sr_no'] = 2;
-            // for debit entry disc_amount_total
-            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+            if(!empty($disc_amount_total)){
+                $data['chart_account_id'] = $discount_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = 0;
+                $data['voucher_debit'] = abs($disc_amount_total);
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Discount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($spec_disc_amount)){
+                $data['chart_account_id'] = $discount_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = 0;
+                $data['voucher_debit'] = abs($spec_disc_amount);
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Spec Discount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($request->overall_disc_amount)){
+                $data['chart_account_id'] = $discount_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = 0;
+                $data['voucher_debit'] = abs($request->overall_disc_amount);
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Order Discount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($amount_total)){
+                $data['chart_account_id'] = $amount_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = abs($amount_total);
+                $data['voucher_debit'] = 0;
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Amount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($vat_amount_total)){
+                $data['chart_account_id'] = $gst_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = abs($vat_amount_total);
+                $data['voucher_debit'] = 0;
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'GST Amount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($request->overall_vat_amount)){
+                $data['chart_account_id'] = $adv_tax_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = abs($request->overall_vat_amount);
+                $data['voucher_debit'] = 0;
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Adv Tax Amount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            if(!empty($fed_total_amount)){
+                $data['chart_account_id'] = $fed_ca_id;
+                $data['voucher_posted'] = 1;
+                $data['voucher_credit'] = abs($fed_total_amount);
+                $data['voucher_debit'] = 0;
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'FED Amount';
+                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data);
+            }
+            $debit_amount = abs($amount_total) + abs($vat_amount_total) + abs($request->overall_vat_amount) + abs($fed_total_amount);
+            $credit_amount = abs($overall_net_amount) + abs($disc_amount_total) + abs($spec_disc_amount) + abs($request->overall_disc_amount);
 
-            $action = 'add';
-            $stock_chart_account_id = Session::get('dataSession')->purchase_stock;
-            $data['chart_account_id'] = $stock_chart_account_id;
-            $data['voucher_debit'] =  0;
-            $data['voucher_credit'] = abs($amount_total);
-            $data['voucher_sr_no'] = 3;
-            // for credit entry amount_total
-            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+            $round_of_amt = number_format($debit_amount,3,'.','') - number_format($credit_amount,3,'.','');
+            $round_of_amt = number_format($round_of_amt,3,'.','');
 
-            $action = 'add';
-            $vat_payable_chart_account_id = Session::get('dataSession')->purchase_vat ;
-            $data['chart_account_id'] = $vat_payable_chart_account_id;
-            $data['voucher_debit'] = 0;
-            $data['voucher_credit'] =  abs($vat_amount_total);
-            $data['voucher_sr_no'] = 4;
-            // for credit entry vat_amount_total
-            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+            if(!empty($round_of_amt)) {
 
-            if(isset($request->pdsm)){
-                $sr_no = 5;
-                foreach($request->pdsm as $expense){
-                    if(0 < $this->addNo($expense['expense_amount'])){
-                        $data['voucher_debit'] = 0;
-                        $data['voucher_credit'] = abs($expense['expense_amount']);
-                    }else{
-                        $data['voucher_debit'] = abs($expense['expense_amount']);
-                        $data['voucher_credit'] = 0;
-                    }
-                    $action = 'add';
-                    $data['chart_account_id'] = $expense['account_id'];
-                    $data['voucher_sr_no'] = $sr_no;
-                    $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
-                    $sr_no++;
+                $data['chart_account_id'] = $round_of_amt_ca_id;
+                $data['voucher_posted'] = 1;
+                if ($round_of_amt > 0) {
+                    $data['voucher_debit'] = abs($round_of_amt);
+                    $data['voucher_credit'] = 0;
+                } else {
+                    $data['voucher_debit'] = 0;
+                    $data['voucher_credit'] = abs($round_of_amt);
                 }
+                $data['voucher_sr_no'] = $voucher_sr_no++;
+                $data['voucher_descrip'] = 'Round of Amount';
+                $this->proAccoVoucherInsert($voucher_id, $action, $table_name, $data);
             }
-            if(!isset($id)){
-                $grn = TblPurcGrn::where('grn_id',$pr_id)->where(Utilities::currentBCB())->first();
-                $grn->voucher_id = $voucher_id;
-                $grn->save();
-            }
+
+            $grnVou = TblPurcGrn::where('grn_id',$grn_id)->first();
+            $grnVou->voucher_id = $voucher_id;
+            $grnVou->save();
+
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -554,7 +564,7 @@ class PurchaseReturnController extends Controller
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         } catch (Exception $e) {
             DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+            return $this->jsonErrorResponse($data, $e->getLine()." : ".$e->getMessage(), 200);
         }
         DB::commit();
         if(isset($id)){
