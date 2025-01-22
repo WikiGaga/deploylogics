@@ -39,12 +39,12 @@ function display_help(that, table_block, table_block__table) {
         inLineHelp.addClass("inline_help_table");
     }
 }
-$(document).on('keyup', '.open_inline__help', function(e) {
+$(document).on('keyup', '.open_inline__help, #OpenInlineSupplierHelp', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    if (e.which === 113) { //F2
+    if (e.which === 113 || ($(this).is('#OpenInlineSupplierHelp') && e.type === 'click') ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number

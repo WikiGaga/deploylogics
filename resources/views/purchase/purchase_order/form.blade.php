@@ -113,10 +113,11 @@
                                                 <i class="la la-search"></i>
                                                 </button>
                                         </div>
-                                        {{-- <div class="input-group-prepend">
-                                            <span class="input-group-text btn-minus-selected-data" id="mobOpenInlineSupplierHelp">
+                                        <div class="input-group-append">
+                                                <button class="input-group-text" id="OpenInlineSupplierHelp">
                                                 <i class="la la-search"></i>
-                                            </span> --}}
+                                                </button>
+                                        </div>
                                     </div>
                                     </div>
                                 </div>
