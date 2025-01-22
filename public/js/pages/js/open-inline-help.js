@@ -11,8 +11,9 @@ function display_help(that, table_block, table_block__table) {
     var help_width = 511;
     var body_width = $('body').width()
     if (that.parents('.open-modal-group').length != 0) {
-        console.log('hello baby');
         var help_left = table_block.find('#inLineHelp').offset().left;
+
+        console.log(help_left);
         if ((body_width - help_left) > help_width) {
             var cssLeft = 0;
         } else {
