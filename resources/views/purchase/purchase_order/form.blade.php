@@ -95,7 +95,7 @@
                             </div>
                         </div>
                     </div>
-                    {{-- <div class="col-lg-4">
+                    <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label">Supplier:<span class="required">*</span></label>
                             <div class="col-lg-6">
@@ -117,7 +117,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div> --}}
+                    </div>
                 </div>
                 <div class="row form-group-block">
                     <div class="col-lg-4">
