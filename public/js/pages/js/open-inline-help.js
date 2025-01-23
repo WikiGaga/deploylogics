@@ -196,100 +196,100 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     var mobileRequest = true;
 
     // if type barcode search open help
-    if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
-        var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
-        if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
-            //  display_help(that,table_block,table_block__table);
-            var inLineHelp = table_block.find('.inLineHelp');
-            inLineHelp.find('.data_tbody_row').removeClass('selected_row');
-            if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == false) {
-                var data_url = that.attr('data-url');
-                if( inLineHelp.find('.data_thead_row').attr('id') == 'productHelp'){
-                    var url = data_url;
-                }else{
-                    var url = data_url + '/' + encodeURIComponent($(this).val());
-                }
-                var formData = {};
-                formData.form_type = form_type;
-                formData.val = $(this).val();
-                var acc_form = ['cpv', '']
-                if (acc_form.includes(form_type)) {
-                    formData.account_id = that.parents('tr').find('.account_id').val();
-                }
-                var form_type_list = ['sale_invoice', 'sales_fee', 'sales_quotation'];
-                if ($('form').find('#sales_contract_code').length != 0 && form_type_list.includes(form_type)) {
-                    formData.customer_id = $('#customer_id').val();
-                }
-                if ($('form').find('#supplier_name').length != 0 && form_type == 'purc_return') {
-                    formData.supplier_id = $('#supplier_id').val();
-                }
-                if(form_type == 'purc_order' && $('form').find('#supplier_id').val() != ""){
-                    formData.supplier_id = $('#supplier_id').val();
-                }
-                if(form_type == 'pv'
-                    && !valueEmpty($('form').find('#up_chart_account_id').val())
-                ){
-                    formData.supplier_chart_id = $('form').find('#up_chart_account_id').val();
-                }
-                if(form_type == 'rv'
-                    && !valueEmpty($('form').find('#up_chart_account_id').val())
-                ){
-                    formData.supplier_chart_id = $('form').find('#up_chart_account_id').val();
-                }
-                currentRequest = $.ajax({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    type: 'POST',
-                    url: url,
-                    dataType: 'json',
-                    data: formData,
-                    beforeSend: function() {
-                        if(currentRequest != null) {
-                            currentRequest.abort();
-                        }
-                        if (table_block.find('#inLineHelp').find('.kt-inline-spinner').length == 0) {
-                            table_block.find('#inLineHelp').prepend('<div class="kt-spinner kt-inline-spinner kt-spinner--lg kt-spinner--success kt-spinner-center" style="position: absolute;top: 0;z-index: 999;width: 100%;background: #f3f3f3;height: 100%;opacity: 0.5;"></div>');
-                        }
-                    },
-                    success: function(response) {
-                        if (response['body'] != null) {
-                            inLineHelp.html(response['body']);
-                        }
-                    },
-                    error: function() {
-                        table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
-                    }
-                });
-                $(document).ajaxStop(function(e, d) {
-                    table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
-                    $(document).unbind("ajaxStop");
-                });
-                //if(inLineHelp.length != 0){
-                //inLineHelp.load(url);
-                //}
-                mobileRequest = false;
-            }
-        }
-        if ($(window).width() <= 1024 && mobileRequest == true) {
-            // display_help(that,table_block,table_block__table);
-            var inLineHelp = table_block.find('.inLineHelp');
-            var data_url = $(this).attr('data-url');
-            var url = data_url + '/' + encodeURIComponent($(this).val());
-            if (inLineHelp.length != 0) {
-                inLineHelp.load(url);
-            }
-        }
-    }
-    if ($('.inLineHelp .data_tbody_row').hasClass('selected_row')) {
-        $("#inLineHelp .inline_help_table").scrollTop(0); //set to top
-        $("#inLineHelp .inline_help").scrollTop(0); //set to top
-        var selected_row = $("#inLineHelp").find('.selected_row:first');
-        if (selected_row.length != 0) {
-            $("#inLineHelp .inline_help_table").scrollTop(selected_row.position().top - 150);
-            $("#inLineHelp .inline_help").scrollTop(selected_row.position().top - 150);
-        }
-    }
+    // if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
+    //     var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
+    //     if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
+    //         //  display_help(that,table_block,table_block__table);
+    //         var inLineHelp = table_block.find('.inLineHelp');
+    //         inLineHelp.find('.data_tbody_row').removeClass('selected_row');
+    //         if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == false) {
+    //             var data_url = that.attr('data-url');
+    //             if( inLineHelp.find('.data_thead_row').attr('id') == 'productHelp'){
+    //                 var url = data_url;
+    //             }else{
+    //                 var url = data_url + '/' + encodeURIComponent($(this).val());
+    //             }
+    //             var formData = {};
+    //             formData.form_type = form_type;
+    //             formData.val = $(this).val();
+    //             var acc_form = ['cpv', '']
+    //             if (acc_form.includes(form_type)) {
+    //                 formData.account_id = that.parents('tr').find('.account_id').val();
+    //             }
+    //             var form_type_list = ['sale_invoice', 'sales_fee', 'sales_quotation'];
+    //             if ($('form').find('#sales_contract_code').length != 0 && form_type_list.includes(form_type)) {
+    //                 formData.customer_id = $('#customer_id').val();
+    //             }
+    //             if ($('form').find('#supplier_name').length != 0 && form_type == 'purc_return') {
+    //                 formData.supplier_id = $('#supplier_id').val();
+    //             }
+    //             if(form_type == 'purc_order' && $('form').find('#supplier_id').val() != ""){
+    //                 formData.supplier_id = $('#supplier_id').val();
+    //             }
+    //             if(form_type == 'pv'
+    //                 && !valueEmpty($('form').find('#up_chart_account_id').val())
+    //             ){
+    //                 formData.supplier_chart_id = $('form').find('#up_chart_account_id').val();
+    //             }
+    //             if(form_type == 'rv'
+    //                 && !valueEmpty($('form').find('#up_chart_account_id').val())
+    //             ){
+    //                 formData.supplier_chart_id = $('form').find('#up_chart_account_id').val();
+    //             }
+    //             currentRequest = $.ajax({
+    //                 headers: {
+    //                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    //                 },
+    //                 type: 'POST',
+    //                 url: url,
+    //                 dataType: 'json',
+    //                 data: formData,
+    //                 beforeSend: function() {
+    //                     if(currentRequest != null) {
+    //                         currentRequest.abort();
+    //                     }
+    //                     if (table_block.find('#inLineHelp').find('.kt-inline-spinner').length == 0) {
+    //                         table_block.find('#inLineHelp').prepend('<div class="kt-spinner kt-inline-spinner kt-spinner--lg kt-spinner--success kt-spinner-center" style="position: absolute;top: 0;z-index: 999;width: 100%;background: #f3f3f3;height: 100%;opacity: 0.5;"></div>');
+    //                     }
+    //                 },
+    //                 success: function(response) {
+    //                     if (response['body'] != null) {
+    //                         inLineHelp.html(response['body']);
+    //                     }
+    //                 },
+    //                 error: function() {
+    //                     table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
+    //                 }
+    //             });
+    //             $(document).ajaxStop(function(e, d) {
+    //                 table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
+    //                 $(document).unbind("ajaxStop");
+    //             });
+    //             //if(inLineHelp.length != 0){
+    //             //inLineHelp.load(url);
+    //             //}
+    //             mobileRequest = false;
+    //         }
+    //     }
+    //     if ($(window).width() <= 1024 && mobileRequest == true) {
+    //         // display_help(that,table_block,table_block__table);
+    //         var inLineHelp = table_block.find('.inLineHelp');
+    //         var data_url = $(this).attr('data-url');
+    //         var url = data_url + '/' + encodeURIComponent($(this).val());
+    //         if (inLineHelp.length != 0) {
+    //             inLineHelp.load(url);
+    //         }
+    //     }
+    // }
+    // if ($('.inLineHelp .data_tbody_row').hasClass('selected_row')) {
+    //     $("#inLineHelp .inline_help_table").scrollTop(0); //set to top
+    //     $("#inLineHelp .inline_help").scrollTop(0); //set to top
+    //     var selected_row = $("#inLineHelp").find('.selected_row:first');
+    //     if (selected_row.length != 0) {
+    //         $("#inLineHelp .inline_help_table").scrollTop(selected_row.position().top - 150);
+    //         $("#inLineHelp .inline_help").scrollTop(selected_row.position().top - 150);
+    //     }
+    // }
 });
 
 $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
