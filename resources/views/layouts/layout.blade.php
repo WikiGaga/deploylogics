@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-@php
-dd(app()->getLocale());
-@endphp
+<html lang="ar">
+
 <!-- begin::Head -->
 <head>
     <base href="">
