@@ -40,12 +40,12 @@ function display_help(that, table_block, table_block__table) {
         inLineHelp.addClass("inline_help_table");
     }
 }
-$(document).on('keyup', '.open_inline__help', function(e) {
+$(document).on('click', '.open_inline__help', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    if (e.which === 113 ) { //F2
+    // if (e.which === 113 ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number
@@ -120,7 +120,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
                 }
             });
         }
-    }
+    // }
     if(e.which === 115){
         $('#inLineHelp').remove();
         var caseHelp = "";
@@ -292,7 +292,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     }
 });
 
-$(document).on('click', '#supplier_name', function(e) {
+$(document).on('click', '#OpenInlineSupplierHelp', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
