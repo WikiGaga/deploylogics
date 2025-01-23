@@ -46,6 +46,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
+    console.log('hello from f2');
     if (e.which === 113 ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
@@ -309,7 +310,8 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
         }
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
-            console.log(display_help(that, table_block, table_block__table));
+    console.log('hello from click');
+            // console.log(display_help(that, table_block, table_block__table));
             var inLineHelp = table_block.find('.inLineHelp');
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
