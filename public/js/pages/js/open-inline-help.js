@@ -17,6 +17,7 @@ function display_help(that, table_block, table_block__table) {
         } else {
             var cssLeft = body_width - (help_left + help_width);
         }
+        console.log($('#inLineHelp'));
         $('#inLineHelp').css({ left: cssLeft + 'px' });
         // $('.inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
@@ -121,77 +122,77 @@ $(document).on('keyup', '.open_inline__help', function(e) {
             });
         }
     }
-    // if(e.which === 115){
-    //     $('#inLineHelp').remove();
-    //     var caseHelp = "";
-    //     if (that.attr('id') == 'purchase_order') {
-    //         funcPOModalHelp(e);
-    //     }
-    //     if (that.attr('id') == 'pd_barcode') {
-    //         funcProductModalHelp(e);
-    //     }
-    // }
-    // var helpNotOpen = false;
-    // if (e.which === 115 && helpNotOpen) { // F4
-    //     $('#inLineHelp').remove();
-    //     $.ajaxSetup({
-    //         headers: {
-    //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    //         }
-    //     });
-    //     var caseHelp = "";
-    //     if (that.attr('id') == 'supplier_name') {
-    //         caseHelp = 'supplierHelp';
-    //     }
-    //     if (that.attr('id') == 'pd_barcode') {
-    //         caseHelp = 'productHelp';
-    //     }
-    //     if (that.attr('id') == 'purchase_order') {
-    //         caseHelp = 'poHelp';
-    //     }
-    //     if (that.attr('id') == 'f_barcode') {
-    //         caseHelp = 'productHelp';
-    //     }
+    if(e.which === 115){
+        $('#inLineHelp').remove();
+        var caseHelp = "";
+        if (that.attr('id') == 'purchase_order') {
+            funcPOModalHelp(e);
+        }
+        if (that.attr('id') == 'pd_barcode') {
+            funcProductModalHelp(e);
+        }
+    }
+    var helpNotOpen = false;
+    if (e.which === 115 && helpNotOpen) { // F4
+        $('#inLineHelp').remove();
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        var caseHelp = "";
+        if (that.attr('id') == 'supplier_name') {
+            caseHelp = 'supplierHelp';
+        }
+        if (that.attr('id') == 'pd_barcode') {
+            caseHelp = 'productHelp';
+        }
+        if (that.attr('id') == 'purchase_order') {
+            caseHelp = 'poHelp';
+        }
+        if (that.attr('id') == 'f_barcode') {
+            caseHelp = 'productHelp';
+        }
 
-    //     if(that.attr('id') == 'multi_product'){
-    //         var formData = {
-    //             supplier_id: $('#supplier_id').val(),
-    //         }
-    //         var data_url = '/common/select-multiple-products';
-    //     }
+        if(that.attr('id') == 'multi_product'){
+            var formData = {
+                supplier_id: $('#supplier_id').val(),
+            }
+            var data_url = '/common/select-multiple-products';
+        }
 
-    //     $('#kt_modal_xl').modal('show').find('.modal-content').load('/common/help-open/' + caseHelp);
-    //     $('.modal-dialog').draggable({
-    //         handle: ".modal-header"
-    //     });
-    //     return false;
-    // }
-    // if (e.which === 40 && table_block.find('.inLineHelp').length != 0) {
-    //     var inLineHelp = table_block.find('.inLineHelp');
-    //     if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == false) {
-    //         inLineHelp.find('.data_tbody_row:eq(0)').addClass('selected_row');
-    //     } else {
-    //         var index = inLineHelp.find('.data_tbody_row.selected_row').index();
-    //         var ww_index = index - 2;
-    //         index = index - 1;
-    //         inLineHelp.find('.data_tbody_row:eq(' + ww_index + ')').removeClass('selected_row');
-    //         inLineHelp.find('.data_tbody_row:eq(' + index + ')').addClass('selected_row');
-    //     }
-    //     var val = inLineHelp.find('.data_tbody_row.selected_row>table>tbody>tr.data-dtl>td[data-view="show"]').text();
-    //     that.val(val);
-    // }
-    // if (e.which === 38 && table_block.find('.inLineHelp').length != 0) {
-    //     var inLineHelp = table_block.find('.inLineHelp');
-    //     if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == true) {
-    //         var index = inLineHelp.find('.data_tbody_row.selected_row').index();
-    //         var ww_index = index - 2;
-    //         index = index - 3;
-    //         inLineHelp.find('.data_tbody_row:eq(' + ww_index + ')').removeClass('selected_row');
-    //         inLineHelp.find('.data_tbody_row:eq(' + index + ')').addClass('selected_row');
-    //     }
-    //     var val = inLineHelp.find('.data_tbody_row.selected_row>table>tbody>tr.data-dtl>td[data-view="show"]').text();
-    //     that.val(val);
-    // }
+        $('#kt_modal_xl').modal('show').find('.modal-content').load('/common/help-open/' + caseHelp);
+        $('.modal-dialog').draggable({
+            handle: ".modal-header"
+        });
+        return false;
+    }
+    if (e.which === 40 && table_block.find('.inLineHelp').length != 0) {
+        var inLineHelp = table_block.find('.inLineHelp');
+        if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == false) {
+            inLineHelp.find('.data_tbody_row:eq(0)').addClass('selected_row');
+        } else {
+            var index = inLineHelp.find('.data_tbody_row.selected_row').index();
+            var ww_index = index - 2;
+            index = index - 1;
+            inLineHelp.find('.data_tbody_row:eq(' + ww_index + ')').removeClass('selected_row');
+            inLineHelp.find('.data_tbody_row:eq(' + index + ')').addClass('selected_row');
+        }
+        var val = inLineHelp.find('.data_tbody_row.selected_row>table>tbody>tr.data-dtl>td[data-view="show"]').text();
+        that.val(val);
+    }
+    if (e.which === 38 && table_block.find('.inLineHelp').length != 0) {
+        var inLineHelp = table_block.find('.inLineHelp');
+        if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == true) {
+            var index = inLineHelp.find('.data_tbody_row.selected_row').index();
+            var ww_index = index - 2;
+            index = index - 3;
+            inLineHelp.find('.data_tbody_row:eq(' + ww_index + ')').removeClass('selected_row');
+            inLineHelp.find('.data_tbody_row:eq(' + index + ')').addClass('selected_row');
+        }
+        var val = inLineHelp.find('.data_tbody_row.selected_row>table>tbody>tr.data-dtl>td[data-view="show"]').text();
+        that.val(val);
+    }
 
     var mobileRequest = true;
 
