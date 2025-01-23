@@ -128,7 +128,7 @@
                                                 <div class="input-group-append">
                                                     <button type="button" class="input-group-text btn-open-mob-help"
                                                         id="OpenInlineSupplierHelp"
-                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}" onclick="Pull_left()">
+                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
                                                         <i class="la la-search"></i>
                                                     </button>
                                                 </div>
