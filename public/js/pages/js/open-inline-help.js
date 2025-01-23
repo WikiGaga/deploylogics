@@ -292,7 +292,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     }
 });
 
-$(document).on('click', '#OpenInlineSupplierHelp', function(e) {
+$(document).on('click', '#supplier_name', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');

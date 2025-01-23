@@ -123,16 +123,15 @@
                                                     id="supplier_name" name="supplier_name"
                                                     class="open_inline__help form-control erp-form-control-sm moveIndex"
                                                     placeholder="Enter here">
+                                                <input type="hidden" id="supplier_id" name="supplier_id"
+                                                    value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
+                                                {{-- <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help open_inline__help erp-form-control-sm moveIndex"
                                                         id="OpenInlineSupplierHelp"
                                                         data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
                                                         <i class="la la-search"></i>
                                                     </span>
-                                                <input type="hidden" id="supplier_id" name="supplier_id"
-                                                    value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
-                                                {{-- <div class="input-group-append"> --}}
-
-                                                {{-- </div> --}}
+                                                </div> --}}
                                                 {{-- <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help"
                                                         id="mobOpenInlineSupplierHelp">
