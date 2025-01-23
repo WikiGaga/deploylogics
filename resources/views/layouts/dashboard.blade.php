@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 
 <!-- begin::Head -->
 <head>
@@ -49,9 +49,6 @@
     <script src="/js/pages/js/lang/en.js" type="text/javascript"></script>
 </head>
 
-@php
-dd(app()->getLocale());
-@endphp
 <!-- end::Head -->
 
 <!-- begin::Body -->
