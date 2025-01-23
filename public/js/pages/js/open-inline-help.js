@@ -197,11 +197,8 @@ $(document).on('keyup', '.open_inline__help', function(e) {
 
     // if type barcode search open help
     if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
-        console.log('f2 '+ that.val().length);
-
         var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
         if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
-        console.log('f2 allowed '+ that.val().length);
             //  display_help(that,table_block,table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
             inLineHelp.find('.data_tbody_row').removeClass('selected_row');
@@ -452,11 +449,8 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
 
     // if type barcode search open help
     if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
-        console.log('search '+ that.val().length);
-        var notAllowKeyCode = [33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
+        var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
         if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
-        console.log('search allowed '+ that.val().length);
-
             //  display_help(that,table_block,table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
             inLineHelp.find('.data_tbody_row').removeClass('selected_row');
