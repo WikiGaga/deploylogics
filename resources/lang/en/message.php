@@ -15,4 +15,6 @@ return [
     'error' => 'Something wrong..',
     'already_login' => 'User Already login',
     'fill_the_grid' => 'Fill The Grid',
+    'smart_product' => 'Smart Product',
+
 ];
