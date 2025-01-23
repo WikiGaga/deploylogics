@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ur">
 
 <!-- begin::Head -->
 <head>
