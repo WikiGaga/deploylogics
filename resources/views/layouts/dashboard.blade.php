@@ -50,7 +50,7 @@
 </head>
 
 @php
-dd('hello');
+dd(app()->getLocale());
 @endphp
 <!-- end::Head -->
 
