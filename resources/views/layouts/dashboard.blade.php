@@ -49,6 +49,9 @@
     <script src="/js/pages/js/lang/en.js" type="text/javascript"></script>
 </head>
 
+@php
+dd('hello');
+@endphp
 <!-- end::Head -->
 
 <!-- begin::Body -->
