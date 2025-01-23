@@ -40,12 +40,12 @@ function display_help(that, table_block, table_block__table) {
         inLineHelp.addClass("inline_help_table");
     }
 }
-$(document).on('click', '.open_inline__help', function(e) {
+$(document).on('keyup', '.open_inline__help', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    // if (e.which === 113 ) { //F2
+    if (e.which === 113 ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number
@@ -120,7 +120,7 @@ $(document).on('click', '.open_inline__help', function(e) {
                 }
             });
         }
-    // }
+    }
     if(e.which === 115){
         $('#inLineHelp').remove();
         var caseHelp = "";
@@ -449,7 +449,7 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
 
     // if type barcode search open help
     if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
-        var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
+        var notAllowKeyCode = [33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
         if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
             //  display_help(that,table_block,table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
