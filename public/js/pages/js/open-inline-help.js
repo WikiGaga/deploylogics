@@ -18,8 +18,8 @@ function display_help(that, table_block, table_block__table) {
         } else {
             var cssLeft = body_width - (help_left + help_width);
         }
-        console.log('hello');
-        // $('#inLineHelp').css({ left: cssLeft + 'px' });
+        console.log(cssLeft);
+        $('#inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
@@ -58,7 +58,6 @@ $(document).on('keyup', '.open_inline__help', function(e) {
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
-            console.log(inLineHelp);
 
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
