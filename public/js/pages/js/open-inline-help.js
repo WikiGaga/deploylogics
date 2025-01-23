@@ -6,24 +6,21 @@ $(document).on('focusin', '.open_inline__help', function(e) {
 });
 
 function display_help(that, table_block, table_block__table) {
-    table_block__table.append('<div id="inLineHelp"><div class="inLineHelp"></div></div>');
+    // table_block__table.append('<div id="inLineHelp"><div class="inLineHelp"></div></div>');
+    table_block__table.append('<div class="inLineHelp"></div>');
     var inLineHelp = table_block.find('.inLineHelp');
     var help_width = 511;
     var body_width = $('body').width()
     if (that.parents('.open-modal-group').length != 0) {
 
-        if ($('#inLineHelp').length === 0) {
-            console.error('Error: #inLineHelp is not found in the DOM.');
-            return;
-        }
-        var help_left = table_block.find('#inLineHelp').offset().left;
+        var help_left = table_block.find('.inLineHelp').offset().left;
 
         if ((body_width - help_left) > help_width) {
             var cssLeft = 0;
         } else {
             var cssLeft = body_width - (help_left + help_width);
         }
-        $('#inLineHelp').css({ left: cssLeft + 'px !important' });
+        $('.inLineHelp').css({ left: cssLeft + 'px !important' });
         inLineHelp.addClass("inline_help");
     } else {
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
