@@ -11,6 +11,11 @@ function display_help(that, table_block, table_block__table) {
     var help_width = 511;
     var body_width = $('body').width()
     if (that.parents('.open-modal-group').length != 0) {
+
+        if ($('#inLineHelp').length === 0) {
+            console.error('Error: #inLineHelp is not found in the DOM.');
+            return;
+        }
         var help_left = table_block.find('#inLineHelp').offset().left;
 
         if ((body_width - help_left) > help_width) {
@@ -18,9 +23,7 @@ function display_help(that, table_block, table_block__table) {
         } else {
             var cssLeft = body_width - (help_left + help_width);
         }
-        console.log('hello' + $('#inLineHelp'));
-        $('#inLineHelp').css({ left: cssLeft + 'px' });
-        // $('.inLineHelp').css({ left: cssLeft + 'px' });
+        $('#inLineHelp').css({ left: cssLeft + 'px !important' });
         inLineHelp.addClass("inline_help");
     } else {
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
