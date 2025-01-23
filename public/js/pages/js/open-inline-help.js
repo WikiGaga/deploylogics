@@ -18,7 +18,7 @@ function display_help(that, table_block, table_block__table) {
         } else {
             var cssLeft = body_width - (help_left + help_width);
         }
-        console.log(cssLeft);
+        $('#inLineHelp').css({ left: cssLeft + 'px' });
         $('.inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
