@@ -307,6 +307,7 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
             $('#retqty_code,#retqty_id,#ref_supplier_id').val("");
             return false;
         }
+        console.log(table_block.find('#inLineHelp').length);
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
             // console.log(display_help(that, table_block, table_block__table));
