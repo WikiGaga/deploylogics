@@ -30,11 +30,6 @@
                             <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>Smart Product</span>
                         </span>
                     </a>
-                    <a href="javascript:;" id="SmartProduct" class="kt-menu__link kt-menu__toggle">
-                        <span class="kt-menu__link-text">
-                            <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>Smart smart</span>
-                        </span>
-                    </a>
                     <div id="smart_product_menu" class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--left">
                         <ul class="kt-menu__subnav">
                             <!--<li class="kt-menu__item" aria-haspopup="true">
