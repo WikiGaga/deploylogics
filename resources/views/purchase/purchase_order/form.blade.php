@@ -690,11 +690,6 @@
 
     <script>
 
-function Pull_left()
-{
-    $(".inLineHelp").css({ "left": "auto", "right": "10px" , "z-index" : "1400"});
-}
-
         function selectComparativeQuotation() {
             $('#help_datatable_comparativeQuotationHelp').on('click', 'tbody>tr', function(e) {
                 $('#repeated_data>tr').each(function() {
