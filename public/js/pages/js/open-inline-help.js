@@ -19,7 +19,6 @@ function display_help(that, table_block, table_block__table) {
         }
         console.log($('#inLineHelp'));
         $('#inLineHelp').css({ left: cssLeft + 'px' });
-        // $('.inLineHelp').css({ left: cssLeft + 'px' });
         inLineHelp.addClass("inline_help");
     } else {
         if (that.parents('thead').hasClass('erp_form__grid_header')) {
@@ -309,7 +308,6 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
             return false;
         }
         if (table_block.find('#inLineHelp').length == 0) {
-            display_help(that, table_block, table_block__table);
             display_help(that, table_block, table_block__table);
             // console.log(display_help(that, table_block, table_block__table));
             var inLineHelp = table_block.find('.inLineHelp');
