@@ -113,17 +113,10 @@
                                     <div class="col-lg-6">
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
-                                                {{-- <div class="input-group-prepend">
+                                                <div class="input-group-prepend">
                                                     <span class="input-group-text btn-minus-selected-data">
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
-                                                </div> --}}
-                                                <div class="input-group-append">
-                                                    <button type="button" class="input-group-text btn-open-mob-help"
-                                                        id="OpenInlineSupplierHelp"
-                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
-                                                        <i class="la la-search"></i>
-                                                    </button>
                                                 </div>
                                                 <input type="text" value="{{ isset($supplier_code) ? $supplier_code : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
@@ -132,7 +125,13 @@
                                                     placeholder="Enter here">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
-
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text btn-open-mob-help open_inline__help erp-form-control-sm moveIndex"
+                                                        id="OpenInlineSupplierHelp"
+                                                        data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
+                                                        <i class="la la-search"></i>
+                                                    </span>
+                                                </div>
                                                 {{-- <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help"
                                                         id="mobOpenInlineSupplierHelp">
