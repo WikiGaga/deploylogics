@@ -309,7 +309,7 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
             return false;
         }
         if (table_block.find('#inLineHelp').length == 0) {
-            // display_help(that, table_block, table_block__table);
+            display_help(that, table_block, table_block__table);
     console.log('hello from click');
             console.log(display_help(that, table_block, table_block__table));
             var inLineHelp = table_block.find('.inLineHelp');
