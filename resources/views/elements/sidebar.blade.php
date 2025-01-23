@@ -3,12 +3,12 @@
     <!-- begin:: Aside -->
     <div class="kt-aside__brand kt-grid__item " id="kt_aside_brand">
         <div class="kt-aside__brand-logo kt-aside__brand-logo-erp">
-            {{-- <a href="/home">
+            <a href="/home">
                 @if(auth()->user()->business->business_profile != null)
                 <img alt="Logo" src="/images/{{ auth()->user()->business->business_profile }}" />
                 @endif
                 <span>{{ auth()->user()->business->business_short_name }}</span>
-            </a> --}}
+            </a>
         </div>
         <div class="kt-aside__brand-tools">
             <button class="kt-aside__brand-aside-toggler" id="kt_aside_toggler">
