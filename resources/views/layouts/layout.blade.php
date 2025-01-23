@@ -80,7 +80,7 @@
         <!-- Uncomment this to display the close button of the panel
 <button class="kt-aside-close " id="kt_aside_close_btn"><i class="la la-close"></i></button>
 -->
-        @include('elements/sidebar')
+        {{-- @include('elements/sidebar') --}}
         <!-- end:: Aside -->
         <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
 
