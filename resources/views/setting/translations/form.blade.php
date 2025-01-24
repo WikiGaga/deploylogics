@@ -15,13 +15,6 @@
             </div>
         </div>
         <div class="kt-portlet__body">
-            {{-- Display Success or Error Messages --}}
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-                <div class="alert alert-danger">{{ implode(', ', $errors->all()) }}</div>
-            @endif
 
             {{-- Add/Update Translation Form --}}
             <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" class="kt-form" id="translation-form">
@@ -46,39 +39,43 @@
             </form>
 
             {{-- Existing Translations Table --}}
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Key</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="translations-table-body">
-                        @forelse($data['translations'] as $key => $value)
+            <form method="POST" action="{{ route('languages.updateTranslations', ['id' => $data['id']]) }}" id="translations-form">
+                @csrf
+                @method('PUT') {{-- Assuming you use a PUT request for updating translations --}}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
                             <tr>
-                                {{-- <td>{{ $loop->iteration }}</td> --}}
-                                <td>
-                                    <input type="text" name="translations[{{ $loop->iteration }}][key]" value="{{ $key }}" class="form-control erp-form-control-sm" required>
-                                </td>
-                                <td>
-                                    <input type="text" name="translations[{{ $loop->iteration }}][value]" value="{{ $value }}" class="form-control erp-form-control-sm" required>
-                                </td>
+                                <th>#</th>
+                                <th>Key</th>
+                                <th>Value</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center">No translations found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody id="translations-table-body">
+                            @forelse($data['translations'] as $key => $value)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>
+                                        <input type="text" name="translations[{{ $loop->iteration }}][key]" value="{{ $key }}" class="form-control erp-form-control-sm" required>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="translations[{{ $loop->iteration }}][value]" value="{{ $value }}" class="form-control erp-form-control-sm" required>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center">No translations found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            {{-- Update All Button --}}
-            <div class="form-group text-right">
-                <button type="submit" class="btn btn-success">Update All Translations</button>
-            </div>
+                {{-- Update All Button --}}
+                <div class="form-group text-right">
+                    <button type="submit" class="btn btn-success">Update All Translations</button>
+                </div>
+            </form>
 
             {{-- Pagination Links --}}
             <div class="d-flex justify-content-start">
@@ -88,58 +85,4 @@
     </div>
 </div>
 
-{{-- Add JavaScript to Handle Form Submission --}}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Handle form submission
-        document.getElementById('translation-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            // Gather the updated translations from the input fields
-            const updatedTranslations = [];
-            const rows = document.querySelectorAll('#translations-table-body tr');
-            rows.forEach(row => {
-                const keyInput = row.querySelector('input[name^="translations"][name$="[key]"]');
-                const valueInput = row.querySelector('input[name^="translations"][name$="[value]"]');
-
-                updatedTranslations.push({
-                    key: keyInput.value.trim(),
-                    value: valueInput.value.trim()
-                });
-            });
-
-            // Optionally, do further validation here if needed
-
-            // Send the updated translations
-            const formData = new FormData();
-            updatedTranslations.forEach((translation, index) => {
-                formData.append(`translations[${index}][key]`, translation.key);
-                formData.append(`translations[${index}][value]`, translation.value);
-            });
-
-            // Submit the form data
-            fetch('{{ route("languages.create", ["id" => $data["id"]]) }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Handle success
-                    alert('Translations updated successfully');
-                } else {
-                    // Handle error
-                    alert('An error occurred');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred');
-            });
-        });
-    });
-</script>
 @endsection
