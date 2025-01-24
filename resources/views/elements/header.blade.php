@@ -101,7 +101,7 @@
     <!-- begin:: Header Topbar -->
     <div class="kt-header__topbar">
 
-        @php
+        {{-- @php
         $languages = \App\Models\Languages::all();
         $locale = app()->getLocale();
         // dd($locale);
@@ -120,7 +120,7 @@
                     @endforeach
                 </select>
             </form>
-        </div>
+        </div> --}}
 
         <!--begin: Switcher -->
         <div class="kt-header__topbar-item kt-header__topbar-item--search dropdown" id="kt_quick_search_toggle">
