@@ -5,8 +5,6 @@
 <div class="kt-container kt-container--fluid kt-grid__item kt-grid__item--fluid">
     <div class="kt-portlet kt-portlet--mobile">
         <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
-
-
             <div class="kt-portlet__head-label">
                 <span class="kt-portlet__head-icon">
                     <i class="kt-font-brand flaticon2-file"></i>
@@ -15,7 +13,6 @@
                     {{isset($page_data['title'])?$page_data['title']:""}}<small class="text-capitalize">{{isset($page_data['type'])?ucwords($page_data['type']):""}}</small>
                 </h3>
             </div>
-
         </div>
         <div class="kt-portlet__body">
             {{-- Display Success or Error Messages --}}
@@ -60,10 +57,14 @@
                     </thead>
                     <tbody id="translations-table-body">
                         @forelse($data['translations'] as $key => $value)
-                            <tr data-key="{{ $key }}">
+                            <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td title="click to edit" data-toggle="tooltip" class="editable" data-column="key">{{ $key }}</td>
-                                <td title="click to edit" data-toggle="tooltip" class="editable" data-column="value">{{ $value }}</td>
+                                <td>
+                                    <input type="text" name="translations[{{ $loop->iteration }}][key]" value="{{ $key }}" class="form-control erp-form-control-sm" required>
+                                </td>
+                                <td>
+                                    <input type="text" name="translations[{{ $loop->iteration }}][value]" value="{{ $value }}" class="form-control erp-form-control-sm" required>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -76,7 +77,7 @@
 
             {{-- Update All Button --}}
             <div class="form-group text-right">
-                <button type="button" id="update-all-btn" class="btn btn-success">Update All Translations</button>
+                <button type="submit" class="btn btn-success">Update All Translations</button>
             </div>
 
             {{-- Pagination Links --}}
@@ -87,72 +88,58 @@
     </div>
 </div>
 
-{{-- Add JavaScript to Make Rows Editable and Handle Updates --}}
+{{-- Add JavaScript to Handle Form Submission --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Make table cells editable
-        const editableCells = document.querySelectorAll('.editable');
-        editableCells.forEach(cell => {
-            cell.addEventListener('click', function() {
-                const currentText = cell.innerText;
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = currentText;
-                input.classList.add('form-control', 'erp-form-control-sm');
+        // Handle form submission
+        document.getElementById('translation-form').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-                // Replace the cell content with the input field
-                cell.innerHTML = '';
-                cell.appendChild(input);
-
-                // Focus on the input field
-                input.focus();
-
-                input.addEventListener('blur', function() {
-                    // Replace the input with the updated text
-                    const updatedValue = input.value.trim();
-                    cell.innerHTML = updatedValue;
-                });
-            });
-        });
-
-        // Handle Update All button click
-        document.getElementById('update-all-btn').addEventListener('click', function() {
+            // Gather the updated translations from the input fields
             const updatedTranslations = [];
-
             const rows = document.querySelectorAll('#translations-table-body tr');
             rows.forEach(row => {
-                const key = row.getAttribute('data-key');
-                const keyCell = row.querySelector('td[data-column="key"]');
-                const valueCell = row.querySelector('td[data-column="value"]');
+                const keyInput = row.querySelector('input[name^="translations"][name$="[key]"]');
+                const valueInput = row.querySelector('input[name^="translations"][name$="[value]"]');
 
-                const updatedKey = keyCell.innerText.trim();
-                const updatedValue = valueCell.innerText.trim();
-
-                if (updatedKey && updatedValue) {
-                    updatedTranslations.push({ key: updatedKey, value: updatedValue });
-                }
+                updatedTranslations.push({
+                    key: keyInput.value.trim(),
+                    value: valueInput.value.trim()
+                });
             });
 
-            // Create hidden inputs to send the updated translations via POST request
+            // Optionally, do further validation here if needed
+
+            // Send the updated translations
+            const formData = new FormData();
             updatedTranslations.forEach((translation, index) => {
-                const inputKey = document.createElement('input');
-                inputKey.type = 'hidden';
-                inputKey.name = `translations[${index}][key]`;
-                inputKey.value = translation.key;
-
-                const inputValue = document.createElement('input');
-                inputValue.type = 'hidden';
-                inputValue.name = `translations[${index}][value]`;
-                inputValue.value = translation.value;
-
-                document.getElementById('translation-form').appendChild(inputKey);
-                document.getElementById('translation-form').appendChild(inputValue);
+                formData.append(`translations[${index}][key]`, translation.key);
+                formData.append(`translations[${index}][value]`, translation.value);
             });
 
-            // Submit the form with updated translations
-            document.getElementById('translation-form').submit();
+            // Submit the form data
+            fetch('{{ route("languages.create", ["id" => $data["id"]]) }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Handle success
+                    alert('Translations updated successfully');
+                } else {
+                    // Handle error
+                    alert('An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
         });
     });
 </script>
 @endsection
-
