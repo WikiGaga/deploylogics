@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="form-group text-right">
-                    <button type="submit" class="btn btn-primary">Add / Update Translation</button>
+                    <button type="submit" class="btn btn-primary">Add Translation</button>
                 </div>
             </form>
 
@@ -80,7 +80,7 @@
             </div>
 
             {{-- Pagination Links --}}
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-start">
                 {!! $data['translations']->links('pagination::bootstrap-4') !!}
             </div>
         </div>
