@@ -1137,6 +1137,12 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('form/{id?}','Inventory\ProductionConsumptionController@store');
             Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
         });
+        Route::prefix('languages')->group(function () {
+            // Route::get('form/{id?}','Inventory\ProductionConsumptionController@create');
+            // Route::post('form/{id?}','Inventory\ProductionConsumptionController@store');
+            // Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
+        });
+
         Route::prefix('stock-request')->group(function () {
             Route::get('form/{id?}','Inventory\StockRequestController@create');
             Route::post('form/{id?}','Inventory\StockRequestController@store');
