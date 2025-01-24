@@ -1138,6 +1138,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
         });
         Route::prefix('languages')->group(function () {
+            Route::get('change/{id?}','Languages\LanguageTranslationController@changeLanguage')->name('change.language');
             Route::get('form/{id?}','Languages\LanguageTranslationController@create');
             Route::post('form/{id?}','Languages\LanguageTranslationController@create')->name('languages.create');
         });

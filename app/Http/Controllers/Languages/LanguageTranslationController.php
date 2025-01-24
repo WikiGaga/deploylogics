@@ -89,4 +89,19 @@ class LanguageTranslationController extends Controller
 }
 
 
+public function changeLanguage(Request $request)
+{
+    $request->validate([
+        'language' => 'required|string|exists:tbllanguages,code',
+    ]);
+
+    // Set the selected language in the session
+    $language = $request->language;
+    Session::put('app_locale', $language);
+    App::setLocale($language);
+
+    return redirect()->back()->with('success', 'Language changed to ' . $language);
+}
+
+
 }

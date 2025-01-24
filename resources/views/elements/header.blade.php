@@ -101,6 +101,20 @@
     <!-- begin:: Header Topbar -->
     <div class="kt-header__topbar">
 
+        <div class="language-selector">
+            <form action="{{ route('change.language') }}" method="POST">
+                @csrf
+                <select name="language" id="language" class="form-control" onchange="this.form.submit()">
+                    @foreach($languages as $language)
+                        <option value="{{ $language->code }}"
+                            {{ app()->getLocale() === $language->code ? 'selected' : '' }}>
+                            {{ $language->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+
         <!--begin: Switcher -->
         <div class="kt-header__topbar-item kt-header__topbar-item--search dropdown" id="kt_quick_search_toggle">
             <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="10px,0px">

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\TblSoftUserActivityLog;
 use App\Models\TblWhatsAppChat;
 use App\Models\TblWhatsAppContact;
+use App\Models\Languages;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
@@ -40,6 +41,8 @@ class Controller extends BaseController
             Auth::logout();
             return redirect('/login');
         }
+
+        view()->share('languages', \App\Models\Languages::all());
     }
 
     public static function arabicText($text){
