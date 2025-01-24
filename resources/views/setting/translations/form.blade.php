@@ -10,7 +10,7 @@
                     <i class="kt-font-brand flaticon2-file"></i>
                 </span>
                 <h3 class="kt-portlet__head-title">
-                    {{isset($page_data['title'])?$page_data['title']:""}}<small class="text-capitalize">{{isset($page_data['type'])?ucwords($page_data['type']):""}}</small>
+                    {{ isset($page_data['title']) ? $page_data['title'] : "" }}<small class="text-capitalize">{{ isset($page_data['type']) ? ucwords($page_data['type']) : "" }}</small>
                 </h3>
             </div>
         </div>
@@ -36,7 +36,8 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-2 text-right">
-                                    <button type="button" class="btn btn-danger remove-translation-row">Remove</button>
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-sm btn-danger remove-translation-row">Remove</button>
                                 </div>
                             </div>
                         </div>
@@ -58,6 +59,7 @@
                             <tr>
                                 <th>Key</th>
                                 <th>Value</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="translations-table-body">
@@ -68,6 +70,9 @@
                                     </td>
                                     <td>
                                         <input type="text" name="translations[{{ $loop->iteration }}][value]" value="{{ $value }}" class="form-control erp-form-control-sm" required>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-table-row">Remove</button>
                                     </td>
                                 </tr>
                             @empty
@@ -91,10 +96,12 @@
     </div>
 </div>
 
-{{-- JavaScript to Handle Dynamic Row Addition and Removal --}}
+{{-- JavaScript to Handle Dynamic Row Addition, Removal, and Table Row Removal --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         let translationIndex = 1;  // Index for the new translations
+
+        // Add more translation rows
         document.getElementById('add-more-btn').addEventListener('click', function() {
             const translationsContainer = document.getElementById('translations');
 
@@ -124,10 +131,19 @@
             translationIndex++;
         });
 
+        // Remove dynamic row functionality
         document.getElementById('translations').addEventListener('click', function(event) {
             if (event.target.classList.contains('remove-translation-row')) {
                 // Remove the clicked translation row
                 event.target.closest('.translation-row').remove();
+            }
+        });
+
+        // Remove table row functionality
+        document.getElementById('translations-table-body').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-table-row')) {
+                // Remove the clicked table row
+                event.target.closest('tr').remove();
             }
         });
     });
