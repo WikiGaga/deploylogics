@@ -84,7 +84,7 @@ class LanguageTranslationController extends Controller
         ['path' => $request->url()]
     );
 
-    return view('settings.translations.form', compact('data'));
+    return view('setting.translations.form', compact('data'));
 }
 
 
