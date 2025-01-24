@@ -41,12 +41,10 @@
             {{-- Existing Translations Table --}}
             <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" id="translations-form">
                 @csrf
-                @method('PUT') {{-- Assuming you use a PUT request for updating translations --}}
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>#</th>
                                 <th>Key</th>
                                 <th>Value</th>
                             </tr>
@@ -54,7 +52,6 @@
                         <tbody id="translations-table-body">
                             @forelse($data['translations'] as $key => $value)
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <input type="text" name="translations[{{ $loop->iteration }}][key]" value="{{ $key }}" class="form-control erp-form-control-sm" required>
                                     </td>
