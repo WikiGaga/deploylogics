@@ -103,6 +103,9 @@
 
         @php
         $languages = \App\Models\Languages::all();
+        $locale = app()->getLocale();
+        $selectedlanguage = \App\Models\Languages::where('code',$locale)->pluck('id');
+
         @endphp
         <div class="language-selector">
             <form action="{{ route('change.language') }}" method="POST">
@@ -110,7 +113,7 @@
                 <select name="language" id="language" class="form-control" onchange="this.form.submit()">
                     @foreach($languages as $language)
                         <option value="{{ $language->id }}"
-                            {{ app()->getLocale() === $language->id ? 'selected' : '' }}>
+                            {{ $selectedlanguage === $language->id ? 'selected' : '' }}>
                             {{ $language->name }}
                         </option>
                     @endforeach
