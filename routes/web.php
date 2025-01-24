@@ -1139,7 +1139,7 @@ Route::group(['middleware' => ['auth']], function () {
         });
         Route::prefix('languages')->group(function () {
             Route::get('form/{id?}','Languages\LanguageTranslationController@create');
-            Route::post('form/{id?}','Languages\LanguageTranslationController@create');
+            Route::post('form/{id?}','Languages\LanguageTranslationController@create')->name('languages.create');
         });
 
         Route::prefix('stock-request')->group(function () {

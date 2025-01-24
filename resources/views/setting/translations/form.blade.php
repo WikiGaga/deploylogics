@@ -17,7 +17,7 @@
             @endif
 
             {{-- Add/Update Translation Form --}}
-            <form method="POST" action="{{ action('LanguageTranslationController@create', $data['id']) }}" class="kt-form">
+            <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" class="kt-form">
                 @csrf
                 <div class="row form-group-block">
                     <div class="col-lg-6">
