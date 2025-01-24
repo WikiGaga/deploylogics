@@ -66,6 +66,7 @@ class LanguageTranslationController extends Controller
         file_put_contents($langPath, "<?php\n\nreturn {$exportedTranslations};");
 
         return redirect()->back()->with('success', trans('message.update'), 200);
+        }
         // return redirect()->back()->with('success', 'Translation added/updated successfully.');
     }
 
