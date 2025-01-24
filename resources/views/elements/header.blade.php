@@ -106,6 +106,7 @@
         $locale = app()->getLocale();
         // dd($locale);
         $selectedlanguage = \App\Models\Languages::where('code',$locale)->get();
+        dd($selectedlanguage)
 
         @endphp
         <div class="language-selector">
