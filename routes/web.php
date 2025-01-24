@@ -1138,9 +1138,8 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
         });
         Route::prefix('languages')->group(function () {
-            // Route::get('form/{id?}','Inventory\ProductionConsumptionController@create');
-            // Route::post('form/{id?}','Inventory\ProductionConsumptionController@store');
-            // Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');
+            Route::get('form/{id?}','Languages\LanguageTranslationController@create');
+            Route::post('form/{id?}','Languages\LanguageTranslationController@create');
         });
 
         Route::prefix('stock-request')->group(function () {
