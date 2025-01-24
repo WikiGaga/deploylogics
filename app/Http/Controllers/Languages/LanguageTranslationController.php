@@ -95,12 +95,12 @@ public function changeLanguage(Request $request)
         'language' => 'required|string|exists:tbllanguages,code',
     ]);
 
-    // Set the selected language in the session
-    $language = $request->language;
-    Session::put('app_locale', $language);
-    App::setLocale($language);
+    session(['app_locale' => $request->language]);
 
-    return redirect()->back()->with('success', 'Language changed to ' . $language);
+    app()->setLocale($request->language);
+    dd(session('app_locale'));
+
+    return redirect()->back()->with('success', 'Language changed successfully!');
 }
 
 
