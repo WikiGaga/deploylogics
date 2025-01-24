@@ -58,16 +58,23 @@ class LanguageTranslationController extends Controller
 
             // Update existing translations with the new data
             foreach ($translations as $translation) {
-                $full_data[$translation['key']] = $translation['value'];
+                if (!empty($translation['key']) && !empty($translation['value'])) {
+                    // Only update if the key and value are not empty
+                    $full_data[$translation['key']] = $translation['value'];
+                }
             }
+
+            // Remove translations that are no longer part of the form (removed rows)
+            $full_data = array_filter($full_data, function($key) use ($translations) {
+                return collect($translations)->contains('key', $key);
+            }, ARRAY_FILTER_USE_KEY);
 
             // Save the updated translations back to the file
             $exportedTranslations = var_export($full_data, true);
-        file_put_contents($langPath, "<?php\n\nreturn {$exportedTranslations};");
+            file_put_contents($langPath, "<?php\n\nreturn {$exportedTranslations};");
 
-        return redirect()->back()->with('success', trans('message.update'), 200);
+            return redirect()->back()->with('success', trans('message.update'), 200);
         }
-        // return redirect()->back()->with('success', 'Translation added/updated successfully.');
     }
 
     // Paginate translations for display
@@ -87,6 +94,7 @@ class LanguageTranslationController extends Controller
 
     return view('setting.translations.form', compact('data'));
 }
+
 
 
 }
