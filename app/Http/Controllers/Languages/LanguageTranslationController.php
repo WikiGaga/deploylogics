@@ -48,20 +48,24 @@ class LanguageTranslationController extends Controller
     ksort($translations);
 
     if ($request->isMethod('post')) {
-        $request->validate([
-            'key' => 'required|string',
-            'value' => 'required|string',
-        ]);
+        $translations = $request->input('translations');
 
-        $key = $request->input('key');
-        $value = $request->input('value');
+        if ($translations) {
+            $langPath = base_path('resources/lang/' . $id . '/message.php');
 
-        $translations[$key] = $value;
+            // Read existing translations
+            $full_data = include($langPath);
 
-        $exportedTranslations = var_export($translations, true);
+            // Update existing translations with the new data
+            foreach ($translations as $translation) {
+                $full_data[$translation['key']] = $translation['value'];
+            }
+
+            // Save the updated translations back to the file
+            $exportedTranslations = var_export($full_data, true);
         file_put_contents($langPath, "<?php\n\nreturn {$exportedTranslations};");
 
-        return $this->jsonSuccessResponse('success', trans('message.update'), 200);
+        return redirect()->back()->with('success', trans('message.update'), 200);
         // return redirect()->back()->with('success', 'Translation added/updated successfully.');
     }
 
