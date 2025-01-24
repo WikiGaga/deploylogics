@@ -16,7 +16,6 @@
         </div>
         <div class="kt-portlet__body">
 
-            {{-- Add Multiple Translations Form --}}
             <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" class="kt-form" id="translation-form">
                 @csrf
                 <div class="form-group">
@@ -36,21 +35,21 @@
                                         <input type="text" name="translations[0][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
                                     </div>
                                 </div>
+                                <div class="col-lg-12 text-right">
+                                    <button type="button" class="btn btn-danger remove-translation-row">Remove</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Button to Add More Translation Rows --}}
                     <button type="button" id="add-more-btn" class="btn btn-info">Add More</button>
                 </div>
 
-                {{-- Save Button --}}
                 <div class="form-group text-right">
                     <button type="submit" class="btn btn-primary">Save Translations</button>
                 </div>
             </form>
 
-            {{-- Existing Translations Table --}}
             <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" id="translations-form">
                 @csrf
                 <div class="table-responsive">
@@ -80,13 +79,11 @@
                     </table>
                 </div>
 
-                {{-- Update All Button --}}
                 <div class="form-group text-right">
                     <button type="submit" class="btn btn-success">Update All Translations</button>
                 </div>
             </form>
 
-            {{-- Pagination Links --}}
             <div class="d-flex justify-content-start">
                 {!! $data['translations']->links('pagination::bootstrap-4') !!}
             </div>
@@ -94,15 +91,13 @@
     </div>
 </div>
 
-{{-- JavaScript to Handle Dynamic Row Addition --}}
+{{-- JavaScript to Handle Dynamic Row Addition and Removal --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Add more translation rows
         let translationIndex = 1;  // Index for the new translations
         document.getElementById('add-more-btn').addEventListener('click', function() {
             const translationsContainer = document.getElementById('translations');
 
-            // Create a new row with input fields for key and value
             const newRow = document.createElement('div');
             newRow.classList.add('translation-row');
             newRow.innerHTML = `
@@ -119,14 +114,21 @@
                             <input type="text" name="translations[${translationIndex}][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
                         </div>
                     </div>
+                    <div class="col-lg-12 text-right">
+                        <button type="button" class="btn btn-danger remove-translation-row">Remove</button>
+                    </div>
                 </div>
             `;
 
-            // Append the new row to the container
             translationsContainer.appendChild(newRow);
-
-            // Increment the index for the next row
             translationIndex++;
+        });
+
+        document.getElementById('translations').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-translation-row')) {
+                // Remove the clicked translation row
+                event.target.closest('.translation-row').remove();
+            }
         });
     });
 </script>
