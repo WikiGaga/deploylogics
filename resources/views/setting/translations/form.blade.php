@@ -16,25 +16,37 @@
         </div>
         <div class="kt-portlet__body">
 
-            {{-- Add/Update Translation Form --}}
+            {{-- Add Multiple Translations Form --}}
             <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" class="kt-form" id="translation-form">
                 @csrf
-                <div class="row form-group-block">
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label for="key">Key</label>
-                            <input type="text" name="key" id="key" class="form-control erp-form-control-sm" placeholder="Enter translation key" required>
+                <div class="form-group">
+                    <label for="translations">Add Multiple Translations</label>
+                    <div id="translations">
+                        <div class="translation-row">
+                            <div class="row form-group-block">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label for="key[]">Key</label>
+                                        <input type="text" name="translations[0][key]" class="form-control erp-form-control-sm" placeholder="Enter translation key" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label for="value[]">Value</label>
+                                        <input type="text" name="translations[0][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label for="value">Value</label>
-                            <input type="text" name="value" id="value" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
-                        </div>
-                    </div>
+
+                    {{-- Button to Add More Translation Rows --}}
+                    <button type="button" id="add-more-btn" class="btn btn-info">Add More</button>
                 </div>
+
+                {{-- Save Button --}}
                 <div class="form-group text-right">
-                    <button type="submit" class="btn btn-primary">Add Translation</button>
+                    <button type="submit" class="btn btn-primary">Save Translations</button>
                 </div>
             </form>
 
@@ -81,5 +93,42 @@
         </div>
     </div>
 </div>
+
+{{-- JavaScript to Handle Dynamic Row Addition --}}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Add more translation rows
+        let translationIndex = 1;  // Index for the new translations
+        document.getElementById('add-more-btn').addEventListener('click', function() {
+            const translationsContainer = document.getElementById('translations');
+
+            // Create a new row with input fields for key and value
+            const newRow = document.createElement('div');
+            newRow.classList.add('translation-row');
+            newRow.innerHTML = `
+                <div class="row form-group-block">
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="key[]">Key</label>
+                            <input type="text" name="translations[${translationIndex}][key]" class="form-control erp-form-control-sm" placeholder="Enter translation key" required>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="value[]">Value</label>
+                            <input type="text" name="translations[${translationIndex}][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Append the new row to the container
+            translationsContainer.appendChild(newRow);
+
+            // Increment the index for the next row
+            translationIndex++;
+        });
+    });
+</script>
 
 @endsection
