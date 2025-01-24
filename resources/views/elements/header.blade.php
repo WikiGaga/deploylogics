@@ -104,6 +104,7 @@
         @php
         $languages = \App\Models\Languages::all();
         $locale = app()->getLocale();
+        dd($locale);
         $selectedlanguage = \App\Models\Languages::where('code',$locale)->pluck('id');
 
         @endphp
