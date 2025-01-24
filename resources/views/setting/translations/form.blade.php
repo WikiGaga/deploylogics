@@ -62,8 +62,8 @@
                         @forelse($data['translations'] as $key => $value)
                             <tr data-key="{{ $key }}">
                                 <td>{{ $loop->iteration }}</td>
-                                <td class="editable" data-column="key">{{ $key }}</td>
-                                <td class="editable" data-column="value">{{ $value }}</td>
+                                <td title="click to edit" data-toggle="tooltip" class="editable" data-column="key">{{ $key }}</td>
+                                <td title="click to edit" data-toggle="tooltip" class="editable" data-column="value">{{ $value }}</td>
                             </tr>
                         @empty
                             <tr>
