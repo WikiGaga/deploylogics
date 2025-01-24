@@ -111,7 +111,7 @@
                     @foreach($languages as $language)
                         <option value="{{ $language->code }}"
                             {{ app()->getLocale() === $language->code ? 'selected' : '' }}>
-                            {{ $language->code }}
+                            {{ $language->name }}
                         </option>
                     @endforeach
                 </select>
