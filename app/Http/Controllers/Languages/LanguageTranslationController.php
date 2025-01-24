@@ -91,13 +91,13 @@ class LanguageTranslationController extends Controller
 
 public function changeLanguage(Request $request)
 {
-    $request->validate([
-        'language' => 'required|string|exists:tbllanguages,code',
-    ]);
+    // $request->validate([
+    //     'language' => 'required|string|exists:tbllanguages,id',
+    // ]);
 
     $language = \App\Models\Languages::find($request->language);
 
-    dd($language->code);
+
     session(['app_locale' => $language->code]);
 
     app()->setLocale($language->code);
