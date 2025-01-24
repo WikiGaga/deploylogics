@@ -109,8 +109,8 @@
                 @csrf
                 <select name="language" id="language" class="form-control" onchange="this.form.submit()">
                     @foreach($languages as $language)
-                        <option value="{{ $language->code }}"
-                            {{ app()->getLocale() === $language->code ? 'selected' : '' }}>
+                        <option value="{{ $language->id }}"
+                            {{ app()->getLocale() === $language->id ? 'selected' : '' }}>
                             {{ $language->name }}
                         </option>
                     @endforeach

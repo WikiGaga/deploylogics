@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Languages extends Model
 {
     protected $table = 'tbllanguages';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'code';
 
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
