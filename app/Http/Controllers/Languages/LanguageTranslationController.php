@@ -97,7 +97,7 @@ public function changeLanguage(Request $request)
 
     $language = \App\Models\Languages::find($request->language);
 
-
+dd($language);
     session(['app_locale' => $language->code]);
 
     app()->setLocale($language->code);
