@@ -101,6 +101,9 @@
     <!-- begin:: Header Topbar -->
     <div class="kt-header__topbar">
 
+        @php
+        $languages = \App\Models\Languages::all();
+        @endphp
         <div class="language-selector">
             <form action="{{ route('change.language') }}" method="POST">
                 @csrf

@@ -42,7 +42,6 @@ class Controller extends BaseController
             return redirect('/login');
         }
 
-        view()->share('languages', \App\Models\Languages::all());
     }
 
     public static function arabicText($text){
