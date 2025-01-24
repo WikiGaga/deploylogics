@@ -103,6 +103,7 @@
 
         @php
         $languages = \App\Models\Languages::all();
+        dd($languages);
         @endphp
         <div class="language-selector">
             <form action="{{ route('change.language') }}" method="POST">
