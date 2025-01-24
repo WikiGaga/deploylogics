@@ -103,7 +103,6 @@
 
         @php
         $languages = \App\Models\Languages::all();
-        dd($languages);
         @endphp
         <div class="language-selector">
             <form action="{{ route('change.language') }}" method="POST">
@@ -112,7 +111,7 @@
                     @foreach($languages as $language)
                         <option value="{{ $language->code }}"
                             {{ app()->getLocale() === $language->code ? 'selected' : '' }}>
-                            {{ $language->name }}
+                            {{ $language->code }}
                         </option>
                     @endforeach
                 </select>
