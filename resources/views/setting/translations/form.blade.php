@@ -36,7 +36,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-2 text-right">
-                                    <button type="button" class="btn btn-sm btn-danger mt-2 remove-translation-row">Remove</button>
+                                    <button type="button" class="btn btn-sm btn-danger mt-5 remove-translation-row">Remove</button>
                                 </div>
                             </div>
                         </div>
