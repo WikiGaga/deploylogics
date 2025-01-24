@@ -91,6 +91,7 @@ class LanguageTranslationController extends Controller
 
 public function changeLanguage(Request $request)
 {
+    dd($request->all());
     $request->validate([
         'language' => 'required|string|exists:tbllanguages,code',
     ]);
