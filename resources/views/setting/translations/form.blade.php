@@ -23,19 +23,19 @@
                     <div id="translations">
                         <div class="translation-row">
                             <div class="row form-group-block">
-                                <div class="col-lg-6">
+                                <div class="col-lg-5">
                                     <div class="form-group">
                                         <label for="key[]">Key</label>
                                         <input type="text" name="translations[0][key]" class="form-control erp-form-control-sm" placeholder="Enter translation key" required>
                                     </div>
                                 </div>
-                                <div class="col-lg-6">
+                                <div class="col-lg-5">
                                     <div class="form-group">
                                         <label for="value[]">Value</label>
                                         <input type="text" name="translations[0][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
                                     </div>
                                 </div>
-                                <div class="col-lg-12 text-right">
+                                <div class="col-lg-2 text-right">
                                     <button type="button" class="btn btn-danger remove-translation-row">Remove</button>
                                 </div>
                             </div>
@@ -102,20 +102,20 @@
             newRow.classList.add('translation-row');
             newRow.innerHTML = `
                 <div class="row form-group-block">
-                    <div class="col-lg-6">
+                    <div class="col-lg-5">
                         <div class="form-group">
                             <label for="key[]">Key</label>
                             <input type="text" name="translations[${translationIndex}][key]" class="form-control erp-form-control-sm" placeholder="Enter translation key" required>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-5">
                         <div class="form-group">
                             <label for="value[]">Value</label>
                             <input type="text" name="translations[${translationIndex}][value]" class="form-control erp-form-control-sm" placeholder="Enter translation value" required>
                         </div>
                     </div>
-                    <div class="col-lg-12 text-right">
-                        <button type="button" class="btn btn-danger remove-translation-row">Remove</button>
+                    <div class="col-lg-2 text-right">
+                        <button type="button" class="btn btn-sm btn-danger remove-translation-row">Remove</button>
                     </div>
                 </div>
             `;
