@@ -58,7 +58,7 @@
                             <tr>
                                 <th>Key</th>
                                 <th>Value</th>
-                                <th>Action</th>
+                                {{-- <th>Action</th> --}}
                             </tr>
                         </thead>
                         <tbody id="translations-table-body">
@@ -70,9 +70,9 @@
                                     <td>
                                         <input type="text" name="translations[{{ $loop->iteration }}][value]" value="{{ $value }}" class="form-control erp-form-control-sm" required>
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         <button type="button" class="btn btn-sm btn-danger remove-table-row">Remove</button>
-                                    </td>
+                                    </td> --}}
                                 </tr>
                             @empty
                                 <tr>
