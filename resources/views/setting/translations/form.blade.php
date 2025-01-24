@@ -39,7 +39,7 @@
             </form>
 
             {{-- Existing Translations Table --}}
-            <form method="POST" action="{{ route('languages.updateTranslations', ['id' => $data['id']]) }}" id="translations-form">
+            <form method="POST" action="{{ route('languages.create', ['id' => $data['id']]) }}" id="translations-form">
                 @csrf
                 @method('PUT') {{-- Assuming you use a PUT request for updating translations --}}
                 <div class="table-responsive">
