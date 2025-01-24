@@ -39,17 +39,14 @@ class LanguageTranslationController extends Controller
 
     $langPath = base_path('resources/lang/' . $id . '/message.php');
 
-    // Check if the language file exists
     if (!file_exists($langPath)) {
         abort(404, "Language file for '{$id}' not found.");
     }
 
-    // Read existing translations
     $translations = include($langPath);
     $translations = array_filter($translations, fn($value) => !is_null($value) && $value !== '');
     ksort($translations);
 
-    // Handle form submission for adding/updating translations
     if ($request->isMethod('post')) {
         $request->validate([
             'key' => 'required|string',
@@ -59,14 +56,13 @@ class LanguageTranslationController extends Controller
         $key = $request->input('key');
         $value = $request->input('value');
 
-        // Update or add the new translation
         $translations[$key] = $value;
 
-        // Save updated translations back to the file
         $exportedTranslations = var_export($translations, true);
         file_put_contents($langPath, "<?php\n\nreturn {$exportedTranslations};");
 
-        return redirect()->back()->with('success', 'Translation added/updated successfully.');
+        return $this->jsonSuccessResponse('success', trans('message.update'), 200);
+        // return redirect()->back()->with('success', 'Translation added/updated successfully.');
     }
 
     // Paginate translations for display
