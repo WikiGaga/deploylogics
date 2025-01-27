@@ -13,7 +13,9 @@ return array (
   'query_error' => 'Your Query Error',
   'report_ready' => 'Your Report is ready',
   'required_fields' => 'Fields are not validate.',
-  'smart_product' => 'المنتج الذكي',
   'update' => 'Entry successfully updated',
   'user_has_permission' => 'Any User has permission this record',
+  'smart_product' => 'المنتج الذكي',
+  'favourites' => 'المفضلة',
+  'hi' => 'أهلاً',
 );

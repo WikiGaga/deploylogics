@@ -11,7 +11,7 @@
                 <li class="kt-menu__item kt-menu__item--open kt-menu__item--here kt-menu__item--submenu kt-menu__item--rel kt-menu__item--active kt-menu__item--open-dropdown header_change_zindex" data-ktmenu-submenu-toggle="click" aria-haspopup="true">
                     <a href="javascript:;" id="Favourites" class="kt-menu__link kt-menu__toggle">
                         <span class="kt-menu__link-text">
-                            <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>Favourites</span>
+                            <i class="la la-heart" style="color: #f44336;font-size: 15px; margin-right: 3px;"></i> <span>{{ __('message.smart_product') }}Favourites</span>
                         </span>
                     </a>
                     <!--<div id="fav_menu" class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--left">
@@ -108,10 +108,11 @@
         // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
-        <div class="language-selector">
-            <form action="{{ route('change.language') }}" method="POST">
+        <div class="language-selector mt-2">
+            <form action="{{ route('change.language') }}" method="POST" class="d-flex align-items-center">
                 @csrf
-                <select name="language" id="language" class="form-control" onchange="this.form.submit()">
+                <label for="language" class="me-2 fw-bold">Choose Language:</label>
+                <select name="language" id="language" class="form-select w-auto" onchange="this.form.submit()">
                     @foreach($languages as $language)
                         <option value="{{ $language->code }}"
                             {{ $locale === $language->code ? 'selected' : '' }}>
@@ -189,7 +190,7 @@
         <div class="kt-header__topbar-item kt-header__topbar-item--user">
             <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="0px,0px">
                 <div class="kt-header__topbar-user user_header_change_zindex">
-                    <span class="kt-header__topbar-welcome kt-hidden-mobile">Hi,</span>
+                    <span class="kt-header__topbar-welcome kt-hidden-mobile">{{ __('message.hi') }},</span>
                     <span class="kt-header__topbar-username kt-hidden-mobile">{{ Auth::user()->name }}</span>
                     <img class="kt-hidden" alt="Pic" src="/assets/media/users/300_25.jpg" />
 
