@@ -95,12 +95,12 @@ public function changeLanguage(Request $request)
     //     'language' => 'required|string|exists:tbllanguages,id',
     // ]);
 
-    $language = \App\Models\Languages::where('id',$request->language)->first();
+//     $language = \App\Models\Languages::where('id',$request->language)->first();
 
-dd($language);
-    session(['app_locale' => $language->code]);
+// dd($language);
+    session(['app_locale' => $request->language]);
 
-    app()->setLocale($language->code);
+    app()->setLocale($request->language);
 
     return redirect()->back()->with('success', 'Language changed successfully!');
 }
