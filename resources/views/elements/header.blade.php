@@ -1,6 +1,5 @@
 <style>
     .custom-language-select {
-    width: 200px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -133,10 +132,10 @@
         // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
-        <div class="language-selector mt-3">
+        <div class="language-selector mt-2">
             <form action="{{ route('change.language') }}" method="POST">
                 @csrf
-                <select name="language" id="language" class="custom-language-select" onchange="this.form.submit()">
+                <select name="language" id="language" class="custom-language-select mr-2" onchange="this.form.submit()">
                     @foreach($languages as $language)
                         <option value="{{ $language->code }}"
                             {{ $locale === $language->code ? 'selected' : '' }}>
