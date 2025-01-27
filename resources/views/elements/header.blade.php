@@ -1,3 +1,28 @@
+<style>
+    .custom-language-select {
+    width: 200px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.custom-language-select:hover {
+    border-color: #007bff;
+    background-color: #fff;
+}
+
+.custom-language-select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+}
+
+</style>
+
 <div id="kt_header" class="kt-header kt-grid__item  kt-header--fixed ">
 
     <!-- begin:: Header Menu -->
@@ -108,11 +133,10 @@
         // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
-        <div class="language-selector mt-2">
-            <form action="{{ route('change.language') }}" method="POST" class="d-flex align-items-center">
+        <div class="language-selector mt-3">
+            <form action="{{ route('change.language') }}" method="POST">
                 @csrf
-                <label for="language" class="me-2 fw-bold">Choose Language:</label>
-                <select name="language" id="language" class="form-select w-auto" onchange="this.form.submit()">
+                <select name="language" id="language" class="custom-language-select" onchange="this.form.submit()">
                     @foreach($languages as $language)
                         <option value="{{ $language->code }}"
                             {{ $locale === $language->code ? 'selected' : '' }}>
