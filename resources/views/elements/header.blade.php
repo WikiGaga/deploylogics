@@ -103,10 +103,9 @@
 
         @php
         $languages = \App\Models\Languages::all();
-        dd($languages);
         $locale = app()->getLocale();
         // dd($locale);
-        $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
+        // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
         <div class="language-selector">
@@ -114,8 +113,8 @@
                 @csrf
                 <select name="language" id="language" class="form-control" onchange="this.form.submit()">
                     @foreach($languages as $language)
-                        <option value="{{ $language->id }}"
-                            {{ $selectedlanguage === $language->id ? 'selected' : '' }}>
+                        <option value="{{ $language->code }}"
+                            {{ $locale === $language->code ? 'selected' : '' }}>
                             {{ $language->name }}
                         </option>
                     @endforeach
