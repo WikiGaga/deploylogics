@@ -1143,6 +1143,13 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('form/{id?}','Languages\LanguageTranslationController@create')->name('languages.create');
         });
 
+        Route::prefix('food')->group(function () {
+            Route::get('form/{id?}','Inventory\StockRequestController@create');
+            Route::post('form/{id?}','Inventory\StockRequestController@store');
+            Route::post('delete/{id}','Inventory\StockRequestController@destroy');
+            Route::get('print/{id}','Inventory\StockRequestController@print');
+        });
+
         Route::prefix('stock-request')->group(function () {
             Route::get('form/{id?}','Inventory\StockRequestController@create');
             Route::post('form/{id?}','Inventory\StockRequestController@store');
