@@ -1144,10 +1144,9 @@ Route::group(['middleware' => ['auth']], function () {
         });
 
         Route::prefix('food')->group(function () {
-            Route::get('form/{id?}','Inventory\StockRequestController@create');
-            Route::post('form/{id?}','Inventory\StockRequestController@store');
-            Route::post('delete/{id}','Inventory\StockRequestController@destroy');
-            Route::get('print/{id}','Inventory\StockRequestController@print');
+            Route::get('form/{id?}','Inventory\FoodController@create');
+            Route::post('form/{id?}','Inventory\FoodController@store');
+            Route::post('delete/{id}','Inventory\FoodController@destroy');
         });
 
         Route::prefix('stock-request')->group(function () {
