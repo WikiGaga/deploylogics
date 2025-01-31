@@ -160,7 +160,7 @@ class FoodController extends Controller
         $food->variations = json_encode([]);
         $food->price = $request->price;
         $food->veg = $request->veg;
-        $food->image = Helpers::upload(dir:'product/', format:'png', image:$request->file('image'));
+        // $food->image = Helpers::upload(dir:'product/', format:'png', image:$request->file('image'));
         $food->available_time_starts = $request->available_time_starts;
         $food->available_time_ends = $request->available_time_ends;
         $food->discount =  $request->discount ?? 0;
