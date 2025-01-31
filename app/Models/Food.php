@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Food extends Model
 {
+    protected $table = 'food';
+
+    protected $primaryKey = 'id';
+
+    protected static function primaryKeyName() {
+        return (new static)->getKeyName();
+    }
 
     protected $casts = [
         'tax' => 'float',
