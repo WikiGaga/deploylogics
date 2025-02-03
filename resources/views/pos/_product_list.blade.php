@@ -6,7 +6,7 @@
             <div class="row g-3">
                 {{-- @foreach     ($products as $product) --}}
                     <div class="order--item-box item-box col-auto">
-                        @include('vendor-views.pos._single_product', [
+                        @include('pos._single_product', [
                             // 'product' => $product,
                             // 'restaurant_data' => $restaurant_data,
                         ])
