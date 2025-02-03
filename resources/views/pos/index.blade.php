@@ -890,7 +890,8 @@
 
         $(document).on('click', '.quick-View', function() {
             $.get({
-                url: '{{ route('vendor.pos.quick-view') }}',
+                // url: '{{ route('vendor.pos.quick-view') }}',
+                url: '',
                 dataType: 'json',
                 data: {
                     product_id: $(this).data('id')
@@ -911,7 +912,8 @@
 
         $(document).on('click', '.quick-View-Cart-Item', function() {
             $.get({
-                url: '{{ route('vendor.pos.quick-view-cart-item') }}',
+                // url: '{{ route('vendor.pos.quick-view-cart-item') }}',
+                url: '',
                 dataType: 'json',
                 data: {
                     product_id: $(this).data('product-id'),
@@ -949,7 +951,8 @@
 
                 $.ajax({
                     type: "POST",
-                    url: '{{ route('vendor.pos.variant_price') }}',
+                    // url: '{{ route('vendor.pos.variant_price') }}',
+                    url: '',
                     data: $('#add-to-cart-form').serializeArray().concat([{
                             name: 'product_discount',
                             value: discountAmount
@@ -1021,7 +1024,7 @@
             });
             let form_id = 'add-to-cart-form';
             $.post({
-                url: '{{ route('vendor.pos.add-to-cart') }}',
+                // url: '{{ route('vendor.pos.add-to-cart') }}',
                 data: $('#' + form_id).serializeArray(),
                 beforeSend: function() {
                     $('#loading').show();
@@ -1151,7 +1154,7 @@
             });
             let form_id = 'delivery_address_store';
             $.post({
-                url: '{{ route('vendor.pos.add-delivery-info') }}',
+                // url: '{{ route('vendor.pos.add-delivery-info') }}',
                 data: $('#' + form_id).serializeArray(),
                 beforeSend: function() {
                     $('#loading').show();
@@ -1185,7 +1188,7 @@
             });
             let form_id = 'payable_store_amount';
             $.post({
-                url: '{{ route('vendor.pos.paid') }}',
+                // url: '{{ route('vendor.pos.paid') }}',
                 data: $('#' + form_id).serializeArray(),
                 beforeSend: function() {
                     $('#loading').show();
@@ -1264,7 +1267,7 @@
 
         $('.js-data-example-ajax').select2({
             ajax: {
-                url: '{{ route('vendor.pos.customers') }}',
+                // url: '{{ route('vendor.pos.customers') }}',
                 data: function(params) {
                     return {
                         q: params.term,
@@ -1338,7 +1341,8 @@
 
         $(document).on('click', '.quick-View', function() {
             $.get({
-                url: '{{ route('vendor.pos.quick-view') }}',
+                // url: '{{ route('vendor.pos.quick-view') }}',
+                url: '',
                 dataType: 'json',
                 data: {
                     product_id: $(this).data('id')
@@ -1361,7 +1365,8 @@
 
             function fetchData(categoryId = '', subcategoryId = '', keyword = '') {
                 $.ajax({
-                    url: "{{ url('restaurant-panel/pos/new') }}",
+                    // url: "{{ url('restaurant-panel/pos/new') }}",
+                    url: "",
                     type: "GET",
                     data: {
                         category_id: categoryId,

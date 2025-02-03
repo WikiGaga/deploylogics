@@ -1,6 +1,6 @@
 @php
-use App\CentralLogics\Helpers;
-use App\Models\AddOn;
+// use App\CentralLogics\Helpers;
+// use App\Models\AddOn;
 @endphp
 <div class="initial-49">
     <div class="modal-header p-0">
@@ -35,7 +35,7 @@ use App\Models\AddOn;
 
                 <div class="mb-3 text-dark">
                     <span class="h3 font-weight-normal text-accent mr-1" id="product-price">
-                        {{ Helpers::get_price_range($product, true) }}
+                        {{-- {{ Helpers::get_price_range($product, true) }} --}}
                     </span>
                     {{-- @if ($product->discount > 0 || Helpers::get_restaurant_discount($product->restaurant))
                     <span class="fz-12px line-through" id="original-price">
@@ -43,13 +43,15 @@ use App\Models\AddOn;
                     </span>
                     @endif --}}
                     <span class="fz-12px line-through {{ ($product->discount > 0 || Helpers::get_restaurant_discount($product->restaurant)) ? '' : 'd-none' }}" id="original-price">
-                        {{ Helpers::get_price_range($product) }}
+                        {{-- {{ Helpers::get_price_range($product) }} --}}
                     </span>
                 </div>
                 {{-- @if ($product->discount > 0) --}}
                 <div class="mb-3 text-dark">
                     <strong>{{ translate('messages.discount') }} : </strong>
-                    <strong id="set-discount-amount">{{ Helpers::get_product_discount($product) }}</strong>
+                    <strong id="set-discount-amount">
+                        {{-- {{ Helpers::get_product_discount($product) }} --}}
+                    </strong>
                 </div>
                 {{-- @endif --}}
             </div>
@@ -85,7 +87,7 @@ use App\Models\AddOn;
                         <div class="form-group col-sm-4">
                             <select name="product_discount_type" class="form-control discount-type" id="product_discount_type" onchange="getVariantPrice()">
                                 <option value="amount" {{$product['discount_type']=='amount'?'selected':''}}>{{translate('messages.amount')}}
-                                    ({{Helpers::currency_symbol()}})
+                                    {{-- ({{Helpers::currency_symbol()}}) --}}
                                 </option>
                                 <option value="percent" {{$product['discount_type']=='percent'?'selected':''}}>{{translate('messages.percent')}}
                                     (%)
@@ -155,7 +157,7 @@ use App\Models\AddOn;
                                     for="choice-option-{{ $key }}-{{ $k }}">
                                     {{ Str::limit($option->label, 20, '...') }}
                                     <br>
-                                    {{ Helpers::format_currency(data_get($option, 'optionPrice')) }}
+                                    {{-- {{ Helpers::format_currency(data_get($option, 'optionPrice')) }} --}}
                                     <span
                                         class="input-label-secondary text--title text--warning {{ data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? '' : 'd-none' }}"
                                         title="{{ translate('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
@@ -227,7 +229,8 @@ use App\Models\AddOn;
                             <label class="d-flex align-items-center btn btn-sm check-label mx-1 addon-input text-break"
                                 for="addon{{ $key }}">{{ Str::limit($add_on->name, 20, '...') }}
                                 <br>
-                                {{ Helpers::format_currency($add_on->price) }}</label>
+                                {{-- {{ Helpers::format_currency($add_on->price) }} --}}
+                            </label>
                             <label class="input-group addon-quantity-input mx-1 shadow bg-white rounded px-1"
                                 for="addon{{ $key }}">
                                 <button class="btn btn-sm h-100 text-dark px-0 decrease-button"

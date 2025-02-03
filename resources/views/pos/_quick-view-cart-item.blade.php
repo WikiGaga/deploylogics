@@ -1,4 +1,5 @@
-@php use App\CentralLogics\Helpers;use App\Models\AddOn; @endphp
+{{-- @php use App\CentralLogics\Helpers;
+use App\Models\AddOn; @endphp --}}
 <div class="initial-49">
     <div class="modal-header p-0">
         <h4 class="modal-title product-title">
@@ -13,14 +14,14 @@
             <div class="d-flex align-items-center justify-content-center active position-relative">
                 @if (config('toggle_veg_non_veg'))
                 <span class="badge badge-{{ $product->veg ? 'success' : 'danger' }} position-absolute left-0 top-0">{{ $product->veg ?
-                    translate('messages.veg') : translate('messages.non_veg') }}</span>
+                    __('messages.veg') : __('messages.non_veg') }}</span>
                 @endif
                 @if ($product?->stock_type !=='unlimited' && $product->item_stock <= 0)
-                <span class="badge badge-danger position-absolute left-0 top-0">{{ translate('messages.Out_of_Stock') }}</span>
+                <span class="badge badge-danger position-absolute left-0 top-0">{{ __('messages.Out_of_Stock') }}</span>
                 @endif
                 <img class="img-responsive mr-3 img--100 onerror-image"
-                     src="{{ $product?->image_full_url ?? dynamicAsset('public/assets/admin/img/100x100/food-default-image.png')}}"
-                     data-onerror-image="{{ dynamicAsset('public/assets/admin/img/100x100/food-default-image.png') }}"
+                     src="{{ $product?->image_full_url ?? asset('assets/images/category/2024-11-20-673de06ce3aa7.png')}}"
+                     data-onerror-image="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
                      data-zoom="{{ $product?->image_full_url }}"
                      alt="Product image">
                 <div class="cz-image-zoom-pane"></div>
@@ -32,21 +33,18 @@
 
                 <div class="mb-3 text-dark">
                     <span class="h3 font-weight-normal text-accent mr-1" id="product-price">
-                        {{ Helpers::get_price_range($product, true) }}
+                        {{-- {{ Helpers::get_price_range($product, true) }} --}}
                     </span>
-                    {{-- @if ($product->discount > 0 || Helpers::get_restaurant_discount($product->restaurant))
-                        <span class="fz-12px line-through">
-                            {{ Helpers::get_price_range($product) }}
-                        </span>
-                    @endif --}}
-                    <span class="fz-12px line-through {{ ($cart_item['discountAmount'] > 0 || Helpers::get_restaurant_discount($product->restaurant)) ? '' : 'd-none' }}" id="original-price">
-                        {{ Helpers::get_price_range($product) }}
+                    <span class="fz-12px line-through {{ ($cart_item['discountAmount'] > 0
+                    // || Helpers::get_restaurant_discount($product->restaurant)) ? '' : 'd-none' }}
+                        " id="original-price">
+                        {{-- {{ Helpers::get_price_range($product) }} --}}
                     </span>
                 </div>
 
                 {{-- @if ($product->discount > 0 || Helpers::get_restaurant_discount($product->restaurant)) --}}
                     <div class="mb-3 text-dark">
-                        <strong>{{ translate('messages.discount') }} : </strong>
+                        <strong>{{ __('messages.discount') }} : </strong>
                         <strong
                             id="set-discount-amount">{{ $cart_item['discountAmount'] }}</strong>
                     </div>
@@ -57,7 +55,7 @@
 
         <div class="row pt-2">
             <div class="col-12">
-                <h2>{{translate('messages.description')}}</h2>
+                <h2>{{__('messages.description')}}</h2>
                 <span class="d-block text-dark text-break">
                     {!! $product->description !!}
                 </span>
@@ -80,7 +78,7 @@
                     @endforeach
 
                     <div class="d-flex justify-content-between mt-4">
-                        <div class="product-description-label mt-2 text-dark h3">{{ translate('messages.Discount') }}:
+                        <div class="product-description-label mt-2 text-dark h3">{{ __('messages.Discount') }}:
                         </div>
                         <div class="form-group col-sm-4">
                             <input type="number" class="form-control" name="product_discount" min="0.0001" id="product_discount"
@@ -88,10 +86,9 @@
                         </div>
                         <div class="form-group col-sm-4">
                             <select name="product_discount_type" class="form-control discount-type" id="product_discount_type" onchange="getVariantPrice()">
-                                <option value="amount" {{$cart_item['discountType']=='amount'?'selected':''}}>{{translate('messages.amount')}}
-                                    ({{Helpers::currency_symbol()}})
+                                <option value="amount" {{$cart_item['discountType']=='amount'?'selected':''}}>{{__('messages.amount')}}
                                 </option>
-                                <option value="percent" {{$cart_item['discountType']=='percent'?'selected':''}}>{{translate('messages.percent')}}
+                                <option value="percent" {{$cart_item['discountType']=='percent'?'selected':''}}>{{__('messages.percent')}}
                                     (%)
                                 </option>
                             </select>
@@ -101,12 +98,12 @@
                     @foreach (json_decode($product->variations) as $key => $choice)
                         @if (isset($choice->name) && isset($choice->values) )
                             <div class="h3 p-0 pt-2">{{ $choice->name }} <small class="text-muted fs-12">
-                                    ({{ ($choice->required == 'on')  ?  translate('messages.Required') : translate('messages.optional') }}
+                                    ({{ ($choice->required == 'on')  ?  __('messages.Required') : __('messages.optional') }}
                                     ) </small>
                             </div>
                             @if ($choice->min != 0 && $choice->max != 0)
                                 <small class="d-block mb-3">
-                                    {{ translate('You_need_to_select_minimum_ ') }} {{ $choice->min }} {{ translate('to_maximum_ ') }} {{ $choice->max }} {{ translate('options') }}
+                                    {{ __('You_need_to_select_minimum_ ') }} {{ $choice->min }} {{ __('to_maximum_ ') }} {{ $choice->max }} {{ __('options') }}
                                 </small>
                             @endif
                             <input type="hidden" name="variations[{{ $key }}][min]" value="{{ $choice->min }}">
@@ -114,35 +111,6 @@
                             <input type="hidden" name="variations[{{ $key }}][required]"
                                    value="{{ $choice->required }}">
                             <input type="hidden" name="variations[{{ $key }}][name]" value="{{ $choice->name }}">
-
-
-                            {{-- @foreach ($choice->values as $k => $option)
-                                <div class="form-check form--check d-flex pr-5 mr-5">
-                                    <input class="form-check-input  input-element {{data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? 'stock_out' : '' }}"
-                                    data-option_id="{{ data_get($option, 'option_id') }}"
-                                           type="{{ ($choice->type == "multi") ? "checkbox" : "radio"}}"
-                                           id="choice-option-{{ $key }}-{{ $k }}"
-                                           name="variations[{{ $key }}][values][label][]" value="{{ $option->label }}"
-                                           @if (isset($values[$key]))
-                                               {{ in_array($option->label, $values[$key]) && !(data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0)? 'checked' : '' }}
-                                           @endif
-                                           {{data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? 'disabled' : '' }}
-                                           autocomplete="off">
-                                    <label class="form-check-label {{data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? 'stock_out text-muted' : 'text-dark' }}"
-                                           for="choice-option-{{ $key }}-{{ $k }}">{{ Str::limit($option->label, 20, '...') }}
-
-                                           &nbsp;
-                                           <span
-                                               class="input-label-secondary text--title text--warning {{data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? '' : 'd-none' }}"
-                                               title="{{ translate('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
-                                               <i class="tio-info-outined"></i>
-                                               <small>{{ translate('stock_out') }}</small>
-                                           </span>
-
-                                        </label>
-                                    <span class="ml-auto">{{ Helpers::format_currency($option->optionPrice) }}</span>
-                                </div>
-                            @endforeach --}}
 
                             <div class="d-flex justify-content-left flex-wrap">
                                 @foreach ($choice->values as $k => $option)
@@ -166,9 +134,9 @@
                                             {{ Helpers::format_currency(data_get($option, 'optionPrice')) }}
                                             <span
                                                 class="input-label-secondary text--title text--warning {{ data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0 ? '' : 'd-none' }}"
-                                                title="{{ translate('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
+                                                title="{{ __('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
                                                 <i class="tio-info-outlined"></i>
-                                                <small>{{ translate('stock_out') }}</small>
+                                                <small>{{ __('stock_out') }}</small>
                                             </span>
                                         </label>
 
@@ -197,7 +165,7 @@
 
                     <!-- Quantity + Add to cart -->
                     <div class="d-flex justify-content-between mt-4">
-                        <div class="product-description-label mt-2 text-dark h3">{{translate('messages.quantity')}}:
+                        <div class="product-description-label mt-2 text-dark h3">{{__('messages.quantity')}}:
                         </div>
                         <div class="product-quantity d-flex align-items-center">
                             <div class="input-group input-group--style-2 pr-3 w-160px">
@@ -228,7 +196,7 @@
                     </div>
                     @php($add_ons = json_decode($product->add_ons))
                     @if (count($add_ons) > 0 && $add_ons[0])
-                        <div class="h3 p-0 pt-2">{{ translate('messages.addon') }}
+                        <div class="h3 p-0 pt-2">{{ __('messages.addon') }}
                         </div>
                         <div class="d-flex justify-content-left flex-wrap">
                             @php ( $selected_addons= array_combine($cart_item['add_ons'] ,  $cart_item['add_on_qtys']) )
@@ -246,7 +214,8 @@
                                     <label
                                         class="d-flex align-items-center btn btn-sm check-label mx-1 addon-input text-break"
                                         for="addon{{ $key }}">{{ Str::limit($add_on->name, 20, '...') }} <br>
-                                        {{ Helpers::format_currency($add_on->price) }}</label>
+                                        {{-- {{ Helpers::format_currency($add_on->price) }} --}}
+                                    </label>
                                     <label class="input-group addon-quantity-input mx-1 shadow bg-white rounded px-1"
                                         @if (in_array($add_on->id, $cart_item['add_ons'])) style="visibility:visible;"  @endif
                                         for="addon{{ $key }}">
@@ -270,7 +239,7 @@
                     @endif
                     <div class="row no-gutters d-none mt-2 text-dark" id="chosen_price_div">
                         <div class="col-2">
-                            <div class="product-description-label">{{translate('messages.Total_Price')}}:</div>
+                            <div class="product-description-label">{{__('messages.Total_Price')}}:</div>
                         </div>
                         <div class="col-10">
                             <div class="product-price">
@@ -283,12 +252,12 @@
                         @if ($product?->stock_type !=='unlimited' && $product->item_stock <= 0)
                         <a href="javascript:"
                         data-product-id="{{$item_key}}"
-                        class="btn  btn--danger  remove-From-Cart"> {{ translate('Remove') }} <i
+                        class="btn  btn--danger  remove-From-Cart"> {{ __('Remove') }} <i
                         class="tio-delete-outlined"></i></a>
                     @else
                         <button class="btn btn--primary h--45px w-40p add-To-Cart" type="button">
                             <i class="tio-shopping-cart"></i>
-                            {{translate('messages.update')}}
+                            {{__('messages.update')}}
                         </button>
                     @endif
                     </div>

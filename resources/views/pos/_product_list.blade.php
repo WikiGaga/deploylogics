@@ -1,4 +1,4 @@
-@php use App\CentralLogics\Helpers; @endphp
+{{-- @php use App\CentralLogics\Helpers; @endphp
 @php($restaurant_data = Helpers::get_restaurant_data())
 @if (!$products->isEmpty())
     <div class="row g-3 mb-auto">
@@ -15,7 +15,7 @@
             </div>
         </div>
     </div>
-@else
+@else --}}
     <div class="my-auto">
         <div class="search--no-found">
             <img src="{{dynamicAsset('/public/assets/admin/img/search-icon.png')}}" alt="img">
@@ -24,4 +24,4 @@
             </p>
         </div>
     </div>
-@endif
+{{-- @endif --}}
