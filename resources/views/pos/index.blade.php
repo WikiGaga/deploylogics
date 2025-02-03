@@ -84,7 +84,7 @@
     </style>
 
     <div id="pos-div" class="content container-fluid" style="background-color: white;">
-        @php($restaurant_data = Helpers::get_restaurant_data())
+        {{-- @php($restaurant_data = Helpers::get_restaurant_data()) --}}
         <div class="d-flex flex-wrap">
             <div class="order--pos-left">
                 <!-- Subcategories (Vertical Scroll Attached to Card) -->
@@ -350,11 +350,11 @@
                             <button class="btn btn--primary" data-toggle="modal"
                                 data-target="#add-customer">{{ __('Add New Customer') }}</button>
                         </div>
-                        @if (
+                        {{-- @if (
                             ($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1) ||
                                 ($restaurant_data->restaurant_model == 'subscription' &&
                                     isset($restaurant_data->restaurant_sub) &&
-                                    $restaurant_data->restaurant_sub->self_delivery == 1))
+                                    $restaurant_data->restaurant_sub->self_delivery == 1)) --}}
                             <div class="pos--delivery-options">
                                 <div class="d-flex justify-content-between">
                                     <h5 class="card-title">
@@ -370,7 +370,7 @@
                                     @include('vendor-views.pos._address')
                                 </div>
                             </div>
-                        @endif
+                        {{-- @endif --}}
                     </div>
 
                     <div class='w-100' id="cart">
@@ -386,9 +386,8 @@
                 </div>
             </div>
         </div>
-        @php($order = Order::find(session('last_order')))
-        @if ($order)
-            {{-- @php(session(['last_order' => false])) --}}
+        {{-- @php($order = Order::find(session('last_order'))) --}}
+        {{-- @if ($order)
             <div class="modal fade" id="print-invoice" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -409,7 +408,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+        @endif --}}
 
 
         <!-- Static Delivery Address Modal -->
@@ -552,6 +551,7 @@
     <script>
         "use strict";
 
+/*
         function initMap() {
             let map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 13,
@@ -831,7 +831,7 @@
             @endif
 
         }
-
+*/
         function handleLocationError(browserHasGeolocation, infoWindow, pos) {
             infoWindow.setPosition(pos);
             infoWindow.setContent(
@@ -1402,38 +1402,38 @@
 
             //Order final Model Calculations
 
-            function formatCurrency(amount) {
-                return `{{ Helpers::currency_symbol() }} ${amount.toFixed(3)}`;
-            }
+            // function formatCurrency(amount) {
+            //     return `{{ Helpers::currency_symbol() }} ${amount.toFixed(3)}`;
+            // }
 
-            function updateCalculations() {
-                const invoiceAmount = parseFloat($('#invoice_amount span').text()) || 0;
-                console.log('amount '+invoiceAmount);
-                const cashPaid = parseFloat($('#cash_paid').val()) || 0;
-                const cardPaid = parseFloat($('#card_paid').val()) || 0;
-                const totalPaid = cashPaid + cardPaid;
-                const cashReturn = Math.max(totalPaid - invoiceAmount, 0);
+            // function updateCalculations() {
+            //     const invoiceAmount = parseFloat($('#invoice_amount span').text()) || 0;
+            //     console.log('amount '+invoiceAmount);
+            //     const cashPaid = parseFloat($('#cash_paid').val()) || 0;
+            //     const cardPaid = parseFloat($('#card_paid').val()) || 0;
+            //     const totalPaid = cashPaid + cardPaid;
+            //     const cashReturn = Math.max(totalPaid - invoiceAmount, 0);
 
-                $('#cash_paid_display').text(formatCurrency(cashPaid));
-                $('#cash_return').text(formatCurrency(cashReturn));
-                const bankAccountSelect = $('#bank_account');
+            //     $('#cash_paid_display').text(formatCurrency(cashPaid));
+            //     $('#cash_return').text(formatCurrency(cashReturn));
+            //     const bankAccountSelect = $('#bank_account');
 
-                // Validate card_paid amount
-                if (cardPaid > invoiceAmount) {
-                    alert('{{ __('Card amount cannot be greater than the invoice amount.') }}');
-                    $('#card_paid').val('');
-                    bankAccountSelect.prop('required', false).prop('disabled', true).val('');
-                    return;
-                }
+            //     // Validate card_paid amount
+            //     if (cardPaid > invoiceAmount) {
+            //         alert('{{ __('Card amount cannot be greater than the invoice amount.') }}');
+            //         $('#card_paid').val('');
+            //         bankAccountSelect.prop('required', false).prop('disabled', true).val('');
+            //         return;
+            //     }
 
-                // Enable/disable bank account selection
-                if (cardPaid > 0) {
-                    bankAccountSelect.prop('required', true).prop('disabled', false);
-                } else {
-                    bankAccountSelect.prop('required', false).prop('disabled', true).val('');
-                }
+            //     // Enable/disable bank account selection
+            //     if (cardPaid > 0) {
+            //         bankAccountSelect.prop('required', true).prop('disabled', false);
+            //     } else {
+            //         bankAccountSelect.prop('required', false).prop('disabled', true).val('');
+            //     }
 
-            }
+            // }
 
             function attachEventListeners() {
         $('#cash_paid, #card_paid').off('input').on('input', function () {
