@@ -122,32 +122,32 @@
         <dl class="row">
 
             <dt class="col-6 font-regular">{{ __('messages.addon') }}:</dt>
-            <dd class="col-6 text-right">{{ (round($addon_price, 3)) }}</dd>
+            <dd class="col-6 text-right">{{ (round(0, 3)) }}</dd>
 
             <dt class="col-6 font-regular">{{ __('messages.subtotal') }}
 
-                @if ($tax_included == 1)
+                {{-- @if ($tax_included == 1)
                     ({{ __('messages.TAX_Included') }})
-                @endif
+                @endif --}}
                 :
             </dt>
             <dd class="col-6 text-right">{{ (round($subtotal + $addon_price, 3)) }}</dd>
 
 
             <dt class="col-6 font-regular">{{ __('messages.discount') }} :</dt>
-            <dd class="col-6 text-right">- {{ (round($discount_on_product, 3)) }}</dd>
+            <dd class="col-6 text-right">- {{ (round(0, 3)) }}</dd>
             <dt class="col-6 font-regular">{{ __('messages.delivery_fee') }} :</dt>
             <dd class="col-6 text-right" id="delivery_price">
-                {{ (round($delivery_fee, 3)) }}</dd>
+                {{ (round(0, 3)) }}</dd>
 
             <dt class="col-6 font-regular">{{ __('messages.extra_discount') }} :</dt>
             <dd class="col-6 text-right">
                 <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-discount"><i
                         class="tio-edit"></i></button>
-                - {{ (round($discount_amount, 3)) }}
+                - {{ (round(0, 3)) }}
             </dd>
 
-            @if ($tax_included != 1)
+            {{-- @if ($tax_included != 1)
                 <dt class="col-6 font-regular">{{ __('messages.vat/tax') }}:</dt>
                 <dd class="col-6 text-right">
                     <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-tax"><i
@@ -155,7 +155,7 @@
                     +
                     {{ (round($total_tax_amount, 3)) }}
                 </dd>
-            @endif
+            @endif --}}
 
             {{-- @if (\App\CentralLogics\Helpers::get_business_data('additional_charge_status'))
                 <dt class="col-6 font-regular">
@@ -176,7 +176,9 @@
             </dd>
             <dt class="col-6 font-regular">{{ __('Total') }}:</dt>
             <dd class="col-6 text-right h4 b">
-                {{ (round($total + $additional_charge + $tax_a, 3)) }} </dd>
+                {{-- {{ (round($total + $additional_charge + $tax_a, 3)) }} --}}
+                {{ (round(0, 3)) }}
+             </dd>
         </dl>
         {{-- <div class="pos--payment-options mt-3 mb-3">
             <h5 class="mb-3">{{ __($add ? 'messages.Payment Method' : 'Paid by') }}</h5>
@@ -269,7 +271,7 @@
                                 <div class="card-body text-center">
                                     <h5>{{ __('Invoice Amount') }}</h5>
                                     <h4 id="invoice_amount" class="font-weight-bold">
-                                        <span>{{ ($paid) }}</span></h4>
+                                        <span>{{ (0) }}</span></h4>
                                 </div>
                             </div>
                         </div>
@@ -407,7 +409,7 @@
                             <label class="input-label"
                                 for="paid">{{ __('messages.amount') }}</label>
                             <input id="paid" type="number" class="form-control" name="paid" min="0"
-                                step="0.01" value="{{ $paid }}">
+                                step="0.01" value="{{ 0 }}">
                         </div>
                     </div>
                     <div class="form-group col-12 mb-0">
@@ -433,21 +435,20 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('vendor.pos.discount') }}" method="post" class="row">
+                <form action="" method="post" class="row">
                     @csrf
                     <div class="form-group col-sm-6">
                         <label for="discount_input">{{ __('messages.discount') }}</label>
                         <input type="number" class="form-control" name="discount" min="0.0001"
-                            id="discount_input" value="{{ $discount }}"
-                            max="{{ $discount_type == 'percent' ? 100 : 1000000000 }}" step="0.0001">
+                            id="discount_input" value="{{ 0 }}" step="0.0001">
                     </div>
                     <div class="form-group col-sm-6">
                         <label for="discount_input_type">{{ __('messages.type') }}</label>
                         <select name="type" class="form-control discount-type" id="discount_input_type">
-                            <option value="amount" {{ $discount_type == 'amount' ? 'selected' : '' }}>
+                            <option value="amount">
                                 {{ __('messages.amount') }}
                             </option>
-                            <option value="percent" {{ $discount_type == 'percent' ? 'selected' : '' }}>
+                            <option value="percent">
                                 {{ __('messages.percent') }}
                                 (%)
                             </option>
@@ -473,7 +474,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('vendor.pos.tax') }}" method="POST" class="row" id="order_submit_form">
+                <form action="" method="POST" class="row" id="order_submit_form">
                     @csrf
                     <div class="form-group col-12">
                         <label for="tax">{{ __('messages.tax') }}(%)</label>
@@ -518,7 +519,7 @@
                                 for="">{{ __('messages.contact_person_name') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="contact_person_name" type="text" class="form-control"
-                                name="contact_person_name" value="{{ $old ? $old['contact_person_name'] : '' }}"
+                                name="contact_person_name" value=""
                                 placeholder="{{ __('Ex: Jhone') }}">
                         </div>
                         <div class="col-md-6">
@@ -526,7 +527,7 @@
                                 for="">{{ __('Contact Number') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="contact_person_number" type="tel" class="form-control"
-                                name="contact_person_number" value="{{ $old ? $old['contact_person_number'] : '' }}"
+                                name="contact_person_number" value=""
                                 placeholder="{{ __('Ex: +3264124565') }}">
                         </div>
                         <div class="col-md-4">
@@ -534,41 +535,41 @@
                                 for="">{{ __('messages.Road') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="road" type="text" class="form-control" name="road"
-                                value="{{ $old ? $old['road'] : '' }}" placeholder="{{ __('Ex: 4th') }}">
+                                value="" placeholder="{{ __('Ex: 4th') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="house" class="input-label"
                                 for="">{{ __('messages.House') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="house" type="text" class="form-control" name="house"
-                                value="{{ $old ? $old['house'] : '' }}" placeholder="{{ __('Ex: 45/C') }}">
+                                value="" placeholder="{{ __('Ex: 45/C') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="floor" class="input-label"
                                 for="">{{ __('messages.Floor') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="floor" type="text" class="form-control" name="floor"
-                                value="{{ $old ? $old['floor'] : '' }}" placeholder="{{ __('Ex: 1A') }}">
+                                value="" placeholder="{{ __('Ex: 1A') }}">
                         </div>
                         <div class="col-md-6">
                             <label for="longitude" class="input-label"
                                 for="">{{ __('messages.longitude') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input type="text" class="form-control" id="longitude" name="longitude"
-                                value="{{ $old ? $old['longitude'] : '' }}" readonly>
+                                value="" readonly>
                         </div>
                         <div class="col-md-6">
                             <label for="latitude" class="input-label"
                                 for="">{{ __('messages.latitude') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input type="text" class="form-control" id="latitude" name="latitude"
-                                value="{{ $old ? $old['latitude'] : '' }}" readonly>
+                                value="" readonly>
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="input-label"
                                 for="">{{ __('messages.address') }}</label>
                             <textarea id="address" name="address" class="form-control" cols="30" rows="3"
-                                placeholder="{{ __('Ex: address') }}">{{ $old ? $old['address'] : '' }}</textarea>
+                                placeholder="{{ __('Ex: address') }}">{{ 'address' }}</textarea>
                         </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
@@ -579,8 +580,8 @@
                                     <span>{{ __('Delivery_fee') }} :</span>
                                     <input type="hidden" name="distance" id="distance">
                                     <input type="hidden" name="delivery_fee" id="delivery_fee"
-                                        value="{{ $old ? $old['delivery_fee'] : '' }}">
-                                    <strong>{{ $old ? $old['delivery_fee'] : 0 }}
+                                        value="{{ '' }}">
+                                    <strong>{{ 0 }}
                                         </strong>
                                 </div>
                             </div>
