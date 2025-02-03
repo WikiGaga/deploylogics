@@ -1143,6 +1143,8 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('form/{id?}','Languages\LanguageTranslationController@create')->name('languages.create');
         });
 
+        Route::get('pos','PosController@pos')->name('pos');
+
         Route::prefix('food')->group(function () {
             Route::get('form/{id?}','Inventory\FoodController@create');
             Route::post('form/{id?}','Inventory\FoodController@store');
