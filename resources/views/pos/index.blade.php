@@ -233,7 +233,7 @@
                                 <div class="category-name">{{ $subCategory->name }}</div>
                             </a>
                         @endforeach --}}
-                        @include('vendor-views.pos._subcategory_list', ['subcategories' => $subcategories])
+                        @include('pos._subcategory_list', ['subcategories' => $subcategories])
                     </div>
                 </div>
                 {{-- @endif --}}
@@ -338,7 +338,7 @@
                             <div class="col-sm-12 mobile-scroll">
                                 <div class="category-scroll-container">
                                     <div class="subcategory-list">
-                                        @include('vendor-views.pos._subcategory_list', [
+                                        @include('pos._subcategory_list', [
                                             'subcategories' => $subcategories,
                                         ])
                                     </div>
@@ -346,7 +346,7 @@
                             </div>
                         </div>
                         <div id="product-list">
-                            @include('vendor-views.pos._product_list', ['products' => $products])
+                            @include('pos._product_list', ['products' => $products])
                         </div>
                     </div>
 
@@ -390,14 +390,14 @@
                                         data-target="#paymentModal"><i class="tio-edit"></i></span>
                                 </div>
                                 <div class="pos--delivery-options-info d-flex flex-wrap" id="del-add">
-                                    @include('vendor-views.pos._address')
+                                    @include('pos._address')
                                 </div>
                             </div>
                         {{-- @endif --}}
                     </div>
 
                     <div class='w-100' id="cart">
-                        @include('vendor-views.pos._cart')
+                        @include('pos._cart')
                     </div>
                 </div>
             </div>
