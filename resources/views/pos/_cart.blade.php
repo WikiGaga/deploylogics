@@ -13,7 +13,7 @@
             // use App\CentralLogics\Helpers;
             $subtotal = 0;
             $addon_price = 0;
-            $tax = Helpers::get_restaurant_data()->tax;
+            // $tax = Helpers::get_restaurant_data()->tax;
             $discount = 0;
             $discount_type = 'amount';
             $discount_on_product = 0;
@@ -65,7 +65,7 @@
                             </td>
                             <td class="text-center px-0 py-1">
                                 <div class="btn">
-                                    {{ Helpers::format_currency(round($product_subtotal, 3)) }}
+                                    {{ (round($product_subtotal, 3)) }}
                                 </div>
                             </td>
                             <td class="align-items-center">
@@ -122,7 +122,7 @@
         <dl class="row">
 
             <dt class="col-6 font-regular">{{ __('messages.addon') }}:</dt>
-            <dd class="col-6 text-right">{{ Helpers::format_currency(round($addon_price, 3)) }}</dd>
+            <dd class="col-6 text-right">{{ (round($addon_price, 3)) }}</dd>
 
             <dt class="col-6 font-regular">{{ __('messages.subtotal') }}
 
@@ -131,20 +131,20 @@
                 @endif
                 :
             </dt>
-            <dd class="col-6 text-right">{{ Helpers::format_currency(round($subtotal + $addon_price, 3)) }}</dd>
+            <dd class="col-6 text-right">{{ (round($subtotal + $addon_price, 3)) }}</dd>
 
 
             <dt class="col-6 font-regular">{{ __('messages.discount') }} :</dt>
-            <dd class="col-6 text-right">- {{ Helpers::format_currency(round($discount_on_product, 3)) }}</dd>
+            <dd class="col-6 text-right">- {{ (round($discount_on_product, 3)) }}</dd>
             <dt class="col-6 font-regular">{{ __('messages.delivery_fee') }} :</dt>
             <dd class="col-6 text-right" id="delivery_price">
-                {{ Helpers::format_currency(round($delivery_fee, 3)) }}</dd>
+                {{ (round($delivery_fee, 3)) }}</dd>
 
             <dt class="col-6 font-regular">{{ __('messages.extra_discount') }} :</dt>
             <dd class="col-6 text-right">
                 <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-discount"><i
                         class="tio-edit"></i></button>
-                - {{ Helpers::format_currency(round($discount_amount, 3)) }}
+                - {{ (round($discount_amount, 3)) }}
             </dd>
 
             @if ($tax_included != 1)
@@ -153,22 +153,22 @@
                     <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-tax"><i
                             class="tio-edit"></i></button>
                     +
-                    {{ Helpers::format_currency(round($total_tax_amount, 3)) }}
+                    {{ (round($total_tax_amount, 3)) }}
                 </dd>
             @endif
 
-            @if (\App\CentralLogics\Helpers::get_business_data('additional_charge_status'))
+            {{-- @if (\App\CentralLogics\Helpers::get_business_data('additional_charge_status'))
                 <dt class="col-6 font-regular">
                     {{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name') ?? __('messages.additional_charge') }}
                     :</dt>
                 <dd class="col-6 text-right">
                     @if ($subtotal + $addon_price > 0)
-                        {{ Helpers::format_currency(round($additional_charge, 3)) }}
+                        {{ (round($additional_charge, 3)) }}
                     @else
-                        {{ Helpers::format_currency($additional_charge) }}
+                        {{ ($additional_charge) }}
                     @endif
                 </dd>
-            @endif
+            @endif --}}
 
 
             <dd class="col-12">
@@ -176,7 +176,7 @@
             </dd>
             <dt class="col-6 font-regular">{{ __('Total') }}:</dt>
             <dd class="col-6 text-right h4 b">
-                {{ Helpers::format_currency(round($total + $additional_charge + $tax_a, 3)) }} </dd>
+                {{ (round($total + $additional_charge + $tax_a, 3)) }} </dd>
         </dl>
         {{-- <div class="pos--payment-options mt-3 mb-3">
             <h5 class="mb-3">{{ __($add ? 'messages.Payment Method' : 'Paid by') }}</h5>
@@ -224,14 +224,14 @@
                 <div>
                     <span data-toggle="modal" data-target="#insertPayableAmount" class="text-body"><i
                             class="tio-edit"></i></span>
-                    <span>{{ Helpers::format_currency($paid) }}</span>
+                    <span>{{ ($paid) }}</span>
                     <input type="hidden" name="amount" value="{{ $paid }}">
                 </div>
             </div>
             <div class="mt-4 d-flex justify-content-between pos--payable-amount">
                 <label class="mb-1">{{ __('Change Amount') }} :</label>
                 <div>
-                    <span>{{ Helpers::format_currency($change) }}</span>
+                    <span>{{ ($change) }}</span>
                     <input type="hidden" value="{{ $change }}">
                 </div>
             </div>
@@ -269,7 +269,7 @@
                                 <div class="card-body text-center">
                                     <h5>{{ __('Invoice Amount') }}</h5>
                                     <h4 id="invoice_amount" class="font-weight-bold">
-                                        <span>{{ Helpers::format_currency($paid) }}</span></h4>
+                                        <span>{{ ($paid) }}</span></h4>
                                 </div>
                             </div>
                         </div>
@@ -278,7 +278,7 @@
                                 <div class="card-body text-center">
                                     <h5>{{ __('Cash Paid') }}</h5>
                                     <h4 id="cash_paid_display" class="font-weight-bold">
-                                        {{ Helpers::format_currency(0.0) }}</h4>
+                                        {{ (0.0) }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -287,7 +287,7 @@
                                 <div class="card-body text-center">
                                     <h5>{{ __('Cash Return') }}</h5>
                                     <h4 id="cash_return" class="font-weight-bold">
-                                        {{ Helpers::format_currency(0.0) }}</h4>
+                                        {{ (0.0) }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -405,7 +405,7 @@
                     <div class="row">
                         <div class="form-group col-12">
                             <label class="input-label"
-                                for="paid">{{ __('messages.amount') }}({{ Helpers::currency_symbol() }})</label>
+                                for="paid">{{ __('messages.amount') }}</label>
                             <input id="paid" type="number" class="form-control" name="paid" min="0"
                                 step="0.01" value="{{ $paid }}">
                         </div>
@@ -446,7 +446,6 @@
                         <select name="type" class="form-control discount-type" id="discount_input_type">
                             <option value="amount" {{ $discount_type == 'amount' ? 'selected' : '' }}>
                                 {{ __('messages.amount') }}
-                                ({{ Helpers::currency_symbol() }})
                             </option>
                             <option value="percent" {{ $discount_type == 'percent' ? 'selected' : '' }}>
                                 {{ __('messages.percent') }}
@@ -582,7 +581,7 @@
                                     <input type="hidden" name="delivery_fee" id="delivery_fee"
                                         value="{{ $old ? $old['delivery_fee'] : '' }}">
                                     <strong>{{ $old ? $old['delivery_fee'] : 0 }}
-                                        {{ Helpers::currency_symbol() }}</strong>
+                                        </strong>
                                 </div>
                             </div>
                             <input id="pac-input" class="controls rounded initial-8"
