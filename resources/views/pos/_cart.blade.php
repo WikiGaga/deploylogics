@@ -10,7 +10,7 @@
         </thead>
         <tbody>
             <?php
-            use App\CentralLogics\Helpers;
+            // use App\CentralLogics\Helpers;
             $subtotal = 0;
             $addon_price = 0;
             $tax = Helpers::get_restaurant_data()->tax;
@@ -43,7 +43,7 @@
                             <td class="media cart--media align-items-center cursor-pointer quick-View-Cart-Item"
                                 data-product-id="{{ $cartItem['id'] }}" data-item-key="{{ $key }}">
                                 <img class="avatar avatar-sm mr-2 onerror-image" src="{{ $cartItem['image_full_url'] }}"
-                                    data-onerror-image="{{ dynamicAsset('public/assets/admin/img/160x160/img2.jpg') }}"
+                                    data-onerror-image="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
                                     alt="{{ data_get($cartItem, 'image') }} image">
 
 
@@ -84,38 +84,38 @@
 </div>
 
 <?php
-$add = false;
-if (session()->has('address') && count(session()->get('address')) > 0) {
-    $add = true;
-    $delivery_fee = session()->get('address')['delivery_fee'];
-} else {
-    $delivery_fee = 0;
-}
-$total = $subtotal + $addon_price;
-$discount_amount = $discount_type == 'percent' && $discount > 0 ? (($total - $discount_on_product) * $discount) / 100 : $discount;
-$total -= $discount_amount + $discount_on_product;
-$tax_included = Helpers::get_mail_status('tax_included') ?? 0;
-$total_tax_amount = $tax > 0 ? ($total * $tax) / 100 : 0;
+// $add = false;
+// if (session()->has('address') && count(session()->get('address')) > 0) {
+//     $add = true;
+//     $delivery_fee = session()->get('address')['delivery_fee'];
+// } else {
+//     $delivery_fee = 0;
+// }
+// $total = $subtotal + $addon_price;
+// $discount_amount = $discount_type == 'percent' && $discount > 0 ? (($total - $discount_on_product) * $discount) / 100 : $discount;
+// $total -= $discount_amount + $discount_on_product;
+// $tax_included = Helpers::get_mail_status('tax_included') ?? 0;
+// $total_tax_amount = $tax > 0 ? ($total * $tax) / 100 : 0;
 
-$tax_a = $total_tax_amount;
-if ($tax_included == 1) {
-    $tax_a = 0;
-}
-$additional_charge = 0.0;
-if (Helpers::get_business_data('additional_charge_status')) {
-    $additional_charge = Helpers::get_business_data('additional_charge');
-}
+// $tax_a = $total_tax_amount;
+// if ($tax_included == 1) {
+//     $tax_a = 0;
+// }
+// $additional_charge = 0.0;
+// if (Helpers::get_business_data('additional_charge_status')) {
+//     $additional_charge = Helpers::get_business_data('additional_charge');
+// }
 
-$total = $total + $delivery_fee;
-if (isset($cart['paid'])) {
-    $paid = $cart['paid'];
-    $change = $total + $tax_a + $additional_charge - $paid;
-} else {
-    $paid = $total + $tax_a + $additional_charge;
-    $change = 0;
-}
+// $total = $total + $delivery_fee;
+// if (isset($cart['paid'])) {
+//     $paid = $cart['paid'];
+//     $change = $total + $tax_a + $additional_charge - $paid;
+// } else {
+//     $paid = $total + $tax_a + $additional_charge;
+//     $change = 0;
+// }
 ?>
-<form action="{{ route('vendor.pos.order') }}" id='order_place' method="post">
+<form action="" id='order_place' method="post">
     @csrf
     <input type="hidden" name="user_id" id="customer_id">
     <div class="box p-3">
