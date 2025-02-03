@@ -5,7 +5,7 @@
 @endphp
 @extends('layouts.vendor.app')
 
-@section('title', translate('messages.pos'))
+@section('title', __('messages.pos'))
 
 @section('content')
 
@@ -218,7 +218,7 @@
 
                 <div class="subcategory-scroll-container">
                     <h6 class="subcategory-header">
-                        {{ $categories->firstWhere('id', $category)->name ?? translate('Sub_Categories') }}
+                        {{ $categories->firstWhere('id', $category)->name ?? __('Sub_Categories') }}
                     </h6>
                     <div class="subcategory-list">
                         {{-- @foreach ($subcategories as $subCategory)
@@ -240,7 +240,7 @@
                         <div class="col-sm-4">
                             <h5 class="card-title">
                                 <span>
-                                    {{ translate('Food Section') }}
+                                    {{ __('Food Section') }}
                                 </span>
                             </h5>
                         </div>
@@ -255,12 +255,12 @@
                                     </div>
                                     {{-- <input id="datatableSearch" type="search" value="{{ $keyword ?? '' }}" name="search"
                                         class="form-control flex-grow-1 pl-5 border rounded h--45x"
-                                        placeholder="{{ translate('messages.Ex : Search Food Name') }}"
-                                        aria-label="{{ translate('messages.search_here') }}"> --}}
+                                        placeholder="{{ __('messages.Ex : Search Food Name') }}"
+                                        aria-label="{{ __('messages.search_here') }}"> --}}
                                     <input id="search-keyword" type="search" value="{{ $keyword ?? '' }}" name="keyword"
                                         class="form-control flex-grow-1 pl-5 border rounded h--45x"
-                                        placeholder="{{ translate('messages.Ex : Search Food Name') }}"
-                                        aria-label="{{ translate('messages.search_here') }}">
+                                        placeholder="{{ __('messages.Ex : Search Food Name') }}"
+                                        aria-label="{{ __('messages.search_here') }}">
                                 </div>
                                 <!-- End Search -->
                             </form>
@@ -273,8 +273,8 @@
                                     <select name="category" id="category"
                                             class="form-control js-select2-custom set-filter"
                                             data-url="{{ url()->full() }}" data-filter="category_id"
-                                            title="{{ translate('messages.select_category') }}">
-                                        <option value="">{{ translate('messages.all_categories') }}</option>
+                                            title="{{ __('messages.select_category') }}">
+                                        <option value="">{{ __('messages.all_categories') }}</option>
                                         @foreach ($categories as $item)
                                             <option
                                                 value="{{ $item->id }}" {{ $category == $item->id ? 'selected' : '' }}>
@@ -294,7 +294,7 @@
                                                     alt="All Products">
                                             </div>
                                             <div class="category-name">
-                                                {{ translate('messages.all_menu') }}
+                                                {{ __('messages.all_menu') }}
                                             </div>
                                         </a>
                                         @foreach ($categories as $item)
@@ -337,7 +337,7 @@
                     <div class="card-header bg-light border-0 m-1">
                         <h5 class="card-title">
                             <span>
-                                {{ translate('Billing Section') }}
+                                {{ __('Billing Section') }}
                             </span>
                         </h5>
                     </div>
@@ -345,10 +345,10 @@
                         <div class="d-flex flex-wrap flex-row p-2 add--customer-btn">
                             <label for='customer'></label>
                             <select id='customer' name="customer_id"
-                                data-placeholder="{{ translate('messages.walk_in_customer') }}"
+                                data-placeholder="{{ __('messages.walk_in_customer') }}"
                                 class="js-data-example-ajax form-control"></select>
                             <button class="btn btn--primary" data-toggle="modal"
-                                data-target="#add-customer">{{ translate('Add New Customer') }}</button>
+                                data-target="#add-customer">{{ __('Add New Customer') }}</button>
                         </div>
                         @if (
                             ($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1) ||
@@ -361,7 +361,7 @@
                                         <span class="card-title-icon">
                                             <i class="tio-user"></i>
                                         </span>
-                                        <span>{{ translate('Delivery_Information') }}</span>
+                                        <span>{{ __('Delivery_Information') }}</span>
                                     </h5>
                                     <span class="delivery--edit-icon text-primary" id="delivery_address" data-toggle="modal"
                                         data-target="#paymentModal"><i class="tio-edit"></i></span>
@@ -393,7 +393,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">{{ translate('messages.print_invoice') }}
+                            <h5 class="modal-title">{{ __('messages.print_invoice') }}
                             </h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -417,7 +417,7 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-light border-bottom py-3">
-                        <h3 class="modal-title flex-grow-1 text-center">{{ translate('Delivery Options') }}</h3>
+                        <h3 class="modal-title flex-grow-1 text-center">{{ __('Delivery Options') }}</h3>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">×</span>
                         </button>
@@ -427,38 +427,38 @@
                             <div class="row g-2">
                                 <div class="col-md-6">
                                     <label for="contact_person_name"
-                                        class="input-label">{{ translate('Contact person name') }}</label>
+                                        class="input-label">{{ __('Contact person name') }}</label>
                                     <input id="contact_person_name" type="text" class="form-control"
                                         name="contact_person_name" value=""
-                                        placeholder="{{ translate('messages.Ex :') }} Jhone">
+                                        placeholder="{{ __('messages.Ex :') }} Jhone">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="contact_person_number"
-                                        class="input-label">{{ translate('Contact Number') }}</label>
+                                        class="input-label">{{ __('Contact Number') }}</label>
                                     <input id="contact_person_number" type="text" class="form-control"
                                         name="contact_person_number" value=""
-                                        placeholder="{{ translate('messages.Ex :') }} +3264124565">
+                                        placeholder="{{ __('messages.Ex :') }} +3264124565">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="road" class="input-label">{{ translate('Road') }}</label>
+                                    <label for="road" class="input-label">{{ __('Road') }}</label>
                                     <input id="road" type="text" class="form-control" name="road"
-                                        value="" placeholder="{{ translate('messages.Ex :') }} 4th">
+                                        value="" placeholder="{{ __('messages.Ex :') }} 4th">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="house" class="input-label">{{ translate('House') }}</label>
+                                    <label for="house" class="input-label">{{ __('House') }}</label>
                                     <input id="house" type="text" class="form-control" name="house"
-                                        value="" placeholder="{{ translate('messages.Ex :') }} 45/C">
+                                        value="" placeholder="{{ __('messages.Ex :') }} 45/C">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="floor" class="input-label">{{ translate('Floor') }}</label>
+                                    <label for="floor" class="input-label">{{ __('Floor') }}</label>
                                     <input id="floor" type="text" class="form-control" name="floor"
-                                        value="" placeholder="{{ translate('messages.Ex :') }} 1A">
+                                        value="" placeholder="{{ __('messages.Ex :') }} 1A">
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label for="address" class="input-label">{{ translate('Address') }}</label>
+                                    <label for="address" class="input-label">{{ __('Address') }}</label>
                                     <textarea id="address" name="address" class="form-control" cols="30" rows="3"
-                                        placeholder="{{ translate('messages.Ex :') }} address"></textarea>
+                                        placeholder="{{ __('messages.Ex :') }} address"></textarea>
                                 </div>
                                 <div class="col-12">
                                     <div class="mb-3 h-200px" id="map"></div>
@@ -466,7 +466,7 @@
                             </div>
                             <div class="btn--container justify-content-end">
                                 <button class="btn btn-sm btn--primary w-100" type="submit">
-                                    {{ translate('Update Delivery address') }}
+                                    {{ __('Update Delivery address') }}
                                 </button>
                             </div>
                         </form>
@@ -481,7 +481,7 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-light py-3">
-                        <h4 class="modal-title">{{ translate('add_new_customer') }}</h4>
+                        <h4 class="modal-title">{{ __('add_new_customer') }}</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -492,19 +492,19 @@
                             <div class="row pl-2">
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <label for="f_name" class="input-label">{{ translate('first_name') }} <span
+                                        <label for="f_name" class="input-label">{{ __('first_name') }} <span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="f_name" type="text" name="f_name" class="form-control"
-                                            value="{{ old('f_name') }}" placeholder="{{ translate('first_name') }}"
+                                            value="{{ old('f_name') }}" placeholder="{{ __('first_name') }}"
                                             required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <label for="l_name" class="input-label">{{ translate('last_name') }} <span
+                                        <label for="l_name" class="input-label">{{ __('last_name') }} <span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="l_name" type="text" name="l_name" class="form-control"
-                                            value="{{ old('l_name') }}" placeholder="{{ translate('last_name') }}"
+                                            value="{{ old('l_name') }}" placeholder="{{ __('last_name') }}"
                                             required>
                                     </div>
                                 </div>
@@ -512,28 +512,28 @@
                             <div class="row pl-2">
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <label for="email" class="input-label">{{ translate('email') }}<span
+                                        <label for="email" class="input-label">{{ __('email') }}<span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="email" type="email" name="email" class="form-control"
                                             value="{{ old('email') }}"
-                                            placeholder="{{ translate('Ex_:_ex@example.com') }}" required>
+                                            placeholder="{{ __('Ex_:_ex@example.com') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="form-group">
-                                        <label for="phone" class="input-label">{{ translate('phone') }}
-                                            ({{ translate('with_country_code') }})<span
+                                        <label for="phone" class="input-label">{{ __('phone') }}
+                                            ({{ __('with_country_code') }})<span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="phone" type="tel" name="phone" class="form-control"
-                                            value="{{ old('phone') }}" placeholder="{{ translate('phone') }}" required>
+                                            value="{{ old('phone') }}" placeholder="{{ __('phone') }}" required>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="btn--container justify-content-end">
-                                <button type="reset" class="btn btn--reset">{{ translate('reset') }}</button>
+                                <button type="reset" class="btn btn--reset">{{ __('reset') }}</button>
                                 <button type="submit" id="submit_new_customer"
-                                    class="btn btn--primary">{{ translate('save') }}</button>
+                                    class="btn btn--primary">{{ __('save') }}</button>
                             </div>
                         </form>
                     </div>
@@ -570,7 +570,7 @@
                             lng: position.coords.longitude,
                         };
                         infoWindow.setPosition(myLatlng);
-                        infoWindow.setContent("{{ translate('Location_found') }}");
+                        infoWindow.setContent("{{ __('Location_found') }}");
                         infoWindow.open(map);
                         map.setCenter(myLatlng);
                     },
@@ -606,7 +606,7 @@
                             place.geometry.location,
                             zonePolygon
                         )) {
-                        toastr.error('{{ translate('messages.out_of_coverage') }}', {
+                        toastr.error('{{ __('messages.out_of_coverage') }}', {
                             CloseButton: true,
                             ProgressBar: true
                         });
@@ -836,8 +836,8 @@
             infoWindow.setPosition(pos);
             infoWindow.setContent(
                 browserHasGeolocation ?
-                "Error: {{ translate('The Geolocation service failed') }}." :
-                "Error: {{ translate('Your browser does not support geolocation') }}."
+                "Error: {{ __('The Geolocation service failed') }}." :
+                "Error: {{ __('Your browser does not support geolocation') }}."
             );
             infoWindow.open(map);
         }
@@ -1008,7 +1008,7 @@
                         Swal.fire({
                             icon: 'info',
                             title: 'Cart',
-                            text: "{{ translate('messages.product_already_added_in_cart') }}"
+                            text: "{{ __('messages.product_already_added_in_cart') }}"
                         });
                         return false;
                     } else if (data.data === 2) {
@@ -1016,7 +1016,7 @@
                         Swal.fire({
                             icon: 'info',
                             title: 'Cart',
-                            text: "{{ translate('messages.product_has_been_updated_in_cart') }}"
+                            text: "{{ __('messages.product_has_been_updated_in_cart') }}"
                         });
 
                         return false;
@@ -1031,7 +1031,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Cart',
-                            text: "{{ translate('messages.product_quantity_updated_in_cart') }}"
+                            text: "{{ __('messages.product_quantity_updated_in_cart') }}"
                         });
                         updateCart();
                         return false;
@@ -1039,7 +1039,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Cart',
-                            text: '{{ translate('messages.Sorry, product out of stock') }}'
+                            text: '{{ __('messages.Sorry, product out of stock') }}'
                         });
                         return false;
                     } else if (data.data === 'variation_error') {
@@ -1052,7 +1052,7 @@
                     }
                     $('.call-when-done').click();
 
-                    toastr.success('{{ translate('messages.product_has_been_added_in_cart') }}', {
+                    toastr.success('{{ __('messages.product_has_been_added_in_cart') }}', {
                         CloseButton: true,
                         ProgressBar: true
                     });
@@ -1063,7 +1063,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: '{{ translate('messages.something_went_wrong') }}',
+                        text: '{{ __('messages.something_went_wrong') }}',
                     });
                 },
                 complete: function() {
@@ -1090,7 +1090,7 @@
                 } else {
                     $('#quick-view').modal('hide');
                     updateCart();
-                    toastr.info('{{ translate('messages.item_has_been_removed_from_cart') }}', {
+                    toastr.info('{{ __('messages.item_has_been_removed_from_cart') }}', {
                         CloseButton: true,
                         ProgressBar: true
                     });
@@ -1105,7 +1105,7 @@
             }, function() {
                 $('#del-add').empty();
                 updateCart();
-                toastr.info('{{ translate('messages.item_has_been_removed_from_cart') }}', {
+                toastr.info('{{ __('messages.item_has_been_removed_from_cart') }}', {
                     CloseButton: true,
                     ProgressBar: true
                 });
@@ -1206,7 +1206,7 @@
                         element.val(oldvalue);
                         Swal.fire({
                             icon: 'error',
-                            title: "{{ translate('Cart') }}",
+                            title: "{{ __('Cart') }}",
                             text: data.message
                         });
                     } else {
@@ -1216,8 +1216,8 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: "{{ translate('Cart') }}",
-                    text: "{{ translate('quantity_unavailable') }}"
+                    title: "{{ __('Cart') }}",
+                    text: "{{ __('quantity_unavailable') }}"
                 });
                 element.val(oldvalue);
             }
@@ -1420,7 +1420,7 @@
 
                 // Validate card_paid amount
                 if (cardPaid > invoiceAmount) {
-                    alert('{{ translate('Card amount cannot be greater than the invoice amount.') }}');
+                    alert('{{ __('Card amount cannot be greater than the invoice amount.') }}');
                     $('#card_paid').val('');
                     bankAccountSelect.prop('required', false).prop('disabled', true).val('');
                     return;
