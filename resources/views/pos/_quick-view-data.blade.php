@@ -16,10 +16,10 @@
             <div class="d-flex align-items-center justify-content-center active position-relative">
                 @if (config('toggle_veg_non_veg'))
                 <span class="badge badge-{{ $product->veg ? 'success' : 'danger' }} position-absolute left-0 top-0">{{ $product->veg ?
-                    translate('messages.veg') : translate('messages.non_veg') }}</span>
+                    __('messages.veg') : __('messages.non_veg') }}</span>
                 @endif
                 @if ($product?->stock_type !=='unlimited' && $product->item_stock <= 0)
-                <span class="badge badge-danger position-absolute left-0 top-0">{{ translate('messages.Out_of_Stock') }}</span>
+                <span class="badge badge-danger position-absolute left-0 top-0">{{ __('messages.Out_of_Stock') }}</span>
                 @endif
                 <img class="img-responsive mr-3 img--100 onerror-image"
                     src="{{ $product?->image_full_url ?? dynamicAsset('public/assets/admin/img/100x100/food-default-image.png')}}"
@@ -48,7 +48,7 @@
                 </div>
                 {{-- @if ($product->discount > 0) --}}
                 <div class="mb-3 text-dark">
-                    <strong>{{ translate('messages.discount') }} : </strong>
+                    <strong>{{ __('messages.discount') }} : </strong>
                     <strong id="set-discount-amount">
                         {{-- {{ Helpers::get_product_discount($product) }} --}}
                     </strong>
@@ -69,7 +69,7 @@
                             }
                         }
                     ?>
-                <h2>{{ translate('messages.description') }}</h2>
+                <h2>{{ __('messages.description') }}</h2>
                 <span class="d-block text-dark text-break">
                     {!! $product->description !!}
                 </span>
@@ -78,7 +78,7 @@
                     <input type="hidden" name="id" value="{{ $product->id }}">
 
                     <div class="d-flex justify-content-between mt-4">
-                        <div class="product-description-label mt-2 text-dark h3">{{ translate('messages.Discount') }}:
+                        <div class="product-description-label mt-2 text-dark h3">{{ __('messages.Discount') }}:
                         </div>
                         <div class="form-group col-sm-4">
                             <input type="number" class="form-control" name="product_discount" min="0.0001" id="product_discount"
@@ -86,10 +86,10 @@
                         </div>
                         <div class="form-group col-sm-4">
                             <select name="product_discount_type" class="form-control discount-type" id="product_discount_type" onchange="getVariantPrice()">
-                                <option value="amount" {{$product['discount_type']=='amount'?'selected':''}}>{{translate('messages.amount')}}
+                                <option value="amount" {{$product['discount_type']=='amount'?'selected':''}}>{{__('messages.amount')}}
                                     {{-- ({{Helpers::currency_symbol()}}) --}}
                                 </option>
-                                <option value="percent" {{$product['discount_type']=='percent'?'selected':''}}>{{translate('messages.percent')}}
+                                <option value="percent" {{$product['discount_type']=='percent'?'selected':''}}>{{__('messages.percent')}}
                                     (%)
                                 </option>
                             </select>
@@ -99,14 +99,14 @@
                     @foreach (json_decode($product->variations) as $key => $choice)
                     @if (isset($choice->price) == false)
                     <div class="h3 p-0 pt-2">{{ $choice->name }} <small class="text-muted fs-12">
-                            ({{ $choice->required == 'on' ? translate('messages.Required') :
-                            translate('messages.optional') }}
+                            ({{ $choice->required == 'on' ? __('messages.Required') :
+                            __('messages.optional') }}
                             ) </small>
                     </div>
                     @if ($choice->min != 0 && $choice->max != 0)
                     <small class="d-block mb-3">
-                        {{ translate('You_need_to_select_minimum_ ') }} {{ $choice->min }}
-                        {{ translate('to_maximum_ ') }} {{ $choice->max }} {{ translate('options') }}
+                        {{ __('You_need_to_select_minimum_ ') }} {{ $choice->min }}
+                        {{ __('to_maximum_ ') }} {{ $choice->max }} {{ __('options') }}
                     </small>
                     @endif
 
@@ -131,9 +131,9 @@
                                 &nbsp;
                                 <span
                                     class="input-label-secondary text--title text--warning {{ data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? '' : 'd-none' }}"
-                                    title="{{ translate('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
+                                    title="{{ __('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
                                     <i class="tio-info-outined"></i>
-                                    <small>{{ translate('stock_out') }}</small>
+                                    <small>{{ __('stock_out') }}</small>
                                 </span>
                             </label>
                             <span class="ml-auto">{{ Helpers::format_currency($option->optionPrice) }}</span>
@@ -160,9 +160,9 @@
                                     {{-- {{ Helpers::format_currency(data_get($option, 'optionPrice')) }} --}}
                                     <span
                                         class="input-label-secondary text--title text--warning {{ data_get($option, 'stock_type') && data_get($option, 'stock_type') !== 'unlimited' && data_get($option, 'current_stock') <= 0? '' : 'd-none' }}"
-                                        title="{{ translate('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
+                                        title="{{ __('Currently_you_need_to_manage_discount_with_the_Restaurant.') }}">
                                         <i class="tio-info-outlined"></i>
-                                        <small>{{ translate('stock_out') }}</small>
+                                        <small>{{ __('stock_out') }}</small>
                                     </span>
                                 </label>
                                 @if($choice->type == 'multi')
@@ -193,7 +193,7 @@
                     <input type="hidden" hidden name="option_ids" id="option_ids" >
 
                     <div class="d-flex justify-content-between mt-1">
-                        <div class="product-description-label mt-2 text-dark h3">{{ translate('messages.quantity') }}:
+                        <div class="product-description-label mt-2 text-dark h3">{{ __('messages.quantity') }}:
                         </div>
                         <div class="product-quantity d-flex align-items-center">
                             <div class="input-group input-group--style-2 pr-3 w-160px">
@@ -217,7 +217,7 @@
                     </div>
                     @php($add_ons = json_decode($product->add_ons))
                     @if (count($add_ons) > 0 && $add_ons[0])
-                    <div class="h3 p-0 pt-2">{{ translate('messages.addon') }}</div>
+                    <div class="h3 p-0 pt-2">{{ __('messages.addon') }}</div>
 
                     <div class="d-flex justify-content-left flex-wrap">
                         @foreach (AddOn::whereIn('id',
@@ -250,7 +250,7 @@
                     @endif
                     <div class="row no-gutters d-none mt-2 text-dark" id="chosen_price_div">
                         <div class="col-2">
-                            <div class="product-description-label">{{ translate('messages.Total_Price') }}:</div>
+                            <div class="product-description-label">{{ __('messages.Total_Price') }}:</div>
                         </div>
                         <div class="col-10">
                             <div class="product-price">
@@ -263,12 +263,12 @@
                         @if ($product?->stock_type !=='unlimited' && $product->item_stock <= 0)
                             <button class="btn btn-secondary h--45px w-40p " type="button">
                                 <i class="tio-shopping-cart"></i>
-                                {{ translate('messages.Out_Of_Stock') }}
+                                {{ __('messages.Out_Of_Stock') }}
                             </button>
                         @else
                             <button class="btn btn--primary h--45px w-40p add-To-Cart" type="button">
                                 <i class="tio-shopping-cart"></i>
-                                {{ translate('messages.add_to_cart') }}
+                                {{ __('messages.add_to_cart') }}
                             </button>
                         @endif
                     </div>

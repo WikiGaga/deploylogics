@@ -2,10 +2,10 @@
     <table class="table table-align-middle">
         <thead class="thead-light border-0 text-center">
             <tr>
-                <th class="py-2" scope="col">{{ translate('messages.item') }}</th>
-                <th class="py-2" scope="col" class="text-center">{{ translate('messages.qty') }}</th>
-                <th class="py-2" scope="col">{{ translate('messages.price') }}</th>
-                <th class="py-2" scope="col">{{ translate('messages.delete') }}</th>
+                <th class="py-2" scope="col">{{ __('messages.item') }}</th>
+                <th class="py-2" scope="col" class="text-center">{{ __('messages.qty') }}</th>
+                <th class="py-2" scope="col">{{ __('messages.price') }}</th>
+                <th class="py-2" scope="col">{{ __('messages.delete') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -121,26 +121,26 @@ if (isset($cart['paid'])) {
     <div class="box p-3">
         <dl class="row">
 
-            <dt class="col-6 font-regular">{{ translate('messages.addon') }}:</dt>
+            <dt class="col-6 font-regular">{{ __('messages.addon') }}:</dt>
             <dd class="col-6 text-right">{{ Helpers::format_currency(round($addon_price, 3)) }}</dd>
 
-            <dt class="col-6 font-regular">{{ translate('messages.subtotal') }}
+            <dt class="col-6 font-regular">{{ __('messages.subtotal') }}
 
                 @if ($tax_included == 1)
-                    ({{ translate('messages.TAX_Included') }})
+                    ({{ __('messages.TAX_Included') }})
                 @endif
                 :
             </dt>
             <dd class="col-6 text-right">{{ Helpers::format_currency(round($subtotal + $addon_price, 3)) }}</dd>
 
 
-            <dt class="col-6 font-regular">{{ translate('messages.discount') }} :</dt>
+            <dt class="col-6 font-regular">{{ __('messages.discount') }} :</dt>
             <dd class="col-6 text-right">- {{ Helpers::format_currency(round($discount_on_product, 3)) }}</dd>
-            <dt class="col-6 font-regular">{{ translate('messages.delivery_fee') }} :</dt>
+            <dt class="col-6 font-regular">{{ __('messages.delivery_fee') }} :</dt>
             <dd class="col-6 text-right" id="delivery_price">
                 {{ Helpers::format_currency(round($delivery_fee, 3)) }}</dd>
 
-            <dt class="col-6 font-regular">{{ translate('messages.extra_discount') }} :</dt>
+            <dt class="col-6 font-regular">{{ __('messages.extra_discount') }} :</dt>
             <dd class="col-6 text-right">
                 <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-discount"><i
                         class="tio-edit"></i></button>
@@ -148,7 +148,7 @@ if (isset($cart['paid'])) {
             </dd>
 
             @if ($tax_included != 1)
-                <dt class="col-6 font-regular">{{ translate('messages.vat/tax') }}:</dt>
+                <dt class="col-6 font-regular">{{ __('messages.vat/tax') }}:</dt>
                 <dd class="col-6 text-right">
                     <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-tax"><i
                             class="tio-edit"></i></button>
@@ -159,7 +159,7 @@ if (isset($cart['paid'])) {
 
             @if (\App\CentralLogics\Helpers::get_business_data('additional_charge_status'))
                 <dt class="col-6 font-regular">
-                    {{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name') ?? translate('messages.additional_charge') }}
+                    {{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name') ?? __('messages.additional_charge') }}
                     :</dt>
                 <dd class="col-6 text-right">
                     @if ($subtotal + $addon_price > 0)
@@ -174,12 +174,12 @@ if (isset($cart['paid'])) {
             <dd class="col-12">
                 <hr class="m-0">
             </dd>
-            <dt class="col-6 font-regular">{{ translate('Total') }}:</dt>
+            <dt class="col-6 font-regular">{{ __('Total') }}:</dt>
             <dd class="col-6 text-right h4 b">
                 {{ Helpers::format_currency(round($total + $additional_charge + $tax_a, 3)) }} </dd>
         </dl>
         {{-- <div class="pos--payment-options mt-3 mb-3">
-            <h5 class="mb-3">{{ translate($add ? 'messages.Payment Method' : 'Paid by') }}</h5>
+            <h5 class="mb-3">{{ __($add ? 'messages.Payment Method' : 'Paid by') }}</h5>
             <ul>
                 @if ($add)
                     @php($cod = Helpers::get_business_settings('cash_on_delivery'))
@@ -187,7 +187,7 @@ if (isset($cart['paid'])) {
                         <li>
                             <label>
                                 <input type="radio" name="type" value="cash" hidden checked>
-                                <span>{{ translate('Cash_On_Delivery') }}</span>
+                                <span>{{ __('Cash_On_Delivery') }}</span>
                             </label>
                         </li>
                     @endif
@@ -195,13 +195,13 @@ if (isset($cart['paid'])) {
                     <li>
                         <label>
                             <input type="radio" name="type" value="cash" hidden="" checked>
-                            <span>{{ translate('messages.Cash') }}</span>
+                            <span>{{ __('messages.Cash') }}</span>
                         </label>
                     </li>
                     <li>
                         <label>
                             <input type="radio" name="type" value="card" hidden="">
-                            <span>{{ translate('messages.Card') }}</span>
+                            <span>{{ __('messages.Card') }}</span>
                         </label>
                     </li>
                 @endif
@@ -211,16 +211,16 @@ if (isset($cart['paid'])) {
 
         {{-- <div id="cashCardFields" style="display: none; margin-top: 10px;">
             <div>
-                <input type="number" id="cashAmount" name="cashAmount" class="form-control" min="0" step="0.01" placeholder="{{ translate('messages.Enter Cash Amount') }}">
+                <input type="number" id="cashAmount" name="cashAmount" class="form-control" min="0" step="0.01" placeholder="{{ __('messages.Enter Cash Amount') }}">
             </div>
             <div>
-                <input type="number" id="cardAmount" name="cardAmount" class="form-control mt-1" min="0" step="0.01" placeholder="{{ translate('messages.Enter Card Amount') }}">
+                <input type="number" id="cardAmount" name="cardAmount" class="form-control mt-1" min="0" step="0.01" placeholder="{{ __('messages.Enter Card Amount') }}">
             </div>
         </div> --}}
 
         {{-- @if (!$add)
             <div class="mt-4 d-flex justify-content-between pos--payable-amount">
-                <label class="m-0">{{ translate('Paid Amount') }} :</label>
+                <label class="m-0">{{ __('Paid Amount') }} :</label>
                 <div>
                     <span data-toggle="modal" data-target="#insertPayableAmount" class="text-body"><i
                             class="tio-edit"></i></span>
@@ -229,7 +229,7 @@ if (isset($cart['paid'])) {
                 </div>
             </div>
             <div class="mt-4 d-flex justify-content-between pos--payable-amount">
-                <label class="mb-1">{{ translate('Change Amount') }} :</label>
+                <label class="mb-1">{{ __('Change Amount') }} :</label>
                 <div>
                     <span>{{ Helpers::format_currency($change) }}</span>
                     <input type="hidden" value="{{ $change }}">
@@ -239,15 +239,15 @@ if (isset($cart['paid'])) {
         <div class="row button--bottom-fixed g-1 bg-white">
             <div class="col-sm-6">
                 <button type="button" data-toggle="modal" data-target="#orderFinalModal"
-                    class="btn btn--primary btn-sm btn-block">{{ translate('proceed') }} </button>
+                    class="btn btn--primary btn-sm btn-block">{{ __('proceed') }} </button>
             </div>
 
             {{-- <div class="col-sm-6">
                 <button type="submit"
-                        class="btn  btn--primary btn-sm btn-block">{{ translate('place_order') }} </button>
+                        class="btn  btn--primary btn-sm btn-block">{{ __('place_order') }} </button>
             </div> --}}
             <div class="col-sm-6">
-                <a href="#" class="btn btn--reset btn-sm btn-block empty-Cart">{{ translate('Clear_Cart') }}</a>
+                <a href="#" class="btn btn--reset btn-sm btn-block empty-Cart">{{ __('Clear_Cart') }}</a>
             </div>
         </div>
     </div>
@@ -256,7 +256,7 @@ if (isset($cart['paid'])) {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-light py-3">
-                    <h4 class="modal-title">{{ translate('Payment Details') }}</h4>
+                    <h4 class="modal-title">{{ __('Payment Details') }}</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -267,7 +267,7 @@ if (isset($cart['paid'])) {
                         <div class="col-4">
                             <div class="card bg-primary text-white">
                                 <div class="card-body text-center">
-                                    <h5>{{ translate('Invoice Amount') }}</h5>
+                                    <h5>{{ __('Invoice Amount') }}</h5>
                                     <h4 id="invoice_amount" class="font-weight-bold">
                                         <span>{{ Helpers::format_currency($paid) }}</span></h4>
                                 </div>
@@ -276,7 +276,7 @@ if (isset($cart['paid'])) {
                         <div class="col-4">
                             <div class="card bg-success text-white">
                                 <div class="card-body text-center">
-                                    <h5>{{ translate('Cash Paid') }}</h5>
+                                    <h5>{{ __('Cash Paid') }}</h5>
                                     <h4 id="cash_paid_display" class="font-weight-bold">
                                         {{ Helpers::format_currency(0.0) }}</h4>
                                 </div>
@@ -285,7 +285,7 @@ if (isset($cart['paid'])) {
                         <div class="col-4">
                             <div class="card bg-danger text-white">
                                 <div class="card-body text-center">
-                                    <h5>{{ translate('Cash Return') }}</h5>
+                                    <h5>{{ __('Cash Return') }}</h5>
                                     <h4 id="cash_return" class="font-weight-bold">
                                         {{ Helpers::format_currency(0.0) }}</h4>
                                 </div>
@@ -298,27 +298,27 @@ if (isset($cart['paid'])) {
                         <div class="col-12 col-lg-4">
                             <div class="form-group">
                                 <label for="customer_name" class="input-label">
-                                    {{ translate('Customer Name') }} <span class="text-danger">*</span>
+                                    {{ __('Customer Name') }} <span class="text-danger">*</span>
                                 </label>
                                 <input id="customer_name" type="text" name="customer_name" class="form-control"
                                     value="{{ old('customer_name') }}"
-                                    placeholder="{{ translate('Customer Name') }}" required>
+                                    placeholder="{{ __('Customer Name') }}" required>
                             </div>
                         </div>
                         <div class="col-12 col-lg-4">
                             <div class="form-group">
-                                <label for="car_number" class="input-label">{{ translate('Car Number') }}</label>
+                                <label for="car_number" class="input-label">{{ __('Car Number') }}</label>
                                 <input id="car_number" type="text" name="car_number" class="form-control"
-                                    value="{{ old('car_number') }}" placeholder="{{ translate('Car Number') }}">
+                                    value="{{ old('car_number') }}" placeholder="{{ __('Car Number') }}">
                             </div>
                         </div>
                         <div class="col-12 col-lg-4">
                             <div class="form-group">
                                 <label for="phone" class="input-label">
-                                    {{ translate('Phone') }} ({{ translate('with_country_code') }})
+                                    {{ __('Phone') }} ({{ __('with_country_code') }})
                                 </label>
                                 <input id="phone" type="tel" name="phone" class="form-control"
-                                    value="{{ old('phone') }}" placeholder="{{ translate('Phone') }}">
+                                    value="{{ old('phone') }}" placeholder="{{ __('Phone') }}">
                             </div>
                         </div>
                     </div>
@@ -329,27 +329,27 @@ if (isset($cart['paid'])) {
                             <div class="row">
                             <div class="col-12 col-lg-6">
                                 <div class="form-group">
-                                    <label for="cash_paid" class="input-label">{{ translate('Cash Amount') }}</label>
+                                    <label for="cash_paid" class="input-label">{{ __('Cash Amount') }}</label>
                                     <input id="cash_paid" type="text" name="cash_paid" class="form-control"
                                         min="0" step="0.001"
-                                        placeholder="{{ translate('Enter cash amount') }}">
+                                        placeholder="{{ __('Enter cash amount') }}">
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6">
                                 <div class="form-group">
-                                    <label for="card_paid" class="input-label">{{ translate('Card Amount') }}</label>
+                                    <label for="card_paid" class="input-label">{{ __('Card Amount') }}</label>
                                     <input id="card_paid" type="text" name="card_paid" class="form-control"
                                         min="0" step="0.001"
-                                        placeholder="{{ translate('Enter card amount') }}">
+                                        placeholder="{{ __('Enter card amount') }}">
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="bank_account"
-                                        class="input-label">{{ translate('Select Account') }}</label>
+                                        class="input-label">{{ __('Select Account') }}</label>
                                     <select id="bank_account" name="bank_account" class="form-control" disabled>
-                                        <option value="">{{ translate('Select an option') }}</option>
-                                        <option value="1">{{ translate('Bank 1') }}</option>
-                                        <option value="2">{{ translate('Bank 2') }}</option>
-                                        <option value="3">{{ translate('Bank 3') }}</option>
+                                        <option value="">{{ __('Select an option') }}</option>
+                                        <option value="1">{{ __('Bank 1') }}</option>
+                                        <option value="2">{{ __('Bank 2') }}</option>
+                                        <option value="3">{{ __('Bank 3') }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -358,7 +358,7 @@ if (isset($cart['paid'])) {
                         <!-- Compact Numeric Keypad -->
     <div class="col-lg-4">
         <div class="numeric-keypad-container p-2 border rounded bg-light">
-            <h6 class="text-center">{{ translate('Numeric Keypad') }}</h6>
+            <h6 class="text-center">{{ __('Numeric Keypad') }}</h6>
             <div class="keypad-buttons d-flex flex-wrap justify-content-center">
                 <button type="button" class="btn btn-outline-dark keypad-btn" data-value="1">1</button>
                 <button type="button" class="btn btn-outline-dark keypad-btn" data-value="2">2</button>
@@ -371,7 +371,7 @@ if (isset($cart['paid'])) {
                 <button type="button" class="btn btn-outline-dark keypad-btn" data-value="9">9</button>
                 <button type="button" class="btn btn-outline-dark keypad-btn" data-value="0">0</button>
                 <button type="button" class="btn btn-outline-dark keypad-btn" data-value=".">.</button>
-                <button type="button" class="btn btn-outline-danger keypad-clear">{{ translate('C') }}</button>
+                <button type="button" class="btn btn-outline-danger keypad-clear">{{ __('C') }}</button>
             </div>
         </div>
     </div>
@@ -380,8 +380,8 @@ if (isset($cart['paid'])) {
                     <!-- Submit Button -->
                     <div class="btn--container justify-content-end mt-4">
                         <button type="button" class="btn btn-secondary"
-                            data-dismiss="modal">{{ translate('Close') }}</button>
-                        <button type="submit" class="btn btn--primary">{{ translate('Place Order') }}</button>
+                            data-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn--primary">{{ __('Place Order') }}</button>
                     </div>
                 </div>
             </div>
@@ -394,7 +394,7 @@ if (isset($cart['paid'])) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-light border-bottom py-3">
-                <h5 class="modal-title">{{ translate('messages.payment') }}</h5>
+                <h5 class="modal-title">{{ __('messages.payment') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -405,7 +405,7 @@ if (isset($cart['paid'])) {
                     <div class="row">
                         <div class="form-group col-12">
                             <label class="input-label"
-                                for="paid">{{ translate('messages.amount') }}({{ Helpers::currency_symbol() }})</label>
+                                for="paid">{{ __('messages.amount') }}({{ Helpers::currency_symbol() }})</label>
                             <input id="paid" type="number" class="form-control" name="paid" min="0"
                                 step="0.01" value="{{ $paid }}">
                         </div>
@@ -413,7 +413,7 @@ if (isset($cart['paid'])) {
                     <div class="form-group col-12 mb-0">
                         <div class="btn--container justify-content-end">
                             <button class="btn btn-sm btn--primary payable-Amount" type="button">
-                                {{ translate('messages.submit') }}
+                                {{ __('messages.submit') }}
                             </button>
                         </div>
                     </div>
@@ -427,7 +427,7 @@ if (isset($cart['paid'])) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ translate('messages.update_discount') }}</h5>
+                <h5 class="modal-title">{{ __('messages.update_discount') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -436,27 +436,27 @@ if (isset($cart['paid'])) {
                 <form action="{{ route('vendor.pos.discount') }}" method="post" class="row">
                     @csrf
                     <div class="form-group col-sm-6">
-                        <label for="discount_input">{{ translate('messages.discount') }}</label>
+                        <label for="discount_input">{{ __('messages.discount') }}</label>
                         <input type="number" class="form-control" name="discount" min="0.0001"
                             id="discount_input" value="{{ $discount }}"
                             max="{{ $discount_type == 'percent' ? 100 : 1000000000 }}" step="0.0001">
                     </div>
                     <div class="form-group col-sm-6">
-                        <label for="discount_input_type">{{ translate('messages.type') }}</label>
+                        <label for="discount_input_type">{{ __('messages.type') }}</label>
                         <select name="type" class="form-control discount-type" id="discount_input_type">
                             <option value="amount" {{ $discount_type == 'amount' ? 'selected' : '' }}>
-                                {{ translate('messages.amount') }}
+                                {{ __('messages.amount') }}
                                 ({{ Helpers::currency_symbol() }})
                             </option>
                             <option value="percent" {{ $discount_type == 'percent' ? 'selected' : '' }}>
-                                {{ translate('messages.percent') }}
+                                {{ __('messages.percent') }}
                                 (%)
                             </option>
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
                         <button class="btn btn-sm btn--primary"
-                            type="submit">{{ translate('messages.submit') }}</button>
+                            type="submit">{{ __('messages.submit') }}</button>
                     </div>
                 </form>
             </div>
@@ -468,7 +468,7 @@ if (isset($cart['paid'])) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ translate('messages.update_tax') }}</h5>
+                <h5 class="modal-title">{{ __('messages.update_tax') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -477,14 +477,14 @@ if (isset($cart['paid'])) {
                 <form action="{{ route('vendor.pos.tax') }}" method="POST" class="row" id="order_submit_form">
                     @csrf
                     <div class="form-group col-12">
-                        <label for="tax">{{ translate('messages.tax') }}(%)</label>
+                        <label for="tax">{{ __('messages.tax') }}(%)</label>
                         <input id="tax" type="number" class="form-control" max="100" name="tax"
                             min="0">
                     </div>
 
                     <div class="form-group col-sm-12">
                         <button class="btn btn-sm btn--primary"
-                            type="submit">{{ translate('messages.submit') }}</button>
+                            type="submit">{{ __('messages.submit') }}</button>
                     </div>
                 </form>
             </div>
@@ -496,7 +496,7 @@ if (isset($cart['paid'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-light border-bottom py-3">
-                <h5 class="modal-title flex-grow-1 text-center">{{ translate('Delivery_Information') }}</h5>
+                <h5 class="modal-title flex-grow-1 text-center">{{ __('Delivery_Information') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -516,68 +516,68 @@ if (isset($cart['paid'])) {
                     <div class="row g-2" id="delivery_address">
                         <div class="col-md-6">
                             <label for="contact_person_name" class="input-label"
-                                for="">{{ translate('messages.contact_person_name') }}<span
+                                for="">{{ __('messages.contact_person_name') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="contact_person_name" type="text" class="form-control"
                                 name="contact_person_name" value="{{ $old ? $old['contact_person_name'] : '' }}"
-                                placeholder="{{ translate('Ex: Jhone') }}">
+                                placeholder="{{ __('Ex: Jhone') }}">
                         </div>
                         <div class="col-md-6">
                             <label for="contact_person_number" class="input-label"
-                                for="">{{ translate('Contact Number') }}<span
+                                for="">{{ __('Contact Number') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="contact_person_number" type="tel" class="form-control"
                                 name="contact_person_number" value="{{ $old ? $old['contact_person_number'] : '' }}"
-                                placeholder="{{ translate('Ex: +3264124565') }}">
+                                placeholder="{{ __('Ex: +3264124565') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="road" class="input-label"
-                                for="">{{ translate('messages.Road') }}<span
+                                for="">{{ __('messages.Road') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="road" type="text" class="form-control" name="road"
-                                value="{{ $old ? $old['road'] : '' }}" placeholder="{{ translate('Ex: 4th') }}">
+                                value="{{ $old ? $old['road'] : '' }}" placeholder="{{ __('Ex: 4th') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="house" class="input-label"
-                                for="">{{ translate('messages.House') }}<span
+                                for="">{{ __('messages.House') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="house" type="text" class="form-control" name="house"
-                                value="{{ $old ? $old['house'] : '' }}" placeholder="{{ translate('Ex: 45/C') }}">
+                                value="{{ $old ? $old['house'] : '' }}" placeholder="{{ __('Ex: 45/C') }}">
                         </div>
                         <div class="col-md-4">
                             <label for="floor" class="input-label"
-                                for="">{{ translate('messages.Floor') }}<span
+                                for="">{{ __('messages.Floor') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input id="floor" type="text" class="form-control" name="floor"
-                                value="{{ $old ? $old['floor'] : '' }}" placeholder="{{ translate('Ex: 1A') }}">
+                                value="{{ $old ? $old['floor'] : '' }}" placeholder="{{ __('Ex: 1A') }}">
                         </div>
                         <div class="col-md-6">
                             <label for="longitude" class="input-label"
-                                for="">{{ translate('messages.longitude') }}<span
+                                for="">{{ __('messages.longitude') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input type="text" class="form-control" id="longitude" name="longitude"
                                 value="{{ $old ? $old['longitude'] : '' }}" readonly>
                         </div>
                         <div class="col-md-6">
                             <label for="latitude" class="input-label"
-                                for="">{{ translate('messages.latitude') }}<span
+                                for="">{{ __('messages.latitude') }}<span
                                     class="input-label-secondary text-danger">*</span></label>
                             <input type="text" class="form-control" id="latitude" name="latitude"
                                 value="{{ $old ? $old['latitude'] : '' }}" readonly>
                         </div>
                         <div class="col-md-12">
                             <label for="address" class="input-label"
-                                for="">{{ translate('messages.address') }}</label>
+                                for="">{{ __('messages.address') }}</label>
                             <textarea id="address" name="address" class="form-control" cols="30" rows="3"
-                                placeholder="{{ translate('Ex: address') }}">{{ $old ? $old['address'] : '' }}</textarea>
+                                placeholder="{{ __('Ex: address') }}">{{ $old ? $old['address'] : '' }}</textarea>
                         </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
                                 <span class="text-primary">
-                                    {{ translate('* pin the address in the map to calculate delivery fee') }}
+                                    {{ __('* pin the address in the map to calculate delivery fee') }}
                                 </span>
                                 <div>
-                                    <span>{{ translate('Delivery_fee') }} :</span>
+                                    <span>{{ __('Delivery_fee') }} :</span>
                                     <input type="hidden" name="distance" id="distance">
                                     <input type="hidden" name="delivery_fee" id="delivery_fee"
                                         value="{{ $old ? $old['delivery_fee'] : '' }}">
@@ -586,15 +586,15 @@ if (isset($cart['paid'])) {
                                 </div>
                             </div>
                             <input id="pac-input" class="controls rounded initial-8"
-                                title="{{ translate('messages.search_your_location_here') }}" type="text"
-                                placeholder="{{ translate('messages.search_here') }}" />
+                                title="{{ __('messages.search_your_location_here') }}" type="text"
+                                placeholder="{{ __('messages.search_here') }}" />
                             <div class="mb-2 h-200px" id="map"></div>
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="btn--container justify-content-end">
                             <button class="btn btn-sm btn--primary w-100 delivery-Address-Store" type="button">
-                                {{ translate('Update_Delivery address') }}
+                                {{ __('Update_Delivery address') }}
                             </button>
                         </div>
                     </div>
