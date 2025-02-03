@@ -18,7 +18,7 @@
 @else --}}
     <div class="my-auto">
         <div class="search--no-found">
-            <img src="{{dynamicAsset('/public/assets/admin/img/search-icon.png')}}" alt="img">
+            <img src="{{asset('assets/images/category/2024-11-20-673de06ce3aa7.png')}}" alt="img">
             <p>
                 {{ translate('To get required search result First select zone & then restaurant to search category wise food or search manually to find food under that restaurant') }}
             </p>
