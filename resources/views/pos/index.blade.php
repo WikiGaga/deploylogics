@@ -2,6 +2,9 @@
     // use App\CentralLogics\Helpers;
     // use App\Models\BusinessSetting;
     // use App\Models\Order;
+    $subcategories = [];
+    $products = [];
+    $keyword = '';
 @endphp
 @extends('layouts.vendor.app')
 
@@ -218,7 +221,7 @@
 
                 <div class="subcategory-scroll-container">
                     <h6 class="subcategory-header">
-                        {{ $categories->firstWhere('id', $category)->name ?? __('Sub_Categories') }}
+                        {{ __('Sub_Categories') }}
                     </h6>
                     <div class="subcategory-list">
                         {{-- @foreach ($subcategories as $subCategory)
@@ -288,27 +291,47 @@
                                 <div class="category-scroll-container">
                                     <div class="category-scroll">
                                         <a href="javascript:void(0);"
-                                            class="category-item {{ empty($category) ? 'selected' : '' }}" data-category="">
+                                            class="category-item" data-category="">
                                             <div class="category-icon">
-                                                <img src="{{ dynamicAsset('/public/assets/admin/img/100x100/food.png') }}"
+                                                <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
                                                     alt="All Products">
                                             </div>
                                             <div class="category-name">
                                                 {{ __('messages.all_menu') }}
                                             </div>
                                         </a>
-                                        @foreach ($categories as $item)
+                                        {{-- @foreach ($categories as $item) --}}
                                             <a href="javascript:void(0);"
-                                                class="category-item {{ $category == $item->id ? 'selected' : '' }}"
-                                                data-category="{{ $item->id }}">
+                                                class="category-item "
+                                                data-category="">
                                                 <div class="category-icon">
-                                                    <img src="{{ $item['image_full_url'] }}" alt="{{ $item->name }}">
+                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
                                                 </div>
                                                 <div class="category-name">
-                                                    {{ Str::limit($item->name, 20, '...') }}
+                                                    {{ Str::limit('Burger', 20, '...') }}
                                                 </div>
                                             </a>
-                                        @endforeach
+                                            <a href="javascript:void(0);"
+                                                class="category-item "
+                                                data-category="">
+                                                <div class="category-icon">
+                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
+                                                </div>
+                                                <div class="category-name">
+                                                    {{ Str::limit('Pizza', 20, '...') }}
+                                                </div>
+                                            </a>
+                                            <a href="javascript:void(0);"
+                                                class="category-item "
+                                                data-category="">
+                                                <div class="category-icon">
+                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
+                                                </div>
+                                                <div class="category-name">
+                                                    {{ Str::limit('Coffee & Drinks', 20, '...') }}
+                                                </div>
+                                            </a>
+                                        {{-- @endforeach --}}
                                     </div>
                                 </div>
                             </div>
@@ -327,9 +350,9 @@
                         </div>
                     </div>
 
-                    <div class="card-footer">
+                    {{-- <div class="card-footer">
                         {!! $products->withQueryString()->links() !!}
-                    </div>
+                    </div> --}}
                 </div>
             </div>
             <div class="order--pos-right">
