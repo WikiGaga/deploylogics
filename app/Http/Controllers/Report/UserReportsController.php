@@ -350,32 +350,32 @@ class UserReportsController extends Controller
         $p_str = str_replace("'","''",$p_str);
         $replaced_str = str_replace(' ', '%', trim($p_str));
         $replaced_str = str_replace('%20', '%', trim($replaced_str));
-        $data['items'] = DB::select("SELECT 
+        $data['items'] = DB::select("SELECT
             p.PRODUCT_NAME AS id,
             p.PRODUCT_NAME,
             MAX(b.PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
             MAX(b.UOM_NAME) UOM_NAME,
-            MAX(b.PRODUCT_BARCODE_PACKING) AS packing 
+            MAX(b.PRODUCT_BARCODE_PACKING) AS packing
         FROM
             TBL_PURC_PRODUCT p,
-            TBL_PURC_PRODUCT_BARCODE b 
-        WHERE p.PRODUCT_ID = b.PRODUCT_ID 
-            AND (  
-                upper(b.product_barcode_barcode) Like '%".$replaced_str."%' 
-                OR upper(p.product_name) like '%".$replaced_str."%' 
+            TBL_PURC_PRODUCT_BARCODE b
+        WHERE p.PRODUCT_ID = b.PRODUCT_ID
+            AND (
+                upper(b.product_barcode_barcode) Like '%".$replaced_str."%'
+                OR upper(p.product_name) like '%".$replaced_str."%'
             )
             AND $BC
         GROUP BY p.PRODUCT_ID,
             p.PRODUCT_NAME,
             p.PRODUCT_ARABIC_NAME,
             p.GROUP_ITEM_ID,
-            p.GROUP_ITEM_PARENT_ID  
-        ORDER BY 
+            p.GROUP_ITEM_PARENT_ID
+        ORDER BY
             Case
                 WHEN upper(MAX(b.product_barcode_barcode)) Like '".$replaced_str."' THEN 1
                 WHEN upper(MAX(p.product_name)) Like '".$replaced_str."%' THEN 2
                 WHEN upper(MAX(p.product_name)) Like '%".$replaced_str."' THEN 4
-                Else 3 
+                Else 3
             END,
             p.product_name
             OFFSET $offset ROWS FETCH NEXT 30 ROWS ONLY");
@@ -417,7 +417,7 @@ class UserReportsController extends Controller
         $business_id = Auth::user()->business_id;
         $company_id = Auth::user()->company_id;
         $BC = "p.business_id = $business_id AND p.company_id = $company_id";
-        
+
         $p_str = strtoupper($val);
         $p_str = str_replace('%2F','/',$p_str);
         $p_str = str_replace('%22','"',$p_str);
@@ -426,32 +426,32 @@ class UserReportsController extends Controller
         $replaced_str = str_replace(' ', '%', trim($p_str));
         $replaced_str = str_replace('%20', '%', trim($replaced_str));
 
-        $data['items'] = DB::select("SELECT 
+        $data['items'] = DB::select("SELECT
             p.PRODUCT_ID AS id,
             p.PRODUCT_NAME,
             MAX(b.PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
             MAX(b.UOM_NAME) UOM_NAME,
-            MAX(b.PRODUCT_BARCODE_PACKING) AS packing 
+            MAX(b.PRODUCT_BARCODE_PACKING) AS packing
         FROM
             TBL_PURC_PRODUCT p,
-            TBL_PURC_PRODUCT_BARCODE b 
-        WHERE p.PRODUCT_ID = b.PRODUCT_ID 
-            AND (  
-                upper(b.product_barcode_barcode) Like '%".$replaced_str."%' 
-                OR upper(p.product_name) like '%".$replaced_str."%' 
+            TBL_PURC_PRODUCT_BARCODE b
+        WHERE p.PRODUCT_ID = b.PRODUCT_ID
+            AND (
+                upper(b.product_barcode_barcode) Like '%".$replaced_str."%'
+                OR upper(p.product_name) like '%".$replaced_str."%'
             )
             AND $BC
         GROUP BY p.PRODUCT_ID,
             p.PRODUCT_NAME,
             p.PRODUCT_ARABIC_NAME,
             p.GROUP_ITEM_ID,
-            p.GROUP_ITEM_PARENT_ID  
-        ORDER BY 
+            p.GROUP_ITEM_PARENT_ID
+        ORDER BY
             Case
                 WHEN upper(MAX(b.product_barcode_barcode)) Like '".$replaced_str."' THEN 1
                 WHEN upper(MAX(p.product_name)) Like '".$replaced_str."%' THEN 2
                 WHEN upper(MAX(p.product_name)) Like '%".$replaced_str."' THEN 4
-                Else 3 
+                Else 3
             END,
             p.product_name
             OFFSET $offset ROWS FETCH NEXT 30 ROWS ONLY");
@@ -477,9 +477,9 @@ class UserReportsController extends Controller
 
         return response()->json($data);
     }
-    
+
     public function getMarchantById(Request $request){
-        
+
         $data = [];
         $caseName = $request->caseName;
         $val = $request->q;
@@ -508,20 +508,20 @@ class UserReportsController extends Controller
                             from TBL_ACCO_CHART_ACCOUNT  where $BC
                             AND (
                                 lower(chart_name) like '%".strtolower($val)."%'
-                                ) 
+                                )
                         ");
 
         if(!empty($data['items'])){
             $data['status'] = 'success';
         }
         $data['total_count'] = $count->count;
-        
+
         return response()->json($data);
     }
 
 
     public function getCustomerById(Request $request){
-        
+
         $data = [];
         $caseName = $request->caseName;
         $val = $request->q;
@@ -546,7 +546,7 @@ class UserReportsController extends Controller
                          AND (
                             lower(customer_name) like '%".strtolower($replaced_str)."%' OR
                             lower(card_number) like '%".strtolower($replaced_str)."%' OR
-                            lower(customer_mobile_no) like '%".strtolower($replaced_str)."%' 
+                            lower(customer_mobile_no) like '%".strtolower($replaced_str)."%'
                             )
                          OFFSET $offset ROWS FETCH NEXT 30 ROWS ONLY");
 
@@ -554,18 +554,18 @@ class UserReportsController extends Controller
                             from tbl_sale_customer  where $BC
                             AND (
                                 lower(customer_name) like '%".strtolower($val)."%'
-                                ) 
+                                )
                         ");
 
         if(!empty($data['items'])){
             $data['status'] = 'success';
         }
         $data['total_count'] = $count->count;
-        
+
         return response()->json($data);
     }
     public function getSupplierById(Request $request){
-        
+
         $data = [];
         $caseName = $request->caseName;
         $val = $request->q;
@@ -662,7 +662,7 @@ class UserReportsController extends Controller
         }
         DB::beginTransaction();
         try{
-            
+
             //dd($request->toArray());
             $data['report_id'] = $request->report_id;
             $data['business_id'] = $request->report_business_id;
@@ -947,7 +947,7 @@ class UserReportsController extends Controller
         $validateField = [];
         $validateField['report_branch_ids'] =  'required';
         $msg['report_branch_ids'] =  'Branch field is required.';
-        
+
         if($request->report_case == 'product_activity'){
             $validateField['product_id'] =  'required';
             $msg['product_id'] =  'Product field is required.';
@@ -1075,7 +1075,7 @@ class UserReportsController extends Controller
                 'invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount',
                 'branch_wise_stock','product_list','product_change_rate','product_pl','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','monthly_sale_pur_summary',];
-           
+
             $data['branch_ids'] = $request->report_branch_ids;
             $data['supplier_ids'] = $request->report_supplier_ids;
             $data['product_group'] = $request->report_product_groups;
@@ -1117,7 +1117,7 @@ class UserReportsController extends Controller
                     $data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
                     $data['product_ids'] = $product_ids;
                 }
-                
+
                 if($data['report_case'] == 'product_pl'){
                     $data['key'] = 'product_pl';
                     $data['page_title'] = 'Product Wise Profit & Loss';
@@ -1126,7 +1126,7 @@ class UserReportsController extends Controller
                     $data['supplier_ids'] = $supplier_ids;
                     $data['product_ids'] = $product_ids;
                     $data['product_group'] = $product_group;
-                    
+
                 }
                 if($data['report_case'] == 'invoice_wise_purchase_summary'){
                     $data['key'] = 'invoice_wise_purchase_summary';
@@ -1152,7 +1152,7 @@ class UserReportsController extends Controller
                     $data['key'] = 'branch_wise_stock_summary';
                     $data['page_title'] = 'Branch Wise Stock Summary';
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_time)); 
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_time));
                     }else{
                         $data['date'] = date('Y-m-d', strtotime($date));
                     }
@@ -1164,16 +1164,16 @@ class UserReportsController extends Controller
                 if($data['report_case'] == 'group_wise_stock_activity_summary'){
                     $data['key'] = 'group_wise_stock_activity_summary';
                     $data['page_title'] = 'Stock Activity Summary';
-                    
+
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from)); 
-                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to)); 
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from));
+                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to));
                     }else{
                         $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
                         $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
                     }
                     $data['date_time_wise'] = $date_time_wise;
-                    
+
                     $data['product_ids'] = $new_code;
                     $data['supplier_ids'] = $supplier_ids;
                     $data['product_group'] = $product_group;
@@ -1301,7 +1301,7 @@ class UserReportsController extends Controller
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                 }
-                
+
                 if($data['report_case'] == 'frb_sales_data'){
                     $data['key'] = 'frb_sales_data';
                     $data['page_title'] = 'FBR Sale Data';
@@ -1400,7 +1400,7 @@ class UserReportsController extends Controller
                     $data['users'] = $users_ids;
                     $data['payment_types'] = $payment_types;
                 }
-                
+
                 if($data['report_case'] == 'customer_rpt'){
                     $data['key'] = 'customer_rpt';
                     $data['page_title'] = 'Customer List';
@@ -1418,7 +1418,7 @@ class UserReportsController extends Controller
                     $data['date'] = date('Y-m-d', strtotime($date));
                     $data['level_list'] = $level_list;
                     $data['OrderBy'] = $OrderBy;
-                    
+
                     if (!empty($chart_account_id)) {
                         $data['chart_account'] = TblAccCoa::where('chart_account_id', $chart_account_id)->first();
                         $data['chart_account_level'] = $data['chart_account']->chart_level;
@@ -1427,14 +1427,14 @@ class UserReportsController extends Controller
                     }
                 }
 
-                
+
                 if($data['report_case'] == 'payment_wht'){
                     $data['key'] = 'payment_wht';
                     $data['page_title'] = 'Payment/WHT Report';
                     $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
                     $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
-                    
-                    
+
+
                     if (!empty($chart_account_id)) {
                         $data['chart_account'] = TblAccCoa::where('chart_account_id', $chart_account_id)->first();
                     } else {
@@ -1512,8 +1512,8 @@ class UserReportsController extends Controller
                     $data['currency'] = TblDefiCurrency::select('currency_symbol')->where('currency_default',1)->where('business_id',auth()->user()->business_id)->first();
                     $data['date'] = date('Y-m-d',(strtotime ( '-1 day' , strtotime ($from_date) ) ));
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from)); 
-                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to)); 
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from));
+                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to));
                     }else{
                         $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
                         $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
@@ -1633,7 +1633,7 @@ class UserReportsController extends Controller
                     } else {
                         return $this->jsonErrorResponse($data, 'Must select Chart Code', 422);
                     }
-                    
+
                 }
 
 
@@ -1694,7 +1694,7 @@ class UserReportsController extends Controller
                     $data['product_ids'] = $product_ids;
                 }
 
-                
+
                 if($data['report_case'] == 'top_sale_qty_barcode_wise'){
                     $list = '';
                     $data['key'] = 'top_sale_qty_barcode_wise';
@@ -1728,7 +1728,7 @@ class UserReportsController extends Controller
                     $data['product'] = $product_id;
                     $data['product_group'] = $product_group;
                 }
-                
+
                 if($data['report_case'] == 'month_wise_product_group_sale'){
                     $list = '';
                     $data['key'] = 'month_wise_product_group_sale';
@@ -1831,20 +1831,20 @@ class UserReportsController extends Controller
                     $data['key'] = 'inventory_look_up';
                     $data['page_title'] = 'Inventory Look Up';
                     $data['date'] = date('Y-m-d', strtotime($date));
-                  
+
                     $data['product_ids'] = $new_code;//$product_ids;
                     $data['product_group'] = $product_group;
                     $data['supplier_ids'] = $supplier_ids;
                     $data['consolidate'] = $consolidate;
                 }
-                
+
                 if($data['report_case'] == 'stock_report'){
                     $data['key'] = 'stock_report';
                     $data['page_title'] = 'Stock Report';
                     //$data['date'] = date('Y-m-d', strtotime($date));
-                    
+
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_time)); 
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_time));
                     }else{
                         $data['date'] = date('Y-m-d', strtotime($date));
                     }
@@ -1887,8 +1887,8 @@ class UserReportsController extends Controller
                     $data['document_types'] = $document_types_multiple;
 
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from)); 
-                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to)); 
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from));
+                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to));
                     }else{
                         $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
                         $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
@@ -2080,11 +2080,11 @@ class UserReportsController extends Controller
                     //$data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
-                    
+
                     $data['supplier_ids'] = $supplier_ids;
                     $data['product_ids'] = $new_code;//$product_ids;
                     $data['product_group'] = $product_group;
-                   
+
                 }
                 if($data['report_case'] == 'month_wise_group_first_level'){
                     $data['key'] = 'month_wise_group_first_level';
@@ -2095,7 +2095,7 @@ class UserReportsController extends Controller
                     $data['product_group'] = $product_group;
                     $data['supplier_ids'] = $supplier_ids;
                 }
-                
+
                 if($data['report_case'] == 'gross_profit_first_level'){
                     $data['key'] = 'gross_profit_first_level';
                     $data['page_title'] = 'Gross Profit';
@@ -2114,12 +2114,12 @@ class UserReportsController extends Controller
                     //$data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
-                   
+
                     if(empty($request->group_item_first_level)){
                         return $this->jsonErrorResponse($data, "Category not Found", 200);
                     }
                     $data['first_level'] = $request->group_item_first_level;
-                    
+
                     $data['supplier_ids'] = $request->report_supplier_ids;
                     $data['product_ids'] = $request->report_product_ids;
                     $data['product_group'] = $request->report_product_groups;
@@ -2174,7 +2174,7 @@ class UserReportsController extends Controller
 
             // Sale Reports
             $sale_reports = ['payment_mode_wise_sale','product_price_comparison','sale_analysis',
-            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','category_wise_profit',
+            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['report_case'],$sale_reports)){
@@ -2199,7 +2199,7 @@ class UserReportsController extends Controller
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                     $data['customer_ids'] = $customer_id;
                 }
-                
+
                 if($data['report_case'] == 'product_rate_list'){
                     $data['key'] = 'product_rate_list';
                     $data['page_title'] = 'Product Rate List';
@@ -2256,6 +2256,12 @@ class UserReportsController extends Controller
                     $data['customer_ids'] = $customer_id;
                     $data['supplier_ids'] = $supplier_id;
                 }
+                if($data['report_case'] == 'sale_orders_report'){
+                    $data['key'] = 'sale_orders_report';
+                    $data['page_title'] = 'Sale Orders Report';
+                    $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
+                    $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
+                }
 
                 if($data['report_case'] == 'category_wise_profit'){
                     $data['key'] = 'category_wise_profit';
@@ -2278,7 +2284,7 @@ class UserReportsController extends Controller
                 if($data['report_case'] == 'product_wise_profit'){
                     $data['key'] = 'product_wise_profit';
                     $data['page_title'] = 'Product Wise Profit';
-                    
+
                     $data['to_date'] = date('Y-m-d', strtotime($to_date));
                     $data['from_date'] = date('Y-m-d', strtotime($from_date));
                     if(empty($request->group_item_first_level)){
@@ -2290,7 +2296,7 @@ class UserReportsController extends Controller
                     }
                     $data['last_level'] = $request->group_item_last_level;
                 }
-                
+
                 if($data['report_case'] == 'central_rate_items'){
                     $data['key'] = 'central_rate_items';
                     $data['page_title'] = 'Central Rate Items';
@@ -2308,10 +2314,10 @@ class UserReportsController extends Controller
 
                 $data['to_date'] = date('Y-m-d', strtotime($to_date));
                 $data['from_date'] = date('Y-m-d', strtotime($from_date));
-                
+
                 $getdata = DB::table('vw_inve_stock')->whereIn('branch_id', $data['branch_ids'])
                     ->whereBetween('stock_date',[$data['from_date'],$data['to_date']]);
-                
+
                 if($data['report_case'] == 'opening_stock'){
                     $data['key'] = 'opening_stock';
                     $data['page_title'] = 'Opening Stock Report';
@@ -2331,7 +2337,7 @@ class UserReportsController extends Controller
                     if(!empty($product_group)){
                         $getdata = $getdata->whereIn('group_item_parent_id',$product_group);
                     }
-                    
+
                     $data['product_group'] = $product_group;
                 }
                 if($data['report_case'] == 'stock_adjustment'){
@@ -2376,7 +2382,7 @@ class UserReportsController extends Controller
                         $data['product'] = TblPurcProduct::select('product_id','product_name')->where(DB::raw('lower(product_id)'),$this->strLower($product_id))->first();
                     }
                 }
-                
+
                 $getdata = $getdata->orderby('stock_date')->orderby('stock_code')->get();
                 //dd($getdata);
                 $list = [];
@@ -2636,7 +2642,7 @@ class UserReportsController extends Controller
              ********/
 
             $sale_keys = ['payment_mode_wise_sale','product_price_comparison','sale_analysis','monthly_sale_pur_summ'
-            ,'pos_session_short_and_excess','sale_report','category_wise_profit',
+            ,'pos_session_short_and_excess','sale_report','sale_orders_report','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['key'],$sale_keys)){

@@ -414,8 +414,8 @@
                                             </div>
                                         @endif
                                     @endif
-                                    
-                                    
+
+
                                     @if(in_array('value_wise',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -431,7 +431,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('consolidate_wise',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -447,7 +447,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('posted_wise',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -773,7 +773,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('marchant_id',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -1091,7 +1091,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('cash_flow_type',$data['selected_criteria']))
                                         <div class="row">
                                             <div class="col-lg-3">
@@ -1115,7 +1115,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('level_list',$data['selected_criteria']))
                                         @php
                                             $level_list = isset($saveSaticCriteria['level_list'])?$saveSaticCriteria['level_list']:"";
@@ -1137,7 +1137,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('product_sub_group',$data['selected_criteria']))
                                         @php
                                             $level_list = isset($saveSaticCriteria['level_list'])?$saveSaticCriteria['level_list']:"";
@@ -1156,7 +1156,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('order_by',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -1176,7 +1176,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     @if(in_array('negative_stock',$data['selected_criteria']))
                                         <div class="row form-group-block">
                                             <div class="col-lg-3">
@@ -1870,7 +1870,7 @@
     </script>
     <script src="{{ asset('js/pages/js/report/data-repeater.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/report/req-func.js') }}" type="text/javascript"></script>
-    
+
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         var arr_text_Field = [
@@ -1895,7 +1895,7 @@
         var arr_hidden_field = ['product_id','product_barcode_id'];
         var remain_req = 0; // variable use start from in funcAddSelectedProductToFormGrid()
     </script>
-    
+
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
@@ -1904,7 +1904,7 @@
     </script>
     @include('reports.script')
     <script>
-        
+
         function funcAfterAddRow(){}
 
         var emptyArr = ["",undefined,'NaN',NaN,null,"0",0];
@@ -1972,7 +1972,7 @@
                 sr_no = sr_no + 1;
             });
         }
-        
+
         $(document).on('click','.addCheckedProductAll',function(){
             if($(this).prop('checked')) {
                 $('table.table_pitModal>tbody>tr').each(function(){
@@ -1984,7 +1984,7 @@
         });
     </script>
     <script>
-        
+
         $(document).ready(function(){
             $("#all").click(function(){
                 $("#inputDays").hide();
@@ -2055,7 +2055,7 @@
                 $('#date_from').val(last_30_days);
                 $('#date').val(last_30_days);
             });
-            
+
             $("#last_days").click(function(){
                 $("#inputDays").show();
                 $("#days").keyup(function(){
@@ -2114,7 +2114,7 @@
             $('#kt_daterangepicker_4 .between_date_time_from').val( start.format('DD-MM-YYYY h:mm A'));
             $('#kt_daterangepicker_4 .between_date_time_to').val(end.format('DD-MM-YYYY h:mm A'));
         });
-        
+
         $(document).on('change','.sub_qry_condition',function(){
             var row_id =  $(this).parents('.sub_qry').attr('row-id');
             var val = $(this).parents('.sub_qry').find(".sub_qry_value_fields input[name='sub_qry["+row_id+"][val]']").val();
@@ -2126,7 +2126,7 @@
         });
         $(document).on('change','.select_all_branch',function(){
             var branches = <?=$data['branches']?>;
-            
+
             var select_all_branch = document.getElementById('select_all_branch').checked;
             var newArr = [];
             if(select_all_branch == true)
@@ -2145,7 +2145,7 @@
             {
                 $options = $('#report_branch_name option'); // options cached here to avoid overhead of fetching inside loop
                 branches.forEach((element, index, array) => {
-                    
+
                     $options.filter('[value="'+element.branch_id+'"]').prop('selected', false);
                     if(element.default_branch == "1"){
                          console.log(element.branch_id);
@@ -2153,9 +2153,9 @@
                         $('#report_branch_name option').val().trigger('change');
                     }
                 });
-                
+
             }
-            
+
         });
 
        /* $('.kt_select_none').select2({
@@ -2185,6 +2185,6 @@
             });
         });
     </script>
-    
+
 @endsection
 

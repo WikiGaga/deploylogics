@@ -290,8 +290,7 @@
                             <div class="col-sm-12">
                                 <div class="category-scroll-container">
                                     <div class="category-scroll">
-                                        <a href="javascript:void(0);"
-                                            class="category-item" data-category="">
+                                        <a href="javascript:void(0);" class="category-item" data-category="">
                                             <div class="category-icon">
                                                 <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
                                                     alt="All Products">
@@ -301,36 +300,33 @@
                                             </div>
                                         </a>
                                         {{-- @foreach ($categories as $item) --}}
-                                            <a href="javascript:void(0);"
-                                                class="category-item "
-                                                data-category="">
-                                                <div class="category-icon">
-                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
-                                                </div>
-                                                <div class="category-name">
-                                                    {{ Str::limit('Burger', 20, '...') }}
-                                                </div>
-                                            </a>
-                                            <a href="javascript:void(0);"
-                                                class="category-item "
-                                                data-category="">
-                                                <div class="category-icon">
-                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
-                                                </div>
-                                                <div class="category-name">
-                                                    {{ Str::limit('Pizza', 20, '...') }}
-                                                </div>
-                                            </a>
-                                            <a href="javascript:void(0);"
-                                                class="category-item "
-                                                data-category="">
-                                                <div class="category-icon">
-                                                    <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}" alt="{{ 'item' }}">
-                                                </div>
-                                                <div class="category-name">
-                                                    {{ Str::limit('Coffee & Drinks', 20, '...') }}
-                                                </div>
-                                            </a>
+                                        <a href="javascript:void(0);" class="category-item " data-category="">
+                                            <div class="category-icon">
+                                                <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
+                                                    alt="{{ 'item' }}">
+                                            </div>
+                                            <div class="category-name">
+                                                {{ Str::limit('Burger', 20, '...') }}
+                                            </div>
+                                        </a>
+                                        <a href="javascript:void(0);" class="category-item " data-category="">
+                                            <div class="category-icon">
+                                                <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
+                                                    alt="{{ 'item' }}">
+                                            </div>
+                                            <div class="category-name">
+                                                {{ Str::limit('Pizza', 20, '...') }}
+                                            </div>
+                                        </a>
+                                        <a href="javascript:void(0);" class="category-item " data-category="">
+                                            <div class="category-icon">
+                                                <img src="{{ asset('assets/images/category/2024-11-20-673de06ce3aa7.png') }}"
+                                                    alt="{{ 'item' }}">
+                                            </div>
+                                            <div class="category-name">
+                                                {{ Str::limit('Coffee & Drinks', 20, '...') }}
+                                            </div>
+                                        </a>
                                         {{-- @endforeach --}}
                                     </div>
                                 </div>
@@ -373,26 +369,22 @@
                             <button class="btn btn--primary" data-toggle="modal"
                                 data-target="#add-customer">{{ __('Add New Customer') }}</button>
                         </div>
-                        {{-- @if (
-                            ($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1) ||
-                                ($restaurant_data->restaurant_model == 'subscription' &&
-                                    isset($restaurant_data->restaurant_sub) &&
-                                    $restaurant_data->restaurant_sub->self_delivery == 1)) --}}
-                            <div class="pos--delivery-options">
-                                <div class="d-flex justify-content-between">
-                                    <h5 class="card-title">
-                                        <span class="card-title-icon">
-                                            <i class="tio-user"></i>
-                                        </span>
-                                        <span>{{ __('Delivery_Information') }}</span>
-                                    </h5>
-                                    <span class="delivery--edit-icon text-primary" id="delivery_address" data-toggle="modal"
-                                        data-target="#paymentModal"><i class="tio-edit"></i></span>
-                                </div>
-                                <div class="pos--delivery-options-info d-flex flex-wrap" id="del-add">
-                                    @include('pos._address')
-                                </div>
+                        {{-- @if (($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1) || ($restaurant_data->restaurant_model == 'subscription' && isset($restaurant_data->restaurant_sub) && $restaurant_data->restaurant_sub->self_delivery == 1)) --}}
+                        <div class="pos--delivery-options">
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title">
+                                    <span class="card-title-icon">
+                                        <i class="tio-user"></i>
+                                    </span>
+                                    <span>{{ __('Delivery_Information') }}</span>
+                                </h5>
+                                <span class="delivery--edit-icon text-primary" id="delivery_address" data-toggle="modal"
+                                    data-target="#paymentModal"><i class="tio-edit"></i></span>
                             </div>
+                            <div class="pos--delivery-options-info d-flex flex-wrap" id="del-add">
+                                @include('pos._address')
+                            </div>
+                        </div>
                         {{-- @endif --}}
                     </div>
 
@@ -509,7 +501,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form action="{{ route('vendor.pos.customer-store') }}" method="post" id="product_form">
+                        <form action="" method="post" id="product_form">
                             @csrf
                             <div class="row pl-2">
                                 <div class="col-12 col-lg-6">
@@ -517,8 +509,7 @@
                                         <label for="f_name" class="input-label">{{ __('first_name') }} <span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="f_name" type="text" name="f_name" class="form-control"
-                                            value="{{ old('f_name') }}" placeholder="{{ __('first_name') }}"
-                                            required>
+                                            value="{{ old('f_name') }}" placeholder="{{ __('first_name') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
@@ -526,8 +517,7 @@
                                         <label for="l_name" class="input-label">{{ __('last_name') }} <span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="l_name" type="text" name="l_name" class="form-control"
-                                            value="{{ old('l_name') }}" placeholder="{{ __('last_name') }}"
-                                            required>
+                                            value="{{ old('l_name') }}" placeholder="{{ __('last_name') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -537,8 +527,8 @@
                                         <label for="email" class="input-label">{{ __('email') }}<span
                                                 class="input-label-secondary text-danger">*</span></label>
                                         <input id="email" type="email" name="email" class="form-control"
-                                            value="{{ old('email') }}"
-                                            placeholder="{{ __('Ex_:_ex@example.com') }}" required>
+                                            value="{{ old('email') }}" placeholder="{{ __('Ex_:_ex@example.com') }}"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
@@ -574,306 +564,94 @@
     <script>
         "use strict";
 
-/*
-        function initMap() {
-            let map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 13,
-                center: {
-                    lat: {{ $restaurant_data ? $restaurant_data['latitude'] : '23.757989' }},
-                    lng: {{ $restaurant_data ? $restaurant_data['longitude'] : '90.360587' }}
-                }
-            });
-            let zonePolygon = null;
-            let infoWindow = new google.maps.InfoWindow();
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        myLatlng = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
-                        infoWindow.setPosition(myLatlng);
-                        infoWindow.setContent("{{ __('Location_found') }}");
-                        infoWindow.open(map);
-                        map.setCenter(myLatlng);
-                    },
-                    () => {
-                        handleLocationError(true, infoWindow, map.getCenter());
-                    }
-                );
-            } else {
-                handleLocationError(false, infoWindow, map.getCenter());
-            }
-            const input = document.getElementById("pac-input");
-            const searchBox = new google.maps.places.SearchBox(input);
-            map.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
-            let markers = [];
-            const bounds = new google.maps.LatLngBounds();
-            searchBox.addListener("places_changed", () => {
-                const places = searchBox.getPlaces();
-
-                if (places.length === 0) {
-                    return;
-                }
-                markers.forEach((marker) => {
-                    marker.setMap(null);
-                });
-                markers = [];
-                places.forEach((place) => {
-                    if (!place.geometry || !place.geometry.location) {
-                        console.log("Returned place contains no geometry");
-                        return;
-                    }
-                    console.log(place.geometry.location);
-                    if (!google.maps.geometry.poly.containsLocation(
-                            place.geometry.location,
-                            zonePolygon
-                        )) {
-                        toastr.error('{{ __('messages.out_of_coverage') }}', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
-                        return false;
-                    }
-                    document.getElementById('latitude').value = place.geometry.location.lat();
-                    document.getElementById('longitude').value = place.geometry.location.lng();
-                    const icon = {
-                        url: place.icon,
-                        size: new google.maps.Size(71, 71),
-                        origin: new google.maps.Point(0, 0),
-                        anchor: new google.maps.Point(17, 34),
-                        scaledSize: new google.maps.Size(25, 25),
-                    };
-                    markers.push(
-                        new google.maps.Marker({
-                            map,
-                            icon,
-                            title: place.name,
-                            position: place.geometry.location,
-                        })
-                    );
-
-                    if (place.geometry.viewport) {
-                        bounds.union(place.geometry.viewport);
+        /*
+                function initMap() {
+                    let map = new google.maps.Map(document.getElementById("map"), {
+                        zoom: 13,
+                        center: {
+                            lat: {{ $restaurant_data ? $restaurant_data['latitude'] : '23.757989' }},
+                            lng: {{ $restaurant_data ? $restaurant_data['longitude'] : '90.360587' }}
+                        }
+                    });
+                    let zonePolygon = null;
+                    let infoWindow = new google.maps.InfoWindow();
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                myLatlng = {
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                };
+                                infoWindow.setPosition(myLatlng);
+                                infoWindow.setContent("{{ __('Location_found') }}");
+                                infoWindow.open(map);
+                                map.setCenter(myLatlng);
+                            },
+                            () => {
+                                handleLocationError(true, infoWindow, map.getCenter());
+                            }
+                        );
                     } else {
-                        bounds.extend(place.geometry.location);
+                        handleLocationError(false, infoWindow, map.getCenter());
                     }
-                });
-                map.fitBounds(bounds);
-            });
-            @if ($restaurant_data)
-                $.get({
-                    url: '{{ url('/') }}/admin/zone/get-coordinates/{{ $restaurant_data->zone_id }}',
-                    dataType: 'json',
-                    success: function(data) {
-                        zonePolygon = new google.maps.Polygon({
-                            paths: data.coordinates,
-                            strokeColor: "#FF0000",
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                            fillColor: 'white',
-                            fillOpacity: 0,
+                    const input = document.getElementById("pac-input");
+                    const searchBox = new google.maps.places.SearchBox(input);
+                    map.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
+                    let markers = [];
+                    const bounds = new google.maps.LatLngBounds();
+                    searchBox.addListener("places_changed", () => {
+                        const places = searchBox.getPlaces();
+
+                        if (places.length === 0) {
+                            return;
+                        }
+                        markers.forEach((marker) => {
+                            marker.setMap(null);
                         });
-                        zonePolygon.setMap(map);
-                        zonePolygon.getPaths().forEach(function(path) {
-                            path.forEach(function(latlng) {
-                                bounds.extend(latlng);
-                                map.fitBounds(bounds);
-                            });
+                        markers = [];
+                        places.forEach((place) => {
+                            if (!place.geometry || !place.geometry.location) {
+                                console.log("Returned place contains no geometry");
+                                return;
+                            }
+                            console.log(place.geometry.location);
+                            if (!google.maps.geometry.poly.containsLocation(
+                                    place.geometry.location,
+                                    zonePolygon
+                                )) {
+                                toastr.error('{{ __('messages.out_of_coverage') }}', {
+                                    CloseButton: true,
+                                    ProgressBar: true
+                                });
+                                return false;
+                            }
+                            document.getElementById('latitude').value = place.geometry.location.lat();
+                            document.getElementById('longitude').value = place.geometry.location.lng();
+                            const icon = {
+                                url: place.icon,
+                                size: new google.maps.Size(71, 71),
+                                origin: new google.maps.Point(0, 0),
+                                anchor: new google.maps.Point(17, 34),
+                                scaledSize: new google.maps.Size(25, 25),
+                            };
+                            markers.push(
+                                new google.maps.Marker({
+                                    map,
+                                    icon,
+                                    title: place.name,
+                                    position: place.geometry.location,
+                                })
+                            );
+
+                            if (place.geometry.viewport) {
+                                bounds.union(place.geometry.viewport);
+                            } else {
+                                bounds.extend(place.geometry.location);
+                            }
                         });
-                        map.setCenter(data.center);
-                        google.maps.event.addListener(zonePolygon, 'click', function(mapsMouseEvent) {
-                            infoWindow.close();
-                            infoWindow = new google.maps.InfoWindow({
-                                position: mapsMouseEvent.latLng,
-                                content: JSON.stringify(mapsMouseEvent.latLng.toJSON(), null,
-                                    2),
-                            });
-                            let coordinates;
-                            coordinates = JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2);
-                            coordinates = JSON.parse(coordinates);
-
-                            document.getElementById('latitude').value = coordinates['lat'];
-                            document.getElementById('longitude').value = coordinates['lng'];
-                            infoWindow.open(map);
-                            let geocoder;
-                            geocoder = geocoder = new google.maps.Geocoder();
-                            let latlng = new google.maps.LatLng(coordinates['lat'], coordinates['lng']);
-
-                            geocoder.geocode({
-                                'latLng': latlng
-                            }, function(results, status) {
-                                if (status === google.maps.GeocoderStatus.OK) {
-                                    if (results[1]) {
-                                        let address = results[1].formatted_address;
-
-                                        const geocoder = new google.maps.Geocoder();
-                                        const service = new google.maps.DistanceMatrixService();
-
-                                        const origin1 = {
-                                            lat: {{ $restaurant_data['latitude'] }},
-                                            lng: {{ $restaurant_data['longitude'] }}
-                                        };
-                                        const origin2 = "{{ $restaurant_data->address }}";
-                                        const destinationA = address;
-                                        const destinationB = {
-                                            lat: coordinates['lat'],
-                                            lng: coordinates['lng']
-                                        };
-                                        const request = {
-                                            origins: [origin1, origin2],
-                                            destinations: [destinationA, destinationB],
-                                            travelMode: google.maps.TravelMode.DRIVING,
-                                            unitSystem: google.maps.UnitSystem.METRIC,
-                                            avoidHighways: false,
-                                            avoidTolls: false,
-                                        };
-
-                                        service.getDistanceMatrix(request).then((response) => {
-                                            let distancMeter = response.rows[0]
-                                                .elements[0].distance['value'];
-                                            let distanceMile = distancMeter / 1000;
-                                            let distancMileResult = Math.round((
-                                                    distanceMile + Number.EPSILON) *
-                                                100) / 100;
-                                            console.log(distancMileResult);
-                                            document.getElementById('distance').value =
-                                                distancMileResult;
-                                            <?php
-                                            $rest_sub = $restaurant_data->restaurant_sub;
-                                            if (($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1) || ($restaurant_data->restaurant_model == 'subscription' && isset($rest_sub) && $rest_sub->self_delivery == 1)) {
-                                                $per_km_shipping_charge = (float) $restaurant_data->per_km_shipping_charge;
-                                                $minimum_shipping_charge = (float) $restaurant_data->minimum_shipping_charge;
-                                                $maximum_shipping_charge = (float) $restaurant_data->maximum_shipping_charge;
-                                                $increased = 0;
-                                                $self_delivery_status = 1;
-                                            } else {
-                                                $per_km_shipping_charge = $restaurant_data->zone->per_km_shipping_charge ?? 0;
-                                                $minimum_shipping_charge = $restaurant_data->zone->minimum_shipping_charge ?? 0;
-                                                $maximum_shipping_charge = $restaurant_data->zone->maximum_shipping_charge ?? 0;
-                                                $increased = 0;
-                                                if ($restaurant_data->zone->increased_delivery_fee_status == 1) {
-                                                    $increased = $restaurant_data->zone->increased_delivery_fee ?? 0;
-                                                }
-                                                $self_delivery_status = 0;
-                                            }
-                                            ?>
-
-                                            $.get({
-                                                url: '{{ route('vendor.pos.extra_charge') }}',
-                                                dataType: 'json',
-                                                data: {
-                                                    distancMileResult: distancMileResult,
-                                                    self_delivery_status: {{ $self_delivery_status }},
-                                                },
-                                                success: function(data) {
-                                                    let extra_charge = data;
-                                                    let original_delivery_charge =
-                                                        (distancMileResult *
-                                                            {{ $per_km_shipping_charge }} >
-                                                            {{ $minimum_shipping_charge }}
-                                                        ) ?
-                                                        distancMileResult *
-                                                        {{ $per_km_shipping_charge }} :
-                                                        {{ $minimum_shipping_charge }};
-                                                    let delivery_amount = (
-                                                        {{ $maximum_shipping_charge }} >
-                                                        {{ $minimum_shipping_charge }} &&
-                                                        original_delivery_charge +
-                                                        extra_charge >
-                                                        {{ $maximum_shipping_charge }} ?
-                                                        {{ $maximum_shipping_charge }} :
-                                                        original_delivery_charge +
-                                                        extra_charge);
-                                                    let with_increased_fee =
-                                                        (delivery_amount *
-                                                            {{ $increased }}
-                                                        ) / 100;
-                                                    let delivery_charge =
-                                                        Math.round((
-                                                                delivery_amount +
-                                                                with_increased_fee +
-                                                                Number
-                                                                .EPSILON) *
-                                                            100) / 100;
-                                                    document.getElementById(
-                                                            'delivery_fee')
-                                                        .value =
-                                                        delivery_charge;
-                                                    $('#delivery_fee')
-                                                        .siblings('strong')
-                                                        .html(
-                                                            delivery_charge +
-                                                            ' ({{ Helpers::currency_symbol() }})'
-                                                        );
-
-                                                },
-                                                error: function() {
-                                                    let original_delivery_charge =
-                                                        (distancMileResult *
-                                                            {{ $per_km_shipping_charge }} >
-                                                            {{ $minimum_shipping_charge }}
-                                                        ) ?
-                                                        distancMileResult *
-                                                        {{ $per_km_shipping_charge }} :
-                                                        {{ $minimum_shipping_charge }};
-
-                                                    let delivery_charge =
-                                                        Math.round((
-                                                                ({{ $maximum_shipping_charge }} >
-                                                                    {{ $minimum_shipping_charge }} &&
-                                                                    original_delivery_charge >
-                                                                    {{ $maximum_shipping_charge }} ?
-                                                                    {{ $maximum_shipping_charge }} :
-                                                                    original_delivery_charge
-                                                                ) +
-                                                                Number
-                                                                .EPSILON) *
-                                                            100) / 100;
-                                                    document.getElementById(
-                                                            'delivery_fee')
-                                                        .value =
-                                                        delivery_charge;
-                                                    $('#delivery_fee')
-                                                        .siblings('strong')
-                                                        .html(
-                                                            delivery_charge +
-                                                            ' ({{ Helpers::currency_symbol() }})'
-                                                        );
-                                                }
-                                            });
-
-                                        });
-
-                                    }
-                                }
-                            });
-                        });
-                    },
-                });
-            @endif
-
-        }
-*/
-        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-            infoWindow.setPosition(pos);
-            infoWindow.setContent(
-                browserHasGeolocation ?
-                "Error: {{ __('The Geolocation service failed') }}." :
-                "Error: {{ __('Your browser does not support geolocation') }}."
-            );
-            infoWindow.open(map);
-        }
-
-
-        $("#insertPayableAmount").on('keydown', function(e) {
-            if (e.keyCode === 13) {
-                e.preventDefault();
-            }
-        })
-
-        $(document).on('ready', function() {
-            @if ($order)
+                        map.fitBounds(bounds);
+                    });
+                    @if ($restaurant_data)
                 $('#print-invoice').modal('show');
             @endif
         });
@@ -1103,26 +881,27 @@
         $(document).on('click', '.remove-From-Cart', function() {
             let key = $(this).data('product-id');
             $.post('{{ route('vendor.pos.remove-from-cart') }}', {
-                _token: '{{ csrf_token() }}',
-                key: key
-            }, function(data) {
-                if (data.errors) {
-                    for (let i = 0; i < data.errors.length; i++) {
-                        toastr.error(data.errors[i].message, {
+                    _token: '{{ csrf_token() }}',
+                    key: key
+                },
+                function(data) {
+                    if (data.errors) {
+                        for (let i = 0; i < data.errors.length; i++) {
+                            toastr.error(data.errors[i].message, {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        }
+                    } else {
+                        $('#quick-view').modal('hide');
+                        updateCart();
+                        toastr.info('{{ __('messages.item_has_been_removed_from_cart') }}', {
                             CloseButton: true,
                             ProgressBar: true
                         });
                     }
-                } else {
-                    $('#quick-view').modal('hide');
-                    updateCart();
-                    toastr.info('{{ __('messages.item_has_been_removed_from_cart') }}', {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                }
 
-            });
+                });
         });
 
         $(document).on('click', '.empty-Cart', function() {
@@ -1464,86 +1243,86 @@
             // }
 
             function attachEventListeners() {
-        $('#cash_paid, #card_paid').off('input').on('input', function () {
-            updateCalculations();
-        });
-    }
+                $('#cash_paid, #card_paid').off('input').on('input', function() {
+                    updateCalculations();
+                });
+            }
 
-        // Call updateCalculations when the modal is opened
-        $('#orderFinalModal').on('shown.bs.modal', function () {
-            updateCalculations(); // Recalculate on modal open
-            attachEventListeners(); // Ensure input listeners are attached
-        });
+            // Call updateCalculations when the modal is opened
+            $('#orderFinalModal').on('shown.bs.modal', function() {
+                updateCalculations(); // Recalculate on modal open
+                attachEventListeners(); // Ensure input listeners are attached
+            });
 
-        // Trigger calculations if the modal inputs are dynamically added
-        $(document).on('input', '#cash_paid, #card_paid', function () {
-            updateCalculations();
-        });
+            // Trigger calculations if the modal inputs are dynamically added
+            $(document).on('input', '#cash_paid, #card_paid', function() {
+                updateCalculations();
+            });
 
 
             // Numeric Keypad working
 
             let activeInput = null;
 
-$(document).on('focus', '#orderFinalModal input', function () {
-activeInput = $(this);
-});
+            $(document).on('focus', '#orderFinalModal input', function() {
+                activeInput = $(this);
+            });
 
-$(document).on('click', '.keypad-btn', function () {
-    const value = $(this).data('value');
-    if (activeInput) {
-        let currentVal = activeInput.val();
+            $(document).on('click', '.keypad-btn', function() {
+                const value = $(this).data('value');
+                if (activeInput) {
+                    let currentVal = activeInput.val();
 
-        if (value === '.') {
-            if (!currentVal.includes('.')) {
-                activeInput.val(currentVal + value);
-                activeInput.trigger('input');
-            }
-        } else {
-            const newValue = currentVal + value;
+                    if (value === '.') {
+                        if (!currentVal.includes('.')) {
+                            activeInput.val(currentVal + value);
+                            activeInput.trigger('input');
+                        }
+                    } else {
+                        const newValue = currentVal + value;
 
-            if (isValidNumber(newValue)) {
-                activeInput.val(newValue);
-                activeInput.trigger('input');
-            } else {
-                alert('Invalid input');
-            }
-        }
-    }
-});
+                        if (isValidNumber(newValue)) {
+                            activeInput.val(newValue);
+                            activeInput.trigger('input');
+                        } else {
+                            alert('Invalid input');
+                        }
+                    }
+                }
+            });
 
-// Clear the input field
-$(document).on('click', '.keypad-clear', function () {
-    if (activeInput) {
-        activeInput.val('');
-        activeInput.trigger('input');
-    }
-});
+            // Clear the input field
+            $(document).on('click', '.keypad-clear', function() {
+                if (activeInput) {
+                    activeInput.val('');
+                    activeInput.trigger('input');
+                }
+            });
 
-// Sanitize and validate input on blur
-$('#orderFinalModal').on('blur', '#cash_paid, #card_paid', function () {
-    const currentVal = this.value;
+            // Sanitize and validate input on blur
+            $('#orderFinalModal').on('blur', '#cash_paid, #card_paid', function() {
+                const currentVal = this.value;
 
-    // Check if the value is a valid number
-    if (!isValidNumber(currentVal)) {
-        alert('Please enter a valid number');
-        this.value = ''; // Clear the input if it's invalid
-        $(this).trigger('input');
-    }
+                // Check if the value is a valid number
+                if (!isValidNumber(currentVal)) {
+                    alert('Please enter a valid number');
+                    this.value = ''; // Clear the input if it's invalid
+                    $(this).trigger('input');
+                }
 
-    // Remove trailing decimal point on blur
-    if (currentVal.endsWith('.')) {
-        this.value = currentVal.slice(0, -1);
-        $(this).trigger('input');
-    }
-});
+                // Remove trailing decimal point on blur
+                if (currentVal.endsWith('.')) {
+                    this.value = currentVal.slice(0, -1);
+                    $(this).trigger('input');
+                }
+            });
 
-// Function to validate if the value is a valid number
-const isValidNumber = (value) => {
-    // Check if value is numeric and not empty
-    return !isNaN(value);
-    //  && value.trim() !== '';
-};
+            // Function to validate if the value is a valid number
+            const isValidNumber = (value) => {
+                // Check if value is numeric and not empty
+                return !isNaN(value);
+                //  && value.trim() !== '';
+            };
 
 
 
