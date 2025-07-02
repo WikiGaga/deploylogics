@@ -15,27 +15,67 @@
 @section('content')
     @php
         $data = Session::get('data');
-        dd($data);
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
             <div class="kt-invoice__brand">
                 <h1 class="kt-invoice__title">{{strtoupper($data['page_title'])}}</h1>
-                {{-- @if(isset($data['customer_group']) && count($data['customer_group']) != 0)
+                {{-- @if(count($data['branch_ids']) != 0)
+                    @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->get('branch_name'); @endphp
                     <h6 class="kt-invoice__criteria">
-                        <span style="color: #e27d00;">Customer Group:</span>
-                        @foreach($data['customer_group'] as $customer_group)
-                            @php
-                                $customer_type = \App\Models\TblSaleCustomerType::where('customer_type_id',$customer_group)->first();
-                            @endphp
-                            <span style="color: #5578eb;">{{" ".$customer_type->customer_type_name." "}}</span>
+                        <span style="color: #e27d00;">Branch:</span>
+                        @foreach($branch_lists as $branch_list)
+                            <span style="color: #5578eb;">{{$branch_list->branch_name}}</span><span style="color: #fd397a;">, </span>
+                        @endforeach
+                    </h6>
+                @endif --}}
+                {{-- @if(isset($data['customer_ids']) && count($data['customer_ids']) != 0)
+                @php
+                    $data['selected_customer'] = \App\Models\TblSaleCustomer::whereIn('customer_id',$data['customer_ids'])->get();
+                @endphp
+                    <h6 class="kt-invoice__criteria">
+                        <span style="color: #e27d00;">Customer:</span>
+                        @foreach($data['selected_customer'] as $selected_customer)
+                            <span style="color: #5578eb;">{{" ".ucfirst(strtolower($selected_customer->customer_name))}}</span><span style="color: #ff0000">,</span>
                         @endforeach
                     </h6>
                 @endif --}}
             </div>
-            {{-- @include('reports.template.branding') --}}
+            @include('reports.template.branding')
         </div>
         <div class="kt-portlet__body">
+        <?php
+       $qry = "SELECT DISTINCT
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.ORDER_AMOUNT,
+                    o.PAYMENT_STATUS,
+                    o.ORDER_STATUS,
+                    o.ORDER_TYPE,
+                    o.ORDER_TAKEN_BY,
+                    o.CREATED_AT,
+                    d.CUSTOMER_NAME,
+                    d.CAR_NUMBER,
+                    d.PHONE
+                FROM
+                    ORDERS o
+                LEFT JOIN
+                    POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
+                ORDER BY
+                    o.ORDER_SERIAL
+            ";
+
+
+        // where BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        //     and CUSTOMER_NAME NOT IN ('DELETE IT','Delete It')
+        //     and CUSTOMER_ENTRY_STATUS <> '0'
+
+        $list = \Illuminate\Support\Facades\DB::select($qry);
+        // $list = [];
+        // foreach ($getdata as $row){
+        //     $list[] = $row;
+        // }
+?>
             <div class="row row-block">
                 <div class="col-lg-12">
                     <table width="100%" id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
@@ -44,20 +84,17 @@
                             <th class="text-center">Order Date</th>
                             <th class="text-center">Customer Info</th>
                             <th class="text-center">Total Amount</th>
+                            <th class="text-center">Total Type</th>
                             <th class="text-center">Order Status</th>
-                            {{-- <th width="20%" class="text-left">Address</th> --}}
                         </tr>
-                        @foreach($data['customer'] as $customer)
-                        @php
-                            $city = \App\Models\TblDefiCity::where('city_id',$customer->city_id)->first();
-                        @endphp
+                        @foreach($list as $k=>$detail)
                             <tr>
-                                <td>{{$customer->customer_name}}</td>
-                                <td class="text-center">{{isset($city->city_name)? $city->city_name:''}}</td>
-                                <td class="text-center">{{$customer->customer_mobile_no}}</td>
-                                <td class="text-right">{{$customer->customer_email}}</td>
-                                <td class="text-right">{{$customer->customer_tax_no}}</td>
-                                <td class="text-left">{{$customer->customer_address}}</td>
+                                <td class="text-left">{{$detail->order_serial}}</td>
+                                <td class="text-center">{{date('d-m-Y', strtotime($detail->created_at))}}</td>
+                                <td class="text-left">{{$detail->customer_name ?? ''}} <br> {{$detail->car_number ?? ''}} <br> {{$detail->phone ?? ''}} </td>
+                                <td class="text-right">{{$detail->order_amount}}</td>
+                                <td class="text-left">{{$detail->order_type}}</td>
+                                <td class="text-left">{{$detail->order_status}}</td>
                            </tr>
                         @endforeach
                     </table>
@@ -92,6 +129,3 @@
         </script>
     @endif
 @endsection
-
-
-
