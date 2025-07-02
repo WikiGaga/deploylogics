@@ -15,6 +15,7 @@
 @section('content')
     @php
         $data = Session::get('data');
+        dd($data);
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
