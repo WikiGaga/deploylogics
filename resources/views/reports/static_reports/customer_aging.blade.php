@@ -77,178 +77,178 @@
                                     'branch_ids' => $data['branch_ids'],
                                 ];
                                 $opening_bal = \App\Library\CoreFunc::acco_opening_bal($paras);
-                                
+
                                 if($opening_bal < 0){
 
                                     $netAgingAmount =  $opening_bal ;
-		
+
                                     $totopenBal+= $opening_bal ;
-                                    
-                                    
+
+
                                     // ====== 15 days =====
 
-                                    $Days15 = date('Y-m-d', strtotime($data['date']. ' - 15 days'));  
-                                    $qry15 = "select sum(sales_net_amount) net_amount from 
+                                    $Days15 = date('Y-m-d', strtotime($data['date']. ' - 15 days'));
+                                    $qry15 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days15."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days15."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res15 = DB::select($qry15);
                                     $Days15Amount =  $res15[0]->net_amount ;
-                                    
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days15Amount )
                                     {
                                         $Days15Amount= $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days15Amount= $Days15Amount; 
-                                    } 
-                                    
-                                    $totDays15Amount+= $Days15Amount ; 
+                                        $Days15Amount= $Days15Amount;
+                                    }
+
+                                    $totDays15Amount+= $Days15Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days15Amount ;
                                     // ==========================================
 
                                     // ====== 30 days =====
-                                    
-                                    $Days30 = date('Y-m-d', strtotime($data['date']. ' - 30 days'));  
-                                    $qry30 = "select sum(sales_net_amount) net_amount from 
+
+                                    $Days30 = date('Y-m-d', strtotime($data['date']. ' - 30 days'));
+                                    $qry30 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days30."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days30."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res30 = DB::select($qry30);
                                     $Days30Amount =  $res30[0]->net_amount ;
-                                    
-                                    
+
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days30Amount )
                                     {
                                         $Days30Amount = $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days30Amount= $Days30Amount; 
-                                    } 
-                                    
-                                    $totDays30Amount+= $Days30Amount ; 
+                                        $Days30Amount= $Days30Amount;
+                                    }
+
+                                    $totDays30Amount+= $Days30Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days30Amount ;
                                     // ==========================================
 
                                     // ====== 45 days =====
-                                    
-                                    $Days45 = date('Y-m-d', strtotime($data['date']. ' - 45 days'));  
-                                    $qry45 = "select sum(sales_net_amount) net_amount from 
+
+                                    $Days45 = date('Y-m-d', strtotime($data['date']. ' - 45 days'));
+                                    $qry45 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days45."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days45."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res45 = DB::select($qry45);
                                     $Days45Amount =  $res45[0]->net_amount ;
-                                    
-                                    
+
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days45Amount )
                                     {
                                         $Days45Amount = $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days45Amount= $Days45Amount; 
-                                    } 
-                                    
-                                    $totDays45Amount+= $Days45Amount ; 
+                                        $Days45Amount= $Days45Amount;
+                                    }
+
+                                    $totDays45Amount+= $Days45Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days45Amount ;
                                     // ==========================================
 
                                     // ====== 60 days =====
-                                    
-                                    $Days60 = date('Y-m-d', strtotime($data['date']. ' - 60 days'));  
-                                    $qry60 = "select sum(sales_net_amount) net_amount from 
+
+                                    $Days60 = date('Y-m-d', strtotime($data['date']. ' - 60 days'));
+                                    $qry60 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days60."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days60."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res60 = DB::select($qry60);
                                     $Days60Amount =  $res60[0]->net_amount ;
-                                    
-                                    
+
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days60Amount )
                                     {
                                         $Days60Amount = $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days60Amount= $Days60Amount; 
-                                    } 
-                                    
-                                    $totDays60Amount+= $Days60Amount ; 
+                                        $Days60Amount= $Days60Amount;
+                                    }
+
+                                    $totDays60Amount+= $Days60Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days60Amount ;
                                     // ==========================================
 
                                     // ====== 90 days =====
-                                    
-                                    $Days90 = date('Y-m-d', strtotime($data['date']. ' - 90 days'));  
-                                    $qry90 = "select sum(sales_net_amount) net_amount from 
+
+                                    $Days90 = date('Y-m-d', strtotime($data['date']. ' - 90 days'));
+                                    $qry90 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days90."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days90."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res90 = DB::select($qry90);
                                     $Days90Amount =  $res90[0]->net_amount ;
-                                    
-                                    
+
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days90Amount )
                                     {
                                         $Days90Amount = $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days90Amount= $Days90Amount; 
-                                    } 
-                                    
-                                    $totDays90Amount+= $Days90Amount ; 
+                                        $Days90Amount= $Days90Amount;
+                                    }
+
+                                    $totDays90Amount+= $Days90Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days90Amount ;
                                     // ==========================================
 
                                     // ====== greater 90 days =====
-                                    
-                                    $Days1000 = date('Y-m-d', strtotime($data['date']. ' - 1000 days'));  
-                                    $qry1000 = "select sum(sales_net_amount) net_amount from 
+
+                                    $Days1000 = date('Y-m-d', strtotime($data['date']. ' - 1000 days'));
+                                    $qry1000 = "select sum(sales_net_amount) net_amount from
                                                 (
-                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')  
-                                                and sales_date  between  to_date ('".$Days1000."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
-                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id." 
+                                                select distinct  sales_id  , sales_code, sales_net_amount from vw_sale_sales_invoice where (sales_type = 'pos' or sales_type = 'si')
+                                                and sales_date  between  to_date ('".$Days1000."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd')
+                                                ".$where_common." and  customer_account_id = ".$chart_list->chart_account_id."
                                                 ) xyz";
                                     $res1000 = DB::select($qry1000);
                                     $Days1000Amount =  $res1000[0]->net_amount ;
-                                    
-                                    
+
+
                                     // ====== case if balance => invoiceAmount ==
-                                    
+
                                     if( $netAgingAmount < $Days1000Amount )
                                     {
                                         $Days1000Amount = $netAgingAmount;
                                     }
                                     else
                                     {
-                                        $Days1000Amount= $Days1000Amount; 
-                                    } 
-                                    
-                                    $totDays1000Amount+= $Days1000Amount ; 
+                                        $Days1000Amount= $Days1000Amount;
+                                    }
+
+                                    $totDays1000Amount+= $Days1000Amount ;
                                     $netAgingAmount =  $netAgingAmount -  $Days1000Amount ;
                                     // ==========================================
                         @endphp

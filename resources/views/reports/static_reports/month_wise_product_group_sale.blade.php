@@ -49,7 +49,7 @@
                         @endforeach
                     </h6>
                 @endif
-                
+
                 @if(count($data['supplier_ids']) != 0)
                     @php $suppliers = \Illuminate\Support\Facades\DB::table('tbl_purc_supplier')->whereIn('supplier_id',$data['supplier_ids'])->get(); @endphp
                     <h6 class="kt-invoice__criteria">
@@ -78,7 +78,7 @@
 
                         $whereSup = "";
                         $where = "";
-                        
+
                         if(isset($data['supplier_ids']) && count($data['supplier_ids']) != 0){
                             $whereSup .= " and SUP_PROD.SUPPLIER_ID in (".implode(",",$data['supplier_ids']).") ";
                         }
@@ -107,20 +107,20 @@
                                 }
                                 $where .= " ) ";
                             }
-                            
+
                             $query = "SELECT *
-                            FROM (SELECT 
+                            FROM (SELECT
                                     SALE.BRANCH_ID,
                                     SALE.BRANCH_NAME,
                                     $vendor
                                     SALE.GROUP_ITEM_NAME as GROUP_ITEM_PARENT_NAME,
                                     EXTRACT (MONTH FROM CAST (SALE.CREATED_AT AS TIMESTAMP)) AS month1,
                                     SALE.SALES_DTL_AMOUNT
-                                FROM 
+                                FROM
                                     VW_SALE_SALES_INVOICE SALE
                                     $vendorfrom
                                 WHERE SALE.branch_id IN (".implode(",",$data['branch_ids']).")
-                                    and (SALE.SALES_DATE BETWEEN TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') AND TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')) 
+                                    and (SALE.SALES_DATE BETWEEN TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') AND TO_DATE('".$data['to_date']."', 'yyyy/mm/dd'))
                                     $vendorjoin
                                     $where
                                     $whereSup
@@ -138,7 +138,7 @@
                                     10 AS Oct,
                                     11 AS Nov,
                                     12 AS Dec)
-                            ) 
+                            )
                             ORDER BY GROUP_ITEM_PARENT_NAME";
                         }else{
 
@@ -156,7 +156,7 @@
                             }
 
                             $query = "SELECT *
-                            FROM (SELECT 
+                            FROM (SELECT
                                     SALE.BRANCH_ID,
                                     SALE.BRANCH_NAME,
                                     $vendor
@@ -164,11 +164,11 @@
                                     SALE.GROUP_ITEM_PARENT_NAME,
                                     EXTRACT (MONTH FROM CAST (SALE.CREATED_AT AS TIMESTAMP)) AS month1,
                                     SALE.SALES_DTL_AMOUNT
-                                FROM 
+                                FROM
                                     VW_SALE_SALES_INVOICE SALE
                                     $vendorfrom
                                 WHERE SALE.branch_id IN (".implode(",",$data['branch_ids']).")
-                                    and (SALE.SALES_DATE BETWEEN TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') AND TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')) 
+                                    and (SALE.SALES_DATE BETWEEN TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') AND TO_DATE('".$data['to_date']."', 'yyyy/mm/dd'))
                                     $vendorjoin
                                     $where
                                     $whereSup
@@ -186,10 +186,10 @@
                                     10 AS Oct,
                                     11 AS Nov,
                                     12 AS Dec)
-                            ) 
+                            )
                             ORDER BY GROUP_ITEM_PARENT_NAME";
                         }
-                        
+
                // dd($query);
                         $getdata = DB::select($query);
 
@@ -315,7 +315,7 @@
                                         $totOct += $item->oct;
                                         $totNov += $item->nov;
                                         $totDec += $item->dec;
-                                        
+
                                         $gtotJan += $item->jan;
                                         $gtotFeb += $item->feb;
                                         $gtotMarch += $item->march;
@@ -440,7 +440,7 @@
                         dataType	: 'json',
                         data        : formData,
                         success: function(response,data) {
-                            
+
                             if(response.status == 'success'){
                                 toastr.success(response.message);
                                 window.open(response['data']['url'], parseInt(Math.random()*10000000000));
