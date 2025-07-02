@@ -64,7 +64,8 @@
                                     <div class="col-lg-3">
                                         <label class="erp-col-form-label">Title:</label>
                                         <input type="text" name="listing_studio_title"
-                                            class="form-control erp-form-control-sm" value="{{ isset($title) ? $title : '' }}" />
+                                            class="form-control erp-form-control-sm"
+                                            value="{{ isset($title) ? $title : '' }}" />
                                     </div>
                                     <div class="col-lg-3">
                                         <label class="erp-col-form-label">Case Name:</label>
@@ -128,7 +129,8 @@
                                                     {{ $listing_studio_view_type == 'business' ? 'selected' : '' }}>Business
                                                 </option>
                                                 <option value="branch"
-                                                    {{ $listing_studio_view_type == 'branch' ? 'selected' : '' }}>Branch</option>
+                                                    {{ $listing_studio_view_type == 'branch' ? 'selected' : '' }}>Branch
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
@@ -138,9 +140,11 @@
                                             <select
                                                 class="form-control kt-select2 erp-form-control-sm listing_studio_select_menu"
                                                 name="listing_studio_select_menu">
-                                                <option value="help" {{ $select_menu == 'help' ? 'selected' : '' }}>Help</option>
+                                                <option value="help" {{ $select_menu == 'help' ? 'selected' : '' }}>Help
+                                                </option>
                                                 <option value="main_listing"
-                                                    {{ $select_menu == 'main_listing' ? 'selected' : '' }}>Main Listing</option>
+                                                    {{ $select_menu == 'main_listing' ? 'selected' : '' }}>Main Listing
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
@@ -166,9 +170,11 @@
                                                     class="form-control kt-select2 erp-form-control-sm listing_studio_parent_menu"
                                                     name="listing_studio_parent_menu">
                                                     <option value="0">Select</option>
-                                                    <option value="accounts" {{ $parent_menu == 'accounts' ? 'selected' : '' }}>
+                                                    <option value="accounts"
+                                                        {{ $parent_menu == 'accounts' ? 'selected' : '' }}>
                                                         Accounts</option>
-                                                    <option value="stock" {{ $parent_menu == 'stock' ? 'selected' : '' }}>Stock
+                                                    <option value="stock" {{ $parent_menu == 'stock' ? 'selected' : '' }}>
+                                                        Stock
                                                     </option>
                                                     <option value="day" {{ $parent_menu == 'day' ? 'selected' : '' }}>Day
                                                     </option>
@@ -1659,7 +1665,7 @@
             tags: true
         });
         $(".listing_studio_join_table_column_name,.listing_studio_join_table_column_title").on("select2:select", function(
-        e) {
+            e) {
             var id = e.params.data.id;
             var option = $(e.target).children("[value='" + id + "']");
             option.detach();
