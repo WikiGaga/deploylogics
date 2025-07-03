@@ -47,7 +47,7 @@
                     </h6>
                 @endif --}}
             </div>
-            @include('reports.template.branding')
+            {{-- @include('reports.template.branding') --}}
         </div>
         <div class="kt-portlet__body">
         <?php
