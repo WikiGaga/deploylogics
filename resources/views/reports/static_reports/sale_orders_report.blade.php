@@ -94,6 +94,7 @@
                             <th class="text-center">Total Amount</th>
                             <th class="text-center">Total Type</th>
                             <th class="text-center">Order Status</th>
+                            <th class="text-center">Payment Status</th>
                         </tr>
                         @foreach($list as $k=>$detail)
                         @php
@@ -106,13 +107,14 @@
                                 <td class="text-center">{{$detail->order_amount}}</td>
                                 <td class="text-center">{{$detail->order_type}}</td>
                                 <td class="text-center">{{$detail->order_status}}</td>
+                                <td class="text-center">{{$detail->payment_status}}</td>
                            </tr>
 
                         @endforeach
                         <tr class="grand_total">
                             <td colspan="3" class="fw-bold rep-font-bold">Total</td>
                             <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
-                            <td colspan="2" class="rep-font-bold"></td>
+                            <td colspan="3" class="rep-font-bold"></td>
 
                         </tr>
                     </table>
