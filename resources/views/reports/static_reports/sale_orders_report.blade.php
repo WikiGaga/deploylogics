@@ -110,8 +110,8 @@
 
                         @endforeach
                         <tr class="grand_total">
-                            <td colspan="3" class="rep-font-bold">Total</td>
-                            <td class="text-right rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
+                            <td colspan="3" class="fw-bold rep-font-bold">Total</td>
+                            <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
                             <td colspan="2" class="rep-font-bold"></td>
 
                         </tr>
