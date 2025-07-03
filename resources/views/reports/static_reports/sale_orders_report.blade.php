@@ -15,6 +15,7 @@
 @section('content')
     @php
         $data = Session::get('data');
+        $gTotalAmount = 0;
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -95,15 +96,25 @@
                             <th class="text-center">Order Status</th>
                         </tr>
                         @foreach($list as $k=>$detail)
+                        @php
+                        $gTotalAmount += $detail->order_amount;
+                        @endphp
                             <tr>
                                 <td class="text-left">{{$detail->order_serial}}</td>
                                 <td class="text-center">{{date('d-m-Y', strtotime($detail->created_at))}}</td>
-                                <td class="text-left">{{$detail->customer_name ?? ''}} <br> {{$detail->car_number ?? ''}} <br> {{$detail->phone ?? ''}} </td>
-                                <td class="text-right">{{$detail->order_amount}}</td>
-                                <td class="text-left">{{$detail->order_type}}</td>
-                                <td class="text-left">{{$detail->order_status}}</td>
+                                <td class="text-center">{{$detail->customer_name ?? ''}} <br> {{$detail->car_number ?? ''}} <br> {{$detail->phone ?? ''}} </td>
+                                <td class="text-center">{{$detail->order_amount}}</td>
+                                <td class="text-center">{{$detail->order_type}}</td>
+                                <td class="text-center">{{$detail->order_status}}</td>
                            </tr>
+
                         @endforeach
+                        <tr class="grand_total">
+                            <td colspan="3" class="rep-font-bold">Total</td>
+                            <td class="text-right rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
+                            <td colspan="2" class="rep-font-bold"></td>
+
+                        </tr>
                     </table>
                 </div>
             </div>
