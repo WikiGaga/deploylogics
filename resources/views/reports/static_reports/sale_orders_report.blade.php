@@ -15,12 +15,16 @@
 @section('content')
     @php
         $data = Session::get('data');
-        dd($data);
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
             <div class="kt-invoice__brand">
                 <h1 class="kt-invoice__title">{{strtoupper($data['page_title'])}}</h1>
+                <h6 class="kt-invoice__criteria">
+                    <span style="color: #e27d00;">Date From:</span>
+                    <span style="color: #5578eb;">{{" ".date('d-m-Y', strtotime($data['date_time_from']))}}</span> - <span style="color: #e27d00;">Date To:</span>
+                    <span style="color: #5578eb;">{{" ".date('d-m-Y', strtotime($data['date_time_to']))}}</span>
+                </h6>
                 {{-- @if(count($data['branch_ids']) != 0)
                     @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->get('branch_name'); @endphp
                     <h6 class="kt-invoice__criteria">
@@ -47,24 +51,26 @@
         <div class="kt-portlet__body">
         <?php
        $qry = "SELECT DISTINCT
-                    o.ID,
-                    o.ORDER_SERIAL,
-                    o.ORDER_AMOUNT,
-                    o.PAYMENT_STATUS,
-                    o.ORDER_STATUS,
-                    o.ORDER_TYPE,
-                    o.ORDER_TAKEN_BY,
-                    o.CREATED_AT,
-                    d.CUSTOMER_NAME,
-                    d.CAR_NUMBER,
-                    d.PHONE
-                FROM
-                    ORDERS o
-                LEFT JOIN
-                    POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
-                ORDER BY
-                    o.ORDER_SERIAL
-            ";
+            o.ID,
+            o.ORDER_SERIAL,
+            o.ORDER_AMOUNT,
+            o.PAYMENT_STATUS,
+            o.ORDER_STATUS,
+            o.ORDER_TYPE,
+            o.ORDER_TAKEN_BY,
+            o.CREATED_AT,
+            d.CUSTOMER_NAME,
+            d.CAR_NUMBER,
+            d.PHONE
+        FROM
+            ORDERS o
+        LEFT JOIN
+            POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
+        WHERE
+            o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+        ORDER BY
+            o.ORDER_SERIAL";
+
 
 
         // where BRANCH_ID IN (".implode(",",$data['branch_ids']).")
