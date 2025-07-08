@@ -98,9 +98,9 @@
                             <th class="text-center">Order Type</th>
                             <th class="text-center">Order Status</th>
                             <th class="text-center">Payment Status</th>
+                            <th class="text-center">Order Amount</th>
                             <th class="text-center">Cash Amount</th>
                             <th class="text-center">Card Amount</th>
-                            <th class="text-center">Total Amount</th>
                         </tr>
                         @foreach($list as $k=>$detail)
                         @php
@@ -115,17 +115,17 @@
                                 <td class="text-center">{{$detail->order_type}}</td>
                                 <td class="text-center">{{$detail->order_status}}</td>
                                 <td class="text-center">{{$detail->payment_status}}</td>
+                                <td class="text-center">{{$detail->order_amount}}</td>
                                 <td class="text-center">{{$detail->cash_paid}}</td>
                                 <td class="text-center">{{$detail->card_paid}}</td>
-                                <td class="text-center">{{$detail->order_amount}}</td>
                            </tr>
 
                         @endforeach
                         <tr class="grand_total">
                             <td colspan="6" class="fw-bold rep-font-bold">Total</td>
+                            <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
                             <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalCash,3)}}</td>
                             <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalCard,3)}}</td>
-                            <td class="text-center fw-bold rep-font-bold">{{number_format($gTotalAmount,3)}}</td>
                         </tr>
                     </table>
                 </div>
