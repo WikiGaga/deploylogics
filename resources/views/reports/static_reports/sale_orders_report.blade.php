@@ -100,7 +100,7 @@
                             <th class="text-center">Payment Status</th>
                             <th class="text-center">Order Amount</th>
                             <th class="text-center">Cash Amount</th>
-                            <th class="text-center">Card Amount</th>
+                            <th class="text-center">Visa Amount</th>
                         </tr>
                         @foreach($list as $k=>$detail)
                         @php
