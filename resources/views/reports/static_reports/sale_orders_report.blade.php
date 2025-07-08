@@ -15,6 +15,8 @@
 @section('content')
     @php
         $data = Session::get('data');
+        $gTotalCash = 0;
+        $gTotalCard = 0;
         $gTotalAmount = 0;
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
