@@ -64,7 +64,7 @@
             d.CAR_NUMBER,
             d.PHONE,
             d.cash_paid,
-            d.card_paid,
+            d.card_paid
         FROM
             ORDERS o
         LEFT JOIN
