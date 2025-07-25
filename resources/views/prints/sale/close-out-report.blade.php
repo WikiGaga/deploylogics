@@ -29,23 +29,23 @@
 </style>
 @endsection
 
-@section('title', 'POS DUMMY SLIP')
+@section('title', 'Close Out Report')
 @section('content')
 <div class="thermal_print_body">
-    <div class="main_heading">POS Session Activity Report</div>
-    <div class="main_heading cls_shift">Counter: Terminal 1</div>
-    <div class="main_heading cls_shift">Shift A</div>
+    <div class="main_heading">Malek al atemah <br> international llc </div>
+    <div class="main_heading cls_shift">CR No. 1356079 <br> Oman <br> 0098348412712 </div>
+    <div class="main_heading cls_shift">Close Out Report</div>
 
     <div class="basic_info">
-        <div><span>Opening Date:</span> <span style="margin-left: 10px;">01-Jan-2025 Wed 09:00 AM</span></div>
-        <div><span>Closing Date:</span> <span style="margin-left: 17px;">01-Jan-2025 Wed 06:00 PM</span></div>
-        <div><span>Salesman:</span> <span style="margin-left: 35px;">John Doe</span></div>
+        <div><span>Sign In Date:</span> <span style="margin-left: 10px;">01-Jan-2025 Wed 09:00 AM</span></div>
+        <div><span>Sign Out Date:</span> <span style="margin-left: 17px;">01-Jan-2025 Wed 06:00 PM</span></div>
+        {{-- <div><span>Salesman:</span> <span style="margin-left: 35px;">John Doe</span></div> --}}
     </div>
 
-    <div class="main_heading">POS DOCUMENT ACTIVITY</div>
+    <div class="main_heading">A. Cash In/Out</div>
     <table width="100%" class="pos_document_activity">
-        <tr><th>Document Type</th><th># of Doc.</th><th>Amount</th><th>Discount</th></tr>
-        <tr><td>Sales Invoice</td><td class="text-right">10</td><td class="text-right">5000</td><td class="text-right">250</td></tr>
+        <tr><td>Beginning Balance</td><td class="text-right">0.000</td></tr>
+        <tr><td>Total Cash Sales</td><td class="text-right">126.298</td></tr>
     </table>
 
     <div class="main_heading">CASH RECEIVED SUMMARY</div>
