@@ -110,7 +110,7 @@
 
     <table width="100%" class="footer_table" style="border-top: 2px solid #000; margin-top: 10px;">
         <tr><td>Operator: Jane Admin</td></tr>
-        <tr><td>Software Developed By: <strong>Royalsoft</strong></td></tr>
+        <tr><td>Software Developed By: <strong>DeployLogics</strong></td></tr>
         <tr><td>Print Date & Time: {{ date('d-m-Y h:i:s') }}</td></tr>
     </table>
 </div>
