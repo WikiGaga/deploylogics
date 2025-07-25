@@ -511,6 +511,10 @@ class UserReportController extends Controller
             abort('404');
         }
     }
+
+    public function closeOutReport(){
+        return view('prints.sale.close-out-report');
+    }
     public function DayClosing(){
         $data = Session::get('data');
         if($data['key'] == 'closing_day'){

@@ -408,6 +408,9 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('delete/{id}','Sales\DayController@destroy');
             Route::get('print/{id}','Sales\DayController@print');
         });
+
+        Route::get('close-out-report','Report\UserReportController@closeOutReport')->name('report.close-out-report');
+        
         Route::prefix('day')->group(function () {
             Route::post('get-pos-shift','Sales\DayController@getPosShiftData')->name('getPosShiftData');
         });
