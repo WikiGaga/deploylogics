@@ -1070,11 +1070,10 @@ class DataTableController extends Controller
                     ->join('tbl_purc_product_barcode b','b.product_id','=','p.product_id')
                     ->join('tbl_defi_uom uom','uom.uom_id','=','b.uom_id')
                     ->join('vw_purc_group_item item','item.group_item_id','=','p.group_item_id' )
-                    ->join('vw_purc_group_item item','item.group_parent_item_id','=','p.group_item_parent_id' )
+                    // ->join('vw_purc_group_item item','item.group_parent_item_id','=','p.group_item_parent_id' )
                     ->select('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->groupby('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->limit(50)->get();
-                    dd($data['list']);
             }
             if(isset($request->val)){
                 $p_str = strtoupper($request->val);
