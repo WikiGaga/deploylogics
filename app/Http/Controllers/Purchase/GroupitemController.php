@@ -45,7 +45,6 @@ class GroupitemController extends Controller
      */
     public function create(Request $request, $id = null)
     {
-        dd($request->all());
         $data['page_data'] = [];
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;;

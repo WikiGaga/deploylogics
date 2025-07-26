@@ -132,8 +132,9 @@ class ProductCardController extends Controller
         }
         $data['country'] = TblDefiCountry::where(Utilities::currentBC())->get();
         $data['warranty_period'] = TblPurcWarrentyPeriod::where('warrenty_period_entry_status',1)->where(Utilities::currentBC())->get();
-        $data['group_item'] = ViewPurcGroupItem::where('group_item_level',3)->orderBy('group_item_name_string')
-        // ->where(Utilities::currentBC())
+        $data['group_item'] = ViewPurcGroupItem::orderBy('group_item_name_string')
+        // where('group_item_level',3)
+        ->where(Utilities::currentBC())
         ->get();
         dd($data['group_item']);
         $data['item_type'] = TblSoftProductTypeGroup::where('product_type_group_entry_status',1)->where(Utilities::currentBC())->get();
