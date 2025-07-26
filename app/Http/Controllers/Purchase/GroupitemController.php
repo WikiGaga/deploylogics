@@ -45,6 +45,7 @@ class GroupitemController extends Controller
      */
     public function create(Request $request, $id = null)
     {
+        dd($request->all());
         $data['page_data'] = [];
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;;
@@ -127,7 +128,7 @@ class GroupitemController extends Controller
                 {
                     $vExist = TblPurcProduct::where('group_item_id',$id)
                         ->where('product_id',$productid->product_id);
-                   
+
                     if($vExist->exists()){
                         $vExist->update([
                         'group_item_parent_id'=> $GroupItem->parent_group_id,
