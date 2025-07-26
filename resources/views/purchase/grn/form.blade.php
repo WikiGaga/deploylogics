@@ -85,8 +85,8 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-3 col-form-label">Supplier:<span class="required">*</span></label>
-                                    <div class="col-lg-9">
+                                    <label class="col-lg-6 col-form-label">Supplier:<span class="required">*</span></label>
+                                    <div class="col-lg-6">
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
                                                 <div class="input-group-prepend">
@@ -99,9 +99,6 @@
                                                 <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help"  id="mobOpenInlineSupplierHelp">
                                                         <i class="la la-search"></i>
-                                                    </span>
-                                                    <span class="input-group-text group-input-btn" id="getPOData">
-                                                        GO
                                                     </span>
                                                 </div>
                                             </div>
@@ -125,6 +122,9 @@
                                                 <div class="input-group-append">
                                                     <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
                                                         <i class="la la-search"></i>
+                                                    </span>
+                                                    <span class="input-group-text group-input-btn" id="getPOData">
+                                                        GO
                                                     </span>
                                                 </div>
                                             </div>
