@@ -894,7 +894,7 @@ class DataTableController extends Controller
                 B.SUPPLIER_ID = S.SUPPLIER_ID AND B.SUPPLIER_ID = ". $value->supplier_id ."
                 AND  B.business_id = ". auth()->user()->business_id ." AND B.branch_id = " . auth()->user()->branch_id;
                 $returnable = DB::select($supplierReturnableQuery);
-                
+
                 if(count($returnable) > 0){
                     if($returnable[0]->pending_qty > 0){
                         $value->supplier_has_returnable = 1;
@@ -1074,7 +1074,7 @@ class DataTableController extends Controller
                     ->select('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->groupby('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->limit(50)->get();
-                    // dd($data['list']);
+                    dd($data['list']);
             }
             if(isset($request->val)){
                 $p_str = strtoupper($request->val);
