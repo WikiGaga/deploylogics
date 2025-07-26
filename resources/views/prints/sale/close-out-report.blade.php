@@ -25,6 +25,7 @@
     }
 
     .pos_table td:first-child { border-left: 1px dotted; }
+    .pos_table th:first-child { border-left: 1px dotted; }
     .pos_table tr:last-child td { border-bottom: 1px dotted; }
 
     .total_amount { font-size: 13px; font-weight: bold; }
