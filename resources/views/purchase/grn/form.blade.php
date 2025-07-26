@@ -85,8 +85,8 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Supplier:<span class="required">*</span></label>
-                                    <div class="col-lg-6">
+                                    <label class="col-lg-3 col-form-label">Supplier:<span class="required">*</span></label>
+                                    <div class="col-lg-9">
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
                                                 <div class="input-group-prepend">
