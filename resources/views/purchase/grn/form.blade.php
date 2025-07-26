@@ -100,6 +100,9 @@
                                                     <span class="input-group-text btn-open-mob-help"  id="mobOpenInlineSupplierHelp">
                                                         <i class="la la-search"></i>
                                                     </span>
+                                                    <span class="input-group-text group-input-btn" id="getPOData">
+                                                        GO
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -108,8 +111,8 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-4 col-form-label">PO:</label>
-                                    <div class="col-lg-8">
+                                    <label class="col-lg-6 col-form-label">PO:</label>
+                                    <div class="col-lg-6">
                                         <div class="erp_form___block" id="select_po">
                                             <div class="input-group open-modal-group">
                                                 <div class="input-group-prepend">
@@ -1293,6 +1296,245 @@
                 $(document).unbind("ajaxStop");
             });
         });
+
+
+var poXhr = true;
+        $(document).on('click','#getPOData',function(){
+            var purchase_order_id = $('#purchase_order_id').val();
+            var code = $('#purchase_order').val().trim();
+            var validate = true;
+            if(valueEmpty(code) && valueEmpty(purchase_order_id)){
+                toastr.error("PO No must be selected.");
+                validate = false;
+            }
+            if(poXhr && validate){
+                poXhr = false;
+                $('body').addClass('pointerEventsNone');
+                $.ajax({
+                    type: 'GET',
+                    url: '/grn/po/' + code,
+                    success: function(response, data) {
+                        //console.log(response);
+                        //console.log(data);
+                        if (response['status'] == 'success') {
+                            // $('.erp_form__grid_body>tr>td:first-child').each(function() {
+                            //     var purchase_order_id = $(this).find('input[data-id="purchase_order_id"]').val();
+                            //     if (purchase_order_id) {
+                            //         $(this).parents('tr').remove();
+                            //     }
+                            // });
+                            // updateKeys();
+                            var tr = '';
+                            var total_length = $('.erp_form__grid_body>tr').length;
+
+                            function notNullNo(val) {
+                                if (val == null) {
+                                    return "";
+                                } else {
+                                    return val = parseFloat(val).toFixed(3);
+                                }
+                            }
+                            var tax_on_list = response['tax_on'];
+                            var disc_on_list = response['disc_on'];
+                            for (var p = 0; p < response['all'].length; p++) {
+                                total_length++;
+                                var row = response['all'][p];
+                                var tax_on_options = "";
+                                tax_on_list.forEach(function(item){
+                                    var item_val = (item.constants_value).toLowerCase();
+                                    var selected_val = notNull(row['purchase_order_dtltax_on']);
+                                    var option_select = (item_val == selected_val)?"selected":"";
+                                    tax_on_options += '<option value="'+item_val+'" '+option_select+'>'+item.constants_value+'</option>';
+                                })
+                                var disc_on_options = "";
+                                disc_on_list.forEach(function(item){
+                                    var item_val = (item.constants_value).toLowerCase();
+                                    var selected_val = notNull(row['purchase_order_dtldisc_on']);
+                                    var option_select = (item_val == selected_val)?"selected":"";
+                                    disc_on_options += '<option value="'+item_val+'" '+option_select+'>'+item.constants_value+'</option>';
+                                })
+                                tr += '<tr>' +
+                                    '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
+                                    '<input type="text" name="pd['+ total_length +'][sr_no]"  data-id="sr_no" value="' + total_length + '" title="' + total_length + '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][po_id]" data-id="po_id" value="' + row['purchase_order_id'] + '" class="po_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length + '][product_id]" data-id="product_id" value="' + notNull(row['product_id']) + '" class="product_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][product_barcode_id]" data-id="product_barcode_id" value="' +notNull(row['product_barcode_id']) +'"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +'"class="uom_id form-control erp-form-control-sm " readonly>' +
+                                    '</td>' +
+                                    // '<td><input type="text" name="pd[' + total_length +'][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" title="" class="sup_barcode form-control erp-form-control-sm moveIndex" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][pd_barcode]" data-id="pd_barcode" value="' + notNull(row['product_barcode_barcode']) + '" title="' + notNull( row['product_barcode_barcode']) + '"  class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][product_name]" data-id="product_name" value="' + notNull(row['product_name']) + '" title="' + notNull(row['product_name']) + '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][quantity]" data-id="quantity" value="' + notNull(row['purchase_order_dtlquantity']) + '" title="' + notNull(row['purchase_order_dtlquantity']) +'" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][rate]" data-id="rate" value="' + notNullNo(row['purchase_order_dtlrate']) + '" title="' + notNullNo(row['purchase_order_dtlrate']) +'" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][sale_rate]" data-id="sale_rate" value="' + notNullNo(row['purchase_order_dtlsale_rate']) + '" title="' + notNullNo(row['purchase_order_dtlsale_rate']) +'" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][sys_qty]" data-id="sys_qty" value="' + notNull(row['purchase_order_dtlsys_quantity']) + '" title="' + notNull(row['purchase_order_dtlsys_quantity']) +'" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][mrp]" data-id="mrp" value="' + notNull(row['purchase_order_dtlmrp']) + '" title="' + notNull(row['purchase_order_dtlmrp']) +'" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][cost_amount]" data-id="cost_amount" value="' + notNullNo(row['purchase_order_dtlamount']) + '" title="' + notNullNo(row['purchase_order_dtlamount']) +'" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][dis_perc]" data-id="dis_perc" value="' + notNullNo(row['purchase_order_dtldisc_percent']) + '" title="' + notNullNo(row['purchase_order_dtldisc_percent']) +'" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][dis_amount]" data-id="dis_amount" value="' + notNullNo(row['purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row['purchase_order_dtldisc_amount']) +'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][after_dis_amount]" data-id="after_dis_amount" value="' + notNullNo(row['purchase_order_dtlafter_dis_amount']) + '" title="' + notNullNo(row['purchase_order_dtlafter_dis_amount']) +'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td>' +
+                                    '<select class="pd_tax_on form-control erp-form-control-sm" name="pd[' + total_length + '][pd_tax_on]" data-id="pd_tax_on">' +
+                                    tax_on_options +
+                                    '</select>' +
+                                    '</td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gst_perc]" data-id="gst_perc" value="' + notNullNo(row['purchase_order_dtlvat_percent']) + '" title="' + notNullNo(row['purchase_order_dtlvat_perc']) +'" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][gst_amount]" data-id="gst_amount" value="' + notNullNo(row['purchase_order_dtlvat_amount']) + '" title="' + notNullNo(row['purchase_order_dtlvat_amount']) +'" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][fed_perc]" data-id="fed_perc" value="' + notNullNo(row['purchase_order_dtlfed_perc']) + '" title="' + notNullNo(row['purchase_order_dtlfed_perc']) +'" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][fed_amount]" data-id="fed_amount" value="' + notNullNo(row['purchase_order_dtlfed_amount']) + '" title="' + notNullNo(row['purchase_order_dtlfed_amount']) +'" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td>' +
+                                    '<select class="pd_disc form-control erp-form-control-sm" name="pd[' + total_length + '][pd_disc]" data-id="pd_disc">' +
+                                    disc_on_options +
+                                    '</select>' +
+                                    '</td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][spec_disc_perc]" data-id="spec_disc_perc" value="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) +'" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][spec_disc_amount]" data-id="spec_disc_amount" value="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) +'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gross_amount]" data-id="gross_amount" value="' + notNullNo(row['purchase_order_dtlgross_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgross_amount']) +'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][net_amount]" data-id="net_amount" value="' + notNullNo(row['purchase_order_dtltotal_amount']) + '" title="' + notNullNo(row['purchase_order_dtltotal_amount']) +'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][net_tp]" data-id="net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" title="' + notNullNo(row['purchase_order_dtlnet_tp']) +'" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][last_tp]" data-id="last_tp" value="' + notNullNo(row['purchase_order_dtllast_tp']) + '" title="' + notNullNo(row['purchase_order_dtllast_tp']) +'" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][vend_last_tp]" data-id="vend_last_tp" value="' + notNullNo(row['purchase_order_dtlvend_last_tp']) + '" title="' + notNullNo(row['purchase_order_dtlvend_last_tp']) +'" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][tp_diff]" data-id="tp_diff" value="' + notNullNo(row['purchase_order_dtltp_diff']) + '" title="' + notNullNo(row['purchase_order_dtltp_diff']) +'" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gp_perc]" data-id="gp_perc" value="' + notNullNo(row['purchase_order_dtlgp_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgp_perc']) +'" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gp_amount]" data-id="gp_amount" value="' + notNullNo(row['purchase_order_dtlgp_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgp_amount']) +'" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][remarks]" data-id="remarks" value="' + notNullNo(row['purchase_order_dtlremarks']) + '" title="' + notNullNo(row['purchase_order_dtlremarks']) +'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][fc_rate]" data-id="fc_rate" value="' + notNullNo(row['purchase_order_dtlfc_rate']) + '" title="' + notNullNo(row['purchase_order_dtlfc_rate']) +'" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][po_no]" data-id="po_no" value="' + row['purchase_order_code'] + '" class="po_no form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][po_net_tp]" data-id="po_net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
+                                    '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group">' +
+                                    '<button type="button" class="btn btn-danger gridBtn del_row"><i class="la la-trash"></i></button>' +
+                                    '</div></td>' +
+                                    '</tr>';
+
+
+                            }
+                            $('.erp_form__grid_body').append(tr);
+
+                            $('.erp_form__grid_body tr').each(function(){
+                                var thix = $(this);
+                                var product_id = thix.find('.product_id');
+                                funcHeaderCalc(thix);
+                                changeRateColor(product_id);
+                            })
+                            funcRowInit();
+                            updateHiddenFields();
+
+                        }else{
+                            toastr.error("PO No is not correct.");
+                        }
+                        poXhr = true;
+                        $('body').removeClass('pointerEventsNone');
+
+                    },
+                    error: function(response,status) {
+                        poXhr = true;
+                        $('body').removeClass('pointerEventsNone');
+                    }
+                });
+            }
+        })
+        function selectPO() {
+            $('#help_datatable_poHelp').on('click', 'tbody>tr', function(e) {
+                var code = $(this).find('td[data-field="purchase_order_code"]').text();
+                var po_id = $(this).find('td[data-field="purchase_order_id"]').text();
+                var payment_term_id = $(this).find('td[data-field="payment_mode_id"]').text();
+                var payment_term_days = $(this).find('td[data-field="purchase_order_credit_days"]').text();
+                var supplier_name = $(this).find('td[data-field="supplier_name"]').text();
+                var supplier_id = $(this).find('td[data-field="supplier_id"]').text();
+                var currency_id = $(this).find('td[data-field="currency_id"]').text();
+                var exchange_rate = $(this).find('td[data-field="purchase_order_exchange_rate"]').text();
+                $('#grn_form').find('#purchase_order').val(code);
+                $('#grn_form').find('#purchase_order_id').val(po_id);
+                $("#grn_ageing_term_id").val(payment_term_id).trigger('change');
+                $('#grn_form').find('#grn_ageing_term_value').val(payment_term_days);
+                $('#grn_form').find('#supplier_name').val(supplier_name);
+                $('#grn_form').find('#supplier_id').val(supplier_id);
+                $('#grn_form').find(".currency").val(currency_id).trigger('change');
+                $('#grn_form').find('#exchange_rate').val(exchange_rate);
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/grn/po/' + po_id,
+                    success: function(response, data) {
+                        //console.log(response);
+                        //console.log(data);
+                        if (data) {
+                            // $('#repeated_data>tr>td:first-child').each(function() {
+                            //     var purchase_order_id = $(this).find(
+                            //         'input[data-id="purchase_order_id"]').val();
+                            //     if (purchase_order_id) {
+                            //         $(this).parents('tr').remove();
+                            //     }
+                            // });
+                            // updateKeys();
+                            var tr = '';
+                            var total_length = $('#repeated_data>tr').length;
+
+                            function notNullNo(val) {
+                                if (val == null) {
+                                    return "";
+                                } else {
+                                    return val = parseFloat(val).toFixed(3);
+                                }
+                            }
+                            for (var p = 0; p < response['all'].length; p++) {
+                                total_length++;
+                                var row = response['all'][p];
+                                tr += '<tr>' +
+                                    '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
+                                    '<input type="text" name="pd['+ total_length +'][sr_no]" data-id="sr_no" value="' + total_length + '" title="' + total_length + '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][purc_grn_dtl_id]" data-id="purc_grn_dtl_id" value="" class="purc_grn_dtl_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][po_id]" data-id="po_id" value="' + po_id + '" class="po_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length + '][product_id]" data-id="product_id" value="' + notNull(row['product_id']) + '" class="product_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +'"class="uom_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +'][product_barcode_id]" data-id="product_barcode_id" value="' +notNull(row['product_barcode_id']) +'"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
+                                    '</td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][pd_barcode]" data-id="pd_barcode" value="' + notNull(row['barcode']['product_barcode_barcode']) + '" title="' + notNull( row['barcode']['product_barcode_barcode']) + '" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}" class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][product_name]" data-id="product_name" value="' + notNull(row['product']['product_name']) + '" title="' + notNull(row['product']['product_name']) + '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][quantity]" data-id="quantity" value="' + notNull(row['purchase_order_dtlquantity']) + '" title="' + notNull(row['purchase_order_dtlquantity']) +'" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][rate]" data-id="rate" value="' + notNullNo(row['purchase_order_dtlrate']) + '" title="' + notNullNo(row['purchase_order_dtlrate']) +'" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][sale_rate]" data-id="sale_rate" value="' + notNullNo(row['purchase_order_dtlsale_rate']) + '" title="' + notNullNo(row['purchase_order_dtlsale_rate']) +'" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][sys_qty]" data-id="sys_qty" value="' + notNull(row['purchase_order_dtlsys_quantity']) + '" title="' + notNull(row['purchase_order_dtlsys_quantity']) +'" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][mrp]" data-id="mrp" value="' + notNull(row['purchase_order_dtlmrp']) + '" title="' + notNull(row['purchase_order_dtlmrp']) +'" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][cost_amount]" data-id="cost_amount" value="' + notNullNo(row['purchase_order_dtlcost_amount']) + '" title="' + notNullNo(row['purchase_order_dtlcost_amount']) +'" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][dis_perc]" data-id="dis_perc" value="' + notNullNo(row['purchase_order_dtldisc_percent']) + '" title="' + notNullNo(row['purchase_order_dtldisc_percent']) +'" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][dis_amount]" data-id="dis_amount" value="' + notNullNo(row['purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row['purchase_order_dtldisc_amount']) +'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][after_dis_amount]" data-id="after_dis_amount" value="' + notNullNo(row['purchase_order_dtlafter_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlafter_disc_amount']) +'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][pd_tax_on]" data-id="pd_tax_on" value="' + notNull(row['purchase_order_dtltax_on']) + '" title="' + notNull(row['purchase_order_dtltax_on']) +'" class="pd_tax_on form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gst_perc]" data-id="gst_perc" value="' + notNullNo(row['purchase_order_dtlgst_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgst_perc']) +'" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][gst_amount]" data-id="gst_amount" value="' + notNullNo(row['purchase_order_dtlgst_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgst_amount']) +'" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][fed_perc]" data-id="fed_perc" value="' + notNullNo(row['purchase_order_dtlfed_perc']) + '" title="' + notNullNo(row['purchase_order_dtlfed_perc']) +'" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][fed_amount]" data-id="fed_amount" value="' + notNullNo(row['purchase_order_dtlfed_amount']) + '" title="' + notNullNo(row['purchase_order_dtlfed_amount']) +'" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][pd_disc]" data-id="pd_disc" value="' + notNull(row['purchase_order_dtldisc_on']) + '" title="' + notNull(row['purchase_order_dtldisc_on']) +'" class="pd_disc form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][spec_disc_perc]" data-id="spec_disc_perc" value="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) +'" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][spec_disc_amount]" data-id="spec_disc_amount" value="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) +'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gross_amount]" data-id="gross_amount" value="' + notNullNo(row['purchase_order_dtltotal_amount']) + '" title="' + notNullNo(row['purchase_order_dtltotal_amount']) +'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][net_amount]" data-id="net_amount" value="' + notNullNo(row['purchase_order_dtlnet_amount']) + '" title="' + notNullNo(row['purchase_order_dtlnet_amount']) +'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][net_tp]" data-id="net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" title="' + notNullNo(row['purchase_order_dtlnet_tp']) +'" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][last_tp]" data-id="last_tp" value="' + notNullNo(row['purchase_order_dtllast_tp']) + '" title="' + notNullNo(row['purchase_order_dtllast_tp']) +'" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][vend_last_tp]" data-id="vend_last_tp" value="' + notNullNo(row['purchase_order_dtlvend_last_tp']) + '" title="' + notNullNo(row['purchase_order_dtlvend_last_tp']) +'" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][tp_diff]" data-id="tp_diff" value="' + notNullNo(row['purchase_order_dtltp_diff']) + '" title="' + notNullNo(row['purchase_order_dtltp_diff']) +'" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gp_perc]" data-id="gp_perc" value="' + notNullNo(row['purchase_order_dtlgp_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgp_perc']) +'" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][gp_amount]" data-id="gp_amount" value="' + notNullNo(row['purchase_order_dtlgp_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgp_amount']) +'" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][remarks]" data-id="remarks" value="' + notNullNo(row['purchase_order_dtlremarks']) + '" title="' + notNullNo(row['purchase_order_dtlremarks']) +'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +'][fc_rate]" data-id="fc_rate" value="' + notNullNo(row['purchase_order_dtlfc_rate']) + '" title="' + notNullNo(row['purchase_order_dtlfc_rate']) +'" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][po_no]" data-id="po_no" value="' + row['purchase_order_code'] + '" class="po_no form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length + '][po_net_tp]" data-id="po_net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
+                                    '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group">' +
+                                    '<button type="button" class="btn btn-danger gridBtn del_row"><i class="la la-trash"></i></button>' +
+                                    '</div></td>' +
+                                    '</tr>';
+                            }
+                            $('#repeated_data').append(tr);
+                            addDataInit();
+                            allCalcFunc();
+                        }
+                    }
+                });
+                closeModal();
+            });
+        };
+
 
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v=1') }}" type="text/javascript"></script>
