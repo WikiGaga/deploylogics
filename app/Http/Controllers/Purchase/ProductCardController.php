@@ -135,7 +135,7 @@ class ProductCardController extends Controller
         $data['group_item'] = ViewPurcGroupItem::where('group_item_level',3)->orderBy('group_item_name_string')
         ->where(Utilities::currentBC())
         ->get();
-        dd($data['group_item']);
+        // dd($data['group_item']);
         $data['item_type'] = TblSoftProductTypeGroup::where('product_type_group_entry_status',1)->where(Utilities::currentBC())->get();
         $data['country'] = TblDefiCountry::where(Utilities::currentBC())->get();
         $data['branch'] = TblSoftBranch::where('branch_active_status',1)->where(Utilities::currentBC())->get();
