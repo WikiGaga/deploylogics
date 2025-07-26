@@ -108,8 +108,8 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">PO:</label>
-                                    <div class="col-lg-6">
+                                    <label class="col-lg-4 col-form-label">PO:</label>
+                                    <div class="col-lg-8">
                                         <div class="erp_form___block" id="select_po">
                                             <div class="input-group open-modal-group">
                                                 <div class="input-group-prepend">
