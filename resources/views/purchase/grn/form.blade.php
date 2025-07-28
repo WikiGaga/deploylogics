@@ -17,23 +17,22 @@
             background: #f0e130 !important;
             color: #000 !important;
         }
-
     </style>
 @endsection
 
 @section('content')
     @php
-    $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : '';
-    if ($case == 'new') {
-        $length = 0;
-        $currencySymbol = 'OMR';
-    }
-    if ($case == 'edit') {
-        $expense_dtls = isset($data['current']->grn_expense) ? $data['current']->grn_expense : [];
-        $length = count($expense_dtls);
-        $currencySymbol = $data['current']->currency->currency_symbol ?? 'OMR';
-    }
-    $form_type = $data['form_type'];
+        $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : '';
+        if ($case == 'new') {
+            $length = 0;
+            $currencySymbol = 'OMR';
+        }
+        if ($case == 'edit') {
+            $expense_dtls = isset($data['current']->grn_expense) ? $data['current']->grn_expense : [];
+            $length = count($expense_dtls);
+            $currencySymbol = $data['current']->currency->currency_symbol ?? 'OMR';
+        }
+        $form_type = $data['form_type'];
     @endphp
     @permission($data['permission'])
         <!--begin::Form-->
@@ -44,7 +43,7 @@
             <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
                 <div class="kt-portlet kt-portlet--mobile">
                     <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
-                        @include('elements.page_header',['page_data' => $data['page_data']])
+                        @include('elements.page_header', ['page_data' => $data['page_data']])
                     </div>
                     <div class="kt-portlet__body">
                         <div class="row form-group-block">
@@ -73,7 +72,9 @@
                                             @else
                                                 @php $due_date =  date('d-m-Y'); @endphp
                                             @endif
-                                            <input type="text" name="grn_date" autocomplete="off" class="form-control erp-form-control-sm moveIndex c-date-p" readonly value="{{ $due_date }}" id="kt_datepicker_3" autofocus />
+                                            <input type="text" name="grn_date" autocomplete="off"
+                                                class="form-control erp-form-control-sm moveIndex c-date-p" readonly
+                                                value="{{ $due_date }}" id="kt_datepicker_3" autofocus />
                                             <div class="input-group-append">
                                                 <span class="input-group-text">
                                                     <i class="la la-calendar"></i>
@@ -94,10 +95,17 @@
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
                                                 </div>
-                                                <input type="text" id="supplier_name" value="{{ isset($data['current']->supplier->supplier_name) ? $data['current']->supplier->supplier_name : '' }}" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}" autocomplete="off" name="supplier_name" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
-                                                <input type="hidden" id="supplier_id" name="supplier_id" value="{{ isset($data['current']->supplier->supplier_id) ? $data['current']->supplier->supplier_id : '' }}" />
+                                                <input type="text" id="supplier_name"
+                                                    value="{{ isset($data['current']->supplier->supplier_name) ? $data['current']->supplier->supplier_name : '' }}"
+                                                    data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
+                                                    autocomplete="off" name="supplier_name"
+                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    placeholder="Enter here">
+                                                <input type="hidden" id="supplier_id" name="supplier_id"
+                                                    value="{{ isset($data['current']->supplier->supplier_id) ? $data['current']->supplier->supplier_id : '' }}" />
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text btn-open-mob-help"  id="mobOpenInlineSupplierHelp">
+                                                    <span class="input-group-text btn-open-mob-help"
+                                                        id="mobOpenInlineSupplierHelp">
                                                         <i class="la la-search"></i>
                                                     </span>
                                                 </div>
@@ -117,10 +125,17 @@
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
                                                 </div>
-                                                <input type="text" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'poHelp') }}"  value="{{ isset($data['current']->PO->purchase_order_code) ? $data['current']->PO->purchase_order_code : '' }}" id="purchase_order" name="purchase_order" class="open_inline__help form-control erp-form-control-sm moveIndex"  placeholder="Enter here">
-                                                <input type="hidden" id="purchase_order_id" name="purchase_order_id" value="{{ isset($data['current']->PO->purchase_order_id) ? $data['current']->PO->purchase_order_id : '' }}" />
+                                                <input type="text"
+                                                    data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'poHelp') }}"
+                                                    value="{{ isset($data['current']->PO->purchase_order_code) ? $data['current']->PO->purchase_order_code : '' }}"
+                                                    id="purchase_order" name="purchase_order"
+                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    placeholder="Enter here">
+                                                <input type="hidden" id="purchase_order_id" name="purchase_order_id"
+                                                    value="{{ isset($data['current']->PO->purchase_order_id) ? $data['current']->PO->purchase_order_id : '' }}" />
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
+                                                    <span class="input-group-text btn-open-mob-help"
+                                                        id="mobOpenInlineSupplierHelp">
                                                         <i class="la la-search"></i>
                                                     </span>
                                                     <span class="input-group-text group-input-btn" id="getPOData">
@@ -139,11 +154,14 @@
                                     <label class="col-lg-6 col-form-label">Currency:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
-                                            <select class="form-control kt-select2 erp-form-control-sm moveIndex currency" id="kt_select2_1" name="grn_currency">
+                                            <select class="form-control kt-select2 erp-form-control-sm moveIndex currency"
+                                                id="kt_select2_1" name="grn_currency">
                                                 <option value="0">Select</option>
                                                 @if (isset($data['current']->currency_id))
                                                     @php
-                                                        $grn_currency = isset($data['current']->currency_id) ? $data['current']->currency_id : 0;
+                                                        $grn_currency = isset($data['current']->currency_id)
+                                                            ? $data['current']->currency_id
+                                                            : 0;
                                                         $exchange_rate = '';
                                                     @endphp
                                                     @foreach ($data['currency'] as $currency)
@@ -171,9 +189,12 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Exchange Rate:<span  class="required">*</span></label>
+                                    <label class="col-lg-6 col-form-label">Exchange Rate:<span
+                                            class="required">*</span></label>
                                     <div class="col-lg-6">
-                                        <input type="text" id="exchange_rate" name="exchange_rate" value="{{ isset($data['current']->grn_exchange_rate) ? $data['current']->grn_exchange_rate : $exchange_rate }}" class="form-control erp-form-control-sm moveIndex validNumber">
+                                        <input type="text" id="exchange_rate" name="exchange_rate"
+                                            value="{{ isset($data['current']->grn_exchange_rate) ? $data['current']->grn_exchange_rate : $exchange_rate }}"
+                                            class="form-control erp-form-control-sm moveIndex validNumber">
                                     </div>
                                 </div>
                             </div>
@@ -181,7 +202,9 @@
                                 <div class="row">
                                     <label class="col-lg-6 col-form-label">Bill No:</label>
                                     <div class="col-lg-6">
-                                        <input type="text" id="grn_bill_no" name="grn_bill_no" value="{{ isset($data['current']->grn_bill_no) ? $data['current']->grn_bill_no : '' }}" class="form-control erp-form-control-sm moveIndex">
+                                        <input type="text" id="grn_bill_no" name="grn_bill_no"
+                                            value="{{ isset($data['current']->grn_bill_no) ? $data['current']->grn_bill_no : '' }}"
+                                            class="form-control erp-form-control-sm moveIndex">
                                     </div>
                                 </div>
                             </div>
@@ -197,12 +220,16 @@
                                                 <option value="0">Select</option>
                                                 @foreach ($data['payment_terms'] as $payment_term)
                                                     @php $payment_terms_id = isset($data['current']->grn_ageing_term_id)?$data['current']->grn_ageing_term_id:''; @endphp
-                                                    <option value="{{ $payment_term->payment_term_id }}" {{ $payment_terms_id == $payment_term->payment_term_id ? 'selected' : '' }}>{{ $payment_term->payment_term_name }}</option>
+                                                    <option value="{{ $payment_term->payment_term_id }}"
+                                                        {{ $payment_terms_id == $payment_term->payment_term_id ? 'selected' : '' }}>
+                                                        {{ $payment_term->payment_term_name }}</option>
                                                 @endforeach
                                             </select>
                                             <div class="input-group-append" style="width: 33%;">
                                                 <input type="text"
-                                                    value="{{ isset($data['current']->grn_ageing_term_value) ? $data['current']->grn_ageing_term_value : '' }}" id="grn_ageing_term_value" name="grn_ageing_term_value" class="moveIndex form-control erp-form-control-sm validNumber">
+                                                    value="{{ isset($data['current']->grn_ageing_term_value) ? $data['current']->grn_ageing_term_value : '' }}"
+                                                    id="grn_ageing_term_value" name="grn_ageing_term_value"
+                                                    class="moveIndex form-control erp-form-control-sm validNumber">
                                             </div>
                                         </div>
                                     </div>
@@ -261,7 +288,8 @@
                                 <div class="row">
                                     <label class="col-lg-6 col-form-label">Select Products:</label>
                                     <div class="col-lg-6">
-                                        <button type="button" class="btn btn-brand btn-sm" id="makePD" style="padding: 4px 6px;">
+                                        <button type="button" class="btn btn-brand btn-sm" id="makePD"
+                                            style="padding: 4px 6px;">
                                             Select Multiple Products
                                         </button>
                                     </div>
@@ -298,9 +326,33 @@
                                             <i class="flaticon-more" style="color: #666666;"></i>
                                         </button>
                                         @php
-                                            $headings = ['Sr No', 'Barcode', 'Product Name', 'UOM', 'Packing', 'Sup Barcode', 'Qty', 'FOC Qty', 'Sale Rate', '<span class="fc_dynamic_title">'.$currencySymbol.' Rate (FC)</span>', 'Rate', 'Amount', 'Disc%', 'Disc Amt', 'VAT%', 'Vat Amt', 'Batch #', 'Production Date', 'Expiry Date', 'Gross Amt'];
+                                            $headings = [
+                                                'Sr No',
+                                                'Barcode',
+                                                'Product Name',
+                                                'UOM',
+                                                'Packing',
+                                                'Sup Barcode',
+                                                'Qty',
+                                                'FOC Qty',
+                                                'Sale Rate',
+                                                '<span class="fc_dynamic_title">' .
+                                                $currencySymbol .
+                                                ' Rate (FC)</span>',
+                                                'Rate',
+                                                'Amount',
+                                                'Disc%',
+                                                'Disc Amt',
+                                                'VAT%',
+                                                'Vat Amt',
+                                                'Batch #',
+                                                'Production Date',
+                                                'Expiry Date',
+                                                'Gross Amt',
+                                            ];
                                         @endphp
-                                        <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
+                                        <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown"
+                                            style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                             @foreach ($headings as $key => $heading)
                                                 <li>
                                                     <label>
@@ -312,17 +364,24 @@
                                         </ul>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Setting Save" data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon" id="pageUserSettingSave">
+                                        <button type="button" style="width: 30px;height: 30px;" title="Setting Save"
+                                            data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon"
+                                            id="pageUserSettingSave">
                                             <i class="la la-floppy-o"></i>
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Barcode Print" data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon" id="generatePriceTags">
+                                        <button type="button" style="width: 30px;height: 30px;" title="Barcode Print"
+                                            data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon"
+                                            id="generatePriceTags">
                                             <i class="la la-barcode"></i>
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Shelf Barcode Print" data-toggle="tooltip" class="btn btn-brand btn-success btn-elevate btn-circle btn-icon" id="generateShelfPriceTags">
+                                        <button type="button" style="width: 30px;height: 30px;" title="Shelf Barcode Print"
+                                            data-toggle="tooltip"
+                                            class="btn btn-brand btn-success btn-elevate btn-circle btn-icon"
+                                            id="generateShelfPriceTags">
                                             <i class="la la-barcode"></i>
                                         </button>
                                     </div>
@@ -341,7 +400,8 @@
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_title">
                                                         Barcode
-                                                        <button type="button" id="mobOpenInlineHelp" class="btn btn-primary btn-sm">
+                                                        <button type="button" id="mobOpenInlineHelp"
+                                                            class="btn btn-primary btn-sm">
                                                             <i class="la la-barcode"></i>
                                                         </button>
                                                     </div>
@@ -365,10 +425,12 @@
                                                     <div class="erp_form__grid_th_title">FOC Qty</div>
                                                 </th>
                                                 <th scope="col">
-                                                    <div class="erp_form__grid_th_title btn btn-sm sale_rate_barcode"  id="sale_barcode">Sale Rate</div>
+                                                    <div class="erp_form__grid_th_title btn btn-sm sale_rate_barcode"
+                                                        id="sale_barcode">Sale Rate</div>
                                                 </th>
                                                 <th scope="col">
-                                                    <div class="erp_form__grid_th_title fc_dynamic_title">{{ $currencySymbol }} Rate (FC)</div>
+                                                    <div class="erp_form__grid_th_title fc_dynamic_title">
+                                                        {{ $currencySymbol }} Rate (FC)</div>
                                                 </th>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_title">Rate</div>
@@ -411,7 +473,12 @@
                                                     @php
                                                         $rateColorClass = '';
                                                         $rate = number_format($dtl->tbl_purc_grn_dtl_rate, 3);
-                                                        $po_rate = isset($dtl->grn_dtl_po_rate) && $dtl->grn_dtl_po_rate != null && $dtl->grn_dtl_po_rate != '' ? number_format($dtl->grn_dtl_po_rate, 3) : '';
+                                                        $po_rate =
+                                                            isset($dtl->grn_dtl_po_rate) &&
+                                                            $dtl->grn_dtl_po_rate != null &&
+                                                            $dtl->grn_dtl_po_rate != ''
+                                                                ? number_format($dtl->grn_dtl_po_rate, 3)
+                                                                : '';
                                                         if ($rate == $po_rate) {
                                                             $rateColorClass = 'grn_green';
                                                         }
@@ -424,38 +491,143 @@
                                                     @endphp
                                                     <tr>
                                                         <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
-                                                            <input type="text" value="{{ $loop->iteration }}" name="pd[{{ $loop->iteration }}][sr_no]" class="form-control erp-form-control-sm handle" readonly>
-                                                            <input type="hidden" name="pd[{{ $loop->iteration }}][purc_grn_dtl_id]" data-id="purc_grn_dtl_id" value="{{ $dtl->purc_grn_dtl_id }}"  class="purc_grn_dtl_id form-control erp-form-control-sm handle"readonly>
-                                                            <input type="hidden" name="pd[{{ $loop->iteration }}][product_id]"   data-id="product_id"  value="{{ isset($dtl->product->product_id) ? $dtl->product->product_id : '' }}" class="product_id form-control erp-form-control-sm handle" readonly>
-                                                            <input type="hidden" name="pd[{{ $loop->iteration }}][uom_id]" data-id="uom_id" value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}" class="uom_id form-control erp-form-control-sm handle" readonly>
-                                                            <input type="hidden" name="pd[{{ $loop->iteration }}][product_barcode_id]"  data-id="product_barcode_id" value="{{ isset($dtl->product_barcode_id) ? $dtl->product_barcode_id : '' }}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
-                                                            <input readonly type="hidden" data-id="grn_supplier_id" name="pd[{{ $loop->iteration }}][grn_supplier_id]" value="" class="grn_supplier_id form-control erp-form-control-sm">
-                                                            <input readonly type="hidden" data-id="grn_dtl_po_rate" name="pd[{{ $loop->iteration }}][grn_dtl_po_rate]" value="{{ $po_rate }}" class="grn_dtl_po_rate form-control erp-form-control-sm">
+                                                            <input type="text" value="{{ $loop->iteration }}"
+                                                                name="pd[{{ $loop->iteration }}][sr_no]"
+                                                                class="form-control erp-form-control-sm handle" readonly>
+                                                            <input type="hidden"
+                                                                name="pd[{{ $loop->iteration }}][purc_grn_dtl_id]"
+                                                                data-id="purc_grn_dtl_id" value="{{ $dtl->purc_grn_dtl_id }}"
+                                                                class="purc_grn_dtl_id form-control erp-form-control-sm handle"readonly>
+                                                            <input type="hidden"
+                                                                name="pd[{{ $loop->iteration }}][product_id]"
+                                                                data-id="product_id"
+                                                                value="{{ isset($dtl->product->product_id) ? $dtl->product->product_id : '' }}"
+                                                                class="product_id form-control erp-form-control-sm handle"
+                                                                readonly>
+                                                            <input type="hidden" name="pd[{{ $loop->iteration }}][uom_id]"
+                                                                data-id="uom_id"
+                                                                value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}"
+                                                                class="uom_id form-control erp-form-control-sm handle"
+                                                                readonly>
+                                                            <input type="hidden"
+                                                                name="pd[{{ $loop->iteration }}][product_barcode_id]"
+                                                                data-id="product_barcode_id"
+                                                                value="{{ isset($dtl->product_barcode_id) ? $dtl->product_barcode_id : '' }}"
+                                                                class="product_barcode_id form-control erp-form-control-sm handle"
+                                                                readonly>
+                                                            <input readonly type="hidden" data-id="grn_supplier_id"
+                                                                name="pd[{{ $loop->iteration }}][grn_supplier_id]"
+                                                                value=""
+                                                                class="grn_supplier_id form-control erp-form-control-sm">
+                                                            <input readonly type="hidden" data-id="grn_dtl_po_rate"
+                                                                name="pd[{{ $loop->iteration }}][grn_dtl_po_rate]"
+                                                                value="{{ $po_rate }}"
+                                                                class="grn_dtl_po_rate form-control erp-form-control-sm">
                                                         </td>
-                                                        <td><input type="text" data-id="pd_barcode"   name="pd[{{ $loop->iteration }}][pd_barcode]" value="{{ $dtl->barcode->product_barcode_barcode }}"  data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"  class="pd_barcode tb_moveIndex form-control erp-form-control-sm"  readonly></td>
-                                                        <td><input type="text" data-id="product_name"   name="pd[{{ $loop->iteration }}][product_name]"  value="{{ isset($dtl->product->product_name) ? $dtl->product->product_name : '' }}" class="product_name form-control erp-form-control-sm" readonly> </td>
+                                                        <td><input type="text" data-id="pd_barcode"
+                                                                name="pd[{{ $loop->iteration }}][pd_barcode]"
+                                                                value="{{ $dtl->barcode->product_barcode_barcode }}"
+                                                                data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
+                                                                class="pd_barcode tb_moveIndex form-control erp-form-control-sm"
+                                                                readonly></td>
+                                                        <td><input type="text" data-id="product_name"
+                                                                name="pd[{{ $loop->iteration }}][product_name]"
+                                                                value="{{ isset($dtl->product->product_name) ? $dtl->product->product_name : '' }}"
+                                                                class="product_name form-control erp-form-control-sm" readonly>
+                                                        </td>
                                                         <td>
-                                                            <select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd[{{ $loop->iteration }}][pd_uom]">
-                                                                <option value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}"> {{ isset($dtl->uom->uom_name) ? $dtl->uom->uom_name : '' }} </option>
+                                                            <select
+                                                                class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm"
+                                                                data-id="pd_uom" name="pd[{{ $loop->iteration }}][pd_uom]">
+                                                                <option
+                                                                    value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}">
+                                                                    {{ isset($dtl->uom->uom_name) ? $dtl->uom->uom_name : '' }}
+                                                                </option>
                                                             </select>
                                                         </td>
-                                                        <td><input type="text" data-id="pd_packing" name="pd[{{ $loop->iteration }}][pd_packing]" value="{{ isset($dtl->barcode->product_barcode_packing) ? $dtl->barcode->product_barcode_packing : '' }}" class="pd_packing form-control erp-form-control-sm" readonly></td>
-                                                        <td><input type="text"  name="pd[{{ $loop->iteration }}][grn_supplier_barcode]"  data-id="grn_supplier_barcode"  class="sup_barcode tb_moveIndex form-control erp-form-control-sm"   readonly></td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][quantity]" data-id="quantity" value="{{ $dtl->tbl_purc_grn_dtl_quantity }}" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][foc_qty]" data-id="foc_qty" value="{{ $dtl->tbl_purc_grn_dtl_foc_quantity }}" class="tblGridCal_foc_qty tb_moveIndex form-control erp-form-control-sm validNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][sale_rate]" data-id="sale_rate" value="{{ number_format($dtl->tbl_purc_grn_dtl_sale_rate, 3, '.', '') }}" class="tblGridSale_rate tb_moveIndex form-control erp-form-control-sm validNumber" readonly></td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][fc_rate]" data-id="fc_rate" value="{{ number_format($dtl->tbl_purc_grn_dtl_fc_rate, 3, '.', '') }}" class="fc_rate tb_moveIndex form-control erp-form-control-sm validNumber"></td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][rate]" data-id="rate" value="{{ number_format($dtl->tbl_purc_grn_dtl_rate, 3, '.', '') }}" class="{{ $rateColorClass }} tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][amount]" data-id="amount" value="{{ number_format($dtl->tbl_purc_grn_dtl_amount, 3, '.', '') }}" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">  </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][dis_perc]"  data-id="dis_perc"  value="{{ number_format($dtl->tbl_purc_grn_dtl_disc_percent, 2, '.', '') }}" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][dis_amount]"  data-id="dis_amount" value="{{ number_format($dtl->tbl_purc_grn_dtl_disc_amount, 3, '.', '') }}" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][vat_perc]" data-id="vat_perc" value="{{ number_format($dtl->tbl_purc_grn_dtl_vat_percent, 2, '.', '') }}"  class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][vat_amount]" data-id="vat_amount"  value="{{ number_format($dtl->tbl_purc_grn_dtl_vat_amount, 3, '.', '') }}" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"> </td>
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][batch_no]" data-id="batch_no" value="{{ isset($dtl->tbl_purc_grn_dtl_batch_no) ? $dtl->tbl_purc_grn_dtl_batch_no : '' }}"  class="tb_moveIndex form-control erp-form-control-sm"></td>
+                                                        <td><input type="text" data-id="pd_packing"
+                                                                name="pd[{{ $loop->iteration }}][pd_packing]"
+                                                                value="{{ isset($dtl->barcode->product_barcode_packing) ? $dtl->barcode->product_barcode_packing : '' }}"
+                                                                class="pd_packing form-control erp-form-control-sm" readonly>
+                                                        </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][grn_supplier_barcode]"
+                                                                data-id="grn_supplier_barcode"
+                                                                class="sup_barcode tb_moveIndex form-control erp-form-control-sm"
+                                                                readonly></td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][quantity]"
+                                                                data-id="quantity"
+                                                                value="{{ $dtl->tbl_purc_grn_dtl_quantity }}"
+                                                                class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][foc_qty]"
+                                                                data-id="foc_qty"
+                                                                value="{{ $dtl->tbl_purc_grn_dtl_foc_quantity }}"
+                                                                class="tblGridCal_foc_qty tb_moveIndex form-control erp-form-control-sm validNumber">
+                                                        </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][sale_rate]"
+                                                                data-id="sale_rate"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_sale_rate, 3, '.', '') }}"
+                                                                class="tblGridSale_rate tb_moveIndex form-control erp-form-control-sm validNumber"
+                                                                readonly></td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][fc_rate]"
+                                                                data-id="fc_rate"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_fc_rate, 3, '.', '') }}"
+                                                                class="fc_rate tb_moveIndex form-control erp-form-control-sm validNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][rate]"
+                                                                data-id="rate"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_rate, 3, '.', '') }}"
+                                                                class="{{ $rateColorClass }} tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][amount]"
+                                                                data-id="amount"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_amount, 3, '.', '') }}"
+                                                                class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][dis_perc]"
+                                                                data-id="dis_perc"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_disc_percent, 2, '.', '') }}"
+                                                                class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][dis_amount]"
+                                                                data-id="dis_amount"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_disc_amount, 3, '.', '') }}"
+                                                                class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][vat_perc]"
+                                                                data-id="vat_perc"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_vat_percent, 2, '.', '') }}"
+                                                                class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][vat_amount]"
+                                                                data-id="vat_amount"
+                                                                value="{{ number_format($dtl->tbl_purc_grn_dtl_vat_amount, 3, '.', '') }}"
+                                                                class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                        </td>
+                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][batch_no]"
+                                                                data-id="batch_no"
+                                                                value="{{ isset($dtl->tbl_purc_grn_dtl_batch_no) ? $dtl->tbl_purc_grn_dtl_batch_no : '' }}"
+                                                                class="tb_moveIndex form-control erp-form-control-sm"></td>
                                                         @php $prod_date= date('d-m-Y', strtotime(trim(str_replace('/','-',$dtl->tbl_purc_grn_dtl_production_date)))); @endphp
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][production_date]" data-id="production_date" value="{{ $prod_date == '01-01-1970' ? '' : $prod_date }}" title="{{ $prod_date == '01-01-1970' ? '' : $prod_date }}" class="date_inputmask tb_moveIndex form-control form-control-sm" /> </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][production_date]"
+                                                                data-id="production_date"
+                                                                value="{{ $prod_date == '01-01-1970' ? '' : $prod_date }}"
+                                                                title="{{ $prod_date == '01-01-1970' ? '' : $prod_date }}"
+                                                                class="date_inputmask tb_moveIndex form-control form-control-sm" />
+                                                        </td>
                                                         @php $expiry_date= date('d-m-Y', strtotime(trim(str_replace('/','-',$dtl->tbl_purc_grn_dtl_expiry_date)))); @endphp
-                                                        <td><input type="text" name="pd[{{ $loop->iteration }}][expiry_date]"  data-id="expiry_date" value="{{ $expiry_date == '01-01-1970' ? '' : $expiry_date }}" title="{{ $expiry_date == '01-01-1970' ? '' : $expiry_date }}" class="date_inputmask tb_moveIndex form-control form-control-sm" /> </td>
+                                                        <td><input type="text"
+                                                                name="pd[{{ $loop->iteration }}][expiry_date]"
+                                                                data-id="expiry_date"
+                                                                value="{{ $expiry_date == '01-01-1970' ? '' : $expiry_date }}"
+                                                                title="{{ $expiry_date == '01-01-1970' ? '' : $expiry_date }}"
+                                                                class="date_inputmask tb_moveIndex form-control form-control-sm" />
+                                                        </td>
                                                         <td><input type="text"
                                                                 name="pd[{{ $loop->iteration }}][gross_amount]"
                                                                 data-id="gross_amount"
@@ -464,7 +636,8 @@
                                                                 readonly></td>
                                                         <td class="text-center">
                                                             <div class="btn-group btn-group btn-group-sm" role="group">
-                                                                <button type="button" class="btn btn-danger gridBtn delData"><i
+                                                                <button type="button"
+                                                                    class="btn btn-danger gridBtn delData"><i
                                                                         class="la la-trash"></i></button>
                                                             </div>
                                                         </td>
@@ -473,122 +646,153 @@
                                             @endif
                                         </tbody>
                                         <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
-                                        <tr>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="sr_no" readonly type="text" class="sr_no form-control erp-form-control-sm">
-                                                    <input id="product_id" readonly type="hidden" class="product_id form-control erp-form-control-sm">
-                                                    <input id="product_barcode_id" readonly type="hidden"  class="product_barcode_id form-control erp-form-control-sm">
-                                                    <input id="uom_id" readonly type="hidden"  class="uom_id form-control erp-form-control-sm">
-                                                    <input id="grn_supplier_id" readonly type="hidden" class="grn_supplier_id form-control erp-form-control-sm handle">
-                                                    <input id="grn_dtl_po_rate" readonly type="hidden" class="grn_dtl_po_rate form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"   data-url_popup="{{ action('Common\DataTableController@helpOpen', 'productHelp') }}">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="product_name" readonly type="text" class="product_name form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <select id="pd_uom" class="pd_uom tb_moveIndex form-control erp-form-control-sm">
-                                                        <option value="">Select</option>
-                                                    </select>
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="pd_packing" readonly type="text" class="pd_packing form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="grn_supplier_barcode" type="text" class="sup_barcode tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="quantity" type="text"  class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="foc_qty" type="text"     class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="sale_rate" data-id="sale_rate" type="text"  class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm" readonly>
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="fc_rate" type="text" class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="rate" type="text"  class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="amount" type="text"  class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="dis_perc" type="text"  class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="dis_amount" type="text"  class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="vat_perc" type="text"  class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="vat_amount" type="text"   class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="batch_no" type="text"  class="tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="production_date" value="" title="{{ date('d-m-Y') }}"  type="text"  class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="expiry_date" value="" title="{{ date('d-m-Y') }}"  type="text"  class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_input">
-                                                    <input id="gross_amount" readonly type="text" class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
-                                                </div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="erp_form__grid_th_btn">
-                                                    <button type="button" id="addData"   class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
-                                                        <i class="la la-plus"></i>
-                                                    </button>
-                                                </div>
-                                            </th>
-                                        </tr>
+                                            <tr>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="sr_no" readonly type="text"
+                                                            class="sr_no form-control erp-form-control-sm">
+                                                        <input id="product_id" readonly type="hidden"
+                                                            class="product_id form-control erp-form-control-sm">
+                                                        <input id="product_barcode_id" readonly type="hidden"
+                                                            class="product_barcode_id form-control erp-form-control-sm">
+                                                        <input id="uom_id" readonly type="hidden"
+                                                            class="uom_id form-control erp-form-control-sm">
+                                                        <input id="grn_supplier_id" readonly type="hidden"
+                                                            class="grn_supplier_id form-control erp-form-control-sm handle">
+                                                        <input id="grn_dtl_po_rate" readonly type="hidden"
+                                                            class="grn_dtl_po_rate form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="pd_barcode" type="text"
+                                                            class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"
+                                                            data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
+                                                            data-url_popup="{{ action('Common\DataTableController@helpOpen', 'productHelp') }}">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="product_name" readonly type="text"
+                                                            class="product_name form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <select id="pd_uom"
+                                                            class="pd_uom tb_moveIndex form-control erp-form-control-sm">
+                                                            <option value="">Select</option>
+                                                        </select>
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="pd_packing" readonly type="text"
+                                                            class="pd_packing form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="grn_supplier_barcode" type="text"
+                                                            class="sup_barcode tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="quantity" type="text"
+                                                            class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="foc_qty" type="text"
+                                                            class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="sale_rate" data-id="sale_rate" type="text"
+                                                            class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"
+                                                            readonly>
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="fc_rate" type="text"
+                                                            class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="rate" type="text"
+                                                            class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="amount" type="text"
+                                                            class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="dis_perc" type="text"
+                                                            class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="dis_amount" type="text"
+                                                            class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="vat_perc" type="text"
+                                                            class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="vat_amount" type="text"
+                                                            class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="batch_no" type="text"
+                                                            class="tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="production_date" value=""
+                                                            title="{{ date('d-m-Y') }}" type="text"
+                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="expiry_date" value="" title="{{ date('d-m-Y') }}"
+                                                            type="text"
+                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="gross_amount" readonly type="text"
+                                                            class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_btn">
+                                                        <button type="button" id="addData"
+                                                            class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
+                                                            <i class="la la-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </th>
+                                            </tr>
                                         </tbody>
                                         <tbody class="erp_form__grid_body_total">
                                             <tr>
@@ -599,30 +803,36 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td class="total_grid_qty">
-                                                    <input value="0.000" readonly type="text"class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly
+                                                        type="text"class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td class="total_grid_foc_qty">
-                                                    <input value="0.000" readonly type="text" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly type="text"
+                                                        class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
                                                 <td class="total_grid_amount">
-                                                    <input value="0.000" readonly type="text" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly type="text"
+                                                        class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td></td>
                                                 <td class="total_grid_disc_amount">
-                                                    <input value="0.000" readonly type="text" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly type="text"
+                                                        class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td></td>
                                                 <td class="total_grid_vat_amount">
-                                                    <input value="0.000" readonly type="text"  class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly type="text"
+                                                        class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
                                                 <td class="total_grid_gross_amount">
-                                                    <input value="0.000" readonly type="text" class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                                                    <input value="0.000" readonly type="text"
+                                                        class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -639,7 +849,8 @@
                                             <td>
                                                 <div class="t_total_label">Total Amount:</div>
                                             </td>
-                                            <td class="text-right"><span class="t_gross_total t_total">0</span><input  type="hidden" id="pro_tot"></td>
+                                            <td class="text-right"><span class="t_gross_total t_total">0</span><input
+                                                    type="hidden" id="pro_tot"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -674,7 +885,8 @@
                                 <div class="row">
                                     <label class="col-lg-2 erp-col-form-label">Notes:</label>
                                     <div class="col-lg-10">
-                                        <textarea type="text" rows="3" id="grn_notes" name="grn_notes" maxlength="255" class="form-control erp-form-control-sm">{{ isset($data['current']->grn_remarks) ? $data['current']->grn_remarks : '' }}</textarea>
+                                        <textarea type="text" rows="3" id="grn_notes" name="grn_notes" maxlength="255"
+                                            class="form-control erp-form-control-sm">{{ isset($data['current']->grn_remarks) ? $data['current']->grn_remarks : '' }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -692,10 +904,16 @@
                                                             </span>
                                                         </div>
                                                         <div style="width: 50px;">
-                                                            <input readonly type="text" {{-- id="overall_discount" name="overall_discount" --}}value="{{ isset($data['current']->grn_overall_discount) ? number_format($data['current']->grn_overall_discount, 3) : 0.0 }}" class="moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"      style="    background: #f6f7f7;">
+                                                            <input readonly type="text"
+                                                                {{-- id="overall_discount" name="overall_discount" --}}value="{{ isset($data['current']->grn_overall_discount) ? number_format($data['current']->grn_overall_discount, 3) : 0.0 }}"
+                                                                class="moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"
+                                                                style="    background: #f6f7f7;">
                                                         </div>
                                                         <div style="width: 88px;">
-                                                            <input readonly type="text" {{-- id="overall_disc_amount" name="overall_disc_amount" --}}value="{{ isset($data['current']->grn_overall_disc_amount) ? number_format($data['current']->grn_overall_disc_amount, 3) : 0.0 }}" class="moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"  style="    background: #f6f7f7;">
+                                                            <input readonly type="text"
+                                                                {{-- id="overall_disc_amount" name="overall_disc_amount" --}}value="{{ isset($data['current']->grn_overall_disc_amount) ? number_format($data['current']->grn_overall_disc_amount, 3) : 0.0 }}"
+                                                                class="moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"
+                                                                style="    background: #f6f7f7;">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -712,7 +930,9 @@
                                     <div class="row">
                                         <div class="col-lg-12">
                                             <div class="form-group-block" style="overflow:auto; height:120px;">
-                                                <table id="SalesAccForm" class="ErpFormsm expense_acc_table table table-striped table-bordered" style="margin-top:0px;">
+                                                <table id="SalesAccForm"
+                                                    class="ErpFormsm expense_acc_table table table-striped table-bordered"
+                                                    style="margin-top:0px;">
                                                     <thead>
                                                         <tr>
                                                             <th width="7%">Sr No</th>
@@ -728,27 +948,75 @@
                                                             @php
                                                                 $expense_amount = '';
                                                                 $expense_perc = '';
-                                                                $expense = \App\Models\TblPurcGrnExpense::where('grn_id', $id)
-                                                                    ->where('chart_account_id', $expense_accounts->chart_account_id)
+                                                                $expense = \App\Models\TblPurcGrnExpense::where(
+                                                                    'grn_id',
+                                                                    $id,
+                                                                )
+                                                                    ->where(
+                                                                        'chart_account_id',
+                                                                        $expense_accounts->chart_account_id,
+                                                                    )
                                                                     ->first(['grn_expense_amount', 'grn_expense_perc']);
                                                                 if ($expense != null) {
-                                                                    $expense_amount = number_format($expense->grn_expense_amount, 3);
+                                                                    $expense_amount = number_format(
+                                                                        $expense->grn_expense_amount,
+                                                                        3,
+                                                                    );
                                                                 }
                                                                 if ($expense != null) {
-                                                                    $expense_perc = number_format($expense->grn_expense_perc, 3);
+                                                                    $expense_perc = number_format(
+                                                                        $expense->grn_expense_perc,
+                                                                        3,
+                                                                    );
                                                                 }
                                                             @endphp
                                                             <tr>
                                                                 <td>
-                                                                    <input type="text" name="pdsm[{{ $loop->iteration }}][sr_no]" value="{{ $loop->iteration }}" class=" form-control erp-form-control-sm" readonly>
-                                                                    <input type="hidden" name="pdsm[{{ $loop->iteration }}][account_id]" value="{{ $expense_accounts->account->chart_account_id }}"  data-id="account_id"  class="acc_id form-control erp-form-control-sm">
-                                                                    <input type="hidden" name="pdsm[{{ $loop->iteration }}][expense_dr_cr]" value="{{ $expense_accounts->expense_accounts_dr_cr }}" data-id="expense_dr_cr" class="expense_dr_cr form-control erp-form-control-sm">
+                                                                    <input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][sr_no]"
+                                                                        value="{{ $loop->iteration }}"
+                                                                        class=" form-control erp-form-control-sm" readonly>
+                                                                    <input type="hidden"
+                                                                        name="pdsm[{{ $loop->iteration }}][account_id]"
+                                                                        value="{{ $expense_accounts->account->chart_account_id }}"
+                                                                        data-id="account_id"
+                                                                        class="acc_id form-control erp-form-control-sm">
+                                                                    <input type="hidden"
+                                                                        name="pdsm[{{ $loop->iteration }}][expense_dr_cr]"
+                                                                        value="{{ $expense_accounts->expense_accounts_dr_cr }}"
+                                                                        data-id="expense_dr_cr"
+                                                                        class="expense_dr_cr form-control erp-form-control-sm">
                                                                 </td>
-                                                                <td><input type="text"  name="pdsm[{{ $loop->iteration }}][account_code]" value="{{ $expense_accounts->account->chart_code }}" data-id="account_code" class="acc_code masking moveIndexsm validNumber form-control erp-form-control-sm text-left" maxlength="12" readonly></td>
-                                                                <td><input type="text"  name="pdsm[{{ $loop->iteration }}][account_name]" value="{{ $expense_accounts->account->chart_name }}"  data-id="account_name"   class="acc_name form-control erp-form-control-sm " readonly></td>
-                                                                <td><input type="text" name="pdsm[{{ $loop->iteration }}][expense_plus_minus]"   value="{{ $expense_accounts->expense_accounts_plus_minus }}"  data-id="expense_plus_minus" class="expense_plus_minus form-control erp-form-control-sm text-center"  readonly></td>
-                                                                <td><input type="text" name="pdsm[{{ $loop->iteration }}][expense_perc]" value="{{ isset($expense_perc) ? $expense_perc : '' }}" data-id="expense_perc"  class="expense_perc form-control erp-form-control-sm moveIndexsm validNumber validOnlyFloatNumber"> </td>
-                                                                <td><input type="text" name="pdsm[{{ $loop->iteration }}][expense_amount]" value="{{ isset($expense_amount) ? $expense_amount : '' }}" data-id="expense_amount" class="expense_amount form-control erp-form-control-sm moveIndexsm validNumber validOnlyFloatNumber"></td>
+                                                                <td><input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][account_code]"
+                                                                        value="{{ $expense_accounts->account->chart_code }}"
+                                                                        data-id="account_code"
+                                                                        class="acc_code masking moveIndexsm validNumber form-control erp-form-control-sm text-left"
+                                                                        maxlength="12" readonly></td>
+                                                                <td><input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][account_name]"
+                                                                        value="{{ $expense_accounts->account->chart_name }}"
+                                                                        data-id="account_name"
+                                                                        class="acc_name form-control erp-form-control-sm "
+                                                                        readonly></td>
+                                                                <td><input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][expense_plus_minus]"
+                                                                        value="{{ $expense_accounts->expense_accounts_plus_minus }}"
+                                                                        data-id="expense_plus_minus"
+                                                                        class="expense_plus_minus form-control erp-form-control-sm text-center"
+                                                                        readonly></td>
+                                                                <td><input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][expense_perc]"
+                                                                        value="{{ isset($expense_perc) ? $expense_perc : '' }}"
+                                                                        data-id="expense_perc"
+                                                                        class="expense_perc form-control erp-form-control-sm moveIndexsm validNumber validOnlyFloatNumber">
+                                                                </td>
+                                                                <td><input type="text"
+                                                                        name="pdsm[{{ $loop->iteration }}][expense_amount]"
+                                                                        value="{{ isset($expense_amount) ? $expense_amount : '' }}"
+                                                                        data-id="expense_amount"
+                                                                        class="expense_amount form-control erp-form-control-sm moveIndexsm validNumber validOnlyFloatNumber">
+                                                                </td>
                                                             </tr>
                                                         @endforeach
                                                     </tbody>
@@ -794,8 +1062,8 @@
             </div>
         </form>
         <!--end::Form-->
-        @endpermission
-    @endsection
+    @endpermission
+@endsection
 @section('pageJS')
 
     <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
@@ -863,36 +1131,110 @@
                                 var row = response['all']['po_details'][p];
                                 tr += '<tr>' +
                                     '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
-                                    '<input type="text" name="pd['+ total_length +'][sr_no]" value="' + total_length + '" title="' + total_length + '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][purchase_order_id]" data-id="purchase_order_id" value="' + po_id + '" class="purchase_order_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length + '][product_id]" data-id="product_id" value="' + notNull(row['product_id']) + '" class="product_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +'"class="uom_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][product_barcode_id]" data-id="product_barcode_id" value="' +notNull(row['product_barcode_id']) +'"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][supplier_id]" data-id="supplier_id" value="" class="supplier_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="text" name="pd[' + total_length +
+                                    '][sr_no]" value="' + total_length + '" title="' + total_length +
+                                    '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][purchase_order_id]" data-id="purchase_order_id" value="' +
+                                    po_id +
+                                    '" class="purchase_order_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_id]" data-id="product_id" value="' + notNull(row[
+                                        'product_id']) +
+                                    '" class="product_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +
+                                    '"class="uom_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_barcode_id]" data-id="product_barcode_id" value="' +
+                                    notNull(row['product_barcode_id']) +
+                                    '"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][supplier_id]" data-id="supplier_id" value="" class="supplier_id form-control erp-form-control-sm " readonly>' +
                                     '</td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" title="" class="sup_barcode form-control erp-form-control-sm moveIndex" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][pd_barcode]" data-id="pd_barcode" value="' + notNull(row['barcode']['product_barcode_barcode']) + '" title="' + notNull( row['barcode']['product_barcode_barcode']) + '" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}" class="form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][product_name]" data-id="product_name" value="' + notNull(row['product']['product_name']) + '" title="' + notNull(row['product']['product_name']) + '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" title="" class="sup_barcode form-control erp-form-control-sm moveIndex" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][pd_barcode]" data-id="pd_barcode" value="' + notNull(row[
+                                        'barcode']['product_barcode_barcode']) + '" title="' + notNull(
+                                        row['barcode']['product_barcode_barcode']) +
+                                    '" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}" class="form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][product_name]" data-id="product_name" value="' + notNull(row[
+                                        'product']['product_name']) + '" title="' + notNull(row[
+                                        'product']['product_name']) +
+                                    '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
                                     '<td>' +
-                                    '<select class="pd_uom field_readonly moveIndex form-control erp-form-control-sm" name="pd[' + total_length + '][uom]" data-id="uom" title="' + row['uom']['uom_name'] + '">' +
-                                        '<option value="' + notNull(row['uom']['uom_id']) + '">' + notNull(row['uom']['uom_name']) + '</option>' +
+                                    '<select class="pd_uom field_readonly moveIndex form-control erp-form-control-sm" name="pd[' +
+                                    total_length + '][uom]" data-id="uom" title="' + row['uom'][
+                                        'uom_name'
+                                    ] + '">' +
+                                    '<option value="' + notNull(row['uom']['uom_id']) + '">' + notNull(
+                                        row['uom']['uom_name']) + '</option>' +
                                     '</select>' +
                                     '</td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][packing]" data-id="packing" value="' + notNull(row['purchase_order_dtlpacking']) + '" title="' + notNull(row['purchase_order_dtlpacking']) +'" class="pd_packing form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][quantity]" data-id="quantity" value="' + notNull(row['purchase_order_dtlquantity']) + '" title="' + notNull(row['purchase_order_dtlquantity']) +'" class="tblGridCal_qty moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][foc_qty]" data-id="foc_qty" value="' + notNull(row['purchase_order_dtlfoc_quantity']) + '" title="' + notNull(row['purchase_order_dtlfoc_quantity']) +'" class="tblGridCal_foc_qty form-control erp-form-control-sm validNumber"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][fc_rate]" data-id="fc_rate" value="' + notNull(row['purchase_order_dtlfc_rate']) + '" title="' + notNull(row['purchase_order_dtlfc_rate']) + '" class="fc_rate form-control erp-form-control-sm validNumber"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][rate]" data-id="rate" value="' + notNullNo(row['purchase_order_dtlrate']) + '" title="' + notNullNo(row['purchase_order_dtlrate']) +'" class="tblGridCal_rate moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][amount]" data-id="amount" value="' + notNullNo(row['purchase_order_dtlamount']) + '" title="' + notNullNo(row['purchase_order_dtlamount']) +'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][discount]" data-id="discount" value="' + notNullNo(row['purchase_order_dtldisc_percent']) + '" title="' + notNullNo(row['purchase_order_dtldisc_percent']) +'" class="tblGridCal_discount moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][discount_val]" data-id="discount_val" value="' + notNullNo(row['purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row['purchase_order_dtldisc_amount']) +'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][packing]" data-id="packing" value="' + notNull(row[
+                                        'purchase_order_dtlpacking']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlpacking']) +
+                                    '" class="pd_packing form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][quantity]" data-id="quantity" value="' + notNull(row[
+                                        'purchase_order_dtlquantity']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlquantity']) +
+                                    '" class="tblGridCal_qty moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][foc_qty]" data-id="foc_qty" value="' + notNull(row[
+                                        'purchase_order_dtlfoc_quantity']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlfoc_quantity']) +
+                                    '" class="tblGridCal_foc_qty form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fc_rate]" data-id="fc_rate" value="' + notNull(row[
+                                        'purchase_order_dtlfc_rate']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlfc_rate']) +
+                                    '" class="fc_rate form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][rate]" data-id="rate" value="' + notNullNo(row[
+                                        'purchase_order_dtlrate']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlrate']) +
+                                    '" class="tblGridCal_rate moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][amount]" data-id="amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlamount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlamount']) +
+                                    '" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][discount]" data-id="discount" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_percent']) + '" title="' + notNullNo(
+                                        row['purchase_order_dtldisc_percent']) +
+                                    '" class="tblGridCal_discount moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][discount_val]" data-id="discount_val" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtldisc_amount']) +
+                                    '" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
                                     /*'<td><input type="text" name="pd['+total_length+'][grn_gst]" data-id="grn_gst" value="" title="" class="form-control erp-form-control-sm validNumber" readonly></td>' +*/
-                                    '<td><input type="text" name="pd[' + total_length +'][vat_perc]" data-id="vat_perc" value="' + notNullNo(row['purchase_order_dtlvat_percent']) + '" title="' + notNullNo(row[ 'purchase_order_dtlvat_percent']) + '" class="tblGridCal_vat_perc moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][vat_val]" data-id="vat_val" value="' + notNullNo(row['purchase_order_dtlvat_amount']) + '" title="' + notNullNo(row['purchase_order_dtlvat_amount']) +'" class="tblGridCal_vat_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][batch_no]" data-id="batch_no" class="moveIndex form-control form-control-sm"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][production_date]" data-id="production_date" value="" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][expiry_date]" data-id="expiry_date" value="" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gross_amount]" data-id="gross_amount" value="' + notNullNo(row['purchase_order_dtltotal_amount']) + '" title="' + notNullNo(row['purchase_order_dtltotal_amount']) +'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][vat_perc]" data-id="vat_perc" value="' + notNullNo(row[
+                                        'purchase_order_dtlvat_percent']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlvat_percent']) +
+                                    '" class="tblGridCal_vat_perc moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][vat_val]" data-id="vat_val" value="' + notNullNo(row[
+                                        'purchase_order_dtlvat_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlvat_amount']) +
+                                    '" class="tblGridCal_vat_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][batch_no]" data-id="batch_no" class="moveIndex form-control form-control-sm"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][production_date]" data-id="production_date" value="" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][expiry_date]" data-id="expiry_date" value="" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gross_amount]" data-id="gross_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtltotal_amount']) + '" title="' + notNullNo(
+                                        row['purchase_order_dtltotal_amount']) +
+                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
                                     '<td class="text-center"></td>' +
                                     '</tr>';
                             }
@@ -1116,8 +1458,7 @@
                 success: function(response, data) {
                     var win = window.open(url, "generateBarcodeTags");
                     win.location.reload();
-                    if (response) {
-                    }
+                    if (response) {}
                 },
                 error: function(response, status) {}
             });
@@ -1126,7 +1467,7 @@
         $('#generateShelfPriceTags').click(function() {
             var formData = {};
             formData.data = [];
-            if($('.erp_form__grid>tbody.erp_form__grid_body>tr').length < 1){
+            if ($('.erp_form__grid>tbody.erp_form__grid_body>tr').length < 1) {
                 toastr.error('Add Some Products');
                 return false;
             }
@@ -1135,7 +1476,7 @@
                 var tr = {
                     'barcode_id': thix.find('input[data-id="product_barcode_id"]').val(),
                     'qty': thix.find('input[data-id="quantity"]').val(),
-                    'gross_amount' : thix.find('input[data-id="gross_amount"]').val(),
+                    'gross_amount': thix.find('input[data-id="gross_amount"]').val(),
                 }
 
                 formData.data.push(tr);
@@ -1153,8 +1494,7 @@
                 success: function(response, data) {
                     var win = window.open(url, "generateShelfBarcodeTags");
                     win.location.reload();
-                    if (response) {
-                    }
+                    if (response) {}
                 },
                 error: function(response, status) {}
             });
@@ -1190,8 +1530,10 @@
                             toastr.success('Sale Rate Updated');
                             var products = response.product_barcode;
                             products.forEach(element => {
-                                var parent = $('input[value="' + element.product_barcode_id +'"]').parents('tr');
-                                var value = parseFloat(element.product_barcode_sale_rate_rate).toFixed(3);
+                                var parent = $('input[value="' + element.product_barcode_id +
+                                    '"]').parents('tr');
+                                var value = parseFloat(element.product_barcode_sale_rate_rate)
+                                    .toFixed(3);
                                 parent.find('input[data-id="sale_rate"]').val(value);
                             });
                         }
@@ -1203,40 +1545,40 @@
 
 
         // Select Multiple Products Functionalities
-        $('#makePD').click(function(){
+        $('#makePD').click(function() {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
             var formData = {
-                supplier_id : $('#supplier_id').val(),
-                form_type : $('#form_type').val(),
+                supplier_id: $('#supplier_id').val(),
+                form_type: $('#form_type').val(),
             }
             var data_url = '/common/select-multiple-products';
-            $('#kt_modal_xl').modal('show').find('.modal-content').load(data_url,formData);
+            $('#kt_modal_xl').modal('show').find('.modal-content').load(data_url, formData);
         });
-        $(document).on('click','.btn_add',function(e){
+        $(document).on('click', '.btn_add', function(e) {
             e.preventDefault();
             var thix = $(this);
             addRow(thix)
 
         })
-        function addRow(thix){
+
+        function addRow(thix) {
             var parentTr = thix.parents('tr');
-            if(!parentTr.find('.grn_qty').val())
-            {
+            if (!parentTr.find('.grn_qty').val()) {
                 alert("Please add Qty");
-            }else
-            {
+            } else {
                 var item_duplicate = false;
-                $(document).find('#smp_selected_products table tbody tr').each(function(){
-                    if($(this).find('td[data-field="product_barcode_barcode"]>span').text() == parentTr.find('td[data-field="product_barcode_barcode"]>span').text()){
+                $(document).find('#smp_selected_products table tbody tr').each(function() {
+                    if ($(this).find('td[data-field="product_barcode_barcode"]>span').text() == parentTr.find(
+                            'td[data-field="product_barcode_barcode"]>span').text()) {
                         toastr.warning("Item alread added.");
                         item_duplicate = true;
                     }
                 })
-                if(item_duplicate == true){
+                if (item_duplicate == true) {
                     return true;
                 }
                 var tr = thix.parents('tr').clone();
@@ -1247,33 +1589,38 @@
                 $(document).find('#smp_selected_products table tbody>.kt-datatable--error').remove();
                 var lastTd = "<span>";
                 lastTd += "<input type='checkbox' style='height: 16px;width: 16px;' checked>";
-                lastTd += "<i class='la la-times del_row' style='position: relative;background: #f44336;padding: 2px 2px;color: #fff;margin-left: 3px;top: -3px;'></i>";
+                lastTd +=
+                    "<i class='la la-times del_row' style='position: relative;background: #f44336;padding: 2px 2px;color: #fff;margin-left: 3px;top: -3px;'></i>";
                 lastTd += "</span>";
                 $(document).find('#smp_selected_products table tbody tr:last-child td:last-child').html(lastTd);
                 toastr.success("Item added.");
             }
         }
-        $(document).on('click','.del_row',function(e){
+        $(document).on('click', '.del_row', function(e) {
             e.preventDefault();
             $(this).parents('tr').remove();
         })
-        $(document).on('click','.close',function(e){
+        $(document).on('click', '.close', function(e) {
             e.preventDefault();
             $('.modal').find('.modal-content').empty();
-            $('.modal').find('.modal-content').html(' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>');
+            $('.modal').find('.modal-content').html(
+                ' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>'
+                );
             $('.modal').modal('hide');
         })
-        $(document).on('click','#add_selected_products',function(e){
+        $(document).on('click', '#add_selected_products', function(e) {
             e.preventDefault();
-            if($(document).find('#smp_selected_products table tbody tr').length == 0){
+            if ($(document).find('#smp_selected_products table tbody tr').length == 0) {
                 toastr.warning("Please first select items");
                 return true;
             }
-            $(this).attr('disabled',true);
-            $('.modal').find('.modal-header>button').attr('disabled',true);
-            $('.modal').find('.modal-content').prepend('<div style="position: absolute;left: 50%;" class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span style="margin-left: 30px;">insert data,please wait..</span></div>');
-            $(document).find('#smp_selected_products table input').attr('readonly',true)
-            $(document).find('#smp_selected_products table tbody tr').each(function(){
+            $(this).attr('disabled', true);
+            $('.modal').find('.modal-header>button').attr('disabled', true);
+            $('.modal').find('.modal-content').prepend(
+                '<div style="position: absolute;left: 50%;" class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span style="margin-left: 30px;">insert data,please wait..</span></div>'
+                );
+            $(document).find('#smp_selected_products table input').attr('readonly', true)
+            $(document).find('#smp_selected_products table tbody tr').each(function() {
                 var thix = $(this);
                 var barcode = thix.find('td[data-field="product_barcode_barcode"]>span').text();
                 var demand_qty = thix.find('td[data-field="grn_qty"] input.grn_qty').val();
@@ -1281,33 +1628,35 @@
                 var tr = $(document).find('.erp_form__grid>.erp_form__grid_header>tr');
                 var form_type = $('#form_type').val();
                 var formData = {
-                    form_type : form_type,
-                    val : barcode,
-                    demand_qty : demand_qty,
-                    selection : "multi",
+                    form_type: form_type,
+                    val: barcode,
+                    demand_qty: demand_qty,
+                    selection: "multi",
                 }
-                initBarcode(keycodeNo,tr,form_type,formData);
+                initBarcode(keycodeNo, tr, form_type, formData);
             });
-            $(document).ajaxStop(function(e,d) {
+            $(document).ajaxStop(function(e, d) {
                 // place code to be executed on completion of last outstanding ajax call here
                 $('.modal').find('.modal-content').empty();
-                $('.modal').find('.modal-content').html(' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>');
+                $('.modal').find('.modal-content').html(
+                    ' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>'
+                    );
                 $('.modal').modal('hide');
                 $(document).unbind("ajaxStop");
             });
         });
 
 
-var poXhr = true;
-        $(document).on('click','#getPOData',function(){
+        var poXhr = true;
+        $(document).on('click', '#getPOData', function() {
             var purchase_order_id = $('#purchase_order_id').val();
             var code = $('#purchase_order').val().trim();
             var validate = true;
-            if(valueEmpty(code) && valueEmpty(purchase_order_id)){
+            if (valueEmpty(code) && valueEmpty(purchase_order_id)) {
                 toastr.error("PO No must be selected.");
                 validate = false;
             }
-            if(poXhr && validate){
+            if (poXhr && validate) {
                 poXhr = false;
                 $('body').addClass('pointerEventsNone');
                 $.ajax({
@@ -1340,77 +1689,177 @@ var poXhr = true;
                                 total_length++;
                                 var row = response['all'][p];
                                 var tax_on_options = "";
-                                tax_on_list.forEach(function(item){
+                                tax_on_list.forEach(function(item) {
                                     var item_val = (item.constants_value).toLowerCase();
                                     var selected_val = notNull(row['purchase_order_dtltax_on']);
-                                    var option_select = (item_val == selected_val)?"selected":"";
-                                    tax_on_options += '<option value="'+item_val+'" '+option_select+'>'+item.constants_value+'</option>';
+                                    var option_select = (item_val == selected_val) ?
+                                        "selected" : "";
+                                    tax_on_options += '<option value="' + item_val + '" ' +
+                                        option_select + '>' + item.constants_value +
+                                        '</option>';
                                 })
                                 var disc_on_options = "";
-                                disc_on_list.forEach(function(item){
+                                disc_on_list.forEach(function(item) {
                                     var item_val = (item.constants_value).toLowerCase();
-                                    var selected_val = notNull(row['purchase_order_dtldisc_on']);
-                                    var option_select = (item_val == selected_val)?"selected":"";
-                                    disc_on_options += '<option value="'+item_val+'" '+option_select+'>'+item.constants_value+'</option>';
+                                    var selected_val = notNull(row[
+                                    'purchase_order_dtldisc_on']);
+                                    var option_select = (item_val == selected_val) ?
+                                        "selected" : "";
+                                    disc_on_options += '<option value="' + item_val + '" ' +
+                                        option_select + '>' + item.constants_value +
+                                        '</option>';
                                 })
                                 tr += '<tr>' +
-                                    '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
-                                    '<input type="text" name="pd['+ total_length +'][sr_no]"  data-id="sr_no" value="' + total_length + '" title="' + total_length + '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][po_id]" data-id="po_id" value="' + row['purchase_order_id'] + '" class="po_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length + '][product_id]" data-id="product_id" value="' + notNull(row['product_id']) + '" class="product_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][product_barcode_id]" data-id="product_barcode_id" value="' +notNull(row['product_barcode_id']) +'"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +'"class="uom_id form-control erp-form-control-sm " readonly>' +
+                                    '<td class="handle">' +
+                                    '<i class="fa fa-arrows-alt-v handle"></i>' +
+                                    '<input type="text" name="pd[' + total_length +
+                                    '][sr_no]" value="' + total_length +
+                                    '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][po_id]" value="' + row['purchase_order_id'] +
+                                    '" class="po_id">' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_id]" value="' + notNull(row['product_id']) +
+                                    '" class="product_id">' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_barcode_id]" value="' + notNull(row[
+                                        'product_barcode_id']) + '" class="product_barcode_id">' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][uom_id]" value="' + notNull(row['uom_id']) +
+                                    '" class="uom_id">' +
                                     '</td>' +
-                                    // '<td><input type="text" name="pd[' + total_length +'][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" title="" class="sup_barcode form-control erp-form-control-sm moveIndex" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][pd_barcode]" data-id="pd_barcode" value="' + notNull(row['product_barcode_barcode']) + '" title="' + notNull( row['product_barcode_barcode']) + '"  class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][product_name]" data-id="product_name" value="' + notNull(row['product_name']) + '" title="' + notNull(row['product_name']) + '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][quantity]" data-id="quantity" value="' + notNull(row['purchase_order_dtlquantity']) + '" title="' + notNull(row['purchase_order_dtlquantity']) +'" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][rate]" data-id="rate" value="' + notNullNo(row['purchase_order_dtlrate']) + '" title="' + notNullNo(row['purchase_order_dtlrate']) +'" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][sale_rate]" data-id="sale_rate" value="' + notNullNo(row['purchase_order_dtlsale_rate']) + '" title="' + notNullNo(row['purchase_order_dtlsale_rate']) +'" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][sys_qty]" data-id="sys_qty" value="' + notNull(row['purchase_order_dtlsys_quantity']) + '" title="' + notNull(row['purchase_order_dtlsys_quantity']) +'" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][mrp]" data-id="mrp" value="' + notNull(row['purchase_order_dtlmrp']) + '" title="' + notNull(row['purchase_order_dtlmrp']) +'" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][cost_amount]" data-id="cost_amount" value="' + notNullNo(row['purchase_order_dtlamount']) + '" title="' + notNullNo(row['purchase_order_dtlamount']) +'" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][dis_perc]" data-id="dis_perc" value="' + notNullNo(row['purchase_order_dtldisc_percent']) + '" title="' + notNullNo(row['purchase_order_dtldisc_percent']) +'" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][dis_amount]" data-id="dis_amount" value="' + notNullNo(row['purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row['purchase_order_dtldisc_amount']) +'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][after_dis_amount]" data-id="after_dis_amount" value="' + notNullNo(row['purchase_order_dtlafter_dis_amount']) + '" title="' + notNullNo(row['purchase_order_dtlafter_dis_amount']) +'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td>' +
-                                    '<select class="pd_tax_on form-control erp-form-control-sm" name="pd[' + total_length + '][pd_tax_on]" data-id="pd_tax_on">' +
-                                    tax_on_options +
-                                    '</select>' +
-                                    '</td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gst_perc]" data-id="gst_perc" value="' + notNullNo(row['purchase_order_dtlvat_percent']) + '" title="' + notNullNo(row['purchase_order_dtlvat_perc']) +'" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][gst_amount]" data-id="gst_amount" value="' + notNullNo(row['purchase_order_dtlvat_amount']) + '" title="' + notNullNo(row['purchase_order_dtlvat_amount']) +'" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][fed_perc]" data-id="fed_perc" value="' + notNullNo(row['purchase_order_dtlfed_perc']) + '" title="' + notNullNo(row['purchase_order_dtlfed_perc']) +'" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][fed_amount]" data-id="fed_amount" value="' + notNullNo(row['purchase_order_dtlfed_amount']) + '" title="' + notNullNo(row['purchase_order_dtlfed_amount']) +'" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td>' +
-                                    '<select class="pd_disc form-control erp-form-control-sm" name="pd[' + total_length + '][pd_disc]" data-id="pd_disc">' +
-                                    disc_on_options +
-                                    '</select>' +
-                                    '</td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][spec_disc_perc]" data-id="spec_disc_perc" value="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) +'" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][spec_disc_amount]" data-id="spec_disc_amount" value="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) +'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gross_amount]" data-id="gross_amount" value="' + notNullNo(row['purchase_order_dtlgross_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgross_amount']) +'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][net_amount]" data-id="net_amount" value="' + notNullNo(row['purchase_order_dtltotal_amount']) + '" title="' + notNullNo(row['purchase_order_dtltotal_amount']) +'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][net_tp]" data-id="net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" title="' + notNullNo(row['purchase_order_dtlnet_tp']) +'" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][last_tp]" data-id="last_tp" value="' + notNullNo(row['purchase_order_dtllast_tp']) + '" title="' + notNullNo(row['purchase_order_dtllast_tp']) +'" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][vend_last_tp]" data-id="vend_last_tp" value="' + notNullNo(row['purchase_order_dtlvend_last_tp']) + '" title="' + notNullNo(row['purchase_order_dtlvend_last_tp']) +'" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][tp_diff]" data-id="tp_diff" value="' + notNullNo(row['purchase_order_dtltp_diff']) + '" title="' + notNullNo(row['purchase_order_dtltp_diff']) +'" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gp_perc]" data-id="gp_perc" value="' + notNullNo(row['purchase_order_dtlgp_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgp_perc']) +'" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gp_amount]" data-id="gp_amount" value="' + notNullNo(row['purchase_order_dtlgp_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgp_amount']) +'" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][remarks]" data-id="remarks" value="' + notNullNo(row['purchase_order_dtlremarks']) + '" title="' + notNullNo(row['purchase_order_dtlremarks']) +'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][fc_rate]" data-id="fc_rate" value="' + notNullNo(row['purchase_order_dtlfc_rate']) + '" title="' + notNullNo(row['purchase_order_dtlfc_rate']) +'" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][po_no]" data-id="po_no" value="' + row['purchase_order_code'] + '" class="po_no form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][po_net_tp]" data-id="po_net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
-                                    '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group">' +
+
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][pd_barcode]" value="' + notNull(row['product_barcode_barcode']) +
+                                    '" class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][product_name]" value="' + notNull(row['product_name']) +
+                                    '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][quantity]" value="' + notNull(row[
+                                    'purchase_order_dtlquantity']) +
+                                    '" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][rate]" value="' + notNullNo(row['purchase_order_dtlrate']) +
+                                    '" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][sale_rate]" value="' + notNullNo(row[
+                                        'purchase_order_dtlsale_rate']) +
+                                    '" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][sys_qty]" value="' + notNull(row[
+                                        'purchase_order_dtlsys_quantity']) +
+                                    '" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][mrp]" value="' + notNull(row['purchase_order_dtlmrp']) +
+                                    '" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][cost_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlamount']) +
+                                    '" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][dis_perc]" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_percent']) +
+                                    '" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][dis_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_amount']) +
+                                    '" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][after_dis_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlafter_dis_amount']) +
+                                    '" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+
+                                    '<td><select class="pd_tax_on form-control erp-form-control-sm" name="pd[' +
+                                    total_length + '][pd_tax_on]">' + tax_on_options +
+                                    '</select></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gst_perc]" value="' + notNullNo(row[
+                                        'purchase_order_dtlvat_percent']) +
+                                    '" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gst_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlvat_amount']) +
+                                    '" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber"></td>' +
+
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fed_perc]" value="' + notNullNo(row[
+                                        'purchase_order_dtlfed_perc']) +
+                                    '" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fed_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlfed_amount']) +
+                                    '" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+
+                                    '<td><select class="pd_disc form-control erp-form-control-sm" name="pd[' +
+                                    total_length + '][pd_disc]">' + disc_on_options + '</select></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][spec_disc_perc]" value="' + notNullNo(row[
+                                        'purchase_order_dtlspec_disc_perc']) +
+                                    '" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][spec_disc_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlspec_disc_amount']) +
+                                    '" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gross_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlgross_amount']) +
+                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][net_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtltotal_amount']) +
+                                    '" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][net_tp]" value="' + notNullNo(row['purchase_order_dtlnet_tp']) +
+                                    '" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][last_tp]" value="' + notNullNo(row[
+                                    'purchase_order_dtllast_tp']) +
+                                    '" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][vend_last_tp]" value="' + notNullNo(row[
+                                        'purchase_order_dtlvend_last_tp']) +
+                                    '" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][tp_diff]" value="' + notNullNo(row[
+                                    'purchase_order_dtltp_diff']) +
+                                    '" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gp_perc]" value="' + notNullNo(row[
+                                    'purchase_order_dtlgp_perc']) +
+                                    '" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gp_amount]" value="' + notNullNo(row[
+                                        'purchase_order_dtlgp_amount']) +
+                                    '" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][remarks]" value="' + notNullNo(row[
+                                    'purchase_order_dtlremarks']) +
+                                    '" class="form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fc_rate]" value="' + notNullNo(row[
+                                    'purchase_order_dtlfc_rate']) +
+                                    '" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][po_no]" value="' + row['purchase_order_code'] +
+                                    '" class="po_no form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][po_net_tp]" value="' + notNullNo(row[
+                                    'purchase_order_dtlnet_tp']) +
+                                    '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
+
+                                    '<td class="text-center">' +
+                                    '<div class="btn-group btn-group-sm" role="group">' +
                                     '<button type="button" class="btn btn-danger gridBtn del_row"><i class="la la-trash"></i></button>' +
-                                    '</div></td>' +
+                                    '</div>' +
+                                    '</td>' +
                                     '</tr>';
-
-
                             }
                             $('.erp_form__grid_body').append(tr);
 
-                            $('.erp_form__grid_body tr').each(function(){
+                            $('.erp_form__grid_body tr').each(function() {
                                 var thix = $(this);
                                 var product_id = thix.find('.product_id');
                                 funcHeaderCalc(thix);
@@ -1419,20 +1868,21 @@ var poXhr = true;
                             funcRowInit();
                             updateHiddenFields();
 
-                        }else{
+                        } else {
                             toastr.error("PO No is not correct.");
                         }
                         poXhr = true;
                         $('body').removeClass('pointerEventsNone');
 
                     },
-                    error: function(response,status) {
+                    error: function(response, status) {
                         poXhr = true;
                         $('body').removeClass('pointerEventsNone');
                     }
                 });
             }
         })
+
         function selectPO() {
             $('#help_datatable_poHelp').on('click', 'tbody>tr', function(e) {
                 var code = $(this).find('td[data-field="purchase_order_code"]').text();
@@ -1482,44 +1932,180 @@ var poXhr = true;
                                 var row = response['all'][p];
                                 tr += '<tr>' +
                                     '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
-                                    '<input type="text" name="pd['+ total_length +'][sr_no]" data-id="sr_no" value="' + total_length + '" title="' + total_length + '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][purc_grn_dtl_id]" data-id="purc_grn_dtl_id" value="" class="purc_grn_dtl_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][po_id]" data-id="po_id" value="' + po_id + '" class="po_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length + '][product_id]" data-id="product_id" value="' + notNull(row['product_id']) + '" class="product_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +'"class="uom_id form-control erp-form-control-sm " readonly>' +
-                                    '<input type="hidden" name="pd[' + total_length +'][product_barcode_id]" data-id="product_barcode_id" value="' +notNull(row['product_barcode_id']) +'"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="text" name="pd[' + total_length +
+                                    '][sr_no]" data-id="sr_no" value="' + total_length + '" title="' +
+                                    total_length +
+                                    '" class="form-control sr_no erp-form-control-sm handle" readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][purc_grn_dtl_id]" data-id="purc_grn_dtl_id" value="" class="purc_grn_dtl_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][po_id]" data-id="po_id" value="' + po_id +
+                                    '" class="po_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_id]" data-id="product_id" value="' + notNull(row[
+                                        'product_id']) +
+                                    '" class="product_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][uom_id]" data-id="uom_id" value="' + notNull(row['uom_id']) +
+                                    '"class="uom_id form-control erp-form-control-sm " readonly>' +
+                                    '<input type="hidden" name="pd[' + total_length +
+                                    '][product_barcode_id]" data-id="product_barcode_id" value="' +
+                                    notNull(row['product_barcode_id']) +
+                                    '"class="product_barcode_id form-control erp-form-control-sm " readonly>' +
                                     '</td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][pd_barcode]" data-id="pd_barcode" value="' + notNull(row['barcode']['product_barcode_barcode']) + '" title="' + notNull( row['barcode']['product_barcode_barcode']) + '" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}" class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][product_name]" data-id="product_name" value="' + notNull(row['product']['product_name']) + '" title="' + notNull(row['product']['product_name']) + '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][quantity]" data-id="quantity" value="' + notNull(row['purchase_order_dtlquantity']) + '" title="' + notNull(row['purchase_order_dtlquantity']) +'" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][rate]" data-id="rate" value="' + notNullNo(row['purchase_order_dtlrate']) + '" title="' + notNullNo(row['purchase_order_dtlrate']) +'" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][sale_rate]" data-id="sale_rate" value="' + notNullNo(row['purchase_order_dtlsale_rate']) + '" title="' + notNullNo(row['purchase_order_dtlsale_rate']) +'" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][sys_qty]" data-id="sys_qty" value="' + notNull(row['purchase_order_dtlsys_quantity']) + '" title="' + notNull(row['purchase_order_dtlsys_quantity']) +'" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][mrp]" data-id="mrp" value="' + notNull(row['purchase_order_dtlmrp']) + '" title="' + notNull(row['purchase_order_dtlmrp']) +'" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][cost_amount]" data-id="cost_amount" value="' + notNullNo(row['purchase_order_dtlcost_amount']) + '" title="' + notNullNo(row['purchase_order_dtlcost_amount']) +'" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][dis_perc]" data-id="dis_perc" value="' + notNullNo(row['purchase_order_dtldisc_percent']) + '" title="' + notNullNo(row['purchase_order_dtldisc_percent']) +'" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][dis_amount]" data-id="dis_amount" value="' + notNullNo(row['purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row['purchase_order_dtldisc_amount']) +'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber"></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][after_dis_amount]" data-id="after_dis_amount" value="' + notNullNo(row['purchase_order_dtlafter_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlafter_disc_amount']) +'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][pd_tax_on]" data-id="pd_tax_on" value="' + notNull(row['purchase_order_dtltax_on']) + '" title="' + notNull(row['purchase_order_dtltax_on']) +'" class="pd_tax_on form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gst_perc]" data-id="gst_perc" value="' + notNullNo(row['purchase_order_dtlgst_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgst_perc']) +'" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][gst_amount]" data-id="gst_amount" value="' + notNullNo(row['purchase_order_dtlgst_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgst_amount']) +'" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][fed_perc]" data-id="fed_perc" value="' + notNullNo(row['purchase_order_dtlfed_perc']) + '" title="' + notNullNo(row['purchase_order_dtlfed_perc']) +'" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][fed_amount]" data-id="fed_amount" value="' + notNullNo(row['purchase_order_dtlfed_amount']) + '" title="' + notNullNo(row['purchase_order_dtlfed_amount']) +'" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][pd_disc]" data-id="pd_disc" value="' + notNull(row['purchase_order_dtldisc_on']) + '" title="' + notNull(row['purchase_order_dtldisc_on']) +'" class="pd_disc form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][spec_disc_perc]" data-id="spec_disc_perc" value="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_perc']) +'" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][spec_disc_amount]" data-id="spec_disc_amount" value="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) + '" title="' + notNullNo(row['purchase_order_dtlspec_disc_amount']) +'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gross_amount]" data-id="gross_amount" value="' + notNullNo(row['purchase_order_dtltotal_amount']) + '" title="' + notNullNo(row['purchase_order_dtltotal_amount']) +'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][net_amount]" data-id="net_amount" value="' + notNullNo(row['purchase_order_dtlnet_amount']) + '" title="' + notNullNo(row['purchase_order_dtlnet_amount']) +'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][net_tp]" data-id="net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" title="' + notNullNo(row['purchase_order_dtlnet_tp']) +'" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][last_tp]" data-id="last_tp" value="' + notNullNo(row['purchase_order_dtllast_tp']) + '" title="' + notNullNo(row['purchase_order_dtllast_tp']) +'" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][vend_last_tp]" data-id="vend_last_tp" value="' + notNullNo(row['purchase_order_dtlvend_last_tp']) + '" title="' + notNullNo(row['purchase_order_dtlvend_last_tp']) +'" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][tp_diff]" data-id="tp_diff" value="' + notNullNo(row['purchase_order_dtltp_diff']) + '" title="' + notNullNo(row['purchase_order_dtltp_diff']) +'" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gp_perc]" data-id="gp_perc" value="' + notNullNo(row['purchase_order_dtlgp_perc']) + '" title="' + notNullNo(row['purchase_order_dtlgp_perc']) +'" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][gp_amount]" data-id="gp_amount" value="' + notNullNo(row['purchase_order_dtlgp_amount']) + '" title="' + notNullNo(row['purchase_order_dtlgp_amount']) +'" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][remarks]" data-id="remarks" value="' + notNullNo(row['purchase_order_dtlremarks']) + '" title="' + notNullNo(row['purchase_order_dtlremarks']) +'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length +'][fc_rate]" data-id="fc_rate" value="' + notNullNo(row['purchase_order_dtlfc_rate']) + '" title="' + notNullNo(row['purchase_order_dtlfc_rate']) +'" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][po_no]" data-id="po_no" value="' + row['purchase_order_code'] + '" class="po_no form-control erp-form-control-sm" readonly></td>' +
-                                    '<td><input type="text" name="pd[' + total_length + '][po_net_tp]" data-id="po_net_tp" value="' + notNullNo(row['purchase_order_dtlnet_tp']) + '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][pd_barcode]" data-id="pd_barcode" value="' + notNull(row[
+                                        'barcode']['product_barcode_barcode']) + '" title="' + notNull(
+                                        row['barcode']['product_barcode_barcode']) +
+                                    '" data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}" class="pd_barcode form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][product_name]" data-id="product_name" value="' + notNull(row[
+                                        'product']['product_name']) + '" title="' + notNull(row[
+                                        'product']['product_name']) +
+                                    '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][quantity]" data-id="quantity" value="' + notNull(row[
+                                        'purchase_order_dtlquantity']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlquantity']) +
+                                    '" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][rate]" data-id="rate" value="' + notNullNo(row[
+                                        'purchase_order_dtlrate']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlrate']) +
+                                    '" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][sale_rate]" data-id="sale_rate" value="' + notNullNo(row[
+                                        'purchase_order_dtlsale_rate']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlsale_rate']) +
+                                    '" class="tblGridCal_sale_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][sys_qty]" data-id="sys_qty" value="' + notNull(row[
+                                        'purchase_order_dtlsys_quantity']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlsys_quantity']) +
+                                    '" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber" readonly ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][mrp]" data-id="mrp" value="' + notNull(row[
+                                        'purchase_order_dtlmrp']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlmrp']) +
+                                    '" class="tblGridCal_mrp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][cost_amount]" data-id="cost_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlcost_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlcost_amount']) +
+                                    '" class="tblGridCal_cost_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][dis_perc]" data-id="dis_perc" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_percent']) + '" title="' + notNullNo(
+                                        row['purchase_order_dtldisc_percent']) +
+                                    '" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][dis_amount]" data-id="dis_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtldisc_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtldisc_amount']) +
+                                    '" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][after_dis_amount]" data-id="after_dis_amount" value="' +
+                                    notNullNo(row['purchase_order_dtlafter_disc_amount']) +
+                                    '" title="' + notNullNo(row[
+                                    'purchase_order_dtlafter_disc_amount']) +
+                                    '" class="tblGridCal_after_discount_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][pd_tax_on]" data-id="pd_tax_on" value="' + notNull(row[
+                                        'purchase_order_dtltax_on']) + '" title="' + notNull(row[
+                                        'purchase_order_dtltax_on']) +
+                                    '" class="pd_tax_on form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gst_perc]" data-id="gst_perc" value="' + notNullNo(row[
+                                        'purchase_order_dtlgst_perc']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlgst_perc']) +
+                                    '" class="tblGridCal_gst_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gst_amount]" data-id="gst_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlgst_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlgst_amount']) +
+                                    '" class="tblGridCal_gst_amount form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fed_perc]" data-id="fed_perc" value="' + notNullNo(row[
+                                        'purchase_order_dtlfed_perc']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlfed_perc']) +
+                                    '" class="tblGridCal_fed_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fed_amount]" data-id="fed_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlfed_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlfed_amount']) +
+                                    '" class="tblGridCal_fed_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][pd_disc]" data-id="pd_disc" value="' + notNull(row[
+                                        'purchase_order_dtldisc_on']) + '" title="' + notNull(row[
+                                        'purchase_order_dtldisc_on']) +
+                                    '" class="pd_disc form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][spec_disc_perc]" data-id="spec_disc_perc" value="' + notNullNo(
+                                        row['purchase_order_dtlspec_disc_perc']) + '" title="' +
+                                    notNullNo(row['purchase_order_dtlspec_disc_perc']) +
+                                    '" class="tblGridCal_spec_disc_perc tb_moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][spec_disc_amount]" data-id="spec_disc_amount" value="' +
+                                    notNullNo(row['purchase_order_dtlspec_disc_amount']) + '" title="' +
+                                    notNullNo(row['purchase_order_dtlspec_disc_amount']) +
+                                    '" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gross_amount]" data-id="gross_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtltotal_amount']) + '" title="' + notNullNo(
+                                        row['purchase_order_dtltotal_amount']) +
+                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][net_amount]" data-id="net_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlnet_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlnet_amount']) +
+                                    '" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][net_tp]" data-id="net_tp" value="' + notNullNo(row[
+                                        'purchase_order_dtlnet_tp']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlnet_tp']) +
+                                    '" class="tblGridCal_net_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][last_tp]" data-id="last_tp" value="' + notNullNo(row[
+                                        'purchase_order_dtllast_tp']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtllast_tp']) +
+                                    '" class="tblGridCal_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][vend_last_tp]" data-id="vend_last_tp" value="' + notNullNo(row[
+                                        'purchase_order_dtlvend_last_tp']) + '" title="' + notNullNo(
+                                        row['purchase_order_dtlvend_last_tp']) +
+                                    '" class="tblGridCal_vend_last_tp form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][tp_diff]" data-id="tp_diff" value="' + notNullNo(row[
+                                        'purchase_order_dtltp_diff']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtltp_diff']) +
+                                    '" class="tblGridCal_tp_diff form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gp_perc]" data-id="gp_perc" value="' + notNullNo(row[
+                                        'purchase_order_dtlgp_perc']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlgp_perc']) +
+                                    '" class="tblGridCal_gp_perc form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][gp_amount]" data-id="gp_amount" value="' + notNullNo(row[
+                                        'purchase_order_dtlgp_amount']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlgp_amount']) +
+                                    '" class="tblGridCal_gp_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][remarks]" data-id="remarks" value="' + notNullNo(row[
+                                        'purchase_order_dtlremarks']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlremarks']) +
+                                    '" class="form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][fc_rate]" data-id="fc_rate" value="' + notNullNo(row[
+                                        'purchase_order_dtlfc_rate']) + '" title="' + notNullNo(row[
+                                        'purchase_order_dtlfc_rate']) +
+                                    '" class="tblGridCal_fc_rate form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][po_no]" data-id="po_no" value="' + row['purchase_order_code'] +
+                                    '" class="po_no form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][po_net_tp]" data-id="po_net_tp" value="' + notNullNo(row[
+                                        'purchase_order_dtlnet_tp']) +
+                                    '" class="po_net_tp form-control erp-form-control-sm" readonly></td>' +
                                     '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group">' +
                                     '<button type="button" class="btn btn-danger gridBtn del_row"><i class="la la-trash"></i></button>' +
                                     '</div></td>' +
@@ -1534,11 +2120,9 @@ var poXhr = true;
                 closeModal();
             });
         };
-
-
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v=1') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
-    {{--<script src="{{ asset('js/pages/js/common/user-form-setting.js') }}" type="text/javascript"></script>--}}
+    {{-- <script src="{{ asset('js/pages/js/common/user-form-setting.js') }}" type="text/javascript"></script> --}}
 @endsection
