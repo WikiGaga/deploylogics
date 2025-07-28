@@ -1853,6 +1853,8 @@
 
                         poXhr = true;
                         $('body').removeClass('pointerEventsNone');
+                        $('#loader-container').hide();
+                        $('#page-content').removeClass('blurred disabled');
                     },
                     error: function() {
                         poXhr = true;
