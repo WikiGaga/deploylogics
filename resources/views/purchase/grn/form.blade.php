@@ -1845,8 +1845,8 @@
                                 changeRateColor(product_id);
                             });
 
-                            funcRowInit();
-                            updateHiddenFields();
+                            // funcRowInit();
+                            // updateHiddenFields();
                         } else {
                             toastr.error("PO No is not correct.");
                         }
