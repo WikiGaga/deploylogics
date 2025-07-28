@@ -1810,10 +1810,10 @@
                                     <option value="${notNull(row.uom_id)}" selected>${notNull(row.uom_name)}</option>
                                 </select>
                             </td>
-                            <td><input type="text" readonly name="pd[${total_length}][pd_packing]" value="${notNull(row.packing)}" class="pd_packing form-control erp-form-control-sm"></td>
+                            <td><input type="text" readonly name="pd[${total_length}][pd_packing]" value="${notNull(row.purchase_order_dtlpacking)}" class="pd_packing form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][sup_barcode]" value="${notNull(row.grn_supplier_barcode)}" class="sup_barcode tb_moveIndex form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][quantity]" value="${notNull(row.purchase_order_dtlquantity)}" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
-                            <td><input type="text" name="pd[${total_length}][foc_qty]" value="" class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
+                            <td><input type="text" name="pd[${total_length}][foc_qty]" value="${notNull(row.purchase_order_dtlfoc_quantity)}" class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][sale_rate]" value="${notNullNo(row.purchase_order_dtlsale_rate)}" readonly class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][fc_rate]" value="${notNullNo(row.purchase_order_dtlfc_rate)}" class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][rate]" value="${notNullNo(row.purchase_order_dtlrate)}" class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
@@ -1825,7 +1825,7 @@
                             <td><input type="text" name="pd[${total_length}][batch_no]" value="${notNull(row.batch_no)}" class="tb_moveIndex form-control erp-form-control-sm"></td>
                             <td><input type="text" name="pd[${total_length}][production_date]" value="${notNull(row.production_date)}" class="date_inputmask tb_moveIndex form-control erp-form-control-sm" title="${notNull(row.production_date)}"></td>
                             <td><input type="text" name="pd[${total_length}][expiry_date]" value="${notNull(row.expiry_date)}" class="date_inputmask tb_moveIndex form-control erp-form-control-sm" title="${notNull(row.expiry_date)}"></td>
-                            <td><input type="text" name="pd[${total_length}][gross_amount]" value="${notNullNo(row.purchase_order_dtlgross_amount)}" readonly class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm"></td>
+                            <td><input type="text" name="pd[${total_length}][gross_amount]" value="${notNullNo(row.purchase_order_dtltotal_amount)}" readonly class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm"></td>
                             <td>
                                 <div class="erp_form__grid_th_btn">
                                     <button type="button" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-danger btn-sm del_row">
@@ -1842,7 +1842,7 @@
                                 var row = $(this);
                                 var product_id = row.find('.product_id');
                                 // funcHeaderCalc(row);
-                                changeRateColor(product_id);
+                                // changeRateColor(product_id);
                             });
 
                             // funcRowInit();
