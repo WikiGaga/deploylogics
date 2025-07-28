@@ -1080,7 +1080,7 @@
         });
     </script>
     <script>
-        $(document).ready() {
+        $(document).ready(function () {
 
             function fetchAndFillPO(po_id) {
                 if (!po_id) return;
@@ -1228,7 +1228,7 @@
                         }
                     }
                 });
-            }
+            };
 
 
             $('#getPOData').on('click', function() {
@@ -1237,7 +1237,7 @@
             });
 
 
-        };
+        });
 
 
         function selectPO() {
