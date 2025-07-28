@@ -1793,7 +1793,7 @@
                                 total_length++;
 
                                 html += `<tr>
-                            <th scope="row">
+                            <th scope="row" style="padding:0">
                                 <div class="erp_form__grid_th_input">
                                     <input type="text" readonly name="pd[${total_length}][sr_no]" value="${total_length}" class="sr_no form-control erp-form-control-sm">
                                     <input type="hidden" name="pd[${total_length}][product_id]" value="${notNull(row.product_id)}" class="product_id form-control erp-form-control-sm">
