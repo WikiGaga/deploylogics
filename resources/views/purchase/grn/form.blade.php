@@ -1232,7 +1232,7 @@
 
 
             $('#getPOData').on('click', function() {
-                let po_id = $('#purchase_order_id').val();
+                let po_id = $('#purchase_order').val().trim();
                 fetchAndFillPO(po_id);
             });
 
