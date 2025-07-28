@@ -1847,14 +1847,13 @@
 
                             funcRowInit();
                             updateHiddenFields();
+
+                            poXhr = true;
+                            $('body').removeClass('pointerEventsNone');
                         } else {
                             toastr.error("PO No is not correct.");
                         }
 
-                        poXhr = true;
-                        $('body').removeClass('pointerEventsNone');
-                        $('#loader-container').hide();
-                        $('#page-content').removeClass('blurred disabled');
                     },
                     error: function() {
                         poXhr = true;
