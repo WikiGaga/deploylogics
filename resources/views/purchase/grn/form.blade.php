@@ -1841,19 +1841,18 @@
                             $('.erp_form__grid_body tr').each(function() {
                                 var row = $(this);
                                 var product_id = row.find('.product_id');
-                                funcHeaderCalc(row);
+                                // funcHeaderCalc(row);
                                 changeRateColor(product_id);
                             });
 
                             funcRowInit();
                             updateHiddenFields();
-
-                            poXhr = true;
-                            $('body').removeClass('pointerEventsNone');
                         } else {
                             toastr.error("PO No is not correct.");
                         }
 
+                        poXhr = true;
+                        $('body').removeClass('pointerEventsNone');
                     },
                     error: function() {
                         poXhr = true;
