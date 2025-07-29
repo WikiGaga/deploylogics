@@ -467,7 +467,7 @@
                                                 </th>
                                             </tr>
                                         </thead>
-                                        {{-- <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
+                                        <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
                                             <tr>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_input">
@@ -615,7 +615,7 @@
                                                     </div>
                                                 </th>
                                             </tr>
-                                        </tbody> --}}
+                                        </tbody>
                                         <tbody class="erp_form__grid_body">
 
                                             @if (isset($data['current']->grn_dtl))
@@ -1736,6 +1736,7 @@
                                 // changeRateColor(product_id);
                             });
 
+                            allGridTotal();
                             // funcRowInit();
                             // updateHiddenFields();
                         } else {
