@@ -468,6 +468,155 @@
                                             </tr>
                                         </thead>
                                         <tbody class="erp_form__grid_body">
+
+                                            <tr>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="sr_no" readonly type="text"
+                                                            class="sr_no form-control erp-form-control-sm">
+                                                        <input id="product_id" readonly type="hidden"
+                                                            class="product_id form-control erp-form-control-sm">
+                                                        <input id="product_barcode_id" readonly type="hidden"
+                                                            class="product_barcode_id form-control erp-form-control-sm">
+                                                        <input id="uom_id" readonly type="hidden"
+                                                            class="uom_id form-control erp-form-control-sm">
+                                                        <input id="grn_supplier_id" readonly type="hidden"
+                                                            class="grn_supplier_id form-control erp-form-control-sm handle">
+                                                        <input id="grn_dtl_po_rate" readonly type="hidden"
+                                                            class="grn_dtl_po_rate form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="pd_barcode" type="text"
+                                                            class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"
+                                                            data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
+                                                            data-url_popup="{{ action('Common\DataTableController@helpOpen', 'productHelp') }}">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="product_name" readonly type="text"
+                                                            class="product_name form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <select id="pd_uom"
+                                                            class="pd_uom tb_moveIndex form-control erp-form-control-sm">
+                                                            <option value="">Select</option>
+                                                        </select>
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="pd_packing" readonly type="text"
+                                                            class="pd_packing form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="grn_supplier_barcode" type="text"
+                                                            class="sup_barcode tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="quantity" type="text"
+                                                            class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="foc_qty" type="text"
+                                                            class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="sale_rate" data-id="sale_rate" type="text"
+                                                            class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"
+                                                            readonly>
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="fc_rate" type="text"
+                                                            class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="rate" type="text"
+                                                            class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="amount" type="text"
+                                                            class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="dis_perc" type="text"
+                                                            class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="dis_amount" type="text"
+                                                            class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="vat_perc" type="text"
+                                                            class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="vat_amount" type="text"
+                                                            class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="batch_no" type="text"
+                                                            class="tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="production_date" value=""
+                                                            title="{{ date('d-m-Y') }}" type="text"
+                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="expiry_date" value="" title="{{ date('d-m-Y') }}"
+                                                            type="text"
+                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="gross_amount" readonly type="text"
+                                                            class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_btn">
+                                                        <button type="button" id="addData"
+                                                            class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
+                                                            <i class="la la-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </th>
+                                            </tr>
+
                                             @if (isset($data['current']->grn_dtl))
                                                 @foreach ($data['current']->grn_dtl as $dtl)
                                                     @php
@@ -645,155 +794,9 @@
                                                 @endforeach
                                             @endif
                                         </tbody>
-                                        <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
-                                            <tr>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="sr_no" readonly type="text"
-                                                            class="sr_no form-control erp-form-control-sm">
-                                                        <input id="product_id" readonly type="hidden"
-                                                            class="product_id form-control erp-form-control-sm">
-                                                        <input id="product_barcode_id" readonly type="hidden"
-                                                            class="product_barcode_id form-control erp-form-control-sm">
-                                                        <input id="uom_id" readonly type="hidden"
-                                                            class="uom_id form-control erp-form-control-sm">
-                                                        <input id="grn_supplier_id" readonly type="hidden"
-                                                            class="grn_supplier_id form-control erp-form-control-sm handle">
-                                                        <input id="grn_dtl_po_rate" readonly type="hidden"
-                                                            class="grn_dtl_po_rate form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="pd_barcode" type="text"
-                                                            class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"
-                                                            data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
-                                                            data-url_popup="{{ action('Common\DataTableController@helpOpen', 'productHelp') }}">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="product_name" readonly type="text"
-                                                            class="product_name form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <select id="pd_uom"
-                                                            class="pd_uom tb_moveIndex form-control erp-form-control-sm">
-                                                            <option value="">Select</option>
-                                                        </select>
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="pd_packing" readonly type="text"
-                                                            class="pd_packing form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="grn_supplier_barcode" type="text"
-                                                            class="sup_barcode tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="quantity" type="text"
-                                                            class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="foc_qty" type="text"
-                                                            class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="sale_rate" data-id="sale_rate" type="text"
-                                                            class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"
-                                                            readonly>
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="fc_rate" type="text"
-                                                            class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="rate" type="text"
-                                                            class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="amount" type="text"
-                                                            class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="dis_perc" type="text"
-                                                            class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="dis_amount" type="text"
-                                                            class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="vat_perc" type="text"
-                                                            class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="vat_amount" type="text"
-                                                            class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="batch_no" type="text"
-                                                            class="tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="production_date" value=""
-                                                            title="{{ date('d-m-Y') }}" type="text"
-                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="expiry_date" value="" title="{{ date('d-m-Y') }}"
-                                                            type="text"
-                                                            class="date_inputmask tb_moveIndex form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_input">
-                                                        <input id="gross_amount" readonly type="text"
-                                                            class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_btn">
-                                                        <button type="button" id="addData"
-                                                            class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
-                                                            <i class="la la-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                        </tbody>
+                                        {{-- <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
+
+                                        </tbody> --}}
                                         <tbody class="erp_form__grid_body_total">
                                             <tr>
                                                 <td></td>
@@ -950,8 +953,7 @@
                                                                 $expense_perc = '';
                                                                 $expense = \App\Models\TblPurcGrnExpense::where(
                                                                     'grn_id',
-                                                                    $id,
-                                                                )
+                                                                    $id)
                                                                     ->where(
                                                                         'chart_account_id',
                                                                         $expense_accounts->chart_account_id,
@@ -1080,116 +1082,6 @@
         });
     </script>
     <script>
-        //         $(document).ready(function() {
-        //             function notNull(val) {
-        //                 return val !== null && val !== undefined ? val : '';
-        //             }
-
-        //             function notNullNo(val) {
-        //                 if (val === null || val === undefined || isNaN(val)) {
-        //                     return '';
-        //                 }
-        //                 return parseFloat(val).toFixed(3);
-        //             }
-
-        //             function fetchAndFillPO(po_id) {
-        //                 if (!po_id) return;
-
-        //                 $.ajax({
-        //                     type: 'GET',
-        //                     url: '/grn/po/' + po_id,
-        //                     success: function(response) {
-        //                         const poDetails = response?.all?.po_details ?? [];
-
-        //                         if (!poDetails.length) return;
-
-        //                         // Remove existing rows related to the current PO
-        //                         $('#repeated_data > tr > td:first-child').each(function() {
-        //                             const purchase_order_id = $(this).find(
-        //                                 'input[data-id="purchase_order_id"]').val();
-        //                             if (purchase_order_id) {
-        //                                 $(this).closest('tr').remove();
-        //                             }
-        //                         });
-
-        //                         updateKeys();
-
-        //                         let tr = '';
-        //                         let total_length = $('#repeated_data > tr').length;
-
-        //                         poDetails.forEach((row) => {
-        //                             total_length++;
-
-        //                             tr += `
-    // <tr>
-    //     <td class="handle">
-    //         <i class="fa fa-arrows-alt-v handle"></i>
-    //         <input type="text" name="pd[${total_length}][sr_no]" value="${total_length}" title="${total_length}" class="form-control sr_no erp-form-control-sm handle" readonly>
-    //         <input type="hidden" name="pd[${total_length}][purchase_order_id]" data-id="purchase_order_id" value="${po_id}" class="purchase_order_id form-control erp-form-control-sm" readonly>
-    //         <input type="hidden" name="pd[${total_length}][product_id]" data-id="product_id" value="${notNull(row.product_id)}" class="product_id form-control erp-form-control-sm" readonly>
-    //         <input type="hidden" name="pd[${total_length}][uom_id]" data-id="uom_id" value="${notNull(row.uom_id)}" class="uom_id form-control erp-form-control-sm" readonly>
-    //         <input type="hidden" name="pd[${total_length}][product_barcode_id]" data-id="product_barcode_id" value="${notNull(row.product_barcode_id)}" class="product_barcode_id form-control erp-form-control-sm" readonly>
-    //         <input type="hidden" name="pd[${total_length}][supplier_id]" data-id="supplier_id" value="" class="supplier_id form-control erp-form-control-sm" readonly>
-    //     </td>
-
-    //     <td><input type="text" name="pd[${total_length}][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" class="sup_barcode form-control erp-form-control-sm moveIndex" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][pd_barcode]" data-id="pd_barcode" value="${notNull(row.barcode?.product_barcode_barcode)}" class="form-control erp-form-control-sm" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][product_name]" data-id="product_name" value="${notNull(row.product?.product_name)}" class="pd_product_name form-control erp-form-control-sm" readonly></td>
-
-    //     <td>
-    //         <select class="pd_uom field_readonly moveIndex form-control erp-form-control-sm" name="pd[${total_length}][uom]" data-id="uom" title="${notNull(row.uom?.uom_name)}">
-    //             <option value="${notNull(row.uom?.uom_id)}">${notNull(row.uom?.uom_name)}</option>
-    //         </select>
-    //     </td>
-
-    //     <td><input type="text" name="pd[${total_length}][packing]" data-id="packing" value="${notNull(row.purchase_order_dtlpacking)}" class="pd_packing form-control erp-form-control-sm" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][quantity]" data-id="quantity" value="${notNull(row.purchase_order_dtlquantity)}" class="tblGridCal_qty moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][foc_qty]" data-id="foc_qty" value="${notNull(row.purchase_order_dtlfoc_quantity)}" class="tblGridCal_foc_qty form-control erp-form-control-sm validNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][fc_rate]" data-id="fc_rate" value="${notNull(row.purchase_order_dtlfc_rate)}" class="fc_rate form-control erp-form-control-sm validNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][rate]" data-id="rate" value="${notNullNo(row.purchase_order_dtlrate)}" class="tblGridCal_rate moveIndex form-control erp-form-control-sm validNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][amount]" data-id="amount" value="${notNullNo(row.purchase_order_dtlamount)}" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][discount]" data-id="discount" value="${notNullNo(row.purchase_order_dtldisc_percent)}" class="tblGridCal_discount moveIndex form-control erp-form-control-sm validNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][discount_val]" data-id="discount_val" value="${notNullNo(row.purchase_order_dtldisc_amount)}" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][vat_perc]" data-id="vat_perc" value="${notNullNo(row.purchase_order_dtlvat_percent)}" class="tblGridCal_vat_perc moveIndex form-control erp-form-control-sm validNumber"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][vat_val]" data-id="vat_val" value="${notNullNo(row.purchase_order_dtlvat_amount)}" class="tblGridCal_vat_amount form-control erp-form-control-sm validNumber" readonly></td>
-
-    //     <td><input type="text" name="pd[${total_length}][batch_no]" data-id="batch_no" class="moveIndex form-control form-control-sm"></td>
-
-    //     <td><input type="text" name="pd[${total_length}][production_date]" data-id="production_date" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>
-
-    //     <td><input type="text" name="pd[${total_length}][expiry_date]" data-id="expiry_date" class="form-control form-control-sm date_inputmask tb_moveIndex" /></td>
-
-    //     <td><input type="text" name="pd[${total_length}][gross_amount]" data-id="gross_amount" value="${notNullNo(row.purchase_order_dtltotal_amount)}" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>
-
-    //     <td class="text-center"></td>
-    // </tr>
-    //                     `;
-        //                         });
-
-        //                         $('#repeated_data').append(tr);
-        //                         addDataInit();
-        //                         allCalcFunc();
-        //                     }
-        //                 });
-        //             }
-
-        //             $('#getPOData').on('click', function() {
-        //                 const po_id = $('#purchase_order').val().trim();
-        //                 fetchAndFillPO(po_id);
-        //             });
-        //         });
-
 
         function selectPO() {
             $('#help_datatable_poHelp').on('click', 'tbody>tr', function(e) {
