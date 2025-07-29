@@ -467,8 +467,7 @@
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody class="erp_form__grid_body">
-
+                                        <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
                                             <tr>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_input">
@@ -616,6 +615,8 @@
                                                     </div>
                                                 </th>
                                             </tr>
+                                        </tbody>
+                                        <tbody class="erp_form__grid_body">
 
                                             @if (isset($data['current']->grn_dtl))
                                                 @foreach ($data['current']->grn_dtl as $dtl)
@@ -794,9 +795,7 @@
                                                 @endforeach
                                             @endif
                                         </tbody>
-                                        {{-- <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
 
-                                        </tbody> --}}
                                         <tbody class="erp_form__grid_body_total">
                                             <tr>
                                                 <td></td>
@@ -953,7 +952,8 @@
                                                                 $expense_perc = '';
                                                                 $expense = \App\Models\TblPurcGrnExpense::where(
                                                                     'grn_id',
-                                                                    $id)
+                                                                    $id,
+                                                                )
                                                                     ->where(
                                                                         'chart_account_id',
                                                                         $expense_accounts->chart_account_id,
@@ -1082,7 +1082,6 @@
         });
     </script>
     <script>
-
         function selectPO() {
             $('#help_datatable_poHelp').on('click', 'tbody>tr', function(e) {
                 var code = $(this).find('td[data-field="purchase_order_code"]').text();
