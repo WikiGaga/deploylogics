@@ -524,7 +524,7 @@ function allGridTotal(){
     tr.find('.total_grid_gross_amount>input').val(funcNumValid(t_gross_amount).toFixed(3));
     // total_grid_amount is net amount
     tr.find('.total_grid_amount>input').val(funcNumValid(t_amount).toFixed(3));
-    $('span.t_total').html(funcNumValid(t_amount).toFixed(3));
+    $('span.t_total').val(funcNumValid(t_amount).toFixed(3));
     tr.find('.total_grid_net_tp>input').val("") // val(funcNumValid(t_net_tp).toFixed(3));
     tr.find('.total_grid_last_tp>input').val("") // val(funcNumValid(t_last_tp).toFixed(3));
     tr.find('.total_grid_vend_last_tp>input').val("") // val(funcNumValid(t_vend_last_tp).toFixed(3));
