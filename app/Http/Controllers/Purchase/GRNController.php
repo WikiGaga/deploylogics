@@ -627,7 +627,7 @@ class GRNController extends Controller
                     $grnDtl->grn_dtl_po_rate = $this->addNo($dtl['grn_dtl_po_rate']);
                     $grnDtl->tbl_purc_grn_dtl_packing = $dtl['pd_packing'];
                     $grnDtl->qty_base_unit = (isset($dtl['pd_packing'])?$dtl['pd_packing']:'0') * ((isset($dtl['quantity'])?$dtl['quantity']:'0')+(isset($dtl['foc_qty'])?$dtl['foc_qty']:'0'));
-                    // $grnDtl->tbl_purc_grn_dtl_supplier_barcode = $dtl['grn_supplier_barcode'];
+                    $grnDtl->tbl_purc_grn_dtl_supplier_barcode = $dtl['grn_supplier_barcode'] ?? '';
                     $grnDtl->product_barcode_barcode = $dtl['pd_barcode'];
                     $grnDtl->tbl_purc_grn_dtl_quantity = $dtl['quantity'];
                     $grnDtl->tbl_purc_grn_dtl_foc_quantity = $dtl['foc_qty'];
@@ -673,7 +673,7 @@ class GRNController extends Controller
                             $stmt = $pdo->prepare("begin ".Utilities::getDatabaseUsername().".PRO_PURC_SUP_BATCH_INSERT(:p1, :p2, :p3, :p4, :p5, :p6); end;");
                             $stmt->bindParam(':p1', $dtl['product_id']);
                             $stmt->bindParam(':p2', $supplier_id);
-                            // $stmt->bindParam(':p3', $dtl['grn_supplier_barcode']);
+                            $stmt->bindParam(':p3', $dtl['grn_supplier_barcode']);
                             $stmt->bindParam(':p4', $business_id);
                             $stmt->bindParam(':p5', $company_id);
                             $stmt->bindParam(':p6', $branch_id);
