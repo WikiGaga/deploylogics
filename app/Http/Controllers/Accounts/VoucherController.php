@@ -116,7 +116,7 @@ class VoucherController extends Controller
                 break;
             }
             case 'cpv': {
-                $data['page_data']['title'] = 'Cash Deposit Voucher';
+                $data['page_data']['title'] = 'Cash Payment';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '37';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
@@ -291,25 +291,25 @@ class VoucherController extends Controller
         }else{
             $data['users'] = User::where('user_entry_status',1)->where(Utilities::currentBC())->orderby(DB::raw('lower(name)'))->get();
         }
-        
+
         $data['cash_name'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', "6-01-05-0001")->where(Utilities::currentBC())->orderBy('chart_name')->first();
         $data['currency']  = TblDefiCurrency::where('currency_entry_status',1)->where(Utilities::currentBC())->get();
-        
+
         $user = User::where('id',auth()->user()->id)->where('user_entry_status',1)->where(Utilities::currentBC())->first();
         $data['voucher_post'] = Permission::where('menu_dtl_id',$data['stock_menu_id'])->where('display_name','post')->first();
         if(isset($data['voucher_post']))
         {
-            if($data['voucher_post']->display_name == "post")   
+            if($data['voucher_post']->display_name == "post")
             {
                 $data['page_data']['post'] = $data['stock_menu_id'].'-post';
             }else{
                 $data['page_data']['post'] ='';
-            }  
+            }
         }else{
             $data['page_data']['post'] ='';
-        }   
-        
-        
+        }
+
+
         $arr = [
             'biz_type' => 'branch',
             'code' => $data['voucher_no'],
@@ -398,7 +398,7 @@ class VoucherController extends Controller
                 $voucher_no = $code->voucher_no;
                 $user= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_user_id');
                 $voucher_user_id = $user->voucher_user_id;
-                
+
                 $del_rvs = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->get();
                 foreach ($del_rvs as $del_rv){
                     TblAccoVoucher::where('voucher_id',$del_rv->voucher_id)->where(Utilities::currentBCB())->delete();
@@ -678,7 +678,7 @@ class VoucherController extends Controller
                     }else{
                         $voucher->voucher_user_id = auth()->user()->id;
                     }
-                    
+
                     $voucher->save();
 
                     //---------grid entry----------
@@ -1441,7 +1441,7 @@ class VoucherController extends Controller
                 $voucher->business_id = auth()->user()->business_id;
                 $voucher->company_id = auth()->user()->company_id;
                 $voucher->branch_id = auth()->user()->branch_id;
-                
+
                 if(isset($id))
                 {
                     $voucher->update_user_id = auth()->user()->id;
@@ -2068,7 +2068,7 @@ class VoucherController extends Controller
                     $voucher->business_id = auth()->user()->business_id;
                     $voucher->company_id = auth()->user()->company_id;
                     $voucher->branch_id = auth()->user()->branch_id;
-                    
+
                     if(isset($id))
                     {
                         $voucher->update_user_id = auth()->user()->id;
@@ -2103,7 +2103,7 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_fc_credit = isset($dtl['voucher_fc_credit'])?$this->addNo($dtl['voucher_fc_credit']):0;
                     $voucherDtl->business_id = auth()->user()->business_id;
                     $voucherDtl->company_id = auth()->user()->company_id;
-                    $voucherDtl->branch_id = auth()->user()->branch_id; 
+                    $voucherDtl->branch_id = auth()->user()->branch_id;
                     if(isset($id))
                     {
                         $voucherDtl->update_user_id = auth()->user()->id;
@@ -2468,7 +2468,7 @@ class VoucherController extends Controller
     {
         $salesman_id = $request->salesman_id;
         $voucher_date = date('Y-m-d', strtotime($request->voucher_date));
-      
+
         $terminal = ViewSaleSalesInvoice::where('sales_entry_status' , 1)
             ->whereDate('sales_date' , $voucher_date)
             ->where('sales_sales_man' , $salesman_id)
@@ -2714,7 +2714,7 @@ class VoucherController extends Controller
     {
         $voucher_id  = $request->voucher_id;
         $data = [];
-        
+
         //$data['locations'] = ViewInveDisplayLocation::where('branch_id',auth()->user()->branch_id)->where('store_id',$store_id)->orderBy('display_location_name_string')->get();
 
         if(!empty($voucher_id)){
@@ -2728,7 +2728,7 @@ class VoucherController extends Controller
         }
         return response()->json($data);
     }
-    
+
     public function VoucherUnPosted(Request $request)
     {
         $data = [];
@@ -2744,10 +2744,10 @@ class VoucherController extends Controller
         }else{
             abort('404');
         }
-        
+
         return response()->json(['status'=>'success']);
     }
-    
+
     public function VoucherPosted(Request $request)
     {
         $data = [];
@@ -2763,7 +2763,7 @@ class VoucherController extends Controller
         }else{
             abort('404');
         }
-        
+
         return response()->json(['status'=>'success']);
     }
 
