@@ -55,11 +55,11 @@
         <form id="voucher_form" class="kt-form" method="post" action="{{action('Accounts\VoucherController@pvstore', [$type,isset($id)?$id:''])}}">
     @endif
     @csrf
-    
+
     @if(session('msg'))
         <script>
             alert('This voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}'; 
+            document.location='/listing/accounts/{{ $type }}';
         </script>
     @endif
     <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
@@ -203,7 +203,7 @@
                                 @else
                                     <label class="col-lg-3 erp-col-form-label">Payment Through:<span class="required">*</span></label>
                                 @endif
-                                <div class="col-lg-9"> 
+                                <div class="col-lg-9">
                                     <div class="erp-select2">
                                         <select class="form-control erp-form-control-sm moveIndex kt-select2" id="kt_select2_1" name="cash_type">
                                             <option value="">Select</option>

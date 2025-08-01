@@ -280,7 +280,7 @@
                     $data['case'] == 'rv' ||
                     $data['case'] == 'obv' ||
                     $data['case'] == 'product-discount-setup')
-                @include('partial_script.custom_filter_listing')
+                {{-- @include('partial_script.custom_filter_listing') --}}
             @endif
 
             <div class="kt-portlet__body kt-portlet__body--fit">
