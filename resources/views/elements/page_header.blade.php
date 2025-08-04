@@ -26,11 +26,11 @@
                 <i class="la la-clipboard"></i>
             </a>
         @endif--}}
-        @if(isset($data['page_data']['post']) && $data['page_data']['post'] != '')
+        {{-- @if(isset($data['page_data']['post']) && $data['page_data']['post'] != '')
             <a href="" onclick="voucher_posted();" style="background-color:#2471A3;color:#FFFF;" class="btn btn-sm btn-icon" title="Post">
                 Post
             </a>
-        @endif
+        @endif --}}`
         {{-- @if($data['form_type'] == 'pos-sales-invoice') --}}
             <font class="tTip" color="" title="Click Here to Send via Whatsapp!">
                 <div class="btn-group" role="group">
