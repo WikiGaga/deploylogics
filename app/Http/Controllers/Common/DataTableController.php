@@ -975,7 +975,7 @@ class DataTableController extends Controller
 
         if($helpType == 'FoodRecipeHelp'){
             $data['show_name'] = 'id';
-            $data['hideKeys'] = ['id'];
+            $data['hideKeys'] = ['id','name'];
             $data['keys'] = ['id','name'];
             $merge = array_merge( $data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
