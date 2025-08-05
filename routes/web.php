@@ -410,7 +410,7 @@ Route::group(['middleware' => ['auth']], function () {
         });
 
         Route::get('close-out-report','Report\UserReportController@closeOutReport')->name('report.close-out-report');
-        
+
         Route::prefix('day')->group(function () {
             Route::post('get-pos-shift','Sales\DayController@getPosShiftData')->name('getPosShiftData');
         });
@@ -1127,6 +1127,12 @@ Route::group(['middleware' => ['auth']], function () {
             //Route::get('product-item-tax','Inventory\StockAuditController@viewProductItemTax');
             Route::post('product-item-tax-insert','Inventory\StockAuditController@storeProductItemTax');
             Route::post('product-item-tax-product-list','Inventory\StockAuditController@productListProductItemTax');
+        });
+
+        Route::prefix('food-recipes')->group(function () {
+            Route::get('form/{id?}','Inventory\FoodRecipeController@create');
+            Route::post('form/{id?}','Inventory\FoodRecipeController@store');
+            Route::post('delete/{id}','Inventory\FoodRecipeController@destroy');
         });
 
         Route::prefix('formulation')->group(function () {
