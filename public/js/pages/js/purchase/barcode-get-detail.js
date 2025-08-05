@@ -1792,7 +1792,7 @@ function get_product_formulation_detail(selected_row) {
 }
 
 function get_food_detail(selected_row) {
-    var product_name = selected_row.find('dtltr.data->td[data-field="name"]').text();
+    var product_name = selected_row.find('tr.d-none>td[data-field="name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="id"]').text();
 
     $('#food_name').val(product_name);
