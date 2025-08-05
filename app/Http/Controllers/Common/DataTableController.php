@@ -844,7 +844,6 @@ class DataTableController extends Controller
         if(isset($request['query']['generalSearch']) && !empty($request['query']['generalSearch'])){
             $str = $request['query']['generalSearch'];
         }
-        dd($str);
         $form_type = $request->form_type; // current form type
         if(isset($request->account_id)){
             $account_id = $request->account_id; // this is account id in case of vouchers
