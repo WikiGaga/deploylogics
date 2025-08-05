@@ -103,7 +103,7 @@ $(document).on('click', '.data_tbody_row', function() {
     if(caseType == 'productFormulationHelp'){
         get_product_formulation_detail(thix);
     }
-    if(form_type == 'purc_order'){
+    if(form_type == 'food_recipes'){
         get_food_detail(thix);
     }
     if(caseType == 'formulationEntryHelp'){

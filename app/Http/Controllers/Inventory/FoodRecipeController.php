@@ -15,7 +15,7 @@ class FoodRecipeController extends Controller
     public function create($id = null)
     {
         $data['page_data'] = [];
-        $data['form_type'] = 'food-recipes';
+        $data['form_type'] = 'food_recipes';
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage . self::$redirect_url;
         ;
