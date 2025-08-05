@@ -45,7 +45,7 @@ $(document).on('keyup', '.open_inline__help', function(e) {
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    console.log('hello from f2');
+    // console.log('hello from f2');
     if (e.which === 113 ) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
@@ -63,7 +63,10 @@ $(document).on('keyup', '.open_inline__help', function(e) {
             if(that.attr('id') == 'formulation_code'){
                 var product_id = $('#f_barcode').val();
                 var url = data_url + '/' + product_id  + '/' + encodeURIComponent($(this).val());
-            }else{
+            } elseif(that.attr('id') == 'formulation_code'){
+                var product_id = $('#food_id').val();
+                var url = data_url + '/' + product_id  + '/' + encodeURIComponent($(this).val());
+            } else {
                 var data_url = that.attr('data-url');
             }
 
