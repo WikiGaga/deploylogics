@@ -974,11 +974,11 @@ class DataTableController extends Controller
         }
 
         if($helpType == 'FoodRecipeHelp'){
-            $data['show_name'] = 'product_barcode_barcode';
-            $data['hideKeys'] = ['product_id','product_barcode_id','uom_id','product_barcode_packing'];
-            $data['keys'] = ['product_barcode_barcode','product_name','product_arabic_name','uom_name'];
-            $merge = array_merge( $data['keys'], $data['hideKeys']);
-            $selectColumns = implode(', ', $merge);
+            // $data['show_name'] = 'product_barcode_barcode';
+            // $data['hideKeys'] = ['product_id','product_barcode_id','uom_id','product_barcode_packing'];
+            // $data['keys'] = ['product_barcode_barcode','product_name','product_arabic_name','uom_name'];
+            // $merge = array_merge( $data['keys'], $data['hideKeys']);
+            // $selectColumns = implode(', ', $merge);
                     if(!$str){
                         $data['list'] = DB::table('food')
                             ->select('id','name')
