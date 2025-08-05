@@ -973,6 +973,38 @@ class DataTableController extends Controller
                     $data['head'] = ['Barcode','Name','Arabic Name','UOM'];
         }
 
+        if($helpType == 'FoodRecipeHelp'){
+            $data['show_name'] = 'product_barcode_barcode';
+            $data['hideKeys'] = ['product_id','product_barcode_id','uom_id','product_barcode_packing'];
+            $data['keys'] = ['product_barcode_barcode','product_name','product_arabic_name','uom_name'];
+            $merge = array_merge( $data['keys'], $data['hideKeys']);
+            $selectColumns = implode(', ', $merge);
+                    if(!$str){
+                        $data['list'] = DB::table('food')
+                            ->select('id','name')
+                            ->limit(50)->get();
+                    }
+                    if($str){
+                        $str = strtoupper($str);
+                        $replaced_str = str_replace(' ', '%', trim($str));
+                        $qry = "Select * from food
+                                WHERE upper(id) Like '%".$replaced_str."%' OR
+                                upper(name) like '%".$replaced_str."%'
+                                order by
+                                Case
+                                    WHEN upper(name) Like '".$str."' THEN 1
+                                    WHEN upper(name) Like '".$str."%' THEN 2
+                                    WHEN upper(name) Like '%".$str."' THEN 4
+                                    Else 3
+                                END,name
+                                    fetch first 50 rows only";
+
+                        $data['list'] = DB::select($qry);
+                    }
+
+                    $data['head'] = ['ID','Name'];
+        }
+
          //Formula Entry Help
          if($helpType == 'formulationEntryHelp'){
             $data['show_name'] = 'item_formulation_code';

@@ -81,7 +81,7 @@
                                                     <i class="la la-minus-circle"></i>
                                                 </span>
                                             </div>
-                                            <input type="text" id="f_barcode" name="f_barcode" value="{{isset($product_barcode)?$product_barcode:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','productFormulationHelp')}}" class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm" placeholder="Enter Here">
+                                            <input type="text" id="f_barcode" name="f_barcode" value="{{isset($product_barcode)?$product_barcode:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','FoodRecipeHelp')}}" class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm" placeholder="Enter Here">
                                             <input type="hidden" id="f_product_id" name="f_product_id" value="{{isset($product_id)?$product_id:''}}" class="form-control erp-form-control-sm">
                                             <input type="hidden" id="f_product_barcode_id" name="f_product_barcode_id" value="{{isset($product_barcode_id)?$product_barcode_id:''}}" class="form-control erp-form-control-sm">
                                             <!-- <div class="input-group-append">
