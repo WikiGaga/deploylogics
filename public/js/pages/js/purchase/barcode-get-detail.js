@@ -1790,7 +1790,9 @@ function get_product_formulation_detail(selected_row) {
     $('#inLineHelp').remove();
     selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
 }
+
 function get_food_detail(selected_row) {
+    console.log('hello');
     var product_name = selected_row.find('tr.data-dtl>td[data-field="food_name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="food_id"]').text();
 
