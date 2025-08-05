@@ -1774,8 +1774,6 @@ $('#f_barcode').keydown(function(e) {
 });
 
 function get_product_formulation_detail(selected_row) {
-    console.log('hello');
-
     var product_barcode = selected_row.find('tr.data-dtl>td[data-field="product_barcode_barcode"]').text();
     var product_name = selected_row.find('tr.data-dtl>td[data-field="product_name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="product_id"]').text();
@@ -1794,8 +1792,8 @@ function get_product_formulation_detail(selected_row) {
 }
 
 function get_food_detail(selected_row) {
-    console.log('hello');
-    var product_name = selected_row.find('tr.data-dtl>td[data-field="food_name"]').text();
+    console.log(selected_row);
+    var product_name = selected_row.find('dtltr.data->td[data-field="food_name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="food_id"]').text();
 
     $('#food_name').val(product_name);
