@@ -77,8 +77,8 @@
                                                     <i class="la la-minus-circle"></i>
                                                 </span>
                                             </div>
-                                            <input type="text" id="food_id" name="food_id" value="{{isset($food_id)?$food_id:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','FoodRecipeHelp')}}" class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm" placeholder="Enter Here">
-                                            <input type="hidden" id="form_type" name="form_type" value="{{isset($food_id)?$food_id:''}}" class="form-control erp-form-control-sm">
+                                            <input type="text" id="f_barcode" name="f_barcode" value="{{isset($food_id)?$food_id:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','FoodRecipeHelp')}}" class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm" placeholder="Enter Here">
+                                            <input type="hidden" id="f_product_id" name="f_product_id" value="{{isset($food_id)?$food_id:''}}" class="form-control erp-form-control-sm">
                                             <!-- <div class="input-group-append">
                                                 <span class="input-group-text btn-open-modal">
                                                 <i class="la la-search"></i>
@@ -90,7 +90,7 @@
                             </div>
                         </div>
                         <div class="col-lg-4">
-                            <input id="food_name" name="food_name" value="{{isset($food_name)?$food_name:''}}" type="text" class="form-control erp-form-control-sm" readonly>
+                            <input id="f_product_name" name="f_product_name" value="{{isset($food_name)?$food_name:''}}" type="text" class="form-control erp-form-control-sm" readonly>
                         </div>
                     </div>
                     <div class="row">
