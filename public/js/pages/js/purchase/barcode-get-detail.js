@@ -103,6 +103,9 @@ $(document).on('click', '.data_tbody_row', function() {
     if(caseType == 'productFormulationHelp'){
         get_product_formulation_detail(thix);
     }
+    if(caseType == 'FoodRecipeHelp'){
+        get_food_detail(thix);
+    }
     if(caseType == 'formulationEntryHelp'){
         get_formula_entry(thix);
     }
@@ -279,7 +282,7 @@ $(document).on('change', '.pd_uom', function(e) {
                         get_po_product_detail(tr, response, formData);
                     }
                 }
-                if (response['central_rate_type'] == 'grn_central_rate') 
+                if (response['central_rate_type'] == 'grn_central_rate')
                 {
                     if (response['current_product'] !== "") {
                         swal.fire({
@@ -386,7 +389,7 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                         get_po_product_detail(tr, response, formData);
                     }
                 }
-                if (response['central_rate_type'] == 'grn_central_rate') 
+                if (response['central_rate_type'] == 'grn_central_rate')
                 {
                     if (response['current_product'] !== "") {
                         swal.fire({
@@ -621,11 +624,11 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.first_level_category').val(parent_group_item_name);
         tr.find('.last_level_category').val(group_item_name);
         tr.find('input.tblGridCal_sales_rate').val(tbl_purc_rate['sale_rate']);
-        
+
         if(product2['weight_id'] != "" && product2['weight_id'] != "0")
         {
             var product_barcode_packing = !valueEmpty(product2['product_barcode_packing'])?product2['product_barcode_packing']:1;
-            
+
             var amount = (parseFloat(tbl_purc_rate['sale_rate']) * parseFloat(product_barcode_packing));
 
             tr.find('input.tblGridCal_weight').val(product_barcode_packing);
@@ -805,7 +808,7 @@ function barcodeCommonData(tr, response, formData) {
         var last_disc_perc = !valueEmpty(tbl_purc_rate['last_disc_perc'])?tbl_purc_rate['last_disc_perc']:0;
         var pd_tax_on = !valueEmpty(tbl_purc_rate['pd_tax_on'])?tbl_purc_rate['pd_tax_on']:'da';
         var pd_disc = !valueEmpty(tbl_purc_rate['pd_disc'])?tbl_purc_rate['pd_disc']:'ga';
-         
+
         tr.find('.tblGridCal_qty').val(qty);
         tr.find('.tblGridCal_rate').val(cost_rate);
         tr.find('.tblGridCal_sale_rate').val(sale_rate);
@@ -836,7 +839,7 @@ function barcodeCommonData(tr, response, formData) {
         var last_gst_perc = !valueEmpty(tbl_purc_rate['last_gst_perc'])?tbl_purc_rate['last_gst_perc']:0;
         var pd_tax_on = !valueEmpty(tbl_purc_rate['pd_tax_on'])?tbl_purc_rate['pd_tax_on']:'da';
         var pd_disc = !valueEmpty(tbl_purc_rate['pd_disc'])?tbl_purc_rate['pd_disc']:'ga';
-        
+
         tr.find('.tblGridCal_qty').val(qty);
         tr.find('.tblGridCal_rate').val(cost_rate);
         tr.find('.tblGridCal_sale_rate').val(sale_rate);
@@ -864,13 +867,13 @@ function barcodeCommonData(tr, response, formData) {
     if (form_type == 'product_discount_setup') { // product_discount_setup
         setProductDiscountSetup(tr, response, formData)
     }
-    if (form_type == 'sale_report') { 
+    if (form_type == 'sale_report') {
         setSaleReport(tr, response, formData)
     }
-    if (form_type == 'purc_return') { 
+    if (form_type == 'purc_return') {
         setPurchaseReturn(tr, response, formData)
     }
-    if (form_type == 'change_rate') { 
+    if (form_type == 'change_rate') {
         setProductChangeRate(tr, response, formData)
     }
     if(form_type == 'st'){
@@ -885,7 +888,7 @@ function barcodeCommonData(tr, response, formData) {
         $('#current_product_stock').val(store_stock);
         $('#sys_qty').val(store_stock);
 
-        
+
         var grn_qty = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity']:0;
         var unit_price = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_rate'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_rate']:0;
         var discount_perc = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_disc_percent'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_disc_percent']:0;
@@ -1069,7 +1072,7 @@ function setProductDiscountSetup(tr, response, formData){
 }
 function setSaleReport(tr, response, formData){
     var actionBol = true;
-    
+
     if(actionBol){
         if(!valueEmpty(formData.autoClick) && formData.autoClick){
             $('#addData').click();
@@ -1093,7 +1096,7 @@ function setProductChangeRate(tr, response, formData)
         var current_tp = response['purc_rate']['net_tp'];
         //var last_tp = (emptyArr.includes(response['purc_rate']['last_cost_rate']))?0:response['purc_rate']['last_cost_rate'];
         var last_tp = (emptyArr.includes(response['purc_rate']['last_tp']))?0:response['purc_rate']['last_tp'];
-        
+
         var mrp = response['purc_rate']['mrp'];
         var sale_rate = response['purc_rate']['sale_rate'];
         var gp_amount = response['purc_rate']['gp_amount'];
@@ -1783,6 +1786,16 @@ function get_product_formulation_detail(selected_row) {
     $('#f_product_uom_id').val(uom_id);
     $('#f_product_barcode_id').val(product_barcode_id);
     $('#f_product_barcode_packing').val(product_barcode_packing);
+
+    $('#inLineHelp').remove();
+    selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
+}
+function get_food_detail(selected_row) {
+    var product_name = selected_row.find('tr.data-dtl>td[data-field="food_name"]').text();
+    var product_id = selected_row.find('tr.d-none>td[data-field="food_id"]').text();
+
+    $('#food_name').val(product_name);
+    $('#food_id').val(product_id);
 
     $('#inLineHelp').remove();
     selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
