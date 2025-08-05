@@ -1774,6 +1774,8 @@ $('#f_barcode').keydown(function(e) {
 });
 
 function get_product_formulation_detail(selected_row) {
+    console.log('hello');
+
     var product_barcode = selected_row.find('tr.data-dtl>td[data-field="product_barcode_barcode"]').text();
     var product_name = selected_row.find('tr.data-dtl>td[data-field="product_name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="product_id"]').text();
