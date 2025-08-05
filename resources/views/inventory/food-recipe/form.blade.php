@@ -78,7 +78,6 @@
                                                 </span>
                                             </div>
                                             <input type="text" id="food_id" name="food_id" value="{{isset($food_id)?$food_id:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','FoodRecipeHelp')}}" class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm" placeholder="Enter Here">
-                                            <input type="hidden" id="form_type" name="form_type" value="{{isset($food_id)?$food_id:''}}" class="form-control erp-form-control-sm">
                                             <!-- <div class="input-group-append">
                                                 <span class="input-group-text btn-open-modal">
                                                 <i class="la la-search"></i>
