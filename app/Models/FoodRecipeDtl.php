@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
-class FoodRecipe extends Model
+class FoodRecipeDtl extends Model
 {
-    protected $table = 'food_recipes';
+    protected $table = 'food_recipes_detail';
 
     protected $primaryKey = 'id';
 
@@ -17,12 +17,6 @@ class FoodRecipe extends Model
         return (new static)->getKeyName();
     }
 
-    public function food() {
-        return $this->belongsTo(Food::class, 'food_id');
-    }
-    public function dtls() {
-        return $this->hasMany(FoodRecipeDtl::class, 'food_recipe_id');
-    }
 
 
 }
