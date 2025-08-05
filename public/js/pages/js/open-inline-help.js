@@ -63,9 +63,6 @@ $(document).on('keyup', '.open_inline__help', function(e) {
             if(that.attr('id') == 'formulation_code'){
                 var product_id = $('#f_barcode').val();
                 var url = data_url + '/' + product_id  + '/' + encodeURIComponent($(this).val());
-            } elseif(that.attr('id') == 'formulation_code'){
-                var product_id = $('#food_id').val();
-                var url = data_url + '/' + product_id  + '/' + encodeURIComponent($(this).val());
             } else {
                 var data_url = that.attr('data-url');
             }
