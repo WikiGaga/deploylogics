@@ -45,8 +45,11 @@ class FoodRecipeController extends Controller
     }
 
 
-    public function getFoodDetailData(Request $request){
-        dd($request->all());
+    public function getFoodDetailData(Request $request)
+    {
+        $foodId = $request->input('food_id');
+        $food = FoodRecipe::find($foodId);
+        dd($food);
     }
 
 }
