@@ -83,11 +83,6 @@
                                                 <i class="la la-search"></i>
                                                 </span>
                                             </div> -->
-                                            @if($case == 'new')
-                                                <span class="input-group-text group-input-btn" id="getFoodDetailData">
-                                                    GO
-                                                </span>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -95,6 +90,11 @@
                         </div>
                         <div class="col-lg-4">
                             <input id="food_name" name="food_name" value="{{isset($food_name)?$food_name:''}}" type="text" class="form-control erp-form-control-sm" readonly>
+                            @if($case == 'new')
+                                                <span class="input-group-text group-input-btn" id="getFoodDetailData">
+                                                    GO
+                                                </span>
+                                            @endif
                         </div>
                     </div>
                     <div class="row">
@@ -269,13 +269,13 @@
             validate = true
             var food_id = $('#food_id').val();
             if(valueEmpty(food_id)){
-                toastr.error('Please Select Food Id First');
+                toastr.error('Please Select Food First');
                 validate = false;
                 return false;
             }
             if(validate){
                 var disabledElement = $('table.erp_form__grid');
-                var url = '/stock/890/get-grn-dtl-data';
+                var url = '/food-recipes/get-food-detail';
                 var formData = {
                     food_id : food_id,
                 };

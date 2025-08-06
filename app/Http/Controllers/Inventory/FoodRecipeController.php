@@ -43,4 +43,9 @@ class FoodRecipeController extends Controller
         return view('inventory.food-recipe.form', compact('data'));
     }
 
+
+    public function getFoodDetailData($request){
+        dd($request->all());
+    }
+
 }
