@@ -87,17 +87,12 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}"
                                                     class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm"
                                                     placeholder="Enter Here">
-                                                <!-- <div class="input-group-append">
-                                                                                                <span class="input-group-text btn-open-modal">
-                                                                                                <i class="la la-search"></i>
-                                                                                                </span>
-                                                                                            </div> -->
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <div class="erp_form___block">
                                     <div class="input-group open-modal-group">
                                         <input id="food_name" name="food_name" value="{{ isset($food_name) ? $food_name : '' }}"
