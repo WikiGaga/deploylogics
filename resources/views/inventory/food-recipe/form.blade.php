@@ -88,24 +88,28 @@
                                                     class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm"
                                                     placeholder="Enter Here">
                                                 <!-- <div class="input-group-append">
-                                                        <span class="input-group-text btn-open-modal">
-                                                        <i class="la la-search"></i>
-                                                        </span>
-                                                    </div> -->
+                                                                <span class="input-group-text btn-open-modal">
+                                                                <i class="la la-search"></i>
+                                                                </span>
+                                                            </div> -->
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-4">
-                                <input id="food_name" name="food_name" value="{{ isset($food_name) ? $food_name : '' }}"
-                                    type="text" class="form-control erp-form-control-sm" readonly>
-                            </div>
-                            @if ($case == 'new')
-                            <div class="input-group-append">
-                                <span class="input-group-text group-input-btn" id="getFoodDetailData">
-                                    GO
-                                </span>
+                                <div class="erp_form___block">
+                                    <div class="input-group open-modal-group">
+                                        <input id="food_name" name="food_name" value="{{ isset($food_name) ? $food_name : '' }}"
+                                            type="text" class="form-control erp-form-control-sm" readonly>
+                                    </div>
+                                    @if ($case == 'new')
+                                        <div class="input-group-append">
+                                            <span class="input-group-text group-input-btn" id="getFoodDetailData">
+                                                GO
+                                            </span>
+                                        </div>
+                                </div>
                             </div>
                             @endif
                         </div>
