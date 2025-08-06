@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\Food;
 use App\Models\FoodRecipe;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class FoodRecipeController extends Controller
     public function getFoodDetailData(Request $request)
     {
         $foodId = $request->input('food_id');
-        $food = FoodRecipe::find($foodId);
+        $food = Food::find($foodId);
         dd($food);
     }
 
