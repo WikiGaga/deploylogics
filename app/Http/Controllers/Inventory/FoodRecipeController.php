@@ -44,8 +44,8 @@ class FoodRecipeController extends Controller
     }
 
 
-    public function getFoodDetailData($request){
-        dd($request->all());
+    public function getFoodDetailData($id){
+        dd($id);
     }
 
 }

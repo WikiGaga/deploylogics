@@ -1133,7 +1133,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('form/{id?}','Inventory\FoodRecipeController@create');
             Route::post('form/{id?}','Inventory\FoodRecipeController@store');
             Route::post('delete/{id}','Inventory\FoodRecipeController@destroy');
-            Route::post('get-food-detail','Inventory\FoodRecipeController@getFoodDetailData');
+            Route::post('get-food-detail/{id}','Inventory\FoodRecipeController@getFoodDetailData');
         });
 
         Route::prefix('formulation')->group(function () {
