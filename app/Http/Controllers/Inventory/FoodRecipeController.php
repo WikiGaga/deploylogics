@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\FoodRecipe;
 use App\Library\Utilities;
+use Illuminate\Http\Request;
 
 class FoodRecipeController extends Controller
 {
@@ -44,8 +45,8 @@ class FoodRecipeController extends Controller
     }
 
 
-    public function getFoodDetailData($id){
-        dd($id);
+    public function getFoodDetailData(Request $request){
+        dd($request->all());
     }
 
 }
