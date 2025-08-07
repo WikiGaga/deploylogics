@@ -119,7 +119,7 @@ class VoucherController extends Controller
             case 'bpv': {
                 $data['page_data']['title'] = 'Bank Payment';
                 $formUrl = 'bank_voucher';
-                $data['stock_menu_id'] = '36';
+                $data['stock_menu_id'] = '342';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
