@@ -115,10 +115,10 @@
         var casetype = '{{ $data['case'] }}'
         var user_id = '{{ auth()->user()->id }}'
     </script>
-    console.log('hello' + @permission($edit));
     @permission($edit)
         <script>
             var btnEditView = true;
+            console.log('hello ' + btnEditView);
         </script>
     @endpermission
     @permission($del)
