@@ -45,13 +45,6 @@
         <form id="voucher_form" class="kt-form" method="post" action="{{action('Accounts\VoucherController@pvstore', [$type,isset($id)?$id:''])}}">
     @endif
     @csrf
-    
-    @if(session('msg'))
-        <script>
-            alert('This Voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}'; 
-        </script>
-    @endif
         <input type="hidden" value='{{$type}}' id="form_type">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
@@ -182,7 +175,7 @@
                                     </button>
                                     @php
                                         $headings = ['Sr No','Account Code','Account Name','Narration','Budget',
-                                                      'Payment Mode','Mode No','Mode Date',"{$InvHelp}",'Amount','FC Amount'];
+                                                      'Payment Mode','Mode No','Mode Date',"{$InvHelp}",'Amount','VAT %','VAT','Net Amount'];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                         @foreach($headings as $key=>$heading)
@@ -284,10 +277,28 @@
                                                 <input id="voucher_credit" type="text" class="credit validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm">
                                             </div>
                                         </th>
-                                        <th scope="col">
+                                        {{-- <th scope="col">
                                             <div class="erp_form__grid_th_title">FC Amount</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="voucher_fc_credit" type="text" class="fccredit validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm">
+                                            </div>
+                                        </th> --}}
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">VAT %</div>
+                                            <div class="erp_form__grid_th_input">
+                                                <input id="vat_perc" type="text" class="vatperc validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm" oninput="calculateAmounts()">
+                                            </div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">VAT</div>
+                                            <div class="erp_form__grid_th_input">
+                                                <input id="vat_amt" type="text" class="vatamt validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm" oninput="calculateVAT()">
+                                            </div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">Net Amount</div>
+                                            <div class="erp_form__grid_th_input">
+                                                <input id="net_amt" type="text" class="netamt validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col" width="48">
@@ -301,66 +312,6 @@
                                     </tr>
                                     </thead>
                                     <tbody class="erp_form__grid_body">
-                                    @if(isset($data['addInstallmentRow']) && $data['addInstallmentRow'] == 1)
-                                        <tr class="new-row">
-                                            <td class="handle">
-                                                <i class="fa fa-arrows-alt-v handle"></i>
-                                                <input type="text" value="1" name="pd[1][sr_no]" title="1" class="form-control erp-form-control-sm handle" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][account_id]" data-id="account_id" value="{{ $data['userdetail']['account_id'] }}" class="account_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][budget_id]" data-id="budget_id" value="" class="budget_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][budget_branch_id]" data-id="budget_branch_id" value="" class="budget_branch_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][cheque_book_id]" data-id="cheque_book_id" value="" class="cheque_book_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][invoice_id]" data-id="invoice_id" value="" class="invoice_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][installment_id]" data-id="installment_id" value="{{ $data['userdetail']['installment_id'] }}" class="installment_id form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][installment_discount]" data-id="installment_discount" value="{{ $data['userdetail']['installment_discount'] }}" class="installment_discount form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                                <input type="hidden" name="pd[1][installment_balance]" data-id="installment_balance" value="{{ $data['userdetail']['installment_balance'] }}" class="installment_balance form-control erp-form-control-sm" readonly="" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][account_code]" data-id="account_code" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" value="{{ $data['userdetail']['account_code'] }}" title="{{ $data['userdetail']['account_code'] }}" class="form-control erp-form-control-sm acc_code open_inline__help" readonly="" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][account_name]" data-id="account_name" value="{{ $data['userdetail']['account_name'] }}" title="{{ $data['userdetail']['account_name'] }}" class="form-control erp-form-control-sm acc_name" readonly="" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][voucher_descrip]" data-id="voucher_descrip" value="{{ $data['userdetail']['installment_desc'] }}" title="{{ $data['userdetail']['installment_desc'] }}" class="form-control erp-form-control-sm tb_moveIndex" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][budget]" data-id="budget" data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}" value="" title="" class="form-control erp-form-control-sm budget_dscrp open_inline__help tb_moveIndex" autocomplete="off">
-                                            </td>
-                                            <td>
-                                                <div class="erp-select2">
-                                                    <select class="tb_moveIndex form-control erp-form-control-sm" name="pd[1][payment_mode]">
-                                                        <option value="">Select</option>
-                                                        <option value="atm">ATM Transfer</option>
-                                                        <option value="cheque" selected="">Cheque</option>
-                                                        <option value="online">Online Payment</option>
-                                                    </select>
-                                                </div>
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][mode_no]" data-id="mode_no" data-url="{{action('Common\DataTableController@inlineHelpOpen', 'chequebookHelp') }}" value="" title="" class="form-control erp-form-control-sm open_inline__help tb_moveIndex" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][mode_date]" data-id="mode_date" value="{{ date('d-m-Y') }}" title="{{ date('d-m-Y') }}" class="form-control erp-form-control-sm c-date-p kt_datepicker_3 tb_moveIndex" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][invoice_code]" data-id="invoice_code" data-url="{{action('Common\DataTableController@inlineHelpOpen', 'invoiceHelp') }}" value="" title="" class="form-control erp-form-control-sm invoice_code open_inline__help tb_moveIndex" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][voucher_credit]" data-id="voucher_credit" value="{{ $data['userdetail']['installment_amount'] }}" title="" class="form-control erp-form-control-sm tb_moveIndex credit validNumber validOnlyFloatNumber" autocomplete="off">
-                                            </td>
-                                            <td class="">
-                                                <input type="text" name="pd[1][voucher_fc_credit]" data-id="voucher_fc_credit" value="{{ $data['userdetail']['installment_amount'] }}" title="{{ $data['userdetail']['installment_amount'] }}" class="form-control erp-form-control-sm tb_moveIndex fccredit validNumber validOnlyFloatNumber" autocomplete="off">
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group btn-group btn-group-sm" role="group">
-                                                    <button type="button" class="btn btn-danger gridBtn delData">
-                                                        <i class="la la-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endif
                                     @if(isset($dtls))
                                         @foreach($dtls as $data)
                                             @php
@@ -401,7 +352,10 @@
                                                     @php $credit = $data->voucher_debit; $fc_credit = $data->voucher_debit; @endphp
                                                 @endif
                                                 <td><input type="text" data-id="voucher_credit" name="pd[{{ $loop->iteration }}][voucher_credit]" value="{{number_format($credit,3)}}" title="{{$credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber" ></td>
-                                                <td><input type="text" data-id="voucher_fc_credit" name="pd[{{ $loop->iteration }}][voucher_fc_credit]" value="{{number_format($fc_credit,3)}}" title="{{$fc_credit}}" class="tb_moveIndex fccredit form-control erp-form-control-sm validNumber" ></td>
+                                                {{-- <td><input type="text" data-id="voucher_fc_credit" name="pd[{{ $loop->iteration }}][voucher_fc_credit]" value="{{number_format($fc_credit,3)}}" title="{{$fc_credit}}" class="tb_moveIndex fccredit form-control erp-form-control-sm validNumber" ></td> --}}
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][vat_perc]" data-id="vat_perc" value="{{isset($data->vat_perc)?$data->vat_perc:''}}" title="{{isset($data->vat_perc)?$data->vat_perc:''}}" class="tb_moveIndex vatperc form-control erp-form-control-sm validNumber" oninput="calculateAmountsGrid(this)"></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][vat_amt]" data-id="vat_amt" value="{{isset($data->vat_amt)?$data->vat_amt:''}}" title="{{isset($data->vat_amt)?$data->vat_amt:''}}" class="tb_moveIndex vatamt form-control erp-form-control-sm validNumber" oninput="calculateVATGrid(this)"></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][net_amt]" data-id="net_amt" value="{{isset($data->net_amt)?$data->net_amt:''}}" title="{{isset($data->net_amt)?$data->net_amt:''}}" class="tb_moveIndex netamt form-control erp-form-control-sm validNumber" ></td>
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
                                                         <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
@@ -426,9 +380,18 @@
                                             <span id="tot_credit" ></span>
                                             <input id="tot_voucher_credit" name="tot_voucher_credit" type="hidden" class="form-control erp-form-control-sm text-right" readonly>
                                         </td>
-                                        <td class="voucher-total-amt align-middle">
+                                        {{-- <td class="voucher-total-amt align-middle">
                                             <span id="tot_fccredit" ></span>
                                             <input id="tot_voucher_fccredit" name="tot_voucher_fccredit" type="hidden" class="form-control erp-form-control-sm text-right" readonly>
+                                        </td> --}}
+                                        <td></td>
+                                        <td class="voucher-total-amt align-middle">
+                                            <span id="tot_vat" ></span>
+                                            <input id="tot_vat_amt" name="tot_vat_amt" type="hidden" class="form-control erp-form-control-sm text-right" readonly>
+                                        </td>
+                                        <td class="voucher-total-amt align-middle">
+                                            <span id="tot_net" ></span>
+                                            <input id="tot_net_amt" name="tot_net_amt" type="hidden" class="form-control erp-form-control-sm text-right" readonly>
                                         </td>
                                         <td></td>
                                     </tr>
@@ -648,8 +611,16 @@
                 'fieldClass':'tb_moveIndex credit validNumber validOnlyFloatNumber'
             },
             {
-                'id':'voucher_fc_credit',
-                'fieldClass':'tb_moveIndex fccredit validNumber validOnlyFloatNumber'
+                'id':'vat_perc',
+                'fieldClass':'tb_moveIndex vatperc validNumber validOnlyFloatNumber'
+            },
+            {
+                'id':'vat_amt',
+                'fieldClass':'tb_moveIndex vatamt validNumber validOnlyFloatNumber'
+            },
+            {
+                'id':'net_amt',
+                'fieldClass':'tb_moveIndex netamt validNumber validOnlyFloatNumber'
             }
         ];
         var arr_hidden_field = ['account_id','budget_id','budget_branch_id','cheque_book_id','invoice_id'];
