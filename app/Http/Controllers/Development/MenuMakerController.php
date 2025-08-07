@@ -117,7 +117,6 @@ class MenuMakerController extends Controller
                     $has = in_array($permission->display_name, $request->views_action);
                     if($has == false){
                         $user_permission = PermissionUser::where('permission_id',$permission->id)->exists();
-                        dd(PermissionUser::where('permission_id',$permission->id)->get());
                         if($user_permission == true){
                             return $this->jsonErrorResponse($data, trans('message.user_has_permission'), 200);
                         }else{
