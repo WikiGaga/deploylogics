@@ -81,6 +81,7 @@
         $view = $data['menu_dtl_id'] . '-view';
         $create = $data['menu_dtl_id'] . '-create';
         $edit = $data['menu_dtl_id'] . '-edit';
+        dd($edit);
         $del = $data['menu_dtl_id'] . '-delete';
         $print = $data['menu_dtl_id'] . '-print';
         $changePass = $data['menu_dtl_id'] . '-change_password';
