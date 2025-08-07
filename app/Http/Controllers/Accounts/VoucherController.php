@@ -193,7 +193,7 @@ class VoucherController extends Controller
         $validator = Validator::make($request->all(), [
             'currency_id' => 'required|numeric',
             'exchange_rate' => 'required|numeric',
-            'up_account_id' => 'required',
+            'cash_type' => 'required',
             'pd.*.account_id' => 'required|numeric',
         ]);
         if ($validator->fails()) {
@@ -227,9 +227,6 @@ class VoucherController extends Controller
                 $voucher_id = $id;
                 $code= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_no');
                 $voucher_no = $code->voucher_no;
-                $user= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_user_id');
-                $voucher_user_id = $user->voucher_user_id;
-
                 $del_rvs = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->get();
                 foreach ($del_rvs as $del_rv){
                     TblAccoVoucher::where('voucher_id',$del_rv->voucher_id)->where(Utilities::currentBCB())->delete();
@@ -249,7 +246,7 @@ class VoucherController extends Controller
             }
             $form_id = $voucher_id;
             $notes = $request->voucher_notes;
-            $cashcode= TblAccCoa::select('chart_Account_id')->where('chart_level', '=',4)->where('chart_code', $request->up_account_code)->where(Utilities::currentBC())->first();
+            $cashcode= TblAccCoa::select('chart_Account_id')->where('chart_level', '=',4)->where('chart_code', $request->cash_type)->where(Utilities::currentBC())->first();
             $account_id = $cashcode->chart_account_id;
             $voucher_date = date('Y-m-d', strtotime($request->voucher_date));
             $payment_mode = isset($request->payment_mode)?$request->payment_mode:'';
@@ -258,7 +255,7 @@ class VoucherController extends Controller
             $currency_id = $request->currency_id;
             $exchange_rate = $request->exchange_rate;
             //$voucher_descrip = $request->narration;
-            $up_chart_code = $request->up_chart_code;
+            $cash_type = $request->cash_type;
 
             if($request->pd){
                 foreach($request->pd as $dtl){
@@ -270,33 +267,30 @@ class VoucherController extends Controller
                     $voucher->voucher_type = $voucher_type;
                     $voucher->voucher_date = $voucher_date;
                     $voucher->chart_account_id = $account_id;
-                    $voucher->voucher_cont_acc_code = $dtl['account_id'];
-                    $voucher->chart_code = $up_chart_code;
+                    $voucher->voucher_tax_status = '0';
                     $voucher->voucher_payment_mode = isset($dtl['payment_mode'])?$dtl['payment_mode']:$payment_mode;
                     $voucher->voucher_chqno = isset($dtl['voucher_chqno'])?$dtl['voucher_chqno']:'';
                     $voucher->voucher_mode_no = isset($dtl['mode_no'])?$dtl['mode_no']:$mode_no;
                     $voucher->voucher_mode_date = isset($dtl['mode_date'])?date('Y-m-d', strtotime($dtl['mode_date'])):'';
-                    $voucher->voucher_payee_title = isset($dtl['voucher_payee_title'])?$dtl['voucher_payee_title']:"";;
                     $voucher->saleman_id = $saleman_id;
                     $voucher->currency_id = $currency_id;
                     $voucher->voucher_exchange_rate = $exchange_rate;
                     $voucher->voucher_descrip = $dtl['voucher_descrip'];
+                    $voucher->chart_code = $cash_type;
                     $voucher->voucher_notes = $notes;
-                    $voucher->voucher_debit = 0;
-                    $voucher->voucher_fc_debit = 0;
-                    $voucher->voucher_credit = isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0;
-                    $voucher->voucher_fc_credit = isset($dtl['voucher_fc_credit'])?$this->addNo($dtl['voucher_fc_credit']):0;
+                    $voucher->voucher_credit = 0;
+                    $voucher->voucher_fc_credit = 0;
+                    $voucher->voucher_debit = (isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0) + ($dtl['vat_amt']);
+                    $voucher->voucher_fc_debit = (isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0) + ($dtl['vat_amt']);
+
+                    $voucher->vat_perc = 0;
+                    $voucher->vat_amt = 0;
+                    $voucher->net_amt = 0;
+
                     $voucher->business_id = auth()->user()->business_id;
                     $voucher->company_id = auth()->user()->company_id;
                     $voucher->branch_id = auth()->user()->branch_id;
-                    if(isset($id))
-                    {
-                        $voucher->update_user_id = auth()->user()->id;
-                        $voucher->voucher_user_id = $voucher_user_id;
-                    }else{
-                        $voucher->voucher_user_id = auth()->user()->id;
-                    }
-
+                    $voucher->voucher_user_id = auth()->user()->id;
                     $voucher->save();
 
                     //-----------grid entry-----------
@@ -307,10 +301,10 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_sr_no = ++$i;
                     $voucherDtl->voucher_date = $voucher_date;
                     $voucherDtl->chart_account_id = $dtl['account_id'];
-                    $voucherDtl->voucher_cont_acc_code = $account_id;
-                    $voucherDtl->budget_id = isset($dtl['budget_id'])?$dtl['budget_id']:"";
+                    $voucherDtl->voucher_tax_status = '0';
+                    $voucherDtl->budget_id = $dtl['budget_id'];
                     $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
-                    $voucherDtl->budget_branch_id = isset($dtl['budget_branch_id'])?$dtl['budget_branch_id']:"";
+                    $voucherDtl->budget_branch_id = $dtl['budget_branch_id'];
                     $voucherDtl->chart_code = $dtl['account_code'];
                     $voucherDtl->voucher_acc_name = $dtl['account_name'];
                     $voucherDtl->voucher_descrip = $dtl['voucher_descrip'];
@@ -318,41 +312,68 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_payment_mode = isset($dtl['payment_mode'])?$dtl['payment_mode']:'';
                     $voucherDtl->voucher_mode_no = isset($dtl['mode_no'])?$dtl['mode_no']:'';
                     $voucherDtl->voucher_mode_date = isset($dtl['mode_date'])?date('Y-m-d', strtotime($dtl['mode_date'])):'';
-                    $voucherDtl->voucher_payee_title = isset($dtl['voucher_payee_title'])?$dtl['voucher_payee_title']:"";;
                     $voucherDtl->voucher_invoice_code = isset($dtl['invoice_code'])?$dtl['invoice_code']:'';
-                    $voucherDtl->voucher_debit = isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0;
-                    $voucherDtl->voucher_fc_debit = isset($dtl['voucher_fc_credit'])?$this->addNo($dtl['voucher_fc_credit']):0;
-                    $voucherDtl->voucher_credit = 0;
-                    $voucherDtl->voucher_fc_credit = 0;
+                    $voucherDtl->voucher_credit = isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0;
+                    $voucherDtl->voucher_fc_credit = isset($dtl['voucher_fc_credit'])?$this->addNo($dtl['voucher_fc_credit']):0;
+                    $voucherDtl->voucher_debit = 0;
+                    $voucherDtl->voucher_fc_debit = 0;
+
+                    $voucherDtl->vat_perc = $dtl['vat_perc'];
+                    $voucherDtl->vat_amt = $dtl['vat_amt'];
+                    $voucherDtl->net_amt = $dtl['net_amt'];
+
                     $voucherDtl->voucher_notes = $notes;
                     $voucherDtl->business_id = auth()->user()->business_id;
                     $voucherDtl->company_id = auth()->user()->company_id;
                     $voucherDtl->branch_id = auth()->user()->branch_id;
-                    if(isset($id))
-                    {
-                        $voucherDtl->update_user_id = auth()->user()->id;
-                        $voucherDtl->voucher_user_id = $voucher_user_id;
-                    }else{
-                        $voucherDtl->voucher_user_id = auth()->user()->id;
-                    }
+                    $voucherDtl->voucher_user_id = auth()->user()->id;
                     $voucherDtl->save();
 
-                    // If the Entry is Rent Installment
-                    if(isset($dtl['installment_id'])){
-                        $installment = TblRentAgreementDtl::where('rent_agreement_dtl_id' , $dtl['installment_id'])->first();
-                        $installment->rent_agreement_dtl_status = 1;
-                        $installment->rent_agreement_dtl_amount = isset($dtl['voucher_credit'])?$this->addNo($dtl['voucher_credit']):0;
-                        $installment->rent_agreement_dtl_balance = isset($dtl['installment_balance'])?$this->addNo($dtl['installment_balance']):0;
-                        $installment->rent_agreement_dtl_discount = isset($dtl['installment_discount'])?$this->addNo($dtl['installment_discount']):0;
-                        $installment->voucher_id = $voucher_id;
-                        $installment->voucher_no = $voucher_no;
-                        $installment->voucher_type = $voucher_type;
-                        $installment->voucher_date = $voucher_date;
-                        $installment->rent_agreement_dtl_desc = $dtl['voucher_descrip'];
-                        $installment->user_id = auth()->user()->id;
-                        $installment->save();
-                        $form_id = $installment->rent_agreement_id;
-                    }
+
+                    // VAT save working
+
+                    if($dtl['vat_amt'] != 0) {
+
+                    $voucherDtl = new TblAccoVoucher();
+                    $voucherDtl->voucher_id = $voucher_id;
+                    $voucherDtl->voucher_no  = $voucher_no;
+                    $voucherDtl->voucher_type = $voucher_type;
+                    $voucherDtl->voucher_sr_no = ++$i;
+                    $voucherDtl->voucher_date = $voucher_date;
+                    // $voucherDtl->chart_account_id = $dtl['account_id'];
+                    $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '67192221301240';
+                    $voucherDtl->voucher_tax_status = '1';
+                    $voucherDtl->budget_id = $dtl['budget_id'];
+                    $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
+                    $voucherDtl->budget_branch_id = $dtl['budget_branch_id'];
+                    // $voucherDtl->chart_code = $dtl['account_code'];
+                    $voucherDtl->chart_code = DB::table('TBL_ACCO_CHART_ACCOUNT')->where('chart_account_id',$voucherDtl->chart_account_id)->value('chart_code');
+                    // $voucherDtl->voucher_acc_name = $dtl['account_name'];
+                    $voucherDtl->voucher_acc_name = DB::table('TBL_ACCO_CHART_ACCOUNT')->where('chart_account_id',$voucherDtl->chart_account_id)->value('chart_name');
+                    $voucherDtl->voucher_descrip = $dtl['voucher_descrip'];
+                    $voucherDtl->voucher_chqno = isset($dtl['voucher_chqno'])?$dtl['voucher_chqno']:'';
+                    $voucherDtl->voucher_payment_mode = isset($dtl['payment_mode'])?$dtl['payment_mode']:'';
+                    $voucherDtl->voucher_mode_no = isset($dtl['mode_no'])?$dtl['mode_no']:'';
+                    $voucherDtl->voucher_mode_date = isset($dtl['mode_date'])?date('Y-m-d', strtotime($dtl['mode_date'])):'';
+                    $voucherDtl->voucher_invoice_code = isset($dtl['invoice_code'])?$dtl['invoice_code']:'';
+                    $voucherDtl->voucher_credit = isset($dtl['vat_amt'])?$this->addNo($dtl['vat_amt']):0;
+                    $voucherDtl->voucher_fc_credit = isset($dtl['vat_amt'])?$this->addNo($dtl['vat_amt']):0;
+                    $voucherDtl->voucher_debit = 0;
+                    $voucherDtl->voucher_fc_debit = 0;
+
+                    $voucherDtl->vat_perc = 0;
+                    $voucherDtl->vat_amt = 0;
+                    $voucherDtl->net_amt = 0;
+
+                    $voucherDtl->voucher_notes = $notes;
+                    $voucherDtl->business_id = auth()->user()->business_id;
+                    $voucherDtl->company_id = auth()->user()->company_id;
+                    $voucherDtl->branch_id = auth()->user()->branch_id;
+                    $voucherDtl->voucher_user_id = auth()->user()->id;
+                    $voucherDtl->save();
+
+                }
+
                 }
             }
         }catch (QueryException $e) {
@@ -366,7 +387,7 @@ class VoucherController extends Controller
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         } catch (Exception $e) {
             DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getLine(), 200);
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
         DB::commit();
         if(isset($id)){
@@ -375,11 +396,7 @@ class VoucherController extends Controller
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
-            if(isset($dtl['installment_id'])){
-                $data['redirect'] = '/rent-agreement/form/'.$form_id;
-            }else{
-                $data['redirect'] = '/accounts/'.$type.$this->prefixCreatePage.'/'.$form_id;
-            }
+            $data['redirect'] = '/accounts/'.$type.$this->prefixCreatePage.'/'.$form_id;
             return $this->jsonSuccessResponse($data, trans('message.create'), 200);
         }
 
