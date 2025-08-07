@@ -113,9 +113,11 @@ class MenuMakerController extends Controller
                 $menu_permissions = Permission::where('menu_dtl_id', $id)->get();
                 foreach ($menu_permissions as $permission){
                     array_push($menu_permissions_arr, $permission->display_name);
+
                     $has = in_array($permission->display_name, $request->views_action);
                     if($has == false){
                         $user_permission = PermissionUser::where('permission_id',$permission->id)->exists();
+                        dd($user_permission);
                         if($user_permission == true){
                             return $this->jsonErrorResponse($data, trans('message.user_has_permission'), 200);
                         }else{
