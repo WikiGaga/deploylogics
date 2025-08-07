@@ -49,8 +49,9 @@ class FoodRecipeController extends Controller
     public function getFoodDetailData(Request $request)
     {
         $foodId = $request->input('food_id');
-        $food = Food::find($foodId);
-        dd($food);
+        $food = Food::with('variations.variationOptions')->find($foodId);
+
+        return view('your.view', compact('food'));
     }
 
 }

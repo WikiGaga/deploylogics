@@ -5,23 +5,9 @@
 * currency
 
 * */
-function deduct_credit(tr){
-        var deduction = tr.find(".deduct_credit").val();
-        if(deduction > 0){
-            console.log(deduction);
-            var rate = $('#exchange_rate').val();
-            var deduction_credit = deduction * rate;
-            deduction_credit = deduction_credit.toFixed(3);
-            tr.find('.deduct_credit').val(deduction);
-            tr.find('.fccredit').val(0);
-            tr.find('.debit').val(0);
-            tr.find('.fcdebit').val(0);
-            TotalAmount();
-        }
-}
 function credit(tr){
         var credit = tr.find(".credit").val();
-        if(credit > 0){ 
+        if(credit > 0){
             var rate = $('#exchange_rate').val();
             var fccredit = credit * rate;
             fccredit= fccredit.toFixed(3);
@@ -73,25 +59,12 @@ function fcdebit(tr){
 function TotalAmount()
 {
     var tot_debit = 0;
-    var tot_deduct_credit = 0;
-    var tot_amount = 0;
     var tot_credit = 0;
     var tot_fcdebit = 0;
     var tot_fccredit = 0;
-    $( ".erp_amount>tr" ).each(function( index ) {
-        var amount = $(this).find(".amount").val();
-        amount = (amount == '' || amount == undefined)? 0 : amount.replace( /,/g, '');
-        tot_amount = (parseFloat(tot_amount)+parseFloat(amount));
-    });
-    tot_amount= tot_amount.toFixed(3);
-    $("#tot_voucher_amount").val(tot_amount);
-
+    var tot_vatamt = 0;
+    var tot_netamt = 0;
     $( ".erp_form__grid_body>tr" ).each(function( index ) {
-        
-        var deduct_credit = $(this).find(".deduct_credit").val();
-        deduct_credit = (deduct_credit == '' || deduct_credit == undefined)? 0 : deduct_credit.replace( /,/g, '');
-        tot_deduct_credit = (parseFloat(tot_deduct_credit)+parseFloat(deduct_credit));
-        
         var debit = $(this).find(".debit").val();
             debit = (debit == '' || debit == undefined)? 0 : debit.replace( /,/g, '');
         tot_debit = (parseFloat(tot_debit)+parseFloat(debit));
@@ -107,34 +80,38 @@ function TotalAmount()
         var fccredit = $(this).find(".fccredit").val();
             fccredit = (fccredit == '' || fccredit == undefined)? 0 : fccredit.replace( /,/g, '');
         tot_fccredit = (parseFloat(tot_fccredit)+parseFloat(fccredit));
+
+        var vatamt = $(this).find(".vatamt").val();
+        vatamt = (vatamt == '' || vatamt == undefined)? 0 : vatamt.replace( /,/g, '');
+        tot_vatamt = (parseFloat(tot_vatamt)+parseFloat(vatamt));
+
+        var netamt = $(this).find(".netamt").val();
+        netamt = (netamt == '' || netamt == undefined)? 0 : netamt.replace( /,/g, '');
+        tot_netamt = (parseFloat(tot_netamt)+parseFloat(netamt));
     });
 
     tot_debit= tot_debit.toFixed(3);
     tot_credit= tot_credit.toFixed(3);
-    tot_deduct_credit= tot_deduct_credit.toFixed(3);
     tot_fcdebit= tot_fcdebit.toFixed(3);
     tot_fccredit= tot_fccredit.toFixed(3);
+    tot_vatamt= tot_vatamt.toFixed(3);
+    tot_netamt= tot_netamt.toFixed(3);
 
     $("#tot_debit").html(tot_debit);
-    $("#tot_debit_amt").html(tot_debit);
-
     $("#tot_credit").html(tot_credit);
-    $("#tot_credit_amt").html(tot_credit);
-
-    $("#tot_deduct_credit").html(tot_deduct_credit);
-    $("#tot_deduct_credit_amt").html(tot_deduct_credit);
-
     $("#tot_fcdebit").html(tot_fcdebit);
     $("#tot_fccredit").html(tot_fccredit);
+    $("#tot_vat").html(tot_vatamt);
+    $("#tot_net").html(tot_netamt);
 
     $("#tot_voucher_debit").val(tot_debit);
     $("#tot_voucher_credit").val(tot_credit);
-    $("#tot_voucher_deduct_credit").val(tot_deduct_credit);
     $("#tot_voucher_fcdebit").val(tot_fcdebit);
     $("#tot_voucher_fccredit").val(tot_fccredit);
+    $("#tot_vat_amt").val(tot_vatamt);
+    $("#tot_net_amt").val(tot_netamt);
 
-    var total_credit_amount = parseFloat(tot_deduct_credit) + parseFloat(tot_credit);
-    var tot_diff = parseFloat(tot_debit) - parseFloat(total_credit_amount);
+    var tot_diff = parseFloat(tot_debit) - parseFloat(tot_credit);
     $("#tot_jv_difference").val(tot_diff);
     $("#tot_difference").html(tot_diff);
 
@@ -156,11 +133,6 @@ function exRate(){
     });
 }
 function calcDC(){
-    $(".deduct_credit").keyup(function(){
-        var tr = $(this).parents('tr');
-        deduct_credit(tr)
-        TotalAmount();
-    });
     $(".credit").keyup(function(){
         var tr = $(this).parents('tr');
         credit(tr)
@@ -201,6 +173,62 @@ function calcDC(){
     });
     TotalAmount();
 }
+
+function calculateAmounts() {
+    var voucherCredit = parseFloat(document.getElementById('voucher_credit').value.replace(/,/g, '')) || 0;
+    var vatPerc = parseFloat(document.getElementById('vat_perc').value.replace(/,/g, '')) || 0;
+
+    var vatAmt = (voucherCredit * vatPerc) / 100;
+    var netAmt = voucherCredit + vatAmt;
+
+    document.getElementById('vat_amt').value = vatAmt.toFixed(3);
+    document.getElementById('net_amt').value = netAmt.toFixed(3);
+    TotalAmount();
+
+}
+
+function calculateVAT() {
+    var voucherCredit = parseFloat(document.getElementById('voucher_credit').value.replace(/,/g, '')) || 0;
+    var vatAmt = parseFloat(document.getElementById('vat_amt').value.replace(/,/g, '')) || 0;
+
+    var vatPerc = (vatAmt / voucherCredit) * 100;
+    var netAmt = voucherCredit + vatAmt;
+
+    document.getElementById('vat_perc').value = vatPerc.toFixed(3);
+    document.getElementById('net_amt').value = netAmt.toFixed(3);
+    TotalAmount();
+
+}
+
+function calculateAmountsGrid(element) {
+    var row = element.closest('tr');
+    var voucherCredit = parseFloat(row.querySelector('[data-id="voucher_credit"]').value.replace(/,/g, '')) || 0;
+    var vatPerc = parseFloat(row.querySelector('[data-id="vat_perc"]').value.replace(/,/g, '')) || 0;
+
+    var vatAmt = (voucherCredit * vatPerc) / 100;
+    var netAmt = voucherCredit + vatAmt;
+
+    row.querySelector('[data-id="vat_amt"]').value = vatAmt.toFixed(3);
+    row.querySelector('[data-id="net_amt"]').value = netAmt.toFixed(3);
+    TotalAmount();
+
+}
+
+function calculateVATGrid(element) {
+    var row = element.closest('tr');
+    var voucherCredit = parseFloat(row.querySelector('[data-id="voucher_credit"]').value.replace(/,/g, '')) || 0;
+    var vatAmt = parseFloat(row.querySelector('[data-id="vat_amt"]').value.replace(/,/g, '')) || 0;
+
+    var vatPerc = (vatAmt / voucherCredit) * 100;
+    var netAmt = voucherCredit + vatAmt;
+
+    row.querySelector('[data-id="vat_perc"]').value = vatPerc.toFixed(3);
+    row.querySelector('[data-id="net_amt"]').value = netAmt.toFixed(3);
+    TotalAmount();
+
+}
+
+
 $(document).ready(function(){
     calcDC();
     /*setInterval(function(){

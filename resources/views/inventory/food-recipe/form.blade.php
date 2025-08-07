@@ -457,34 +457,6 @@
                                         '</select>' +
                                         '</div>' +
                                         '</td>' +
-                                        '<td><input readonly data-id="pd_packing" name="pd[' +
-                                        total_length + '][pd_packing]" value="' + row.barcode
-                                        .product_barcode_packing +
-                                        '" type="text" class="pd_packing form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input readonly data-id="sys_qty" name="pd[' +
-                                        total_length + '][sys_qty]" value="' + row
-                                        .tbl_purc_grn_dtl_sys_quantity +
-                                        '" type="text" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber "></td>' +
-                                        '<td><input readonly data-id="demand_qty" name="pd[' +
-                                        total_length +
-                                        '][demand_qty]" value="" type="text" class="demand_qty form-control erp-form-control-sm validNumber validOnlyNumber "></td>' +
-                                        '<td><input  data-id="quantity" name="pd[' + total_length +
-                                        '][quantity]" value="' + row.tbl_purc_grn_dtl_quantity +
-                                        '" type="text" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input readonly data-id="rate" name="pd[' + total_length +
-                                        '][rate]" value="' + row.tbl_purc_grn_dtl_sale_rate +
-                                        '" type="text" class="tblGridCal_rate form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input data-id="mrp" name="pd[' + total_length +
-                                        '][mrp]" value="' + row.tbl_purc_grn_dtl_mrp +
-                                        '" type="text" class="mrp form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input  data-id="ex_net_tp" name="pd[' + total_length +
-                                        '][ex_net_tp]" value="' + row.tbl_purc_grn_dtl_net_tp +
-                                        '" type="text" class="tblGridCal_ex_net_tp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input  data-id="adjrate" name="pd[' + total_length +
-                                        '][adjrate]" value="" type="text" class="tblGridCal_adjrate  tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
-                                        '<td><input  data-id="purc_rate" name="pd[' + total_length +
-                                        '][purc_rate]" value="' + row.tbl_purc_grn_dtl_net_tp +
-                                        '" type="text" class="tblGridCal_purc_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>' +
                                         '<td><input readonly data-id="amount" name="pd[' +
                                         total_length + '][amount]" value="' + row
                                         .tbl_purc_grn_dtl_gross_amount +

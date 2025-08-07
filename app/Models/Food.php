@@ -13,9 +13,20 @@ class Food extends Model
 
     protected $primaryKey = 'id';
 
-    protected static function primaryKeyName() {
+    protected static function primaryKeyName()
+    {
         return (new static)->getKeyName();
     }
+
+    public function variations()
+    {
+        return $this->hasMany(Variation::class, 'food_id');
+    }
+
+    // public function variationOptions()
+    // {
+    //     return $this->hasMany(VariationOption::class, 'food_id');
+    // }
 
     // protected $casts = [
     //     'tax' => 'float',
