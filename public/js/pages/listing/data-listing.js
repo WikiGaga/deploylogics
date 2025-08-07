@@ -108,7 +108,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 if(btnEditView){
                     if(casetype == 'pve' ||
                         casetype == 'pv' ||
-                        casetype == 'cpv' ||
+                        // casetype == 'cpv' ||
                         // casetype == 'crv'||
                         casetype == 'lv'||
                         casetype == 'jv'||
