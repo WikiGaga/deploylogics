@@ -73,73 +73,59 @@ class VoucherController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request, $type,$id = null)
+    public function create($type,$id = null)
     {
         $chart_cash_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->cash_group)->where(Utilities::currentBC())->first('chart_code');
         $chart_bank_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->bank_group)->where(Utilities::currentBC())->first('chart_code');
         $cash_group = substr($chart_cash_group->chart_code,0,7);
         $bank_group = substr($chart_bank_group->chart_code,0,7);
 
-        $copy_entry = false;
-        if(!isset($id)){
-            if(!empty(session($type))){
-                $id = session($type)['id'];
-                $v_no = session($type)['no'];
-                $copy_entry = true;
-                $data['last_voucher_no'] = $v_no;
-            }
-        }
-
         $data['page_data'] = [];
-        $data['page_data']['path_index'] = $this->prefixIndexPage.'accounts/'.$type;
-        $data['page_data']['create'] = '/accounts/'.$type.$this->prefixCreatePage;
         $data['type'] = $type;
         switch ($type){
             case 'jv': {
-                $data['page_data']['title'] = 'Journal Voucher';
+                $data['page_data']['title'] = 'Journal';
                 $formUrl = 'jv';
                 $data['stock_menu_id'] = '31';
                 break;
             }
             case 'obv': {
-                $data['page_data']['title'] = 'Opening Balance Voucher';
+                $data['page_data']['title'] = 'Opening Balance';
                 $formUrl = 'jv';
                 $data['stock_menu_id'] = '62';
                 break;
             }
             case 'crv': {
-                $data['page_data']['title'] = 'Cash Withdrawal Voucher';
+                $data['page_data']['title'] = 'Cash Received';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '28';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
                 break;
             }
             case 'cpv': {
                 $data['page_data']['title'] = 'Cash Payment';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '37';
-                $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
+                $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
             case 'brv': {
-                $data['page_data']['title'] = 'Bank Received Voucher';
+                $data['page_data']['title'] = 'Bank Received';
                 $formUrl = 'bank_voucher';
                 $data['stock_menu_id'] = '29';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
             case 'bpv': {
-                $data['page_data']['title'] = 'Bank Payment Voucher';
+                $data['page_data']['title'] = 'Bank Payment';
                 $formUrl = 'bank_voucher';
                 $data['stock_menu_id'] = '36';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
-            case 'lv': {
-                $data['page_data']['title'] = 'Liability Voucher';
-                $formUrl = 'lv';
+            case 'ctrv': {
+                $data['page_data']['title'] = 'Contra Voucher';
+                $formUrl = 'ctrv';
                 $data['stock_menu_id'] = '138';
                 break;
             }
@@ -151,165 +137,35 @@ class VoucherController extends Controller
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
-            case 'brpv': {
-                $data['page_data']['title'] = 'Branch Payment Voucher';
-                $formUrl = 'branch_voucher';
-                $data['stock_menu_id'] = '269';
-                $data['acc_code'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', "3-01-03-%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                break;
-            }
-            case 'brrv': {
-                $data['page_data']['title'] = 'Branch Receive Voucher';
-                $formUrl = 'branch_receive';
-                $data['stock_menu_id'] = '274';
-                $data['wht'] = TblDefiWHT::where('wht_type_id','<>',0)->get();
-                $data['bank'] = TblDefiBank::where('bank_id','<>',0)->orderby('bank_name')->get();
-                $receiving_branch = auth()->user()->branch_id;
-                $existing_value = DB::table('tbl_acco_voucher_bill_dtl')->where('voucher_bill_type','brrv')->pluck('voucher_document_id');
-                $data['branch_payment_list'] = DB::table('VW_ACCO_VOUCHER_BRANCH_PAYMENT_BALANCE')->where('PAYMENT_BRANCH_ID', $receiving_branch)->where('BALANCE_AMOUNT', '>' ,0)
-                ->whereNotIn('VOUCHER_ID', $existing_value)->orderBy('BRANCH_NAME' , 'asc')->orderBy('VOUCHER_NO','asc')->get();
-
-                // $sql = "SELECT * FROM VW_ACCO_VOUCHER_BRANCH_PAYMENT_BALANCE
-                // where PAYMENT_BRANCH_ID = $receiving_branch and BALANCE_AMOUNT > 0
-                // order by BRANCH_NAME , VOUCHER_NO ";
-                //$data['branch_payment_list'] = DB::select($sql);
-               //dd($existing_value);
-
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                break;
-            }
-            case 'pv': {
-                $data['page_data']['title'] = 'Vendor Payment Voucher';
-                $formUrl = 'vendor_payment_voucher';
-                $data['stock_menu_id'] = '270';
-                $data['acc_code'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', "3-01-03-%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('sr_no')->get();
-                $data['bank'] = TblDefiBank::where('bank_id','<>',0)->orderby('bank_name')->get();
-                break;
-            }
-            case 'ipv': {
-                $data['page_data']['title'] = 'Internal Payment Voucher';
-                $formUrl = 'ipv';
-                $data['stock_menu_id'] = '271';
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                //$data['acc_code'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->orWhere('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', '6-01-02'."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                break;
-            }
-            case 'irv': {
-                $data['page_data']['title'] = 'Internal Receive Voucher';
-                $formUrl = 'irv';
-                $data['stock_menu_id'] = '272';
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                $data['acc_code'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->orWhere('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                break;
-            }
-            case 'pve': {
-                $data['page_data']['title'] = 'Expense Voucher';
-                $formUrl = 'pve';
-                $data['stock_menu_id'] = '273';
-                $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                $data['deduction'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_grid_type','deduction')->where(Utilities::currentBCB())->get();
-                break;
-            }
-            case 'rv': {
-                $data['page_data']['title'] = 'Receiving Voucher';
-                $formUrl = 'receiving_voucher';
-                $data['stock_menu_id'] = '286';
-                $data['acc_code'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', "3-01-03-%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
-                $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('sr_no')->get();
-                $data['bank'] = TblDefiBank::where('bank_id','<>',0)->orderby('bank_name')->get();
-                break;
-            }
         }
+        $data['page_data']['path_index'] = $this->prefixIndexPage.'accounts/'.$type;
+        $data['page_data']['create'] = '/accounts/'.$type.$this->prefixCreatePage;
         if(isset($id)){
-            $data['rec_type'] =  TblAccoVoucher::where('voucher_type',$type)->where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-            if($data['rec_type']->bank_rec_posted == 1)
-            {
-                Session::flash('msg', 'BRS Posted');
-            }
-
             if(TblAccoVoucher::where('voucher_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['permission'] = $data['stock_menu_id'].'-edit';
                 $data['id'] = $id;
-                $data['current'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_sr_no','=','1')->where(Utilities::currentBCB())->first();
-                if($type == 'crv' || $type =='brv' || $type =='lfv' || $type == 'brpv' || $type == 'irv'){
-                    //Voucher Credit
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                    $data['deduction'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','deduction')->where(Utilities::currentBCB())->get();
-                }else if($type == 'cpv' || $type =='bpv' || $type == 'ipv'){
-                    //Voucher Debit
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_sr_no','!=','1')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                }else if($type == 'pv'){
-                    //Voucher Debit
-                    $data['current'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','vendor')->where(Utilities::currentBCB())->first();
-                    $data['current_purchase'] = TblAccoVoucherBillDtl::where('voucher_id',$id)->where('voucher_type','=','GRN')->where(Utilities::currentBCB())->get();
-                    $data['current_purchase_return'] = TblAccoVoucherBillDtl::where('voucher_id',$id)->where('voucher_type','=','PR')->where(Utilities::currentBCB())->get();
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','actual')->where(Utilities::currentBCB())->get();
-                    $data['deduction'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','deduction')->where(Utilities::currentBCB())->get();
-                    //dd($data['deduction']->toArray());
-                }else if($type == 'rv'){
-                    //Voucher Debit
-                    $data['current'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','vendor')->where(Utilities::currentBCB())->first();
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','actual')->where(Utilities::currentBCB())->get();
-                    $data['deduction'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','deduction')->where(Utilities::currentBCB())->get();
-                }else if($type == 'brrv'){
-                    //Voucher credit
-                    $data['current'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','actual')->where(Utilities::currentBCB())->first();
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','actual')->where(Utilities::currentBCB())->get();
-                }else if($type == 'pve'){
-                    $data['debit'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_grid_type','debit')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                    $data['credit'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_grid_type','credit')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                    $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
-                    $data['deduction'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_grid_type','deduction')->where(Utilities::currentBCB())->get();
+                $data['current'] = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_sr_no','=','1')->where(Utilities::currentBCB())->first();
+                if($type == 'crv' || $type =='brv' || $type =='lfv'){
+                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where('voucher_tax_status','!=',1)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
+                }else if($type == 'cpv' || $type =='bpv'){
+                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_debit','!=','0')->where('VOUCHER_TAX_STATUS','!=','1')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
+                }else{
                     $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                }
-                else{
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                    $data['payment_mode'] = TblAccoPaymentTerm::where('payment_term_id','<>',0)->orderby('payment_term_name')->get();
                 }
                 $data['voucher_no'] = $data['current']->voucher_no;
                 $data['page_data']['print'] = '/accounts/'.$type.'/print/'.$id;
-
             }else{
                 abort('404');
             }
-        }
-
-        if(!isset($id)){
+        }else{
             $data['permission'] = $data['stock_menu_id'].'-create';
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
             $max_voucher = TblAccoVoucher::where('voucher_type',$type)->where(Utilities::currentBCB())->max('voucher_no');
             $data['voucher_no'] = $this->documentCode($max_voucher,$type);
         }
-        if($type == 'ipv')
-        {
-            $data['terminals'] = TblSoftPOSTerminal::where('branch_id',auth()->user()->branch_id)->orderby('terminal_name')->get();
-            $data['users'] = User::where('user_entry_status',1)->where('user_type','pos')->where('branch_id',auth()->user()->branch_id)->orderby(DB::raw('lower(name)'))->get();
-        }else{
-            $data['users'] = User::where('user_entry_status',1)->where(Utilities::currentBC())->orderby(DB::raw('lower(name)'))->get();
-        }
-
-        $data['cash_name'] = TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', "6-01-05-0001")->where(Utilities::currentBC())->orderBy('chart_name')->first();
+        $data['users'] = User::where('user_type','erp')->where('user_entry_status',1)->where(Utilities::currentBC())->get();
         $data['currency']  = TblDefiCurrency::where('currency_entry_status',1)->where(Utilities::currentBC())->get();
-
-        $user = User::where('id',auth()->user()->id)->where('user_entry_status',1)->where(Utilities::currentBC())->first();
-        $data['voucher_post'] = Permission::where('menu_dtl_id',$data['stock_menu_id'])->where('display_name','post')->first();
-        if(isset($data['voucher_post']))
-        {
-            if($data['voucher_post']->display_name == "post")
-            {
-                $data['page_data']['post'] = $data['stock_menu_id'].'-post';
-            }else{
-                $data['page_data']['post'] ='';
-            }
-        }else{
-            $data['page_data']['post'] ='';
-        }
-
-
         $arr = [
             'biz_type' => 'branch',
             'code' => $data['voucher_no'],
@@ -321,31 +177,6 @@ class VoucherController extends Controller
             'code_type'         => $type,
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
-        // dd('accounts.'.$formUrl.'.form');
-
-        $data['addInstallmentRow'] = 0;
-        if ($request->session()->exists('installmentDetail')) {
-            if($formUrl == 'cash_voucher'){
-                $data['installmentChartCode'] = '6-06-01-0001';
-            }
-            $installmentDetails = $request->session()->get('installmentDetail');
-            $data['addInstallmentRow'] = 1;
-            $data['userdetail']['account_id'] = $installmentDetails['chart_account']['chart_account_id'];
-            $data['userdetail']['budget_id'] = '';
-            $data['userdetail']['budget_branch_id'] = '';
-            $data['userdetail']['cheque_book_id'] = '';
-            $data['userdetail']['invoice_id'] = '';
-            $data['userdetail']['account_code'] = $installmentDetails['chart_account']['chart_code'];
-            $data['userdetail']['account_name'] = $installmentDetails['chart_account']['chart_name']; // chart_account_title
-            $data['userdetail']['voucher_credit'] = '';
-            $data['userdetail']['installment_id'] = $installmentDetails['installmentId'];
-            $data['userdetail']['installment_amount'] = $installmentDetails['installmentAmount'];
-            $data['userdetail']['installment_discount'] = $installmentDetails['installmentDiscount'];
-            $data['userdetail']['installment_balance'] = $installmentDetails['installmentBalance'];
-            $data['userdetail']['installment_desc'] = $installmentDetails['installmentDesc'];
-            $request->session()->forget('installmentDetail');
-        }
-        $data['copy_entry'] = $copy_entry;
         return view('accounts.'.$formUrl.'.form',compact('data'));
     }
 
