@@ -118,7 +118,6 @@
     @permission($edit)
         <script>
             var btnEditView = true;
-            console.log('hello ' + btnEditView);
         </script>
     @endpermission
     @permission($del)
