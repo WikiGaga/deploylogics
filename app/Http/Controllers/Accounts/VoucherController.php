@@ -2627,17 +2627,9 @@ class VoucherController extends Controller
         DB::beginTransaction();
         try{
 
-            $data['rec_type'] =  TblAccoVoucher::where('voucher_type',$type)->where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-            if($data['rec_type']->bank_rec_posted == 1)
-            {
-                return $this->jsonErrorResponse($data, 'This Voucher enter in BRS', 200);
-            }
-
-            if(TblAccoVoucher::where('voucher_type',$type)->where('voucher_id',$id)->where(Utilities::currentBCB())->exists()){
-                TblAccoVoucherBillDtl::where('voucher_id',$id)->where(Utilities::currentBCB())->delete();
-                TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->delete();
-            }else{
-                return $this->jsonErrorResponse($data, "Invalid Voucher No.", 200);
+            $voucher = TblAccoVoucher::where('voucher_type',$type)->where('voucher_id',$id)->where(Utilities::currentBCB())->get();
+            foreach ($voucher as $vch){
+                TblAccoVoucher::where('voucher_id',$vch->voucher_id)->where(Utilities::currentBCB())->delete();
             }
 
         }catch (QueryException $e) {
