@@ -81,7 +81,6 @@
         $view = $data['menu_dtl_id'] . '-view';
         $create = $data['menu_dtl_id'] . '-create';
         $edit = $data['menu_dtl_id'] . '-edit';
-        dd($edit);
         $del = $data['menu_dtl_id'] . '-delete';
         $print = $data['menu_dtl_id'] . '-print';
         $changePass = $data['menu_dtl_id'] . '-change_password';
@@ -116,6 +115,7 @@
         var casetype = '{{ $data['case'] }}'
         var user_id = '{{ auth()->user()->id }}'
     </script>
+    console.log('hello' + @permission($edit));
     @permission($edit)
         <script>
             var btnEditView = true;
