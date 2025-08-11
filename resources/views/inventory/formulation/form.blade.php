@@ -285,8 +285,8 @@
                                                 <td><input type="text" data-id="percentage" name="pd[{{$loop->iteration}}][percentage]" value="{{$dtl->item_formulation_dtl_percentage}}" class="tblGridCal_percentage tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td><input type="text" data-id="cost_price" name="pd[{{$loop->iteration}}][cost_price]" value="{{$dtl->item_formulation_dtl_cost_price}}" class="tblGridCal_cost_price tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td>
-                                                    <input readonly type="text" data-id="pd_sale_type" value="{{isset($dtl->contants_sale_type_id) ? $dtl->constants['constants_value'] : ''}}" class="pd_sale_type field_readonly tb_moveIndex form-control erp-form-control-sm">
-                                                    <input type="hidden" data-id="pd_sale_type" name="pd[{{ $loop->iteration }}][pd_sale_type]" value="{{$dtl->contants_sale_type_id}}" class="pd_sale_type">
+                                                    <input readonly type="text" data-id="pd_sale_type" value="{{isset($dtl->constants_sale_type_id) ? $dtl->constants['constants_value'] : ''}}" class="pd_sale_type field_readonly tb_moveIndex form-control erp-form-control-sm">
+                                                    <input type="hidden" data-id="pd_sale_type" name="pd[{{ $loop->iteration }}][pd_sale_type]" value="{{$dtl->constants_sale_type_id}}" class="pd_sale_type">
                                                 </td>
                                                 <td>
                                                     <input readonly type="text" data-id="pd_ingredient_type" value="{{isset($dtl->contants_ingredient_type_id) ? $dtl->constants['constants_value'] : ''}}" class="pd_ingredient_type field_readonly tb_moveIndex form-control erp-form-control-sm">
