@@ -1089,7 +1089,6 @@ class DataTableController extends Controller
             $data['keys'] = ['product_barcode_barcode','product_name','uom_name','product_barcode_packing'];
             $merge = array_merge( $data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
-                    dd($str);
 
             if(!$str){
 /*                  $dataSql = ViewPurcProductBarcodeHelp::where('product_barcode_id', '<>', '0');
@@ -1099,6 +1098,8 @@ class DataTableController extends Controller
                     }
                     $data['list'] = $dataSql->where('business_id',auth()->user()->business_id)->limit(50)->get();
 */
+                    dd($str);
+
                 $data['list'] = DB::table('tbl_purc_product p')
                     ->join('tbl_purc_product_barcode b','b.product_id','=','p.product_id')
                     ->join('tbl_defi_uom uom','uom.uom_id','=','b.uom_id')
