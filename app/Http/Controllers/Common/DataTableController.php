@@ -1089,6 +1089,7 @@ class DataTableController extends Controller
             $data['keys'] = ['product_barcode_barcode','product_name','uom_name','product_barcode_packing'];
             $merge = array_merge( $data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
+                    dd($str);
 
             if(!$str){
 /*                  $dataSql = ViewPurcProductBarcodeHelp::where('product_barcode_id', '<>', '0');
@@ -1107,7 +1108,6 @@ class DataTableController extends Controller
                     ->groupby('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->limit(50)->get();
 
-                    dd($data['list']);
             }
             if(isset($request->val)){
                 $p_str = strtoupper($request->val);
