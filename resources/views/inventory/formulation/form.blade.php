@@ -289,8 +289,8 @@
                                                     <input type="hidden" data-id="pd_sale_type" name="pd[{{ $loop->iteration }}][pd_sale_type]" value="{{$dtl->constants_sale_type_id}}" class="pd_sale_type">
                                                 </td>
                                                 <td>
-                                                    <input readonly type="text" data-id="pd_ingredient_type" value="{{isset($dtl->contants_ingredient_type_id) ? $dtl->constants['constants_value'] : ''}}" class="pd_ingredient_type field_readonly tb_moveIndex form-control erp-form-control-sm">
-                                                    <input type="hidden" data-id="pd_ingredient_type" name="pd[{{ $loop->iteration }}][pd_ingredient_type]" value="{{$dtl->contants_ingredient_type_id}}" class="pd_ingredient_type">
+                                                    <input readonly type="text" data-id="pd_ingredient_type" value="{{isset($dtl->constants_ingredient_type_id) ? $dtl->constants['constants_value'] : ''}}" class="pd_ingredient_type field_readonly tb_moveIndex form-control erp-form-control-sm">
+                                                    <input type="hidden" data-id="pd_ingredient_type" name="pd[{{ $loop->iteration }}][pd_ingredient_type]" value="{{$dtl->constants_ingredient_type_id}}" class="pd_ingredient_type">
                                                 </td>
                                                 <td><input type="text" data-id="remarks" name="pd[{{$loop->iteration}}][remarks]" value="{{$dtl->item_formulation_dtl_remarks}}" class="tblGridCal_remarks tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td class="text-center">
