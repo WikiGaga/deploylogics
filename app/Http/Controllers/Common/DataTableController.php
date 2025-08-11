@@ -1108,7 +1108,7 @@ class DataTableController extends Controller
                     ->groupby('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->limit(50)->get();
 
-                    dd($data);
+                    dd($data['list']);
 
             }
             if(isset($request->val)){
