@@ -1098,7 +1098,6 @@ class DataTableController extends Controller
                     }
                     $data['list'] = $dataSql->where('business_id',auth()->user()->business_id)->limit(50)->get();
 */
-                    dd($str);
 
                 $data['list'] = DB::table('tbl_purc_product p')
                     ->join('tbl_purc_product_barcode b','b.product_id','=','p.product_id')
@@ -1108,6 +1107,8 @@ class DataTableController extends Controller
                     ->select('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->groupby('p.product_id','p.product_name','p.product_arabic_name','b.product_barcode_id','b.product_barcode_barcode','b.product_barcode_packing','b.uom_id','uom.uom_name','item.group_item_name','item.parent_group_item_name')
                     ->limit(50)->get();
+
+                    dd($data);
 
             }
             if(isset($request->val)){
