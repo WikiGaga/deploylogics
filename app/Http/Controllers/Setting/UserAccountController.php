@@ -167,6 +167,9 @@ class UserAccountController extends Controller
             }
             $user->user_entry_status = isset($request->user_entry_status)?"1":"0";
             $user->branch_id = $request->user_branch;
+            $user->restaurant_id = $request->user_branch;
+            $user->vendor_id = 5;
+            $user->employee_role_id = 5;
             $user->user_type = $request->user_type;
             $branch = TblSoftBranch::where('branch_id', $request->user_branch)->first();
             $user->business_id = $branch->business_id;
