@@ -8,7 +8,9 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
-        if($case == 'new'){}
+        if($case == 'new'){
+            $size = null;
+        }
         if($case == 'edit'){
             $id = $data['current']->branch_id;
             $name = $data['current']->branch_name;
