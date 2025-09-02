@@ -325,7 +325,6 @@
                                             <thead class="thead-light">
                                                 <tr>
                                                     <th class="border-0">Item</th>
-                                                    <th class="border-0 text-center">Image</th>
                                                     <th class="border-0 text-center">Price</th>
                                                     <th class="border-0 text-center">Qty</th>
                                                     <th class="border-0 text-center">Discount</th>
