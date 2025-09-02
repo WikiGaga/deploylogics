@@ -339,7 +339,7 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="orderDetailsModalLabel">
+                    <h5 class="modal-title text-white" id="orderDetailsModalLabel">
                         <i class="fas fa-receipt"></i> Order Details
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
