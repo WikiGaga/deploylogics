@@ -110,8 +110,7 @@
                 d.card_paid
             ORDER BY
                 o.CREATED_AT DESC,
-                o.ORDER_SERIAL DESC;
-            ";
+                o.ORDER_SERIAL DESC;";
 
             // where BRANCH_ID IN (".implode(",",$data['branch_ids']).")
             //     and CUSTOMER_NAME NOT IN ('DELETE IT','Delete It')
