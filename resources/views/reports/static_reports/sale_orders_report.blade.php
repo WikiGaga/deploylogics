@@ -412,7 +412,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     populateOrderDetails(response.order_summary, response.order_details);
-                    $('#orderDetailsModalLabel').html('<i class="fas fa-receipt"></i> Order Details - #' + response.order_summary.ORDER_SERIAL);
+                    $('#orderDetailsModalLabel').html('<i class="fas fa-receipt"></i> Order Details - #' + response.order_summary.order_serial);
                 } else {
                     showError('Failed to load order details');
                 }
@@ -429,21 +429,21 @@ $(document).ready(function() {
         var summaryHtml = `
             <div class="col-md-6">
                 <div class="mb-2">
-                    <strong>Order ID:</strong> ${orderSummary.ORDER_SERIAL}
+                    <strong>Order ID:</strong> ${orderSummary.order_serial}
                 </div>
                 <div class="mb-2">
-                    <strong>Date:</strong> ${new Date(orderSummary.CREATED_AT).toLocaleDateString()}
+                    <strong>Date:</strong> ${new Date(orderSummary.created_at).toLocaleDateString()}
                 </div>
                 <div class="mb-2">
-                    <strong>Customer:</strong> ${orderSummary.CUSTOMER_NAME || 'N/A'}
+                    <strong>Customer:</strong> ${orderSummary.customer_name || 'N/A'}
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-2">
-                    <strong>Phone:</strong> ${orderSummary.PHONE || 'N/A'}
+                    <strong>Phone:</strong> ${orderSummary.phone || 'N/A'}
                 </div>
                 <div class="mb-2">
-                    <strong>Car Number:</strong> ${orderSummary.CAR_NUMBER || 'N/A'}
+                    <strong>Car Number:</strong> ${orderSummary.car_number || 'N/A'}
                 </div>
             </div>
         `;
@@ -463,12 +463,6 @@ $(document).ready(function() {
                         <div class="font-weight-bold">${item.food_name || 'Unknown Item'}</div>
                         <small class="text-muted">ID: ${item.food_id}</small>
                     </td>
-                    <td class="text-center align-middle">
-                        ${item.food_image ?
-                            `<img src="${item.food_image}" alt="${item.food_name}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">` :
-                            '<div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;"><i class="fas fa-image text-muted"></i></div>'
-                        }
-                    </td>
                     <td class="text-center align-middle">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle">${item.quantity || 0}</td>
                     <td class="text-center align-middle text-danger">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
@@ -481,9 +475,9 @@ $(document).ready(function() {
         $('#orderItemsTable').html(itemsHtml);
 
         // Populate order totals
-        var taxAmount = parseFloat(orderSummary.TOTAL_TAX_AMOUNT || 0);
-        var deliveryCharge = parseFloat(orderSummary.DELIVERY_CHARGE || 0);
-        var grandTotal = parseFloat(orderSummary.ORDER_AMOUNT || 0);
+        var taxAmount = parseFloat(orderSummary.total_tax_amount || 0);
+        var deliveryCharge = parseFloat(orderSummary.delivery_charge || 0);
+        var grandTotal = parseFloat(orderSummary.order_amount || 0);
 
         var totalsHtml = `
             <div class="col-md-6">
