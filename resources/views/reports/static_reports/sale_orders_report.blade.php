@@ -101,33 +101,52 @@
                 /* Variations and Addons styling */
         .variation-item {
             background-color: #f8f9fa;
-            border-left: 3px solid #007bff;
-            padding: 5px 10px;
-            margin: 2px 0;
-            border-radius: 3px;
+            border-left: 2px solid #007bff;
+            padding: 3px 8px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.9rem;
         }
 
         .addon-item {
             background-color: #f8f9fa;
-            border-left: 3px solid #28a745;
-            padding: 5px 10px;
-            margin: 2px 0;
-            border-radius: 3px;
+            border-left: 2px solid #28a745;
+            padding: 3px 8px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.9rem;
+        }
+
+        .variation-addon-item {
+            background-color: #fff3cd;
+            border-left: 2px solid #ffc107;
+            padding: 2px 6px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.85rem;
         }
 
         .variation-name {
             font-weight: 600;
             color: #007bff;
+            font-size: 0.9rem;
         }
 
         .addon-name {
             font-weight: 600;
             color: #28a745;
+            font-size: 0.9rem;
         }
 
         .variation-value, .addon-details {
             font-size: 0.85rem;
             color: #6c757d;
+        }
+
+        .variation-addon-name {
+            font-weight: 500;
+            color: #856404;
+            font-size: 0.85rem;
         }
 
         /* Responsive adjustments */
@@ -497,15 +516,31 @@ $(document).ready(function() {
                 try {
                     var variations = JSON.parse(item.variation);
                     if (Array.isArray(variations) && variations.length > 0) {
-                        variationsHtml = '<div class="mt-2">';
+                        variationsHtml = '<div class="mt-1">';
                         variations.forEach(function(variation) {
                             if (variation.name && variation.values) {
-                                variationsHtml += '<div class="variation-item mb-2">';
+                                variationsHtml += '<div class="variation-item mb-1">';
                                 variationsHtml += '<div class="variation-name">' + variation.name + '</div>';
                                 variation.values.forEach(function(value) {
-                                    variationsHtml += '<div class="variation-value ml-2">';
+                                    variationsHtml += '<div class="variation-value ml-1">';
                                     variationsHtml += value.label + ': <strong>' + parseFloat(value.optionPrice || 0).toFixed(3) + '</strong>';
                                     variationsHtml += '</div>';
+
+                                    // Handle variation-specific addons
+                                    if (value.addons && Array.isArray(value.addons) && value.addons.length > 0) {
+                                        variationsHtml += '<div class="ml-2">';
+                                        value.addons.forEach(function(addon) {
+                                            variationsHtml += '<div class="variation-addon-item">';
+                                            variationsHtml += '<div class="variation-addon-name">';
+                                            variationsHtml += '<i class="fas fa-plus-circle"></i> ' + addon.name;
+                                            if (addon.quantity && addon.price) {
+                                                variationsHtml += ' (' + addon.quantity + 'x' + parseFloat(addon.price).toFixed(3) + ')';
+                                            }
+                                            variationsHtml += '</div>';
+                                            variationsHtml += '</div>';
+                                        });
+                                        variationsHtml += '</div>';
+                                    }
                                 });
                                 variationsHtml += '</div>';
                             }
@@ -522,16 +557,15 @@ $(document).ready(function() {
                 try {
                     var addons = JSON.parse(item.add_ons);
                     if (Array.isArray(addons) && addons.length > 0) {
-                        addonsHtml = '<div class="mt-2">';
+                        addonsHtml = '<div class="mt-1">';
                         addons.forEach(function(addon) {
                             if (addon.name) {
-                                addonsHtml += '<div class="addon-item mb-2">';
-                                addonsHtml += '<div class="addon-name"><i class="fas fa-plus-circle"></i> ' + addon.name + '</div>';
+                                addonsHtml += '<div class="addon-item mb-1">';
+                                addonsHtml += '<div class="addon-name"><i class="fas fa-plus-circle"></i> ' + addon.name;
                                 if (addon.quantity && addon.price) {
-                                    addonsHtml += '<div class="addon-details ml-2">';
-                                    addonsHtml += 'Quantity: ' + addon.quantity + ' x Price: ' + parseFloat(addon.price).toFixed(3);
-                                    addonsHtml += '</div>';
+                                    addonsHtml += ' (' + addon.quantity + 'x' + parseFloat(addon.price).toFixed(3) + ')';
                                 }
+                                addonsHtml += '</div>';
                                 addonsHtml += '</div>';
                             }
                         });
@@ -544,17 +578,17 @@ $(document).ready(function() {
 
             itemsHtml += `
                 <tr>
-                    <td class="align-middle">
-                        <div class="font-weight-bold">${item.food_name || 'Unknown Item'}</div>
-                        <small class="text-muted">ID: ${item.food_id}</small>
+                    <td class="align-middle" style="font-size: 0.95rem;">
+                        <div class="font-weight-bold" style="font-size: 1rem;">${item.food_name || 'Unknown Item'}</div>
+                        <small class="text-muted" style="font-size: 0.8rem;">ID: ${item.food_id}</small>
                         ${variationsHtml}
                         ${addonsHtml}
                     </td>
-                    <td class="text-center align-middle">${parseFloat(item.price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle text-success">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle font-weight-bold">${itemTotal.toFixed(3)}</td>
+                    <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
                 </tr>
             `;
         });
