@@ -26,6 +26,10 @@
 @section('content')
     @php
         $data = Session::get('data');
+        $gTotalGrossAmt = 0;
+        $gTotalDiscount = 0;
+        $gTotalDeliveryCharge = 0;
+        $gTotalTax = 0;
         $gTotalCash = 0;
         $gTotalCard = 0;
         $gTotalAmount = 0;
