@@ -98,218 +98,55 @@
             100% { transform: rotate(360deg); }
         }
 
-                /* Professional Modal Styling */
-        .modal-content {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            border-radius: 12px 12px 0 0;
-            border-bottom: none;
-            padding: 20px 25px;
-        }
-
-        .modal-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .modal-body {
-            padding: 25px;
-            background-color: #f8f9fa;
-        }
-
-        .modal-footer {
-            background-color: #ffffff;
-            border-top: 1px solid #e9ecef;
-            border-radius: 0 0 12px 12px;
-            padding: 15px 25px;
-        }
-
-        /* Card Styling */
-        .info-card {
-            background: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .info-card-header {
-            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 8px 8px 0 0;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .info-card-body {
-            padding: 18px;
-        }
-
-        /* Table Styling */
-        .order-table {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .order-table thead {
-            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
-            color: white;
-        }
-
-        .order-table th {
-            padding: 15px 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            border: none;
-        }
-
-        .order-table td {
-            padding: 12px;
-            border-bottom: 1px solid #f1f3f4;
-            font-size: 1rem;
-            vertical-align: top;
-        }
-
-        .order-table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Variations and Addons styling */
+                /* Variations and Addons styling */
         .variation-item {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            padding: 8px 12px;
-            margin: 4px 0;
-            border-radius: 6px;
-            font-size: 1rem;
+            background-color: #f8f9fa;
+            border-left: 2px solid #007bff;
+            padding: 3px 8px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.9rem;
         }
 
         .addon-item {
-            background: #e8f5e8;
-            border: 1px solid #4caf50;
-            padding: 8px 12px;
-            margin: 4px 0;
-            border-radius: 6px;
-            font-size: 1rem;
+            background-color: #f8f9fa;
+            border-left: 2px solid #28a745;
+            padding: 3px 8px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.9rem;
         }
 
         .variation-addon-item {
-            background: #fff8e1;
-            border: 1px solid #ff9800;
-            padding: 6px 10px;
-            margin: 3px 0;
-            border-radius: 4px;
-            font-size: 0.95rem;
+            background-color: #fff3cd;
+            border-left: 2px solid #ffc107;
+            padding: 2px 6px;
+            margin: 1px 0;
+            border-radius: 2px;
+            font-size: 0.85rem;
         }
 
         .variation-name {
-            font-weight: 700;
-            color: #1976d2;
-            font-size: 1.05rem;
-            margin-bottom: 4px;
+            font-weight: 600;
+            color: #007bff;
+            font-size: 0.9rem;
         }
 
         .addon-name {
-            font-weight: 700;
-            color: #388e3c;
-            font-size: 1.05rem;
+            font-weight: 600;
+            color: #28a745;
+            font-size: 0.9rem;
         }
 
-        .variation-value {
-            font-size: 0.95rem;
-            color: #424242;
-            font-weight: 500;
+        .variation-value, .addon-details {
+            font-size: 0.85rem;
+            color: #6c757d;
         }
 
         .variation-addon-name {
-            font-weight: 600;
-            color: #f57c00;
-            font-size: 0.95rem;
-        }
-
-        /* Summary Styling */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .summary-item {
-            background: white;
-            padding: 12px 15px;
-            border-radius: 6px;
-            border-left: 4px solid #007bff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .summary-label {
-            font-size: 0.9rem;
-            color: #6c757d;
             font-weight: 500;
-        }
-
-        .summary-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        /* Totals Styling */
-        .totals-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 15px;
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .total-row:last-child {
-            border-bottom: none;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #2c3e50;
-            padding-top: 12px;
-        }
-
-        .total-label {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .total-value {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .modal-lg {
-                max-width: 98%;
-                margin: 5px auto;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .order-table {
-                font-size: 0.9rem;
-            }
+            color: #856404;
+            font-size: 0.85rem;
         }
 
         /* Responsive adjustments */
@@ -499,9 +336,9 @@
 
     <!-- Order Details Modal -->
     <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="orderDetailsModalLabel">
                         <i class="fas fa-receipt"></i> Order Details
                     </h5>
@@ -511,50 +348,69 @@
                 </div>
                 <div class="modal-body">
                     <!-- Order Summary -->
-                    <div class="info-card">
-                        <div class="info-card-header">
-                            <i class="fas fa-info-circle"></i> Order Summary
-                        </div>
-                        <div class="info-card-body">
-                            <div class="summary-grid" id="orderSummary">
-                                <!-- Order summary will be populated here -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle text-primary"></i> Order Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="orderSummary">
+                                        <!-- Order summary will be populated here -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Order Items -->
-                    <div class="info-card">
-                        <div class="info-card-header">
-                            <i class="fas fa-list"></i> Order Items
-                        </div>
-                        <div class="info-card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table order-table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Item Details</th>
-                                            <th class="text-center">Price</th>
-                                            <th class="text-center">Qty</th>
-                                            <th class="text-center">Discount</th>
-                                            <th class="text-center">Addon</th>
-                                            <th class="text-center">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="orderItemsTable">
-                                        <!-- Order items will be populated here -->
-                                    </tbody>
-                                </table>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-list text-primary"></i> Order Items</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="border-0">Item</th>
+                                                    <th class="border-0 text-center">Price</th>
+                                                    <th class="border-0 text-center">Qty</th>
+                                                    <th class="border-0 text-center">Discount</th>
+                                                    <th class="border-0 text-center">Addon</th>
+                                                    <th class="border-0 text-center">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="orderItemsTable">
+                                                <!-- Order items will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Order Totals -->
-                    <div class="totals-section" id="orderTotals">
-                        <!-- Order totals will be populated here -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-calculator text-primary"></i> Order Totals</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="orderTotals">
+                                        <!-- Order totals will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
                         <i class="fas fa-times"></i> Close
                     </button>
                 </div>
@@ -621,25 +477,24 @@ $(document).ready(function() {
     function populateOrderDetails(orderSummary, orderDetails) {
         // Populate order summary
         var summaryHtml = `
-            <div class="summary-item">
-                <div class="summary-label">Order ID</div>
-                <div class="summary-value">${orderSummary.order_serial}</div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>Order ID:</strong> ${orderSummary.order_serial}
+                </div>
+                <div class="mb-2">
+                    <strong>Date:</strong> ${new Date(orderSummary.created_at).toLocaleDateString()}
+                </div>
+                <div class="mb-2">
+                    <strong>Customer:</strong> ${orderSummary.customer_name || 'N/A'}
+                </div>
             </div>
-            <div class="summary-item">
-                <div class="summary-label">Date</div>
-                <div class="summary-value">${new Date(orderSummary.created_at).toLocaleDateString()}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Customer</div>
-                <div class="summary-value">${orderSummary.customer_name || 'N/A'}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Phone</div>
-                <div class="summary-value">${orderSummary.phone || 'N/A'}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Car Number</div>
-                <div class="summary-value">${orderSummary.car_number || 'N/A'}</div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>Phone:</strong> ${orderSummary.phone || 'N/A'}
+                </div>
+                <div class="mb-2">
+                    <strong>Car Number:</strong> ${orderSummary.car_number || 'N/A'}
+                </div>
             </div>
         `;
         $('#orderSummary').html(summaryHtml);
@@ -724,17 +579,17 @@ $(document).ready(function() {
 
             itemsHtml += `
                 <tr>
-                    <td class="align-middle">
-                        <div class="font-weight-bold" style="font-size: 1.1rem; color: #2c3e50;">${item.food_name || 'Unknown Item'}</div>
-                        <small class="text-muted" style="font-size: 0.9rem;">ID: ${item.food_id}</small>
+                    <td class="align-middle" style="font-size: 0.95rem;">
+                        <div class="font-weight-bold" style="font-size: 1rem;">${item.food_name || 'Unknown Item'}</div>
+                        <small class="text-muted" style="font-size: 0.8rem;">ID: ${item.food_id}</small>
                         ${variationsHtml}
                         ${addonsHtml}
                     </td>
-                    <td class="text-center align-middle" style="font-size: 1rem; font-weight: 600;">${parseFloat(item.price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle" style="font-size: 1rem; font-weight: 600;">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger" style="font-size: 1rem; font-weight: 600;">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle text-success" style="font-size: 1rem; font-weight: 600;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle font-weight-bold" style="font-size: 1.1rem; color: #2c3e50;">${itemTotal.toFixed(3)}</td>
+                    <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
                 </tr>
             `;
         });
@@ -747,21 +602,25 @@ $(document).ready(function() {
         var grandTotal = parseFloat(orderSummary.order_amount || 0);
 
         var totalsHtml = `
-            <div class="total-row">
-                <span class="total-label">Subtotal:</span>
-                <span class="total-value">${subtotal.toFixed(3)}</span>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span class="font-weight-bold">${subtotal.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tax Amount:</span>
+                    <span class="font-weight-bold text-info">+${taxAmount.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Delivery Charge:</span>
+                    <span class="font-weight-bold text-warning">+${deliveryCharge.toFixed(3)}</span>
+                </div>
             </div>
-            <div class="total-row">
-                <span class="total-label">Tax Amount:</span>
-                <span class="total-value text-info">+${taxAmount.toFixed(3)}</span>
-            </div>
-            <div class="total-row">
-                <span class="total-label">Delivery Charge:</span>
-                <span class="total-value text-warning">+${deliveryCharge.toFixed(3)}</span>
-            </div>
-            <div class="total-row">
-                <span class="total-label">Grand Total:</span>
-                <span class="total-value text-primary">${grandTotal.toFixed(3)}</span>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="h5">Grand Total:</span>
+                    <span class="h5 text-primary font-weight-bold">${grandTotal.toFixed(3)}</span>
+                </div>
             </div>
         `;
         $('#orderTotals').html(totalsHtml);
