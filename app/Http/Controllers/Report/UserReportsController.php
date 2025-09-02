@@ -2258,7 +2258,7 @@ class UserReportsController extends Controller
                 }
                 if($data['report_case'] == 'sale_orders_report'){
                     $data['key'] = 'sale_orders_report';
-                    $data['page_title'] = 'Sale Orders Report';
+                    $data['page_title'] = 'POS Orders Report';
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                 }
@@ -2684,7 +2684,6 @@ class UserReportsController extends Controller
                 return response()->json(['error' => 'Order ID is required'], 400);
             }
 
-            // Get order details with food information
             $orderDetails = DB::select("
                 SELECT
                     od.food_id,
@@ -2704,7 +2703,6 @@ class UserReportsController extends Controller
                 ORDER BY od.id
             ", [$orderId]);
 
-            // Get order summary information
             $orderSummary = DB::select("
                 SELECT
                     o.ID,

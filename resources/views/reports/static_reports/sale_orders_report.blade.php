@@ -1,5 +1,5 @@
 @extends('layouts.report')
-@section('title', 'Sale Orders Report')
+@section('title', 'POS Orders Report')
 
 @section('pageCSS')
     <style>
