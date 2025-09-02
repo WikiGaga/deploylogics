@@ -242,7 +242,7 @@
                                 $gTotalCard += $detail->card_paid;
                                 $gTotalAmount += $detail->order_amount;
                             @endphp
-                            <tr class="order-row" data-order-id="{{ $detail->ID }}" style="cursor: pointer;">
+                            <tr class="order-row" data-order-id="{{ $detail->id }}" style="cursor: pointer;">
                                 <td class="text-left">{{ $detail->order_serial }}</td>
                                 <td class="text-center">{{ date('d-m-Y', strtotime($detail->created_at)) }}</td>
                                 <td class="text-center">{{ $detail->customer_name ?? '' }} <br>
