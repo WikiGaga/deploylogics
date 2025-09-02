@@ -2675,6 +2675,61 @@ class UserReportsController extends Controller
         }
     }
 
+    public function getOrderDetails(Request $request)
+    {
+        try {
+            $orderId = $request->input('order_id');
+
+            if (!$orderId) {
+                return response()->json(['error' => 'Order ID is required'], 400);
+            }
+
+            // Get order details with food information
+            $orderDetails = DB::select("
+                SELECT
+                    od.food_id,
+                    od.price,
+                    od.discount_on_food,
+                    od.quantity,
+                    od.total_addon_price,
+                    f.name as food_name,
+                    f.image as food_image,
+                    (od.price * od.quantity) as gross_amount,
+                    ((od.price * od.quantity) - od.discount_on_food + od.total_addon_price) as net_amount
+                FROM order_details od
+                LEFT JOIN food f ON f.id = od.food_id
+                WHERE od.order_id = ?
+                ORDER BY od.id
+            ", [$orderId]);
+
+            // Get order summary information
+            $orderSummary = DB::select("
+                SELECT
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.TOTAL_TAX_AMOUNT,
+                    o.DELIVERY_CHARGE,
+                    o.ORDER_AMOUNT,
+                    o.CREATED_AT,
+                    d.CUSTOMER_NAME,
+                    d.PHONE,
+                    d.CAR_NUMBER
+                FROM ORDERS o
+                LEFT JOIN POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
+                WHERE o.ID = ?
+            ", [$orderId]);
+
+            return response()->json([
+                'success' => true,
+                'order_details' => $orderDetails,
+                'order_summary' => $orderSummary[0] ?? null
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch order details: ' . $e->getMessage()], 500);
+        }
+    }
+
     public static function notifyClosingDayReportStatus(){
         $date = date('Y-m-d');
         $exists = TblVerifyReports::where('report_name' , 'closing_day')->where('report_date' , $date)->exists();

@@ -503,6 +503,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('get-supplier-by-id','Report\UserReportsController@getSupplierById');
             Route::get('get-chart-account-by-name','Report\UserReportsController@getChartAccountByName');
             Route::post('verify-closing-day-report' , 'Report\UserReportsController@verifyClosingDayReport');
+            Route::post('get-order-details','Report\UserReportsController@getOrderDetails');
         });
         Route::prefix('user-report')->group(function () {
             Route::get('view','Report\UserReportController@reportView')->name('report.report_view');

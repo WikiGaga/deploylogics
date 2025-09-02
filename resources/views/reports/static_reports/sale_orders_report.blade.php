@@ -21,6 +21,94 @@
                 margin: 0;
             }
         }
+
+        /* Order row hover effects */
+        .order-row {
+            transition: all 0.3s ease;
+        }
+
+        .order-row:hover {
+            background-color: #f8f9fa !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Modal styling */
+        .modal-lg {
+            max-width: 900px;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            border-radius: 10px 10px 0 0;
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Card styling */
+        .card {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        }
+
+        .card-header {
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        /* Table styling */
+        .table th {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        /* Image styling */
+        .img-thumbnail {
+            border-radius: 6px;
+            border: 2px solid #e9ecef;
+        }
+
+        /* Loading animation */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modal-lg {
+                max-width: 95%;
+                margin: 10px auto;
+            }
+
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+        }
     </style>
 @endsection
 @section('content')
@@ -154,7 +242,7 @@
                                 $gTotalCard += $detail->card_paid;
                                 $gTotalAmount += $detail->order_amount;
                             @endphp
-                            <tr>
+                            <tr class="order-row" data-order-id="{{ $detail->ID }}" style="cursor: pointer;">
                                 <td class="text-left">{{ $detail->order_serial }}</td>
                                 <td class="text-center">{{ date('d-m-Y', strtotime($detail->created_at)) }}</td>
                                 <td class="text-center">{{ $detail->customer_name ?? '' }} <br>
@@ -194,13 +282,244 @@
             </div>
         </div>
     </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">
+                        <i class="fas fa-receipt"></i> Order Details
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Order Summary -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle text-primary"></i> Order Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="orderSummary">
+                                        <!-- Order summary will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-list text-primary"></i> Order Items</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="border-0">Item</th>
+                                                    <th class="border-0 text-center">Image</th>
+                                                    <th class="border-0 text-center">Price</th>
+                                                    <th class="border-0 text-center">Qty</th>
+                                                    <th class="border-0 text-center">Discount</th>
+                                                    <th class="border-0 text-center">Addon</th>
+                                                    <th class="border-0 text-center">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="orderItemsTable">
+                                                <!-- Order items will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Totals -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-calculator text-primary"></i> Order Totals</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="orderTotals">
+                                        <!-- Order totals will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('pageJS')
 
 @endsection
 
 @section('customJS')
+<script>
+$(document).ready(function() {
+    // Add hover effect to order rows
+    $('.order-row').hover(
+        function() {
+            $(this).addClass('table-active');
+        },
+        function() {
+            $(this).removeClass('table-active');
+        }
+    );
 
+    // Handle row click to show order details
+    $('.order-row').click(function() {
+        var orderId = $(this).data('order-id');
+        if (orderId) {
+            loadOrderDetails(orderId);
+        }
+    });
+
+    function loadOrderDetails(orderId) {
+        // Show loading state
+        $('#orderDetailsModalLabel').html('<i class="fas fa-spinner fa-spin"></i> Loading Order Details...');
+        $('#orderSummary, #orderItemsTable, #orderTotals').html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+
+        // Show modal
+        $('#orderDetailsModal').modal('show');
+
+        // Make AJAX request
+        $.ajax({
+            url: '/reports/get-order-details',
+            method: 'POST',
+            data: {
+                order_id: orderId,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    populateOrderDetails(response.order_summary, response.order_details);
+                    $('#orderDetailsModalLabel').html('<i class="fas fa-receipt"></i> Order Details - #' + response.order_summary.ORDER_SERIAL);
+                } else {
+                    showError('Failed to load order details');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading order details:', error);
+                showError('Error loading order details: ' + error);
+            }
+        });
+    }
+
+    function populateOrderDetails(orderSummary, orderDetails) {
+        // Populate order summary
+        var summaryHtml = `
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>Order ID:</strong> ${orderSummary.ORDER_SERIAL}
+                </div>
+                <div class="mb-2">
+                    <strong>Date:</strong> ${new Date(orderSummary.CREATED_AT).toLocaleDateString()}
+                </div>
+                <div class="mb-2">
+                    <strong>Customer:</strong> ${orderSummary.CUSTOMER_NAME || 'N/A'}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>Phone:</strong> ${orderSummary.PHONE || 'N/A'}
+                </div>
+                <div class="mb-2">
+                    <strong>Car Number:</strong> ${orderSummary.CAR_NUMBER || 'N/A'}
+                </div>
+            </div>
+        `;
+        $('#orderSummary').html(summaryHtml);
+
+        // Populate order items
+        var itemsHtml = '';
+        var subtotal = 0;
+
+        orderDetails.forEach(function(item) {
+            var itemTotal = parseFloat(item.net_amount || 0);
+            subtotal += itemTotal;
+
+            itemsHtml += `
+                <tr>
+                    <td class="align-middle">
+                        <div class="font-weight-bold">${item.food_name || 'Unknown Item'}</div>
+                        <small class="text-muted">ID: ${item.food_id}</small>
+                    </td>
+                    <td class="text-center align-middle">
+                        ${item.food_image ?
+                            `<img src="${item.food_image}" alt="${item.food_name}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">` :
+                            '<div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;"><i class="fas fa-image text-muted"></i></div>'
+                        }
+                    </td>
+                    <td class="text-center align-middle">${parseFloat(item.price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle">${item.quantity || 0}</td>
+                    <td class="text-center align-middle text-danger">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-success">+${parseFloat(item.total_addon_price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle font-weight-bold">${itemTotal.toFixed(3)}</td>
+                </tr>
+            `;
+        });
+
+        $('#orderItemsTable').html(itemsHtml);
+
+        // Populate order totals
+        var taxAmount = parseFloat(orderSummary.TOTAL_TAX_AMOUNT || 0);
+        var deliveryCharge = parseFloat(orderSummary.DELIVERY_CHARGE || 0);
+        var grandTotal = parseFloat(orderSummary.ORDER_AMOUNT || 0);
+
+        var totalsHtml = `
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span class="font-weight-bold">${subtotal.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tax Amount:</span>
+                    <span class="font-weight-bold text-info">+${taxAmount.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Delivery Charge:</span>
+                    <span class="font-weight-bold text-warning">+${deliveryCharge.toFixed(3)}</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="h5">Grand Total:</span>
+                    <span class="h5 text-primary font-weight-bold">${grandTotal.toFixed(3)}</span>
+                </div>
+            </div>
+        `;
+        $('#orderTotals').html(totalsHtml);
+    }
+
+    function showError(message) {
+        $('#orderSummary, #orderItemsTable, #orderTotals').html(`
+            <div class="alert alert-danger text-center">
+                <i class="fas fa-exclamation-triangle"></i> ${message}
+            </div>
+        `);
+        $('#orderDetailsModalLabel').html('<i class="fas fa-receipt"></i> Order Details');
+    }
+});
+</script>
 @endsection
 @section('exportXls')
     @if ($data['form_file_type'] == 'xls')
