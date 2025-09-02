@@ -675,7 +675,6 @@ $(document).ready(function() {
                 <tr>
                     <td class="align-middle" style="font-size: 0.95rem;">
                         <div class="font-weight-bold" style="font-size: 1rem;">${item.food_name || 'Unknown Item'}</div>
-                        <small class="text-muted" style="font-size: 0.8rem;">ID: ${item.food_id}</small>
                         ${variationsHtml}
                         ${addonsHtml}
                     </td>
