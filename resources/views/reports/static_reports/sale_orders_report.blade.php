@@ -525,23 +525,24 @@ $(document).ready(function() {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     variationsHtml += value.label + ': <strong>' + parseFloat(value.optionPrice || 0).toFixed(3) + '</strong>';
                                     variationsHtml += '</div>';
-
-                                    // Handle variation-specific addons
-                                    if (value.addons && Array.isArray(value.addons) && value.addons.length > 0) {
-                                        variationsHtml += '<div class="ml-2">';
-                                        value.addons.forEach(function(addon) {
-                                            variationsHtml += '<div class="variation-addon-item">';
-                                            variationsHtml += '<div class="variation-addon-name">';
-                                            variationsHtml += '<i class="fas fa-plus-circle"></i> ' + addon.name;
-                                            if (addon.quantity && addon.price) {
-                                                variationsHtml += ' (' + addon.quantity + 'x' + parseFloat(addon.price).toFixed(3) + ')';
-                                            }
-                                            variationsHtml += '</div>';
-                                            variationsHtml += '</div>';
-                                        });
-                                        variationsHtml += '</div>';
-                                    }
                                 });
+
+                                // Handle variation-specific addons (at variation level, not value level)
+                                if (variation.addons && Array.isArray(variation.addons) && variation.addons.length > 0) {
+                                    variationsHtml += '<div class="ml-2 mt-1">';
+                                    variation.addons.forEach(function(addon) {
+                                        variationsHtml += '<div class="variation-addon-item">';
+                                        variationsHtml += '<div class="variation-addon-name">';
+                                        variationsHtml += '<i class="fas fa-plus-circle"></i> ' + addon.name;
+                                        if (addon.quantity && addon.price) {
+                                            variationsHtml += ' (' + addon.quantity + 'x' + parseFloat(addon.price).toFixed(3) + ')';
+                                        }
+                                        variationsHtml += '</div>';
+                                        variationsHtml += '</div>';
+                                    });
+                                    variationsHtml += '</div>';
+                                }
+
                                 variationsHtml += '</div>';
                             }
                         });
