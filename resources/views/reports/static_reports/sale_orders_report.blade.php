@@ -149,6 +149,82 @@
             font-size: 0.85rem;
         }
 
+        /* Order Details Modal Font Sizes - Bigger fonts for easy reading */
+        #orderDetailsModal .modal-title {
+            font-size: 1.4rem !important;
+            font-weight: 600 !important;
+        }
+
+        #orderDetailsModal .card-header h6 {
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+        }
+
+        #orderDetailsModal .card-body {
+            font-size: 1.1rem !important;
+        }
+
+        #orderDetailsModal .card-body strong {
+            font-size: 1.15rem !important;
+            font-weight: 600 !important;
+        }
+
+        #orderDetailsModal .table th {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            padding: 12px 8px !important;
+        }
+
+        #orderDetailsModal .table td {
+            font-size: 1.05rem !important;
+            padding: 10px 8px !important;
+            vertical-align: middle !important;
+        }
+
+        #orderDetailsModal .table td .font-weight-bold {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+        }
+
+        #orderDetailsModal .table td small {
+            font-size: 0.95rem !important;
+        }
+
+        #orderDetailsModal .variation-item,
+        #orderDetailsModal .addon-item,
+        #orderDetailsModal .variation-addon-item {
+            font-size: 1rem !important;
+            padding: 6px 10px !important;
+        }
+
+        #orderDetailsModal .variation-name,
+        #orderDetailsModal .addon-name {
+            font-size: 1.05rem !important;
+        }
+
+        #orderDetailsModal .variation-value,
+        #orderDetailsModal .addon-details,
+        #orderDetailsModal .variation-addon-name {
+            font-size: 1rem !important;
+        }
+
+        #orderDetailsModal .d-flex span {
+            font-size: 1.1rem !important;
+        }
+
+        #orderDetailsModal .h5 {
+            font-size: 1.3rem !important;
+        }
+
+        #orderDetailsModal .btn {
+            font-size: 1.1rem !important;
+            padding: 8px 16px !important;
+        }
+
+        #orderDetailsModal .alert {
+            font-size: 1.1rem !important;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .modal-lg {
@@ -158,6 +234,24 @@
 
             .table-responsive {
                 font-size: 0.85rem;
+            }
+
+            /* Adjust modal fonts for mobile */
+            #orderDetailsModal .modal-title {
+                font-size: 1.2rem !important;
+            }
+
+            #orderDetailsModal .card-header h6 {
+                font-size: 1.1rem !important;
+            }
+
+            #orderDetailsModal .card-body {
+                font-size: 1rem !important;
+            }
+
+            #orderDetailsModal .table th,
+            #orderDetailsModal .table td {
+                font-size: 0.95rem !important;
             }
         }
     </style>
