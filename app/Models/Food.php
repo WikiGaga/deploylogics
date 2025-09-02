@@ -23,10 +23,20 @@ class Food extends Model
         return $this->hasMany(Variation::class, 'food_id');
     }
 
-    // public function variationOptions()
-    // {
-    //     return $this->hasMany(VariationOption::class, 'food_id');
-    // }
+    public function variationOptions()
+    {
+        return $this->hasMany(VariationOption::class, 'food_id');
+    }
+
+    public function newVariations()
+    {
+        return $this->hasMany(Variation::class, 'food_id');
+    }
+
+    public function newVariationOptions()
+    {
+        return $this->hasMany(VariationOption::class, 'food_id');
+    }
 
     // protected $casts = [
     //     'tax' => 'float',

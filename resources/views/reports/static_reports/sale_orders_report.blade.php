@@ -98,6 +98,38 @@
             100% { transform: rotate(360deg); }
         }
 
+                /* Variations and Addons styling */
+        .variation-item {
+            background-color: #f8f9fa;
+            border-left: 3px solid #007bff;
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+
+        .addon-item {
+            background-color: #f8f9fa;
+            border-left: 3px solid #28a745;
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+
+        .variation-name {
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .addon-name {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .variation-value, .addon-details {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .modal-lg {
@@ -456,11 +488,67 @@ $(document).ready(function() {
             var itemTotal = parseFloat(item.net_amount || 0);
             subtotal += itemTotal;
 
+            // Parse variations and addons
+            var variationsHtml = '';
+            var addonsHtml = '';
+
+            // Handle variations
+            if (item.variation) {
+                try {
+                    var variations = JSON.parse(item.variation);
+                    if (Array.isArray(variations) && variations.length > 0) {
+                        variationsHtml = '<div class="mt-2">';
+                        variations.forEach(function(variation) {
+                            if (variation.name && variation.values) {
+                                variationsHtml += '<div class="variation-item mb-2">';
+                                variationsHtml += '<div class="variation-name">' + variation.name + '</div>';
+                                variation.values.forEach(function(value) {
+                                    variationsHtml += '<div class="variation-value ml-2">';
+                                    variationsHtml += value.label + ': <strong>' + parseFloat(value.optionPrice || 0).toFixed(3) + '</strong>';
+                                    variationsHtml += '</div>';
+                                });
+                                variationsHtml += '</div>';
+                            }
+                        });
+                        variationsHtml += '</div>';
+                    }
+                } catch (e) {
+                    console.log('Error parsing variations:', e);
+                }
+            }
+
+            // Handle addons
+            if (item.add_ons) {
+                try {
+                    var addons = JSON.parse(item.add_ons);
+                    if (Array.isArray(addons) && addons.length > 0) {
+                        addonsHtml = '<div class="mt-2">';
+                        addons.forEach(function(addon) {
+                            if (addon.name) {
+                                addonsHtml += '<div class="addon-item mb-2">';
+                                addonsHtml += '<div class="addon-name"><i class="fas fa-plus-circle"></i> ' + addon.name + '</div>';
+                                if (addon.quantity && addon.price) {
+                                    addonsHtml += '<div class="addon-details ml-2">';
+                                    addonsHtml += 'Quantity: ' + addon.quantity + ' x Price: ' + parseFloat(addon.price).toFixed(3);
+                                    addonsHtml += '</div>';
+                                }
+                                addonsHtml += '</div>';
+                            }
+                        });
+                        addonsHtml += '</div>';
+                    }
+                } catch (e) {
+                    console.log('Error parsing addons:', e);
+                }
+            }
+
             itemsHtml += `
                 <tr>
                     <td class="align-middle">
                         <div class="font-weight-bold">${item.food_name || 'Unknown Item'}</div>
                         <small class="text-muted">ID: ${item.food_id}</small>
+                        ${variationsHtml}
+                        ${addonsHtml}
                     </td>
                     <td class="text-center align-middle">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle">${item.quantity || 0}</td>

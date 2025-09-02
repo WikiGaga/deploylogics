@@ -2692,6 +2692,8 @@ class UserReportsController extends Controller
                     od.discount_on_food,
                     od.quantity,
                     od.total_add_on_price,
+                    od.variation,
+                    od.add_ons,
                     f.name as food_name,
                     f.image as food_image,
                     (od.price * od.quantity) as gross_amount,
