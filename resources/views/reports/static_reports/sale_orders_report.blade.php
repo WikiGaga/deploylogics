@@ -472,7 +472,7 @@ $(document).ready(function() {
                     <td class="text-center align-middle">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle">${item.quantity || 0}</td>
                     <td class="text-center align-middle text-danger">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle text-success">+${parseFloat(item.total_addon_price || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-success">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle font-weight-bold">${itemTotal.toFixed(3)}</td>
                 </tr>
             `;
