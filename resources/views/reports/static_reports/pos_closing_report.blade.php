@@ -138,15 +138,33 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
-                COALESCE(SUM(od.price), 0) AS gross_amount
+                COALESCE(SUM(od.price), 0) AS gross_amount,
+                ss.shift_id,
+                ss.start_date as session_start_date,
+                ss.end_date as session_end_date,
+                ss.opening_cash,
+                ss.closing_cash,
+                ss.opening_visa,
+                ss.closing_visa,
+                ss.session_no,
+                ss.session_status,
+                ds.shift_name
             FROM
                 ORDERS o
             LEFT JOIN
                 POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
             LEFT JOIN
                 order_details od ON od.order_id = o.ID
+            LEFT JOIN
+                shift_sessions ss ON ss.session_id = o.SESSION_ID
+            LEFT JOIN
+                TBL_DEFI_SHIFT ds ON ds.shift_id = ss.shift_id
             WHERE
                 o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                AND o.SESSION_ID IS NOT NULL
+                AND o.SESSION_ID != ''
+                AND o.SESSION_ID != '0'
+                AND TRIM(o.SESSION_ID) != ''
             GROUP BY
                 o.ID,
                 o.ORDER_SERIAL,
@@ -164,19 +182,23 @@
                 d.CAR_NUMBER,
                 d.PHONE,
                 d.cash_paid,
-                d.card_paid
+                d.card_paid,
+                ss.shift_id,
+                ss.start_date,
+                ss.end_date,
+                ss.opening_cash,
+                ss.closing_cash,
+                ss.opening_visa,
+                ss.closing_visa,
+                ss.session_no,
+                ss.session_status,
+                ds.shift_name
             ORDER BY
                 o.SESSION_ID,
                 o.CREATED_AT DESC,
                 o.ORDER_SERIAL DESC";
 
             $list = \Illuminate\Support\Facades\DB::select($qry);
-
-            // Debug: Show session_id values
-            echo "<!-- DEBUG: Found " . count($list) . " orders -->";
-            foreach ($list as $order) {
-                echo "<!-- DEBUG: Order ID: " . $order->id . ", Session ID: '" . ($order->session_id ?? 'NULL') . "' -->";
-            }
 
             // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
@@ -199,8 +221,7 @@
                 <div class="col-lg-12">
                     @if(empty($groupedOrders))
                         <div class="alert alert-warning text-center">
-                            <i class="fas fa-exclamation-triangle"></i> No orders found with valid session IDs for the selected date range.
-                            <br><small>Total orders found: {{ count($list) }}</small>
+                            <i class="fas fa-exclamation-triangle"></i> No orders found with valid shift sessions for the selected date range.
                         </div>
                     @else
                         @foreach ($groupedOrders as $sessionId => $sessionOrders)
@@ -213,9 +234,13 @@
                             $sessionTotalCard = 0;
                             $sessionTotalAmount = 0;
 
-                            // Get session start and end times
-                            $sessionStartTime = $sessionOrders[0]->created_at;
-                            $sessionEndTime = end($sessionOrders)->created_at;
+                            // Get session information from shift_sessions table
+                            $sessionInfo = $sessionOrders[0];
+                            $sessionStartTime = $sessionInfo->session_start_date ?? $sessionOrders[0]->created_at;
+                            $sessionEndTime = $sessionInfo->session_end_date ?? end($sessionOrders)->created_at;
+                            $shiftName = $sessionInfo->shift_name ?? 'Unknown Shift';
+                            $sessionNo = $sessionInfo->session_no ?? 'N/A';
+                            $sessionStatus = $sessionInfo->session_status ?? 'Unknown';
 
                             // Calculate session duration
                             $sessionDuration = strtotime($sessionEndTime) - strtotime($sessionStartTime);
@@ -228,7 +253,11 @@
                                 <div class="session-info">
                                     <span>
                                         <i class="fas fa-cash-register"></i>
-                                        <strong>Session:</strong> {{ $sessionId }}
+                                        <strong>Session #{{ $sessionNo }}:</strong> {{ $sessionId }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-clock"></i>
+                                        <strong>Shift:</strong> {{ $shiftName }}
                                     </span>
                                     <span>
                                         <i class="fas fa-clock"></i>
@@ -241,6 +270,10 @@
                                     <span>
                                         <i class="fas fa-stopwatch"></i>
                                         <strong>Duration:</strong> {{ $sessionDurationHours }}h {{ $sessionDurationMinutes }}m
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Status:</strong> {{ ucfirst($sessionStatus) }}
                                     </span>
                                 </div>
                                 <div class="session-stats">
@@ -301,9 +334,39 @@
                                 </table>
                             </div>
 
+                            <!-- Session Balances -->
+                            <div class="session-balances" style="background-color: #f8f9fa; padding: 15px; border-top: 1px solid #dee2e6;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3"><i class="fas fa-wallet"></i> Opening Balances</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Opening Cash:</span>
+                                            <span class="font-weight-bold text-success">{{ number_format($sessionInfo->opening_cash ?? 0, 3) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Opening Visa:</span>
+                                            <span class="font-weight-bold text-info">{{ number_format($sessionInfo->opening_visa ?? 0, 3) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3"><i class="fas fa-cash-register"></i> Closing Balances</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Closing Cash:</span>
+                                            <span class="font-weight-bold text-success">{{ number_format($sessionInfo->closing_cash ?? 0, 3) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Closing Visa:</span>
+                                            <span class="font-weight-bold text-info">{{ number_format($sessionInfo->closing_visa ?? 0, 3) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Session Totals -->
                             <div class="session-totals">
                                 <div class="row">
                                     <div class="col-md-12">
+                                        <h6 class="mb-3"><i class="fas fa-calculator"></i> Session Sales Summary</h6>
                                         <div class="d-flex justify-content-between">
                                             <span><strong>Session Total:</strong></span>
                                             <div class="d-flex">
