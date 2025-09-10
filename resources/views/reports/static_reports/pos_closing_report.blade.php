@@ -211,10 +211,6 @@
                                         <tr>
                                             <th class="text-left">Order ID</th>
                                             <th class="text-center">Order Date</th>
-                                            <th class="text-center">Customer Info</th>
-                                            <th class="text-center">Order Type</th>
-                                            <th class="text-center">Order Status</th>
-                                            <th class="text-center">Payment Status</th>
                                             <th class="text-center">Gross Amount</th>
                                             <th class="text-center">Discount</th>
                                             <th class="text-center">Delivery Charges</th>
@@ -247,11 +243,6 @@
                                             <tr>
                                                 <td class="text-left">{{ $detail->order_serial }}</td>
                                                 <td class="text-center">{{ date('d-m-Y H:i', strtotime($detail->created_at)) }}</td>
-                                                <td class="text-center">{{ $detail->customer_name ?? '' }} <br>
-                                                    {{ $detail->car_number ?? '' }} <br> {{ $detail->phone ?? '' }} </td>
-                                                <td class="text-center">{{ $detail->order_type }}</td>
-                                                <td class="text-center">{{ $detail->order_status }}</td>
-                                                <td class="text-center">{{ $detail->payment_status }}</td>
                                                 <td class="text-center">{{ number_format($detail->gross_amount, 3) }}</td>
                                                 <td class="text-center">{{ number_format($detail->restaurant_discount_amount, 3) }}</td>
                                                 <td class="text-center">{{ number_format($detail->delivery_charge, 3) }}</td>
@@ -290,7 +281,7 @@
                         <div class="mt-4">
                             <table width="100%" class="table table-bordered">
                                 <tr class="grand-total-row">
-                                    <td colspan="6" class="fw-bold rep-font-bold text-center">
+                                    <td colspan="2" class="fw-bold rep-font-bold text-center">
                                         <i class="fas fa-calculator"></i> GRAND TOTAL (All Sessions)
                                     </td>
                                     <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalGrossAmt, 3) }}</td>
