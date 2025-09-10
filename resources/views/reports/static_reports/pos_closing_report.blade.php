@@ -198,7 +198,86 @@
                 o.CREATED_AT DESC,
                 o.ORDER_SERIAL DESC";
 
+            // First check if there are any orders in the date range
+            $simpleQry = "SELECT COUNT(*) as order_count FROM ORDERS o
+                         WHERE o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'";
+            $simpleResult = \Illuminate\Support\Facades\DB::select($simpleQry);
+            echo "<!-- DEBUG: Total orders in date range: " . $simpleResult[0]->order_count . " -->";
+
+            // Check orders with session_id
+            $sessionQry = "SELECT COUNT(*) as session_count FROM ORDERS o
+                          WHERE o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                          AND o.SESSION_ID IS NOT NULL AND o.SESSION_ID != '' AND o.SESSION_ID != '0'";
+            $sessionResult = \Illuminate\Support\Facades\DB::select($sessionQry);
+            echo "<!-- DEBUG: Orders with valid session_id: " . $sessionResult[0]->session_count . " -->";
+
             $list = \Illuminate\Support\Facades\DB::select($qry);
+
+            // Debug: Check what we're getting
+            echo "<!-- DEBUG: Found " . count($list) . " orders with shift sessions -->";
+            if (count($list) > 0) {
+                echo "<!-- DEBUG: First order session_id: " . ($list[0]->session_id ?? 'NULL') . " -->";
+                echo "<!-- DEBUG: First order shift_name: " . ($list[0]->shift_name ?? 'NULL') . " -->";
+            } else {
+                // Try a simpler query without shift_sessions JOIN
+                echo "<!-- DEBUG: Trying fallback query without shift_sessions JOIN -->";
+                $fallbackQry = "SELECT
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.ORDER_AMOUNT,
+                    o.TOTAL_TAX_AMOUNT,
+                    o.DELIVERY_CHARGE,
+                    o.RESTAURANT_DISCOUNT_AMOUNT,
+                    o.PAYMENT_STATUS,
+                    o.ORDER_STATUS,
+                    o.ORDER_TYPE,
+                    o.ORDER_TAKEN_BY,
+                    o.CREATED_AT,
+                    o.SESSION_ID,
+                    d.CUSTOMER_NAME,
+                    d.CAR_NUMBER,
+                    d.PHONE,
+                    d.cash_paid,
+                    d.card_paid,
+                    COALESCE(SUM(od.price), 0) AS gross_amount
+                FROM
+                    ORDERS o
+                LEFT JOIN
+                    POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
+                LEFT JOIN
+                    order_details od ON od.order_id = o.ID
+                WHERE
+                    o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                    AND o.SESSION_ID IS NOT NULL
+                    AND o.SESSION_ID != ''
+                    AND o.SESSION_ID != '0'
+                    AND TRIM(o.SESSION_ID) != ''
+                GROUP BY
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.ORDER_AMOUNT,
+                    o.TOTAL_TAX_AMOUNT,
+                    o.DELIVERY_CHARGE,
+                    o.RESTAURANT_DISCOUNT_AMOUNT,
+                    o.PAYMENT_STATUS,
+                    o.ORDER_STATUS,
+                    o.ORDER_TYPE,
+                    o.ORDER_TAKEN_BY,
+                    o.CREATED_AT,
+                    o.SESSION_ID,
+                    d.CUSTOMER_NAME,
+                    d.CAR_NUMBER,
+                    d.PHONE,
+                    d.cash_paid,
+                    d.card_paid
+                ORDER BY
+                    o.SESSION_ID,
+                    o.CREATED_AT DESC,
+                    o.ORDER_SERIAL DESC";
+
+                $list = \Illuminate\Support\Facades\DB::select($fallbackQry);
+                echo "<!-- DEBUG: Fallback query found " . count($list) . " orders -->";
+            }
 
             // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
@@ -241,6 +320,9 @@
                             $shiftName = $sessionInfo->shift_name ?? 'Unknown Shift';
                             $sessionNo = $sessionInfo->session_no ?? 'N/A';
                             $sessionStatus = $sessionInfo->session_status ?? 'Unknown';
+
+                            // Check if we have shift session data
+                            $hasShiftData = isset($sessionInfo->opening_cash);
 
                             // Calculate session duration
                             $sessionDuration = strtotime($sessionEndTime) - strtotime($sessionStartTime);
@@ -334,6 +416,7 @@
                                 </table>
                             </div>
 
+                            @if($hasShiftData)
                             <!-- Session Balances -->
                             <div class="session-balances" style="background-color: #f8f9fa; padding: 15px; border-top: 1px solid #dee2e6;">
                                 <div class="row">
@@ -361,6 +444,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
                             <!-- Session Totals -->
                             <div class="session-totals">
