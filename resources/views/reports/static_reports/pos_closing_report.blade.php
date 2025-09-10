@@ -130,6 +130,8 @@
                 order_details od ON od.order_id = o.ID
             WHERE
                 o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                AND o.SESSION_ID IS NOT NULL
+                AND o.SESSION_ID != ''
             GROUP BY
                 o.ID,
                 o.ORDER_SERIAL,
@@ -168,7 +170,12 @@
 
             <div class="row row-block">
                 <div class="col-lg-12">
-                    @foreach ($groupedOrders as $sessionId => $sessionOrders)
+                    @if(empty($groupedOrders))
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i> No orders found with valid session IDs for the selected date range.
+                        </div>
+                    @else
+                        @foreach ($groupedOrders as $sessionId => $sessionOrders)
                         @php
                             $sessionTotalGrossAmt = 0;
                             $sessionTotalDiscount = 0;
@@ -268,23 +275,24 @@
                         </div>
                     @endforeach
 
-                    <!-- Grand Total Section -->
-                    <div class="mt-4">
-                        <table width="100%" class="table table-bordered">
-                            <tr class="grand-total-row">
-                                <td colspan="6" class="fw-bold rep-font-bold text-center">
-                                    <i class="fas fa-calculator"></i> GRAND TOTAL (All Sessions)
-                                </td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalGrossAmt, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDiscount, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDeliveryCharge, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalTax, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalAmount, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalCash, 3) }}</td>
-                                <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalCard, 3) }}</td>
-                            </tr>
-                        </table>
-                    </div>
+                        <!-- Grand Total Section -->
+                        <div class="mt-4">
+                            <table width="100%" class="table table-bordered">
+                                <tr class="grand-total-row">
+                                    <td colspan="6" class="fw-bold rep-font-bold text-center">
+                                        <i class="fas fa-calculator"></i> GRAND TOTAL (All Sessions)
+                                    </td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalGrossAmt, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDiscount, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDeliveryCharge, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalTax, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalAmount, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalCash, 3) }}</td>
+                                    <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalCard, 3) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
