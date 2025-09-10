@@ -174,93 +174,16 @@
                 o.CREATED_AT DESC,
                 o.ORDER_SERIAL DESC";
 
-            // First, let's check what orders exist in the date range
-            $debugQry = "SELECT COUNT(*) as total_orders FROM ORDERS o
-                        WHERE o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'";
-            $debugResult = \Illuminate\Support\Facades\DB::select($debugQry);
-            echo "<!-- DEBUG: Total orders in date range: " . $debugResult[0]->total_orders . " -->";
-
-            // Check orders with session_id
-            $sessionDebugQry = "SELECT COUNT(*) as session_orders,
-                               COUNT(CASE WHEN o.SESSION_ID IS NOT NULL THEN 1 END) as not_null_sessions,
-                               COUNT(CASE WHEN o.SESSION_ID != '' THEN 1 END) as not_empty_sessions,
-                               COUNT(CASE WHEN o.SESSION_ID != '0' THEN 1 END) as not_zero_sessions
-                               FROM ORDERS o
-                               WHERE o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'";
-            $sessionDebugResult = \Illuminate\Support\Facades\DB::select($sessionDebugQry);
-            echo "<!-- DEBUG: Session analysis - Total: " . $sessionDebugResult[0]->session_orders .
-                 ", Not NULL: " . $sessionDebugResult[0]->not_null_sessions .
-                 ", Not Empty: " . $sessionDebugResult[0]->not_empty_sessions .
-                 ", Not Zero: " . $sessionDebugResult[0]->not_zero_sessions . " -->";
-
             $list = \Illuminate\Support\Facades\DB::select($qry);
-            echo "<!-- DEBUG: Orders after filtering: " . count($list) . " -->";
-
-            // If no results, try a simpler query
-            if (count($list) == 0) {
-                echo "<!-- DEBUG: Trying simpler query without strict session filtering -->";
-                $simpleQry = "SELECT
-                    o.ID,
-                    o.ORDER_SERIAL,
-                    o.ORDER_AMOUNT,
-                    o.TOTAL_TAX_AMOUNT,
-                    o.DELIVERY_CHARGE,
-                    o.RESTAURANT_DISCOUNT_AMOUNT,
-                    o.PAYMENT_STATUS,
-                    o.ORDER_STATUS,
-                    o.ORDER_TYPE,
-                    o.ORDER_TAKEN_BY,
-                    o.CREATED_AT,
-                    o.SESSION_ID,
-                    d.CUSTOMER_NAME,
-                    d.CAR_NUMBER,
-                    d.PHONE,
-                    d.cash_paid,
-                    d.card_paid,
-                    COALESCE(SUM(od.price), 0) AS gross_amount
-                FROM
-                    ORDERS o
-                LEFT JOIN
-                    POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
-                LEFT JOIN
-                    order_details od ON od.order_id = o.ID
-                WHERE
-                    o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
-                GROUP BY
-                    o.ID,
-                    o.ORDER_SERIAL,
-                    o.ORDER_AMOUNT,
-                    o.TOTAL_TAX_AMOUNT,
-                    o.DELIVERY_CHARGE,
-                    o.RESTAURANT_DISCOUNT_AMOUNT,
-                    o.PAYMENT_STATUS,
-                    o.ORDER_STATUS,
-                    o.ORDER_TYPE,
-                    o.ORDER_TAKEN_BY,
-                    o.CREATED_AT,
-                    o.SESSION_ID,
-                    d.CUSTOMER_NAME,
-                    d.CAR_NUMBER,
-                    d.PHONE,
-                    d.cash_paid,
-                    d.card_paid
-                ORDER BY
-                    o.SESSION_ID,
-                    o.CREATED_AT DESC,
-                    o.ORDER_SERIAL DESC";
-
-                $list = \Illuminate\Support\Facades\DB::select($simpleQry);
-                echo "<!-- DEBUG: Simple query found: " . count($list) . " orders -->";
-            }
 
             // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
             foreach ($list as $order) {
                 $sessionId = $order->session_id;
 
-                // If session_id is null or empty, use a default group
+                // Skip orders with invalid session IDs
                 if (is_null($sessionId) || $sessionId === '' || $sessionId === '0' || trim($sessionId) === '') {
-                    $sessionId = 'No Session';
+                    continue;
                 }
 
                 if (!isset($groupedOrders[$sessionId])) {
@@ -269,7 +192,6 @@
                 $groupedOrders[$sessionId][] = $order;
             }
 
-            echo "<!-- DEBUG: Grouped into " . count($groupedOrders) . " sessions -->";
             ?>
 
             <div class="row row-block">
@@ -289,14 +211,7 @@
                             $sessionTotalCard = 0;
                             $sessionTotalAmount = 0;
 
-                            // Get session information from orders
-                            $sessionStartTime = $sessionOrders[0]->created_at;
-                            $sessionEndTime = end($sessionOrders)->created_at;
-
-                            // Calculate session duration
-                            $sessionDuration = strtotime($sessionEndTime) - strtotime($sessionStartTime);
-                            $sessionDurationHours = floor($sessionDuration / 3600);
-                            $sessionDurationMinutes = floor(($sessionDuration % 3600) / 60);
+                            // Session information
                         @endphp
 
                         <div class="session-group">
@@ -305,18 +220,6 @@
                                     <span>
                                         <i class="fas fa-cash-register"></i>
                                         <strong>Session:</strong> {{ $sessionId }}
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-clock"></i>
-                                        <strong>Started:</strong> {{ date('d-m-Y H:i', strtotime($sessionStartTime)) }}
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-clock"></i>
-                                        <strong>Ended:</strong> {{ date('d-m-Y H:i', strtotime($sessionEndTime)) }}
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-stopwatch"></i>
-                                        <strong>Duration:</strong> {{ $sessionDurationHours }}h {{ $sessionDurationMinutes }}m
                                     </span>
                                 </div>
                                 <div class="session-stats">
