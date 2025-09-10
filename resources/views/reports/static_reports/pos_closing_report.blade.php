@@ -3,7 +3,6 @@
 
 @section('pageCSS')
     <style>
-        /* Styles go here */
         @media print {
             thead {
                 display: table-header-group;
@@ -22,7 +21,6 @@
             }
         }
 
-        /* Session group styling */
         .session-group {
             background-color: #f8f9fa;
             border-left: 4px solid #007bff;
@@ -75,7 +73,6 @@
             vertical-align: middle;
         }
 
-        /* Grand total styling */
         .grand-total-row {
             background-color: #e8f5e8 !important;
             font-weight: bold;
@@ -86,7 +83,6 @@
             border-top: 3px solid #28a745 !important;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .table-responsive {
                 font-size: 0.85rem;
@@ -176,8 +172,7 @@
 
             $list = \Illuminate\Support\Facades\DB::select($qry);
             echo "<!-- DEBUG: Main query found " . count($list) . " orders -->";
-            
-            // If no results, try a simpler query without session filtering
+
             if (count($list) == 0) {
                 echo "<!-- DEBUG: Trying fallback query without session filtering -->";
                 $fallbackQry = "SELECT
@@ -229,18 +224,16 @@
                     o.SESSION_ID,
                     o.CREATED_AT DESC,
                     o.ORDER_SERIAL DESC";
-                
+
                 $list = \Illuminate\Support\Facades\DB::select($fallbackQry);
                 echo "<!-- DEBUG: Fallback query found " . count($list) . " orders -->";
             }
 
-            // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
             $skippedCount = 0;
             foreach ($list as $order) {
                 $sessionId = $order->session_id;
 
-                // Skip orders with invalid session IDs
                 if (is_null($sessionId) || $sessionId === '' || $sessionId === '0' || trim($sessionId) === '') {
                     $skippedCount++;
                     continue;
@@ -251,7 +244,7 @@
                 }
                 $groupedOrders[$sessionId][] = $order;
             }
-            
+
             echo "<!-- DEBUG: Skipped " . $skippedCount . " orders with invalid session IDs -->";
             echo "<!-- DEBUG: Grouped into " . count($groupedOrders) . " sessions -->";
 
@@ -274,7 +267,6 @@
                             $sessionTotalCard = 0;
                             $sessionTotalAmount = 0;
 
-                            // Session information
                         @endphp
 
                         <div class="session-group">
@@ -318,7 +310,6 @@
                                                 $sessionTotalCard += $detail->card_paid;
                                                 $sessionTotalAmount += $detail->order_amount;
 
-                                                // Add to grand totals
                                                 $gTotalGrossAmt += $detail->gross_amount;
                                                 $gTotalDiscount += $detail->restaurant_discount_amount;
                                                 $gTotalDeliveryCharge += $detail->delivery_charge;
@@ -343,8 +334,6 @@
                                 </table>
                             </div>
 
-
-                            <!-- Session Totals -->
                             <div class="session-totals">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -367,7 +356,6 @@
                         </div>
                     @endforeach
 
-                        <!-- Grand Total Section -->
                         <div class="mt-4">
                             <table width="100%" class="table table-bordered">
                                 <tr class="grand-total-row">
@@ -405,7 +393,6 @@
 @section('customJS')
 <script>
 $(document).ready(function() {
-    // No row click functionality needed for this report
     console.log('POS Closing Report loaded successfully');
 });
 </script>
@@ -415,10 +402,9 @@ $(document).ready(function() {
     @if ($data['form_file_type'] == 'xls')
         <script>
             $(document).ready(function() {
-                // Export all tables including session groups
                 var tables = document.querySelectorAll('table');
                 tables.forEach(function(table, index) {
-                    if (index === 0) return; // Skip the first table (grand total)
+                    if (index === 0) return;
 
                     $(table).table2excel({
                         filename: "pos_closing_report_session_" + (index) + ".xls",
