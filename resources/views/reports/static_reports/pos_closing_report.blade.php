@@ -175,14 +175,74 @@
                 o.ORDER_SERIAL DESC";
 
             $list = \Illuminate\Support\Facades\DB::select($qry);
+            echo "<!-- DEBUG: Main query found " . count($list) . " orders -->";
+            
+            // If no results, try a simpler query without session filtering
+            if (count($list) == 0) {
+                echo "<!-- DEBUG: Trying fallback query without session filtering -->";
+                $fallbackQry = "SELECT
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.ORDER_AMOUNT,
+                    o.TOTAL_TAX_AMOUNT,
+                    o.DELIVERY_CHARGE,
+                    o.RESTAURANT_DISCOUNT_AMOUNT,
+                    o.PAYMENT_STATUS,
+                    o.ORDER_STATUS,
+                    o.ORDER_TYPE,
+                    o.ORDER_TAKEN_BY,
+                    o.CREATED_AT,
+                    o.SESSION_ID,
+                    d.CUSTOMER_NAME,
+                    d.CAR_NUMBER,
+                    d.PHONE,
+                    d.cash_paid,
+                    d.card_paid,
+                    COALESCE(SUM(od.price), 0) AS gross_amount
+                FROM
+                    ORDERS o
+                LEFT JOIN
+                    POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
+                LEFT JOIN
+                    order_details od ON od.order_id = o.ID
+                WHERE
+                    o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                GROUP BY
+                    o.ID,
+                    o.ORDER_SERIAL,
+                    o.ORDER_AMOUNT,
+                    o.TOTAL_TAX_AMOUNT,
+                    o.DELIVERY_CHARGE,
+                    o.RESTAURANT_DISCOUNT_AMOUNT,
+                    o.PAYMENT_STATUS,
+                    o.ORDER_STATUS,
+                    o.ORDER_TYPE,
+                    o.ORDER_TAKEN_BY,
+                    o.CREATED_AT,
+                    o.SESSION_ID,
+                    d.CUSTOMER_NAME,
+                    d.CAR_NUMBER,
+                    d.PHONE,
+                    d.cash_paid,
+                    d.card_paid
+                ORDER BY
+                    o.SESSION_ID,
+                    o.CREATED_AT DESC,
+                    o.ORDER_SERIAL DESC";
+                
+                $list = \Illuminate\Support\Facades\DB::select($fallbackQry);
+                echo "<!-- DEBUG: Fallback query found " . count($list) . " orders -->";
+            }
 
             // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
+            $skippedCount = 0;
             foreach ($list as $order) {
                 $sessionId = $order->session_id;
 
                 // Skip orders with invalid session IDs
                 if (is_null($sessionId) || $sessionId === '' || $sessionId === '0' || trim($sessionId) === '') {
+                    $skippedCount++;
                     continue;
                 }
 
@@ -191,6 +251,9 @@
                 }
                 $groupedOrders[$sessionId][] = $order;
             }
+            
+            echo "<!-- DEBUG: Skipped " . $skippedCount . " orders with invalid session IDs -->";
+            echo "<!-- DEBUG: Grouped into " . count($groupedOrders) . " sessions -->";
 
             ?>
 
