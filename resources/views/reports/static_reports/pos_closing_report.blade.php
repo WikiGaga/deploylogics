@@ -130,8 +130,6 @@
                 order_details od ON od.order_id = o.ID
             WHERE
                 o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
-                AND o.SESSION_ID IS NOT NULL
-                AND o.SESSION_ID != ''
             GROUP BY
                 o.ID,
                 o.ORDER_SERIAL,
@@ -157,10 +155,22 @@
 
             $list = \Illuminate\Support\Facades\DB::select($qry);
 
-            // Group orders by session_id
+            // Debug: Show session_id values
+            echo "<!-- DEBUG: Found " . count($list) . " orders -->";
+            foreach ($list as $order) {
+                echo "<!-- DEBUG: Order ID: " . $order->id . ", Session ID: '" . ($order->session_id ?? 'NULL') . "' -->";
+            }
+
+            // Group orders by session_id, filtering out invalid sessions
             $groupedOrders = [];
             foreach ($list as $order) {
-                $sessionId = $order->session_id ?? 'No Session';
+                $sessionId = $order->session_id;
+
+                // Skip orders with invalid session IDs
+                if (is_null($sessionId) || $sessionId === '' || $sessionId === '0' || trim($sessionId) === '') {
+                    continue;
+                }
+
                 if (!isset($groupedOrders[$sessionId])) {
                     $groupedOrders[$sessionId] = [];
                 }
@@ -171,8 +181,9 @@
             <div class="row row-block">
                 <div class="col-lg-12">
                     @if(empty($groupedOrders))
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle"></i> No orders found with valid session IDs for the selected date range.
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle"></i> No orders found with valid session IDs for the selected date range.
+                            <br><small>Total orders found: {{ count($list) }}</small>
                         </div>
                     @else
                         @foreach ($groupedOrders as $sessionId => $sessionOrders)
