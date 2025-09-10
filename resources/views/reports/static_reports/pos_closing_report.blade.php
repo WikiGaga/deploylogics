@@ -37,6 +37,23 @@
             font-weight: bold;
             font-size: 1.1rem;
             color: #1976d2;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .session-header .session-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .session-header .session-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .session-totals {
@@ -195,14 +212,42 @@
                             $sessionTotalCash = 0;
                             $sessionTotalCard = 0;
                             $sessionTotalAmount = 0;
+
+                            // Get session start and end times
+                            $sessionStartTime = $sessionOrders[0]->created_at;
+                            $sessionEndTime = end($sessionOrders)->created_at;
+
+                            // Calculate session duration
+                            $sessionDuration = strtotime($sessionEndTime) - strtotime($sessionStartTime);
+                            $sessionDurationHours = floor($sessionDuration / 3600);
+                            $sessionDurationMinutes = floor(($sessionDuration % 3600) / 60);
                         @endphp
 
                         <div class="session-group">
                             <div class="session-header">
-                                <i class="fas fa-cash-register"></i> Session ID: {{ $sessionId }}
-                                <span class="float-right">
-                                    <i class="fas fa-calendar"></i> {{ count($sessionOrders) }} Orders
-                                </span>
+                                <div class="session-info">
+                                    <span>
+                                        <i class="fas fa-cash-register"></i>
+                                        <strong>Session:</strong> {{ $sessionId }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-clock"></i>
+                                        <strong>Started:</strong> {{ date('d-m-Y H:i', strtotime($sessionStartTime)) }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-clock"></i>
+                                        <strong>Ended:</strong> {{ date('d-m-Y H:i', strtotime($sessionEndTime)) }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-stopwatch"></i>
+                                        <strong>Duration:</strong> {{ $sessionDurationHours }}h {{ $sessionDurationMinutes }}m
+                                    </span>
+                                </div>
+                                <div class="session-stats">
+                                    <span>
+                                        <i class="fas fa-shopping-cart"></i> {{ count($sessionOrders) }} Orders
+                                    </span>
+                                </div>
                             </div>
 
                             <div class="table-responsive">
