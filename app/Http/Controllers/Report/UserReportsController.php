@@ -2174,7 +2174,7 @@ class UserReportsController extends Controller
 
             // Sale Reports
             $sale_reports = ['payment_mode_wise_sale','product_price_comparison','sale_analysis',
-            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','category_wise_profit',
+            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['report_case'],$sale_reports)){
@@ -2649,7 +2649,7 @@ class UserReportsController extends Controller
              ********/
 
             $sale_keys = ['payment_mode_wise_sale','product_price_comparison','sale_analysis','monthly_sale_pur_summ'
-            ,'pos_session_short_and_excess','sale_report','sale_orders_report','category_wise_profit',
+            ,'pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['key'],$sale_keys)){
