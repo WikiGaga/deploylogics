@@ -77,39 +77,39 @@ class ShiftSession extends Model
                     ->where('branch_id', Helpers::get_restaurant_id());
     }
 
-    protected static function booted()
-    {
-        // Apply restaurant filtering manually since we use branch_id instead of restaurant_id
-        if(auth('vendor')->check() || auth('vendor_employee')->check())
-        {
-            static::addGlobalScope('restaurant', function (Builder $builder) {
-                $builder->where('branch_id', Helpers::get_restaurant_id());
-            });
-        }
-        static::addGlobalScope(new ZoneScope);
-    }
+    // protected static function booted()
+    // {
+    //     // Apply restaurant filtering manually since we use branch_id instead of restaurant_id
+    //     if(auth('vendor')->check() || auth('vendor_employee')->check())
+    //     {
+    //         static::addGlobalScope('restaurant', function (Builder $builder) {
+    //             $builder->where('branch_id', Helpers::get_restaurant_id());
+    //         });
+    //     }
+    //     static::addGlobalScope(new ZoneScope);
+    // }
 
-    protected static function boot()
-    {
-        parent::boot();
+    // protected static function boot()
+    // {
+    //     parent::boot();
 
-        static::creating(function ($shiftSession) {
-            // Set default values
-            $shiftSession->company_id = 1;
-            $shiftSession->business_id = 1;
-            $shiftSession->branch_id = $shiftSession->branch_id ?? Helpers::get_restaurant_id();
-            $shiftSession->user_id = auth('vendor')->id() ?? auth('vendor_employee')->id();
+    //     static::creating(function ($shiftSession) {
+    //         // Set default values
+    //         $shiftSession->company_id = 1;
+    //         $shiftSession->business_id = 1;
+    //         $shiftSession->branch_id = $shiftSession->branch_id ?? Helpers::get_restaurant_id();
+    //         $shiftSession->user_id = auth('vendor')->id() ?? auth('vendor_employee')->id();
 
-            $shiftSession->session_id = Helpers::generateGlobalId($shiftSession->branch_id);
+    //         $shiftSession->session_id = Helpers::generateGlobalId($shiftSession->branch_id);
 
-            $lastSession = static::where('branch_id', $shiftSession->branch_id)
-                                ->orderBy('session_no', 'desc')
-                                ->first();
-            $shiftSession->session_no = $lastSession ? $lastSession->session_no + 1 : 1;
+    //         $lastSession = static::where('branch_id', $shiftSession->branch_id)
+    //                             ->orderBy('session_no', 'desc')
+    //                             ->first();
+    //         $shiftSession->session_no = $lastSession ? $lastSession->session_no + 1 : 1;
 
-            $shiftSession->session_status = 'open';
-        });
-    }
+    //         $shiftSession->session_status = 'open';
+    //     });
+    // }
 
     public function getShiftNameAttribute()
     {
