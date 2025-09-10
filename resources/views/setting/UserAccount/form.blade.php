@@ -44,6 +44,7 @@
             $picture = $data['current']->image_url;
             $signature = $data['current']->degital_signature_url;
             $user_type = $data['current']->user_type;
+            $employee_role_id = $data['current']->employee_role_id;
             if($data['current']->users_type_acco != null){
                 $customer = $data['current']->users_type_acco->customer != null ? $data['current']->users_type_acco->customer : "";
                 if($customer != "" && $data['current']->user_type == 'customer'){
@@ -115,6 +116,24 @@
                                                     <select class="form-control kt-select2 form-control-sm" id="user_type" name="user_type">
                                                         @foreach($data['user_types'] as $userType)
                                                             <option value="{{$userType->constants_key}}" {{$userType->constants_key == $user_type ? 'selected' : ''}}>{{$userType->constants_value}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-block row">
+                                    <div class="col-lg-12">
+                                        <div class="row">
+                                            <label class="col-lg-6 erp-col-form-label">Select Role:<span class="required">*</span></label>
+                                            <div class="col-lg-6">
+                                                <div class="erp-select2">
+                                                    <select class="form-control kt-select2 form-control-sm" id="employee_role_id" name="employee_role_id">
+                                                        <option value="">Select Role</option>
+                                                        @php $employee_role_id = isset($employee_role_id)?$employee_role_id:''@endphp
+                                                        @foreach($data['employee_roles'] as $role)
+                                                            <option value="{{$role->id}}" {{$role->id == $employee_role_id ? 'selected' : ''}}>{{$role->name}}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>

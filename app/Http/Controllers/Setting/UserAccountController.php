@@ -22,6 +22,7 @@ use App\Models\TblSaleDay;
 use App\Models\TblAccoVoucher;
 use App\Models\TblPurcDemand;
 use App\Models\TblPurcProductBarcodeDtl;
+use App\Models\EmployeeRole;
 
 // db and Validator
 use Illuminate\Validation\Rule;
@@ -83,6 +84,10 @@ class UserAccountController extends Controller
         $data['ip_location'] = TblSoftIpLocation::orderby('ip_location_name')->get();
         $data['user_types'] = TblDefiConstants::where('constants_type','user_logged_type')->where('constants_status',1)->get();
 
+        // Get employee roles filtered by logged in user's restaurant_id
+        $loggedInUser = auth()->user();
+        $data['employee_roles'] = EmployeeRole::where('restaurant_id', $loggedInUser->restaurant_id)->get();
+
 
         return view('setting.UserAccount.form',compact('data'));
     }
@@ -103,6 +108,7 @@ class UserAccountController extends Controller
                 'email' => 'required|max:50',
                 'user_branch' => 'required',
                 'user_type' => 'required',
+                'employee_role_id' => 'required',
             ]);
         }else{
             $validator = Validator::make($request->all(), [
@@ -112,6 +118,7 @@ class UserAccountController extends Controller
                 'email' => 'required|min:4|max:50',
                 'user_branch' => 'required',
                 'user_type' => 'required',
+                'employee_role_id' => 'required',
             ]);
         }
         if ($validator->fails()) {
@@ -169,7 +176,7 @@ class UserAccountController extends Controller
             $user->branch_id = $request->user_branch;
             $user->restaurant_id = $request->user_branch;
             $user->vendor_id = 5;
-            $user->employee_role_id = 5;
+            $user->employee_role_id = $request->employee_role_id;
             $user->user_type = $request->user_type;
             $branch = TblSoftBranch::where('branch_id', $request->user_branch)->first();
             $user->business_id = $branch->business_id;
