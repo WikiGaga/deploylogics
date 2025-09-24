@@ -17,8 +17,8 @@ class FoodRecipe extends Model
         return (new static)->getKeyName();
     }
 
-    public function food() {
-        return $this->belongsTo(Food::class, 'food_id');
+    public function option() {
+        return $this->belongsTo(OptionsList::class, 'food_id'); // Keep same foreign key for compatibility
     }
     public function dtls() {
         return $this->hasMany(FoodRecipeDtl::class, 'food_recipe_id');

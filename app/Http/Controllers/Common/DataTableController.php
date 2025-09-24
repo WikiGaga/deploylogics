@@ -980,14 +980,14 @@ class DataTableController extends Controller
             $merge = array_merge( $data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
                     if(!$str){
-                        $data['list'] = DB::table('food')
+                        $data['list'] = DB::table('options_list')
                             ->select('id','name')
                             ->limit(50)->get();
                     }
                     if($str){
                         $str = strtoupper($str);
                         $replaced_str = str_replace(' ', '%', trim($str));
-                        $qry = "Select * from food
+                        $qry = "Select * from options_list
                                 WHERE upper(id) Like '%".$replaced_str."%' OR
                                 upper(name) like '%".$replaced_str."%'
                                 order by

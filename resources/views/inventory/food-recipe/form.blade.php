@@ -22,8 +22,8 @@
             $id = $data['current']->id;
             $code = $data['current']->id;
             $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->item_formulation_date))));
-            $food_id = $data['current']->id;
-            $food_name = $data['current']->food->name;
+            $option_id = $data['current']->id;
+            $option_name = $data['current']->option->name;
             // $remarks = $data['current']->item_formulation_remarks;
             $dtls = isset($data['current']->dtls) ? $data['current']->dtls : [];
         }
@@ -83,7 +83,7 @@
                                                     </span>
                                                 </div>
                                                 <input type="text" id="food_id" name="food_id"
-                                                    value="{{ isset($food_id) ? $food_id : '' }}"
+                                                    value="{{ isset($option_id) ? $option_id : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}"
                                                     class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm"
                                                     placeholder="Enter Here">
@@ -95,7 +95,7 @@
                             <div class="col-lg-3">
                                 <div class="erp_form___block">
                                     <div class="input-group open-modal-group">
-                                        <input id="food_name" name="food_name" value="{{ isset($food_name) ? $food_name : '' }}"
+                                        <input id="food_name" name="food_name" value="{{ isset($option_name) ? $option_name : '' }}"
                                             type="text" class="form-control erp-form-control-sm" readonly>
                                         @if ($case == 'new')
                                             <div class="input-group-append">

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Food;
+use App\Models\OptionsList;
 use App\Models\FoodRecipe;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
@@ -27,7 +27,7 @@ class FoodRecipeController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = FoodRecipe::with('dtls', 'food')->where('id', $id)->first();
+                $data['current'] = FoodRecipe::with('dtls', 'option')->where('id', $id)->first();
                 // dd($data['current']);
                 $data['page_data']['print'] = '/' . self::$redirect_url . '/print/' . $id;
                 $data['document_code'] = $data['current']->id;
@@ -48,10 +48,24 @@ class FoodRecipeController extends Controller
 
     public function getFoodDetailData(Request $request)
     {
-        $foodId = $request->input('food_id');
-        $food = Food::with('variations.variationOptions')->find($foodId);
+        $optionId = $request->input('food_id'); // Keep same parameter name for compatibility
+        $option = OptionsList::find($optionId);
 
-        return view('your.view', compact('food'));
+        if (!$option) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Option not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'option' => $option,
+                'grn' => null // Since options_list doesn't have grn relationship like food
+            ],
+            'message' => 'Option data retrieved successfully'
+        ]);
     }
 
 }

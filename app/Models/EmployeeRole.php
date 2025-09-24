@@ -19,3 +19,4 @@ class EmployeeRole extends Model
         return (new static)->getKeyName();
     }
 }
+
