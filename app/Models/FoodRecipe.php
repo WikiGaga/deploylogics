@@ -23,15 +23,33 @@ class FoodRecipe extends Model
         'branch_id'
     ];
 
+    protected $casts = [
+        'recipe_date' => 'date',
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }
 
     public function option() {
-        return $this->belongsTo(OptionsList::class, 'food_id'); // Keep same foreign key for compatibility
+        return $this->belongsTo(OptionsList::class, 'food_id');
     }
+
     public function dtls() {
         return $this->hasMany(FoodRecipeDtl::class, 'food_recipe_id');
+    }
+
+    // Additional relations for better data access
+    public function business() {
+        return $this->belongsTo(TblSoftBusiness::class, 'business_id');
+    }
+
+    public function company() {
+        return $this->belongsTo(TblSoftCompany::class, 'company_id');
+    }
+
+    public function branch() {
+        return $this->belongsTo(TblSoftBranch::class, 'branch_id');
     }
 
 }

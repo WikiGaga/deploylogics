@@ -121,9 +121,13 @@ class FoodRecipeController extends Controller
                     if (!empty($pd['pd_barcode']) && !empty($pd['quantity'])) {
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['pd_barcode'];
-                        $dtl->uom_id = $pd['pd_uom'];
+                        $dtl->product_id = $pd['product_id'];
+                        $dtl->product_barcode_id = $pd['product_barcode_id'];
+                        $dtl->uom_id = $pd['uom_id'];
                         $dtl->quantity = $pd['quantity'];
+                        $dtl->business_id = auth()->user()->business_id;
+                        $dtl->company_id = auth()->user()->company_id;
+                        $dtl->branch_id = auth()->user()->branch_id;
                         $dtl->save();
                     }
                 }
