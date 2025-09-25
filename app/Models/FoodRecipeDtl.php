@@ -16,13 +16,11 @@ class FoodRecipeDtl extends Model
     protected $fillable = [
         'food_recipe_id',
         'product_id',
-        'product_barcode_id',
-        'uom_id',
         'quantity',
-        'business_id',
-        'company_id',
-        'branch_id'
+        'uom_id'
     ];
+
+    public $incrementing = true;
 
     protected static function primaryKeyName() {
         return (new static)->getKeyName();

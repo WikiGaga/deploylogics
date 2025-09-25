@@ -10,7 +10,6 @@ use App\Library\Utilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Database\QueryException;
 
@@ -118,28 +117,16 @@ class FoodRecipeController extends Controller
 
             // Save new details
             if (isset($request->pd)) {
-                Log::info('PD Data:', $request->pd);
                 foreach ($request->pd as $pd) {
-                    Log::info('Processing PD:', $pd);
                     if (!empty($pd['product_id']) && !empty($pd['quantity'])) {
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
                         $dtl->product_id = $pd['product_id'];
-                        $dtl->product_barcode_id = $pd['product_barcode_id'] ?? null;
                         $dtl->uom_id = $pd['uom_id'];
                         $dtl->quantity = $pd['quantity'];
-                        $dtl->business_id = auth()->user()->business_id;
-                        $dtl->company_id = auth()->user()->company_id;
-                        $dtl->branch_id = auth()->user()->branch_id;
-                        Log::info('Saving DTL:', $dtl->toArray());
                         $dtl->save();
-                        Log::info('DTL Saved successfully');
-                    } else {
-                        Log::info('Skipping PD - missing required fields:', $pd);
                     }
                 }
-            } else {
-                Log::info('No PD data found in request');
             }
 
             DB::commit();
