@@ -79,6 +79,14 @@ class FoodRecipeController extends Controller
     public function store(Request $request, $id = null)
     {
         $data = [];
+
+        // Debug: Log all request data
+        \Log::info('=== FOOD RECIPE STORE DEBUG ===');
+        \Log::info('Request Method: ' . $request->method());
+        \Log::info('Request URL: ' . $request->fullUrl());
+        \Log::info('All Request Data: ', $request->all());
+        \Log::info('PD Data: ', $request->pd ?? 'No PD data');
+
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
             'food_id' => 'required|numeric',
@@ -89,17 +97,23 @@ class FoodRecipeController extends Controller
         ]);
 
         if ($validator->fails()) {
+            \Log::error('Validation Failed: ', $validator->errors()->toArray());
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, 'Validation failed', 422);
         }
 
         DB::beginTransaction();
         try {
+            \Log::info('Starting transaction...');
+
             if (isset($id)) {
+                \Log::info('Edit mode - ID: ' . $id);
                 $foodRecipe = FoodRecipe::where('id', $id)->first();
             } else {
+                \Log::info('Create mode');
                 $foodRecipe = new FoodRecipe();
                 $foodRecipe->id = FoodRecipe::max('id') + 1;
+                \Log::info('New ID: ' . $foodRecipe->id);
             }
 
             $foodRecipe->food_id = $request->food_id;
@@ -108,25 +122,49 @@ class FoodRecipeController extends Controller
             $foodRecipe->business_id = auth()->user()->business_id;
             $foodRecipe->company_id = auth()->user()->company_id;
             $foodRecipe->branch_id = auth()->user()->branch_id;
+
+            \Log::info('Saving main record: ', $foodRecipe->toArray());
             $foodRecipe->save();
+            \Log::info('Main record saved successfully. ID: ' . $foodRecipe->id);
 
             // Delete existing details
             if (isset($id)) {
-                FoodRecipeDtl::where('food_recipe_id', $id)->delete();
+                \Log::info('Deleting existing details for ID: ' . $id);
+                $deleted = FoodRecipeDtl::where('food_recipe_id', $id)->delete();
+                \Log::info('Deleted ' . $deleted . ' existing details');
             }
 
             // Save new details
             if (isset($request->pd)) {
-                foreach ($request->pd as $pd) {
+                \Log::info('Processing ' . count($request->pd) . ' detail records');
+                $savedCount = 0;
+
+                foreach ($request->pd as $index => $pd) {
+                    \Log::info('Processing detail #' . $index . ': ', $pd);
+
                     if (!empty($pd['product_id']) && !empty($pd['quantity'])) {
-                        $dtl = new FoodRecipeDtl();
-                        $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['product_id'];
-                        $dtl->uom_id = $pd['uom_id'];
-                        $dtl->quantity = $pd['quantity'];
-                        $dtl->save();
+                        try {
+                            $dtl = new FoodRecipeDtl();
+                            $dtl->food_recipe_id = $foodRecipe->id;
+                            $dtl->product_id = $pd['product_id'];
+                            $dtl->uom_id = $pd['uom_id'];
+                            $dtl->quantity = $pd['quantity'];
+
+                            \Log::info('Detail record to save: ', $dtl->toArray());
+                            $dtl->save();
+                            $savedCount++;
+                            \Log::info('Detail #' . $index . ' saved successfully');
+                        } catch (\Exception $e) {
+                            \Log::error('Error saving detail #' . $index . ': ' . $e->getMessage());
+                            throw $e;
+                        }
+                    } else {
+                        \Log::warning('Skipping detail #' . $index . ' - missing required fields: ', $pd);
                     }
                 }
+                \Log::info('Total details saved: ' . $savedCount);
+            } else {
+                \Log::warning('No PD data found in request');
             }
 
             DB::commit();
