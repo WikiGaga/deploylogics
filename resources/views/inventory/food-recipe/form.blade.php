@@ -92,21 +92,21 @@
                                     </div>
                                 </div>
                             </div>
-                            {{-- <div class="col-lg-4">
+                            <div class="col-lg-4">
                                 <div class="erp_form___block">
                                     <div class="input-group open-modal-group">
                                         <input id="food_name" name="food_name" value="{{ isset($option_name) ? $option_name : '' }}"
                                             type="text" class="form-control erp-form-control-sm" readonly>
-                                        @if ($case == 'new')
+                                        {{-- @if ($case == 'new')
                                             <div class="input-group-append">
                                                 <span class="input-group-text group-input-btn" id="getFoodDetailData">
                                                     GO
                                                 </span>
                                             </div>
-                                        @endif
+                                        @endif --}}
                                     </div>
                                 </div>
-                            </div> --}}
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-lg-12 text-right">
