@@ -78,6 +78,7 @@ class FoodRecipeController extends Controller
      */
     public function store(Request $request, $id = null)
     {
+        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
@@ -115,7 +116,6 @@ class FoodRecipeController extends Controller
                 FoodRecipeDtl::where('food_recipe_id', $id)->delete();
             }
 
-            // Save new details
             if (isset($request->pd)) {
                 foreach ($request->pd as $pd) {
                     if (!empty($pd['pd_barcode']) && !empty($pd['quantity']) && !empty($pd['product_id'])) {
