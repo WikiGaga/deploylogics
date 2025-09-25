@@ -83,8 +83,8 @@ class FoodRecipeController extends Controller
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
             'food_id' => 'required|numeric',
-            'pd.*.product_id' => 'nullable|numeric',
-            'pd.*.uom_id' => 'nullable|numeric',
+            'pd.*.pd_barcode' => 'nullable|numeric',
+            'pd.*.pd_uom' => 'nullable|numeric',
             'pd.*.quantity' => 'nullable|numeric',
             'formulation_remarks' => 'nullable|max:100',
         ]);
@@ -119,11 +119,11 @@ class FoodRecipeController extends Controller
             // Save new details
             if (isset($request->pd)) {
                 foreach ($request->pd as $pd) {
-                    if (!empty($pd['product_id']) && !empty($pd['quantity'])) {
+                    if (!empty($pd['pd_barcode']) && !empty($pd['quantity'])) {
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['product_id'];
-                        $dtl->uom_id = $pd['uom_id'];
+                        $dtl->product_id = $pd['pd_barcode'];
+                        $dtl->uom_id = $pd['pd_uom'];
                         $dtl->quantity = $pd['quantity'];
                         $dtl->save();
                     }
