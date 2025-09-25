@@ -47,7 +47,7 @@ function addData(){
             }
         }*/
         var barcodeFound = 0;
-        var form_type_arr = ['pv','brpv','brv','bpv','crv','cpv','jv','obv','lv','lfv','display_rent_fee','rebate_invoice','wa_word','cheque_mangment','budget_form','product_item_tax','food-recipes'];
+        var form_type_arr = ['pv','brpv','brv','bpv','crv','cpv','jv','obv','lv','lfv','display_rent_fee','rebate_invoice','wa_word','cheque_mangment','budget_form','product_item_tax','food_recipes'];
         var currentTable = thix.parents('table');
         if(!form_type_arr.includes(form_type)){
             var product_arr = [];
