@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\OptionsList;
 use App\Models\FoodRecipe;
+use App\Models\FoodRecipeDtl;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Exception;
+use Illuminate\Database\QueryException;
 
 class FoodRecipeController extends Controller
 {
@@ -66,6 +71,83 @@ class FoodRecipeController extends Controller
             ],
             'message' => 'Option data retrieved successfully'
         ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request, $id = null)
+    {
+        $data = [];
+        $validator = Validator::make($request->all(), [
+            'formulation_date' => 'required|date_format:d-m-Y',
+            'food_id' => 'required|numeric',
+            'pd.*.product_id' => 'nullable|numeric',
+            'pd.*.product_barcode_id' => 'nullable|numeric',
+            'pd.*.uom_id' => 'nullable|numeric',
+            'pd.*.pd_barcode' => 'nullable|max:100',
+            'pd.*.quantity' => 'nullable|numeric',
+            'formulation_remarks' => 'nullable|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            $data['validator_errors'] = $validator->errors();
+            return $this->jsonErrorResponse($data, 'Validation failed', 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            if (isset($id)) {
+                $foodRecipe = FoodRecipe::where('id', $id)->first();
+            } else {
+                $foodRecipe = new FoodRecipe();
+                $foodRecipe->id = FoodRecipe::max('id') + 1;
+            }
+
+            $foodRecipe->food_id = $request->food_id;
+            $foodRecipe->item_formulation_date = date('Y-m-d', strtotime($request->formulation_date));
+            $foodRecipe->item_formulation_remarks = $request->formulation_remarks;
+            $foodRecipe->save();
+
+            // Delete existing details
+            if (isset($id)) {
+                FoodRecipeDtl::where('food_recipe_id', $id)->delete();
+            }
+
+            // Save new details
+            if (isset($request->pd)) {
+                foreach ($request->pd as $pd) {
+                    if (!empty($pd['product_id']) && !empty($pd['quantity'])) {
+                        $dtl = new FoodRecipeDtl();
+                        $dtl->food_recipe_id = $foodRecipe->id;
+                        $dtl->product_id = $pd['product_id'];
+                        $dtl->product_barcode_id = $pd['product_barcode_id'];
+                        $dtl->uom_id = $pd['uom_id'];
+                        $dtl->item_formulation_dtl_quantity = $pd['quantity'];
+                        $dtl->save();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            if (isset($id)) {
+                $data = array_merge($data, Utilities::returnJsonEditForm());
+                $data['redirect'] = $this->prefixIndexPage . self::$redirect_url;
+                return $this->jsonSuccessResponse($data, 'Food Recipe updated successfully', 200);
+            } else {
+                $data = array_merge($data, Utilities::returnJsonNewForm());
+                $data['redirect'] = '/' . self::$redirect_url . $this->prefixCreatePage . '/' . $foodRecipe->id;
+                return $this->jsonSuccessResponse($data, 'Food Recipe created successfully', 200);
+            }
+
+        } catch (QueryException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
     }
 
 }

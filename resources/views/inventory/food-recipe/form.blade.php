@@ -31,7 +31,7 @@
     @endphp
     @permission($data['permission'])
         <form id="food-recipe_form" class="kt-form" method="post"
-            action="{{ action('Inventory\ItemFormulationController@store', isset($id) ? $id : '') }}">
+            action="{{ action('Inventory\FoodRecipeController@store', isset($id) ? $id : '') }}">
             <input type="hidden" value='{{ $data['form_type'] }}' id="form_type">
             @csrf
             <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
@@ -82,17 +82,17 @@
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
                                                 </div>
-                                                <input type="text" id="food_id" name="food_id"
+                                                    <input type="text" id="food_id" name="food_id"
                                                     value="{{ isset($option_id) ? $option_id : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}"
-                                                    class="open_inline__help pd_barcode moveIndex form-control erp-form-control-sm"
+                                                    class="open_inline__help form-control erp-form-control-sm"
                                                     placeholder="Enter Here">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3">
+                            <div class="col-lg-4">
                                 <div class="erp_form___block">
                                     <div class="input-group open-modal-group">
                                         <input id="food_name" name="food_name" value="{{ isset($option_name) ? $option_name : '' }}"
@@ -155,8 +155,6 @@
                                                             class="product_barcode_id form-control erp-form-control-sm">
                                                         <input id="uom_id" readonly type="hidden"
                                                             class="uom_id form-control erp-form-control-sm">
-                                                        <input id="constants_id" readonly type="hidden"
-                                                            class="constants_id form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
@@ -203,12 +201,6 @@
                                                             class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
-                                                {{-- <th scope="col">
-                                            <div class="erp_form__grid_th_title">Remarks</div>
-                                            <div class="erp_form__grid_th_input">
-                                                <input id="remarks" type="text" class="tblGridCal_remarks form-control erp-form-control-sm">
-                                            </div>
-                                        </th> --}}
                                                 <th scope="col" width="48">
                                                     <div class="erp_form__grid_th_title">Action</div>
                                                     <div class="erp_form__grid_th_btn">
@@ -238,12 +230,6 @@
                                                                 data-id="uom_id"
                                                                 value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}"
                                                                 class="uom_id form-control erp-form-control-sm handle"
-                                                                readonly>
-                                                            <input type="hidden"
-                                                                name="pd[{{ $loop->iteration }}][constants_id]"
-                                                                data-id="constants_id"
-                                                                value="{{ isset($dtl->constants->constants_id) ? $dtl->constants->constants_id : '' }}"
-                                                                class="constants_id form-control erp-form-control-sm handle"
                                                                 readonly>
                                                             <input type="hidden"
                                                                 name="pd[{{ $loop->iteration }}][product_barcode_id]"
@@ -283,7 +269,6 @@
                                                                 value="{{ $dtl->item_formulation_dtl_quantity }}"
                                                                 class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                         </td>
-                                                        {{-- <td><input type="text" data-id="remarks" name="pd[{{$loop->iteration}}][remarks]" value="{{$dtl->item_formulation_dtl_remarks}}" class="tblGridCal_remarks tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td> --}}
                                                         <td class="text-center">
                                                             <div class="btn-group btn-group btn-group-sm" role="group">
                                                                 <button type="button"
@@ -306,7 +291,6 @@
                                                     <input value="0.000" readonly type="text" id="total_qty"
                                                         class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                 </td>
-                                                {{-- <td></td> --}}
                                             </tr>
                                         </tbody>
                                     </table>
@@ -341,6 +325,19 @@
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
 
     <script>
+        // Prevent food_id field from being cleared when products are selected
+        $(document).on('change', '.pd_barcode, .open_inline__help', function() {
+            // Preserve the food_id value
+            var foodId = $('#food_id').val();
+            if (foodId) {
+                setTimeout(function() {
+                    if (!$('#food_id').val()) {
+                        $('#food_id').val(foodId);
+                    }
+                }, 100);
+            }
+        });
+
         $(document).on('click', '#getFoodDetailData', function(e) {
             validate = true
             var food_id = $('#food_id').val();
@@ -368,111 +365,7 @@
                     success: function(response) {
                         if (response.status == 'success') {
                             $('tbody.erp_form__grid_body').html('');
-                            if (!valueEmpty(response.data['grn'])) {
-                                var grns = response.data['grn'].grn_dtl;
-                                var tr = '';
-                                var total_length = $('tbody.erp_form__grid_body tr').length;
-                                for (var p = 0; p < grns.length; p++) {
-                                    total_length++;
-                                    var row = grns[p];
-                                    tr += '<tr class="new-row">' +
-                                        '<td class="handle">' +
-                                        '<i class="fa fa-arrows-alt-v handle"></i>' +
-                                        '<input type="text" value="' + total_length + '" name="pd[' +
-                                        total_length + '][sr_no]" title="' + total_length +
-                                        '" class="form-control erp-form-control-sm handle" readonly="" autocomplete="off" aria-invalid="false">' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][product_id]" data-id="product_id" value="' + row.product_id +
-                                        '" class="product_id form-control erp-form-control-sm" readonly="" autocomplete="off">' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][product_barcode_id]" data-id="product_barcode_id" value="' +
-                                        row.product_barcode_id +
-                                        '" class="product_barcode_id form-control erp-form-control-sm" readonly="" autocomplete="off">' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][uom_id]" data-id="uom_id" value="' + row.barcode.uom.uom_id +
-                                        '" class="uom_id form-control erp-form-control-sm" readonly="" autocomplete="off">' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][grn_qty]" data-id="grn_qty" value="' + row.grn_qty +
-                                        '" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][dis_perc]" data-id="dis_perc" value="' + row.dis_perc +
-                                        '" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][dis_amount]" data-id="dis_amount" value="' + row.dis_amount +
-                                        '" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][after_dis_amount]" data-id="after_dis_amount" value="' + row
-                                        .after_dis_amount +
-                                        '" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][gst_perc]" data-id="gst_perc" value="' + row.gst_perc +
-                                        '" class="tblGridCal_gst_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][gst_amount]" data-id="gst_amount" value="' + row.gst_amount +
-                                        '" class="tblGridCal_gst_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][fed_perc]" data-id="fed_perc" value="' + row.fed_perc +
-                                        '" class="tblGridCal_fed_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][fed_amount]" data-id="fed_amount" value="' + row.fed_amount +
-                                        '" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][spec_disc_perc]" data-id="spec_disc_perc" value="' + row
-                                        .spec_disc_perc +
-                                        '" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][spec_disc_amount]" data-id="spec_disc_amount" value="' + row
-                                        .spec_disc_amount +
-                                        '" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][gross_amount]" data-id="gross_amount" value="' + row
-                                        .gross_amount +
-                                        '" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][net_amount]" data-id="net_amount" value="' + row.net_amount +
-                                        '" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                        '<input type="hidden" name="pd[' + total_length +
-                                        '][unit_price]" data-id="unit_price" value="' + row.unit_price +
-                                        '" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
-
-                                        '</td>' +
-                                        '<td>' +
-                                        '<input type="text" name="pd[' + total_length +
-                                        '][pd_barcode]" data-id="pd_barcode" data-url="" value="' + row
-                                        .barcode.product_barcode_barcode + '" title="' + row.barcode
-                                        .product_barcode_barcode +
-                                        '" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off">' +
-                                        '</td>' +
-                                        '<td>' +
-                                        '<input type="text" name="pd[' + total_length +
-                                        '][product_name]" data-id="product_name" data-url="" value="' +
-                                        row.product.product_name +
-                                        '" class="form-control erp-form-control-sm product_name" readonly="" autocomplete="off">' +
-                                        '</td>' +
-                                        '<td>' +
-                                        '<div class="erp-select2">' +
-                                        '<select class="pd_uom field_readonly form-control erp-form-control-sm">' +
-                                        '<option value="' + row.barcode.uom.uom_id + '">' + row.barcode
-                                        .uom.uom_name + '</option>' +
-                                        '</select>' +
-                                        '</div>' +
-                                        '</td>' +
-                                        '<td><input readonly data-id="amount" name="pd[' +
-                                        total_length + '][amount]" value="' + row
-                                        .tbl_purc_grn_dtl_gross_amount +
-                                        '" type="text" class="tblGridCal_amount form-control erp-form-control-sm validNumber validOnlyNumber tb_moveIndex"></td>' +
-
-                                        '<td class="text-center">' +
-                                        '<div class="btn-group btn-group btn-group-sm" role="group">' +
-                                        '<button type="button" class="btn btn-danger gridBtn delData">' +
-                                        '<i class="la la-trash"></i>' +
-                                        '</button>' +
-                                        '</div>' +
-                                        '</td>' +
-                                        '</tr>';
-                                }
-                                $('tbody.erp_form__grid_body').append(tr);
-                            }
+                            // Since we're not loading from GRN, just show success message
                             toastr.success(response.message);
                         } else {
                             toastr.error(response.message);
@@ -526,10 +419,6 @@
                 'id': 'quantity',
                 'fieldClass': 'tblGridCal_qty validNumber validOnlyNumber tb_moveIndex'
             },
-            // {
-            //     'id':'remarks',
-            //     'fieldClass':'tblGridCal_remarks'
-            // }
         ];
         var arr_hidden_field = ['id', 'name'];
     </script>

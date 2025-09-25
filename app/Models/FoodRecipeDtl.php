@@ -17,6 +17,19 @@ class FoodRecipeDtl extends Model
         return (new static)->getKeyName();
     }
 
+    public function product()
+    {
+        return $this->belongsTo(TblPurcProduct::class, 'product_id');
+    }
 
+    public function barcode()
+    {
+        return $this->belongsTo(TblPurcProductBarcode::class, 'product_barcode_id');
+    }
+
+    public function uom()
+    {
+        return $this->belongsTo(TblDefiUom::class, 'uom_id');
+    }
 
 }

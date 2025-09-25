@@ -13,15 +13,9 @@ var KTFormWidgets = function() {
             // define validation rules
 
             rules: {
-                formulation_qty: {
+                food_id: {
                     required: true,
                 },
-                f_barcode: {
-                    required: true,
-                },
-                // f_product_barcode_id: {
-                //     required: true,
-                // }
             },
 
             //display error alert on form submit
