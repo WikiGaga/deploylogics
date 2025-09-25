@@ -18,7 +18,10 @@ class FoodRecipeDtl extends Model
         'product_id',
         'product_barcode_id',
         'uom_id',
-        'item_formulation_dtl_quantity'
+        'quantity',
+        'business_id',
+        'company_id',
+        'branch_id'
     ];
 
     protected static function primaryKeyName() {

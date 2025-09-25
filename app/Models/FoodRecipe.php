@@ -16,8 +16,11 @@ class FoodRecipe extends Model
     protected $fillable = [
         'id',
         'food_id',
-        'item_formulation_date',
-        'item_formulation_remarks'
+        'recipe_date',
+        'notes',
+        'business_id',
+        'company_id',
+        'branch_id'
     ];
 
     protected static function primaryKeyName() {

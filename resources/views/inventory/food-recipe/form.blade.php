@@ -82,7 +82,7 @@
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
                                                 </div>
-                                                    <input type="text" id="food_id" name="food_id"
+                                                <input type="text" id="food_id" name="food_id"
                                                     value="{{ isset($option_id) ? $option_id : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}"
                                                     class="open_inline__help form-control erp-form-control-sm"
@@ -252,7 +252,7 @@
                                                         <td>
                                                             <select
                                                                 class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm"
-                                                                data-id="pd_uom" name="pd[{{ $loop->iteration }}][uom]">
+                                                                data-id="pd_uom" name="pd[{{ $loop->iteration }}][uom_id]">
                                                                 <option
                                                                     value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}">
                                                                     {{ isset($dtl->uom->uom_name) ? $dtl->uom->uom_name : '' }}
@@ -266,7 +266,7 @@
                                                         </td>
                                                         <td><input type="text" data-id="quantity"
                                                                 name="pd[{{ $loop->iteration }}][quantity]"
-                                                                value="{{ $dtl->item_formulation_dtl_quantity }}"
+                                                                value="{{ $dtl->quantity }}"
                                                                 class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
                                                         </td>
                                                         <td class="text-center">
