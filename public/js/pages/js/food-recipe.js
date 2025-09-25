@@ -31,17 +31,6 @@ var KTFormWidgets = function() {
                 $("form").find(":submit").prop('disabled', true);
                 //form[0].submit(); // submit the form
                 var formData = new FormData(form);
-
-                // Debug: Log form data
-                console.log('=== FOOD RECIPE FORM SUBMISSION DEBUG ===');
-                console.log('Form action:', form.action);
-                console.log('Form method:', form.method);
-
-                // Log all form data
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
-
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

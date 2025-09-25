@@ -21,10 +21,10 @@
         if ($case == 'edit') {
             $id = $data['current']->id;
             $code = $data['current']->id;
-            $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->item_formulation_date))));
+            $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->recipe_date))));
             $option_id = $data['current']->food_id;
             $option_name = $data['current']->option->name;
-            $remarks = $data['current']->item_formulation_remarks;
+            $remarks = $data['current']->notes;
             $dtls = isset($data['current']->dtls) ? $data['current']->dtls : [];
         }
         $form_type = $data['form_type'];
