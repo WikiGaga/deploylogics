@@ -118,12 +118,12 @@ class FoodRecipeController extends Controller
             // Save new details
             if (isset($request->pd)) {
                 foreach ($request->pd as $pd) {
-                    if (!empty($pd['pd_barcode']) && !empty($pd['quantity'])) {
+                    if (!empty($pd['pd_barcode']) && !empty($pd['quantity']) && !empty($pd['product_id'])) {
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
                         $dtl->product_id = $pd['product_id'];
-                        $dtl->product_barcode_id = $pd['product_barcode_id'];
-                        $dtl->uom_id = $pd['uom_id'];
+                        $dtl->product_barcode_id = isset($pd['product_barcode_id']) ? $pd['product_barcode_id'] : null;
+                        $dtl->uom_id = isset($pd['uom_id']) ? $pd['uom_id'] : null;
                         $dtl->packing_id = isset($pd['packing_id']) ? $pd['packing_id'] : null;
                         $dtl->quantity = $pd['quantity'];
                         $dtl->business_id = auth()->user()->business_id;

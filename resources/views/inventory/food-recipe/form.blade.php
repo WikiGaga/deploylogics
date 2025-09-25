@@ -150,11 +150,13 @@
                                                         <input id="sr_no" readonly type="text"
                                                             class="sr_no form-control erp-form-control-sm">
                                                         <input id="product_id" readonly type="hidden"
-                                                            class="product_id form-control erp-form-control-sm">
+                                                            name="pd[0][product_id]" class="product_id form-control erp-form-control-sm">
                                                         <input id="product_barcode_id" readonly type="hidden"
-                                                            class="product_barcode_id form-control erp-form-control-sm">
+                                                            name="pd[0][product_barcode_id]" class="product_barcode_id form-control erp-form-control-sm">
                                                         <input id="uom_id" readonly type="hidden"
-                                                            class="uom_id form-control erp-form-control-sm">
+                                                            name="pd[0][uom_id]" class="uom_id form-control erp-form-control-sm">
+                                                        <input id="packing_id" readonly type="hidden"
+                                                            name="pd[0][packing_id]" class="packing_id form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
