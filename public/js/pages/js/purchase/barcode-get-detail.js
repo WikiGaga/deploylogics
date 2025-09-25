@@ -1795,12 +1795,8 @@ function get_food_detail(selected_row) {
     var product_name = selected_row.find('tr.d-none>td[data-field="name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="id"]').text();
 
-    // Only update food fields if we're not in food recipe form (to preserve food selection)
-    var form_type = $('#form_type').val();
-    if (form_type !== 'food_recipes') {
-        $('#food_name').val(product_name);
-        $('#food_id').val(product_id);
-    }
+    $('#food_name').val(product_name);
+    $('#food_id').val(product_id);
 
     $('#inLineHelp').remove();
     selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
