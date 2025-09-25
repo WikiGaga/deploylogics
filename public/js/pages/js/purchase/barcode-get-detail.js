@@ -104,7 +104,7 @@ $(document).on('click', '.data_tbody_row', function() {
         get_product_formulation_detail(thix);
     }
     if(form_type == 'food_recipes'){
-        get_food_detail(thix);
+        // get_food_detail(thix);
     }
     if(caseType == 'formulationEntryHelp'){
         get_formula_entry(thix);
@@ -1795,8 +1795,8 @@ function get_food_detail(selected_row) {
     var product_name = selected_row.find('tr.d-none>td[data-field="name"]').text();
     var product_id = selected_row.find('tr.d-none>td[data-field="id"]').text();
 
-    // $('#food_name').val(product_name);
-    // $('#food_id').val(product_id);
+    $('#food_name').val(product_name);
+    $('#food_id').val(product_id);
 
     $('#inLineHelp').remove();
     selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
