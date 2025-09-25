@@ -540,7 +540,6 @@ class BarcodeController extends Controller
         // $value = ((1.080 / 100) * 5);
         // $value = 1.080 + $value;
         // dd(number_format($value , 3));
-dd($data);
         return response()->json($data);
     }
 
