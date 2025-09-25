@@ -17,14 +17,9 @@ class FoodRecipeDtl extends Model
         'id',
         'food_recipe_id',
         'product_id',
-        'product_name',
         'quantity',
         'uom_id',
-        'product_barcode_id',
-        'packing_id',
-        'business_id',
-        'company_id',
-        'branch_id'
+        'packing_id'
     ];
 
     protected $casts = [
@@ -42,11 +37,6 @@ class FoodRecipeDtl extends Model
         return $this->belongsTo(TblPurcProduct::class, 'product_id');
     }
 
-    public function barcode()
-    {
-        return $this->belongsTo(TblPurcProductBarcode::class, 'product_barcode_id');
-    }
-
     public function uom()
     {
         return $this->belongsTo(TblDefiUom::class, 'uom_id');
@@ -60,19 +50,6 @@ class FoodRecipeDtl extends Model
     public function foodRecipe()
     {
         return $this->belongsTo(FoodRecipe::class, 'food_recipe_id');
-    }
-
-    // Additional relations for better data access
-    public function business() {
-        return $this->belongsTo(TblSoftBusiness::class, 'business_id');
-    }
-
-    public function company() {
-        return $this->belongsTo(TblSoftCompany::class, 'company_id');
-    }
-
-    public function branch() {
-        return $this->belongsTo(TblSoftBranch::class, 'branch_id');
     }
 
 }

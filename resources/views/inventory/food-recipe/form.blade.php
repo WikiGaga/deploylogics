@@ -151,8 +151,6 @@
                                                             class="sr_no form-control erp-form-control-sm">
                                                         <input id="product_id" readonly type="hidden"
                                                             name="pd[0][product_id]" class="product_id form-control erp-form-control-sm">
-                                                        <input id="product_barcode_id" readonly type="hidden"
-                                                            name="pd[0][product_barcode_id]" class="product_barcode_id form-control erp-form-control-sm">
                                                         <input id="uom_id" readonly type="hidden"
                                                             name="pd[0][uom_id]" class="uom_id form-control erp-form-control-sm">
                                                         <input id="packing_id" readonly type="hidden"
@@ -225,30 +223,24 @@
                                                             <input type="hidden"
                                                                 name="pd[{{ $loop->iteration }}][product_id]"
                                                                 data-id="product_id"
-                                                                value="{{ isset($dtl->product->product_id) ? $dtl->product->product_id : '' }}"
+                                                                value="{{ $dtl->product_id }}"
                                                                 class="product_id form-control erp-form-control-sm handle"
                                                                 readonly>
                                                             <input type="hidden" name="pd[{{ $loop->iteration }}][uom_id]"
                                                                 data-id="uom_id"
-                                                                value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}"
+                                                                value="{{ $dtl->uom_id }}"
                                                                 class="uom_id form-control erp-form-control-sm handle"
-                                                                readonly>
-                                                            <input type="hidden"
-                                                                name="pd[{{ $loop->iteration }}][product_barcode_id]"
-                                                                data-id="product_barcode_id"
-                                                                value="{{ isset($dtl->product_barcode_id) ? $dtl->product_barcode_id : '' }}"
-                                                                class="product_barcode_id form-control erp-form-control-sm handle"
                                                                 readonly>
                                                             <input type="hidden"
                                                                 name="pd[{{ $loop->iteration }}][packing_id]"
                                                                 data-id="packing_id"
-                                                                value="{{ isset($dtl->barcode->packing_id) ? $dtl->barcode->packing_id : '' }}"
+                                                                value="{{ $dtl->packing_id }}"
                                                                 class="packing_id form-control erp-form-control-sm handle"
                                                                 readonly>
                                                         </td>
                                                         <td><input type="text" data-id="pd_barcode"
                                                                 name="pd[{{ $loop->iteration }}][pd_barcode]"
-                                                                value="{{ isset($dtl->barcode->product_barcode_barcode) ? $dtl->barcode->product_barcode_barcode : $dtl->product_id }}"
+                                                                value="{{ $dtl->product_id }}"
                                                                 data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
                                                                 class="pd_barcode tb_moveIndex form-control erp-form-control-sm"
                                                                 readonly></td>
@@ -260,16 +252,16 @@
                                                         <td>
                                                             <select
                                                                 class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm"
-                                                                data-id="pd_uom" name="pd[{{ $loop->iteration }}][uom_id]">
+                                                                data-id="pd_uom" name="pd[{{ $loop->iteration }}][pd_uom]">
                                                                 <option
-                                                                    value="{{ isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : '' }}">
+                                                                    value="{{ $dtl->uom_id }}">
                                                                     {{ isset($dtl->uom->uom_name) ? $dtl->uom->uom_name : '' }}
                                                                 </option>
                                                             </select>
                                                         </td>
                                                         <td><input type="text" data-id="pd_packing"
-                                                                name="pd[{{ $loop->iteration }}][packing]"
-                                                                value="{{ isset($dtl->packing->packing_name) ? $dtl->packing->packing_name : (isset($dtl->barcode->product_barcode_packing) ? $dtl->barcode->product_barcode_packing : '') }}"
+                                                                name="pd[{{ $loop->iteration }}][pd_packing]"
+                                                                value="{{ isset($dtl->packing->packing_name) ? $dtl->packing->packing_name : '' }}"
                                                                 class="pd_packing form-control erp-form-control-sm" readonly>
                                                         </td>
                                                         <td><input type="text" data-id="quantity"

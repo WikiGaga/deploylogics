@@ -32,7 +32,7 @@ class FoodRecipeController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.barcode', 'dtls.uom', 'dtls.packing', 'option'])->where('id', $id)->first();
+                $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.uom', 'dtls.packing', 'option'])->where('id', $id)->first();
                 // dd($data['current']);
                 $data['page_data']['print'] = '/' . self::$redirect_url . '/print/' . $id;
                 $data['document_code'] = $data['current']->id;
@@ -118,17 +118,13 @@ class FoodRecipeController extends Controller
 
             if (isset($request->pd)) {
                 foreach ($request->pd as $pd) {
-                    if (!empty($pd['pd_barcode']) && !empty($pd['quantity']) && !empty($pd['product_id'])) {
+                    if (!empty($pd['pd_barcode']) && !empty($pd['quantity'])) {
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['product_id'];
-                        $dtl->product_barcode_id = isset($pd['product_barcode_id']) ? $pd['product_barcode_id'] : null;
-                        $dtl->uom_id = isset($pd['uom_id']) ? $pd['uom_id'] : null;
-                        $dtl->packing_id = isset($pd['packing_id']) ? $pd['packing_id'] : null;
+                        $dtl->product_id = $pd['pd_barcode'];
+                        $dtl->uom_id = isset($pd['pd_uom']) ? $pd['pd_uom'] : null;
+                        $dtl->packing_id = isset($pd['pd_packing']) ? $pd['pd_packing'] : null;
                         $dtl->quantity = $pd['quantity'];
-                        $dtl->business_id = auth()->user()->business_id;
-                        $dtl->company_id = auth()->user()->company_id;
-                        $dtl->branch_id = auth()->user()->branch_id;
                         $dtl->save();
                     }
                 }
