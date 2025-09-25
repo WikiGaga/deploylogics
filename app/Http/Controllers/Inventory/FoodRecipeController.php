@@ -32,7 +32,7 @@ class FoodRecipeController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = FoodRecipe::with('dtls', 'option')->where('id', $id)->first();
+                $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.barcode', 'dtls.uom', 'dtls.packing', 'option'])->where('id', $id)->first();
                 // dd($data['current']);
                 $data['page_data']['print'] = '/' . self::$redirect_url . '/print/' . $id;
                 $data['document_code'] = $data['current']->id;
@@ -124,6 +124,7 @@ class FoodRecipeController extends Controller
                         $dtl->product_id = $pd['product_id'];
                         $dtl->product_barcode_id = $pd['product_barcode_id'];
                         $dtl->uom_id = $pd['uom_id'];
+                        $dtl->packing_id = isset($pd['packing_id']) ? $pd['packing_id'] : null;
                         $dtl->quantity = $pd['quantity'];
                         $dtl->business_id = auth()->user()->business_id;
                         $dtl->company_id = auth()->user()->company_id;

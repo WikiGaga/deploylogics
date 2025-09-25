@@ -52,6 +52,11 @@ class FoodRecipeDtl extends Model
         return $this->belongsTo(TblDefiUom::class, 'uom_id');
     }
 
+    public function packing()
+    {
+        return $this->belongsTo(TblPurcPacking::class, 'packing_id');
+    }
+
     public function foodRecipe()
     {
         return $this->belongsTo(FoodRecipe::class, 'food_recipe_id');
