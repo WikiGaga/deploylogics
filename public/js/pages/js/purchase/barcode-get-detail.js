@@ -104,7 +104,7 @@ $(document).on('click', '.data_tbody_row', function() {
         get_product_formulation_detail(thix);
     }
     if(form_type == 'food_recipes'){
-        // get_food_detail(thix);
+        get_food_detail(thix);
     }
     if(caseType == 'formulationEntryHelp'){
         get_formula_entry(thix);
