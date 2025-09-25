@@ -92,7 +92,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
+                            {{-- <div class="col-lg-4">
                                 <div class="erp_form___block">
                                     <div class="input-group open-modal-group">
                                         <input id="food_name" name="food_name" value="{{ isset($option_name) ? $option_name : '' }}"
@@ -106,7 +106,7 @@
                                         @endif
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="row">
                             <div class="col-lg-12 text-right">
