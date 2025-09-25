@@ -79,7 +79,6 @@ class FoodRecipeController extends Controller
      */
     public function store(Request $request, $id = null)
     {
-        dd($request->all());
         $data = [];
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
@@ -105,6 +104,7 @@ class FoodRecipeController extends Controller
             }
 
             $foodRecipe->food_id = $request->food_id;
+            $foodRecipe->food_name = $request->food_name;
             $foodRecipe->recipe_date = date('Y-m-d', strtotime($request->formulation_date));
             $foodRecipe->notes = $request->formulation_remarks;
             $foodRecipe->business_id = auth()->user()->business_id;
