@@ -151,14 +151,14 @@ class BarcodeController extends Controller
             $data['user_central_rate'] = auth()->user()->central_rate;
             $data['ex_net_tp'] = TblPurcProductBarcodePurchRate::where('product_barcode_id',$data['current_product']->product_barcode_id)
             ->where('branch_id',auth()->user()->branch_id)->first();
-            
+
             $data['purc_rate'] = TblPurcProductBarcodePurchRate::where('product_barcode_id',$data['current_product']->product_barcode_id)
                 ->where('branch_id',auth()->user()->branch_id)->first();
             $data['grn_purc_rate'] = ViewPurcGRN::where('product_barcode_id',$data['current_product']->product_barcode_id)
                 ->where('branch_id',auth()->user()->branch_id)
                ->where('grn_type','GRN')
              ->orderBy('grn_date','desc')->orderBy('grn_code','desc')->first();
-       
+
             // Access The JavaScript Cookie ------ Load Product Detail
             /*$showStockLog = isset($_COOKIE['showStockLog']) ? $_COOKIE['showStockLog'] : null;
             if(!is_null($showStockLog)){
@@ -316,13 +316,13 @@ class BarcodeController extends Controller
                     $date
                 ];
 
-                $query = "SELECT 
+                $query = "SELECT
                     nvl (SUM(NVL (QTY_BASE_UNIT_VALUE, 0)), 0) AS STOCK
                 FROM
-                    VW_PURC_STOCK_DTL GRN 
-                WHERE GRN.PRODUCT_ID = '".$data['current_product']->product_id."' 
-                    AND GRN.BUSINESS_ID = '".auth()->user()->business_id."' 
-                    AND GRN.COMPANY_ID = '".auth()->user()->company_id."' 
+                    VW_PURC_STOCK_DTL GRN
+                WHERE GRN.PRODUCT_ID = '".$data['current_product']->product_id."'
+                    AND GRN.BUSINESS_ID = '".auth()->user()->business_id."'
+                    AND GRN.COMPANY_ID = '".auth()->user()->company_id."'
                     AND GRN.BRANCH_ID = '".auth()->user()->branch_id."'
                     AND GRN.DOCUMENT_DATE <= '".$date."'";
 
@@ -540,7 +540,7 @@ class BarcodeController extends Controller
         // $value = ((1.080 / 100) * 5);
         // $value = 1.080 + $value;
         // dd(number_format($value , 3));
-
+dd($data);
         return response()->json($data);
     }
 
