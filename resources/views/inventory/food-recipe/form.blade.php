@@ -22,9 +22,9 @@
             $id = $data['current']->id;
             $code = $data['current']->id;
             $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->item_formulation_date))));
-            $option_id = $data['current']->id;
+            $option_id = $data['current']->food_id;
             $option_name = $data['current']->option->name;
-            // $remarks = $data['current']->item_formulation_remarks;
+            $remarks = $data['current']->item_formulation_remarks;
             $dtls = isset($data['current']->dtls) ? $data['current']->dtls : [];
         }
         $form_type = $data['form_type'];
@@ -325,18 +325,31 @@
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
 
     <script>
+        // Store the original food_id value to prevent it from being cleared
+        var originalFoodId = $('#food_id').val();
+
         // Prevent food_id field from being cleared when products are selected
         $(document).on('change', '.pd_barcode, .open_inline__help', function() {
             // Preserve the food_id value
-            var foodId = $('#food_id').val();
-            if (foodId) {
-                setTimeout(function() {
-                    if (!$('#food_id').val()) {
-                        $('#food_id').val(foodId);
-                    }
-                }, 100);
+            var currentFoodId = $('#food_id').val();
+            if (originalFoodId && !currentFoodId) {
+                $('#food_id').val(originalFoodId);
             }
         });
+
+        // Update original value when food_id is manually changed
+        $(document).on('change', '#food_id', function() {
+            if ($(this).val()) {
+                originalFoodId = $(this).val();
+            }
+        });
+
+        // Additional protection - check periodically
+        setInterval(function() {
+            if (originalFoodId && !$('#food_id').val()) {
+                $('#food_id').val(originalFoodId);
+            }
+        }, 500);
 
         $(document).on('click', '#getFoodDetailData', function(e) {
             validate = true

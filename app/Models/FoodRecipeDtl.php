@@ -13,6 +13,14 @@ class FoodRecipeDtl extends Model
 
     protected $primaryKey = 'id';
 
+    protected $fillable = [
+        'food_recipe_id',
+        'product_id',
+        'product_barcode_id',
+        'uom_id',
+        'item_formulation_dtl_quantity'
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }

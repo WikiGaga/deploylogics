@@ -13,6 +13,13 @@ class FoodRecipe extends Model
 
     protected $primaryKey = 'id';
 
+    protected $fillable = [
+        'id',
+        'food_id',
+        'item_formulation_date',
+        'item_formulation_remarks'
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }
@@ -23,6 +30,5 @@ class FoodRecipe extends Model
     public function dtls() {
         return $this->hasMany(FoodRecipeDtl::class, 'food_recipe_id');
     }
-
 
 }

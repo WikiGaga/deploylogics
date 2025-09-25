@@ -83,9 +83,7 @@ class FoodRecipeController extends Controller
             'formulation_date' => 'required|date_format:d-m-Y',
             'food_id' => 'required|numeric',
             'pd.*.product_id' => 'nullable|numeric',
-            'pd.*.product_barcode_id' => 'nullable|numeric',
             'pd.*.uom_id' => 'nullable|numeric',
-            'pd.*.pd_barcode' => 'nullable|max:100',
             'pd.*.quantity' => 'nullable|numeric',
             'formulation_remarks' => 'nullable|max:100',
         ]);
@@ -105,8 +103,8 @@ class FoodRecipeController extends Controller
             }
 
             $foodRecipe->food_id = $request->food_id;
-            $foodRecipe->item_formulation_date = date('Y-m-d', strtotime($request->formulation_date));
-            $foodRecipe->item_formulation_remarks = $request->formulation_remarks;
+            $foodRecipe->recipe_date = date('Y-m-d', strtotime($request->formulation_date));
+            $foodRecipe->notes = $request->formulation_remarks;
             $foodRecipe->save();
 
             // Delete existing details
@@ -121,9 +119,8 @@ class FoodRecipeController extends Controller
                         $dtl = new FoodRecipeDtl();
                         $dtl->food_recipe_id = $foodRecipe->id;
                         $dtl->product_id = $pd['product_id'];
-                        $dtl->product_barcode_id = $pd['product_barcode_id'];
                         $dtl->uom_id = $pd['uom_id'];
-                        $dtl->item_formulation_dtl_quantity = $pd['quantity'];
+                        $dtl->quantity = $pd['quantity'];
                         $dtl->save();
                     }
                 }
