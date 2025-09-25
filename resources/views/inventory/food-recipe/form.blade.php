@@ -246,7 +246,7 @@
                                                                 readonly></td>
                                                         <td><input type="text" data-id="product_name"
                                                                 name="pd[{{ $loop->iteration }}][product_name]"
-                                                                value="{{ isset($dtl->product->product_name) ? $dtl->product->product_name : '' }}"
+                                                                value="{{ $dtl->product_name }}"
                                                                 class="product_name form-control erp-form-control-sm" readonly>
                                                         </td>
                                                         <td>
@@ -261,7 +261,7 @@
                                                         </td>
                                                         <td><input type="text" data-id="pd_packing"
                                                                 name="pd[{{ $loop->iteration }}][pd_packing]"
-                                                                value="{{ isset($dtl->packing->packing_name) ? $dtl->packing->packing_name : '' }}"
+                                                                value="{{ $dtl->packing_id }}"
                                                                 class="pd_packing form-control erp-form-control-sm" readonly>
                                                         </td>
                                                         <td><input type="text" data-id="quantity"

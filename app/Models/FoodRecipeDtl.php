@@ -14,9 +14,9 @@ class FoodRecipeDtl extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'id',
         'food_recipe_id',
         'product_id',
+        'product_name',
         'quantity',
         'uom_id',
         'packing_id'

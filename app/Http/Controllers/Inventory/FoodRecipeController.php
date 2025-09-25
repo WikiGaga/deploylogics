@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OptionsList;
 use App\Models\FoodRecipe;
 use App\Models\FoodRecipeDtl;
+use App\Models\TblPurcProduct;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -119,8 +120,10 @@ class FoodRecipeController extends Controller
                 foreach ($request->pd as $pd) {
                     if (!empty($pd['pd_barcode']) && !empty($pd['quantity'])) {
                         $dtl = new FoodRecipeDtl();
+                        $dtl->id = FoodRecipeDtl::max('id') + 1;
                         $dtl->food_recipe_id = $foodRecipe->id;
                         $dtl->product_id = $pd['pd_barcode'];
+                        $dtl->product_name = $pd['product_name'];
                         $dtl->uom_id = isset($pd['pd_uom']) ? $pd['pd_uom'] : null;
                         $dtl->packing_id = isset($pd['pd_packing']) ? $pd['pd_packing'] : null;
                         $dtl->quantity = $pd['quantity'];
