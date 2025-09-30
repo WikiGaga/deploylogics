@@ -267,6 +267,12 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
             }
 
+            // Save filter state to localStorage (excluding download parameter)
+            var filterStateToSave = Object.assign({}, filterData);
+            delete filterStateToSave.download;
+            delete filterStateToSave.global_search; // Optional: don't persist search text
+            localStorage.setItem('listing_filter_state', JSON.stringify(filterStateToSave));
+
             $('.kt-container').css({'pointer-events':'none','opacity':'0.5'});
 
             localStorage.removeItem('ajax_data-1-meta');
@@ -407,6 +413,57 @@ var KTDatatableRemoteAjaxDemo = function() {
 }();
 
 jQuery(document).ready(function() {
+    // Restore filter state from localStorage
+    var savedFilterState = localStorage.getItem('listing_filter_state');
+    if (savedFilterState) {
+        var filterState = JSON.parse(savedFilterState);
+
+        // Restore date filter dropdown
+        if (filterState.date) {
+            $('form[name="getRecordsByDateFilter"] select[name="radioDate"]').val(filterState.date);
+        }
+
+        // Restore custom date inputs if applicable
+        if (filterState.from) {
+            $('form[name="getRecordsByDateFilter"] input[name="from"]').val(filterState.from);
+        }
+        if (filterState.to) {
+            $('form[name="getRecordsByDateFilter"] input[name="to"]').val(filterState.to);
+        }
+
+        // Restore time inputs if applicable
+        if (filterState.time_from) {
+            $('form[name="getRecordsByDateFilter"] input[name="time_from"]').val(filterState.time_from);
+        }
+        if (filterState.time_to) {
+            $('form[name="getRecordsByDateFilter"] input[name="time_to"]').val(filterState.time_to);
+        }
+
+        // Restore other custom filters
+        if (filterState.pds_status) {
+            $('input[name="pds_status"][value="' + filterState.pds_status + '"]').prop('checked', true);
+        }
+        if (filterState.post_status) {
+            $('input[name="post_status"][value="' + filterState.post_status + '"]').prop('checked', true);
+        }
+        if (filterState.voucher_from) {
+            $('input[name="voucher_from"]').val(filterState.voucher_from);
+        }
+        if (filterState.voucher_to) {
+            $('input[name="voucher_to"]').val(filterState.voucher_to);
+        }
+
+        // Restore inline filters
+        if (filterState.inline) {
+            inline_filter_data = filterState.inline;
+        }
+
+        // Auto-submit the form to apply the restored filters
+        setTimeout(function() {
+            $('form[name="getRecordsByDateFilter"]').trigger('submit');
+        }, 300);
+    }
+
     KTDatatableRemoteAjaxDemo.init();
     $(document).on('keyup change','.kt-datatable thead tr th input',function(){
         $('.kt-datatable thead tr th').each(function() {
