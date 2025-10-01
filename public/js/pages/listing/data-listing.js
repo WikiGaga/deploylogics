@@ -267,10 +267,9 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
             }
 
-            // Save filter state to localStorage (excluding download parameter)
             var filterStateToSave = Object.assign({}, filterData);
             delete filterStateToSave.download;
-            delete filterStateToSave.global_search; // Optional: don't persist search text
+            delete filterStateToSave.global_search;
             localStorage.setItem('listing_filter_state', JSON.stringify(filterStateToSave));
 
             $('.kt-container').css({'pointer-events':'none','opacity':'0.5'});
@@ -413,25 +412,20 @@ var KTDatatableRemoteAjaxDemo = function() {
 }();
 
 jQuery(document).ready(function() {
-    // Restore filter state from localStorage
     var savedFilterState = localStorage.getItem('listing_filter_state');
     if (savedFilterState) {
         var filterState = JSON.parse(savedFilterState);
 
-        // Restore date filter dropdown
         if (filterState.date) {
             $('form[name="getRecordsByDateFilter"] select[name="radioDate"]').val(filterState.date);
         }
 
-        // Restore custom date inputs if applicable
         if (filterState.from) {
             $('form[name="getRecordsByDateFilter"] input[name="from"]').val(filterState.from);
         }
         if (filterState.to) {
             $('form[name="getRecordsByDateFilter"] input[name="to"]').val(filterState.to);
         }
-
-        // Restore time inputs if applicable
         if (filterState.time_from) {
             $('form[name="getRecordsByDateFilter"] input[name="time_from"]').val(filterState.time_from);
         }
@@ -439,7 +433,6 @@ jQuery(document).ready(function() {
             $('form[name="getRecordsByDateFilter"] input[name="time_to"]').val(filterState.time_to);
         }
 
-        // Restore other custom filters
         if (filterState.pds_status) {
             $('input[name="pds_status"][value="' + filterState.pds_status + '"]').prop('checked', true);
         }
@@ -453,12 +446,10 @@ jQuery(document).ready(function() {
             $('input[name="voucher_to"]').val(filterState.voucher_to);
         }
 
-        // Restore inline filters
         if (filterState.inline) {
             inline_filter_data = filterState.inline;
         }
 
-        // Auto-submit the form to apply the restored filters
         setTimeout(function() {
             $('form[name="getRecordsByDateFilter"]').trigger('submit');
         }, 300);
