@@ -1171,9 +1171,7 @@ class DataTableController extends Controller
                 $where .= " AND ";
             }
             $where .= " business_id = ".auth()->user()->business_id;
-            dd('select '.$selectColumns.' from vw_acco_chart_account_help '.$where.' FETCH FIRST 400 ROWS ONLY');
             $data['list'] = DB::select('select '.$selectColumns.' from vw_acco_chart_account_help '.$where.' FETCH FIRST 400 ROWS ONLY');
-            dd($data['list']);
             $data['head'] = ['Account Code','Account Name','Reference Code'];
         }
         // Sales Quotation Help
