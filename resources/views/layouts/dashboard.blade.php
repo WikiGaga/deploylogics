@@ -116,7 +116,7 @@
     <i class="fa fa-arrow-up"></i>
 </div>
 @include('elements/popup')
-@include('elements/chatbot')
+{{-- @include('elements/chatbot') --}}
 <!-- end::Scrolltop -->
 
 <!-- begin::Global Config(global config for global JS sciprts) -->
