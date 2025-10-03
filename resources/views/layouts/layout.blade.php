@@ -34,6 +34,7 @@
     <link href="/assets/css/skins/aside/dark.css" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/custom.css?v=2') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('css/chatbot.css') }}" rel="stylesheet" type="text/css" />
 
     <!--end::Layout Skins -->
     <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
@@ -117,6 +118,7 @@
     <i class="fa fa-arrow-up"></i>
 </div>
 @include('elements/popup')
+@include('elements/chatbot')
 <!-- end::Scrolltop -->
 
 <!-- begin::Global Config(global config for global JS sciprts) -->
@@ -257,6 +259,7 @@
 <script src="{{ asset('js/pages/js/custom_new.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/constants.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/validateInputFields.js') }}" type="text/javascript"></script>
+<script src="{{ asset('js/chatbot.js') }}" type="text/javascript"></script>
 @yield('customJS')
 
 @include('layouts.pageSetting')

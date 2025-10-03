@@ -39,6 +39,14 @@ Route::get('/', function () {
         return view('auth.login');
     }
 });
+
+// Chatbot Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/chatbot/message', 'ChatbotController@processMessage');
+    Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
+    Route::post('/chatbot/generate-report', 'ChatbotController@generateReport');
+    Route::get('/chatbot/analytics', 'ChatbotController@getAnalytics');
+});
 // ->middleware('wan_access');
 Route::any('web-service/{str}','WelcomeController@webservice');
 
