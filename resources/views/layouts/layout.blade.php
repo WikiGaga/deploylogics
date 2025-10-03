@@ -87,6 +87,8 @@
 
             <!-- begin:: Header -->
             @include('elements/header')
+@include('elements/chatbot')
+
 
             <!-- end:: Header -->
             <div class="kt-content  kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor" id="kt_content">
@@ -118,7 +120,6 @@
     <i class="fa fa-arrow-up"></i>
 </div>
 @include('elements/popup')
-@include('elements/chatbot')
 <!-- end::Scrolltop -->
 
 <!-- begin::Global Config(global config for global JS sciprts) -->
