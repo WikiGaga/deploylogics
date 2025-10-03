@@ -30,7 +30,7 @@ class Chatbot {
         });
 
         document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 this.sendMessage();
             }
