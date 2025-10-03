@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class ChatbotController extends Controller
 {
-    /**
-     * Handle chatbot messages and generate responses
-     */
     public function processMessage(Request $request): JsonResponse
     {
         try {
@@ -25,13 +22,10 @@ class ChatbotController extends Controller
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
 
-            // Log the conversation
             $this->logConversation($user, $message, $conversationId);
 
-            // Process the message and generate response
             $response = $this->generateResponse($message, $user);
 
-            // Log the bot response
             $this->logConversation($user, $response, $conversationId, 'bot');
 
             return response()->json([
@@ -52,87 +46,60 @@ class ChatbotController extends Controller
         }
     }
 
-    /**
-     * Generate response based on user message
-     */
     private function generateResponse(string $message, $user): string
     {
         $lowerMessage = strtolower($message);
 
-        // Sales report responses
         if (strpos($lowerMessage, 'sales') !== false || strpos($lowerMessage, 'revenue') !== false) {
             return $this->getSalesReportResponse();
         }
 
-        // Inventory report responses
         if (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
             return $this->getInventoryReportResponse();
         }
 
-        // Financial report responses
         if (strpos($lowerMessage, 'financial') !== false ||
             strpos($lowerMessage, 'profit') !== false ||
             strpos($lowerMessage, 'loss') !== false) {
             return $this->getFinancialReportResponse();
         }
 
-        // Custom report responses
         if (strpos($lowerMessage, 'custom') !== false || strpos($lowerMessage, 'specific') !== false) {
             return $this->getCustomReportResponse();
         }
 
-        // Help responses
         if (strpos($lowerMessage, 'help') !== false || strpos($lowerMessage, 'assist') !== false) {
             return $this->getHelpResponse();
         }
 
-        // Default response
         return $this->getDefaultResponse();
     }
 
-    /**
-     * Get sales report response
-     */
     private function getSalesReportResponse(): string
     {
         return "I can help you generate sales reports! Here are the available options:\n\n📊 **Sales Report Types:**\n• Daily Sales Summary\n• Monthly Sales Analysis\n• Product-wise Sales Performance\n• Customer Sales History\n• Sales Trend Analysis\n\nWould you like me to generate a specific sales report? Please specify the date range and any filters you need.";
     }
 
-    /**
-     * Get inventory report response
-     */
     private function getInventoryReportResponse(): string
     {
         return "I can assist with inventory reports! Here's what I can help you with:\n\n📦 **Inventory Report Options:**\n• Current Stock Levels\n• Low Stock Alerts\n• Inventory Valuation\n• Stock Movement History\n• Supplier Performance Analysis\n\nPlease let me know which inventory report you need and any specific criteria.";
     }
 
-    /**
-     * Get financial report response
-     */
     private function getFinancialReportResponse(): string
     {
         return "I can help you with financial reporting! Available options include:\n\n💰 **Financial Report Types:**\n• Profit & Loss Statement\n• Balance Sheet Summary\n• Cash Flow Analysis\n• Budget vs Actual Comparison\n• Financial Performance Metrics\n\nWhat specific financial information do you need? Please specify the period and any particular metrics.";
     }
 
-    /**
-     * Get custom report response
-     */
     private function getCustomReportResponse(): string
     {
         return "I can help you create custom reports! To assist you better, please provide:\n\n🔧 **Custom Report Requirements:**\n• What data do you need?\n• What time period?\n• Any specific filters or criteria?\n• Preferred format (PDF, Excel, etc.)\n\nThe more details you provide, the better I can help you generate the exact report you need.";
     }
 
-    /**
-     * Get help response
-     */
     private function getHelpResponse(): string
     {
         return "I'm your Report Assistant! Here's how I can help you:\n\n🤖 **What I can do:**\n• Generate various types of reports\n• Analyze data and provide insights\n• Help with report customization\n• Answer questions about your data\n\n💡 **Quick Tips:**\n• Use the quick action buttons for common reports\n• Be specific about date ranges and filters\n• Ask for help if you're unsure about anything\n\nWhat would you like to work on today?";
     }
 
-    /**
-     * Get default response
-     */
     private function getDefaultResponse(): string
     {
         $responses = [
@@ -145,9 +112,6 @@ class ChatbotController extends Controller
         return $responses[array_rand($responses)];
     }
 
-    /**
-     * Log conversation for analytics
-     */
     private function logConversation($user, string $message, string $conversationId, string $sender = 'user'): void
     {
         try {
@@ -164,9 +128,6 @@ class ChatbotController extends Controller
         }
     }
 
-    /**
-     * Get conversation history
-     */
     public function getConversationHistory(Request $request): JsonResponse
     {
         try {
@@ -196,9 +157,6 @@ class ChatbotController extends Controller
         }
     }
 
-    /**
-     * Generate actual report data (placeholder for future implementation)
-     */
     public function generateReport(Request $request): JsonResponse
     {
         try {
@@ -214,7 +172,6 @@ class ChatbotController extends Controller
             $dateTo = $request->input('date_to');
             $filters = $request->input('filters', []);
 
-            // This is a placeholder - implement actual report generation logic here
             $reportData = $this->processReportGeneration($reportType, $dateFrom, $dateTo, $filters);
 
             return response()->json([
@@ -233,13 +190,8 @@ class ChatbotController extends Controller
         }
     }
 
-    /**
-     * Process report generation (placeholder)
-     */
     private function processReportGeneration(string $reportType, ?string $dateFrom, ?string $dateTo, array $filters): array
     {
-        // This is where you would implement actual report generation logic
-        // For now, return a placeholder response
 
         return [
             'report_type' => $reportType,
@@ -254,15 +206,11 @@ class ChatbotController extends Controller
         ];
     }
 
-    /**
-     * Get chatbot analytics
-     */
     public function getAnalytics(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Get conversation statistics
             $totalConversations = DB::table('chatbot_conversations')
                 ->where('user_id', $user->id)
                 ->count();

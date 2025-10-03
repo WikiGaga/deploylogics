@@ -1,8 +1,3 @@
-/**
- * Chatbot JavaScript Functionality
- * Professional chatbot with reporting capabilities
- */
-
 class Chatbot {
     constructor() {
         this.isOpen = false;
@@ -18,22 +13,22 @@ class Chatbot {
     }
 
     bindEvents() {
-        // Toggle chatbot window
         document.getElementById('chatbotToggle').addEventListener('click', () => {
             this.toggleChatbot();
         });
 
-        // Close chatbot window
         document.getElementById('chatbotClose').addEventListener('click', () => {
             this.closeChatbot();
         });
 
-        // Send message on button click
+        document.getElementById('chatbotClear').addEventListener('click', () => {
+            this.clearConversation();
+        });
+
         document.getElementById('chatbotSend').addEventListener('click', () => {
             this.sendMessage();
         });
 
-        // Send message on Enter key
         document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -41,15 +36,6 @@ class Chatbot {
             }
         });
 
-        // Quick action buttons
-        document.querySelectorAll('.quick-action-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.target.getAttribute('data-action');
-                this.handleQuickAction(action);
-            });
-        });
-
-        // Close chatbot when clicking outside
         document.addEventListener('click', (e) => {
             const chatbotContainer = document.querySelector('.chatbot-container');
             const chatbotWindow = document.getElementById('chatbotWindow');
@@ -80,7 +66,6 @@ class Chatbot {
         chatbotToggle.style.transform = 'scale(1.1)';
         this.isOpen = true;
 
-        // Focus on input
         setTimeout(() => {
             document.getElementById('chatbotInput').focus();
         }, 300);
@@ -101,16 +86,9 @@ class Chatbot {
 
         if (!message) return;
 
-        // Add user message to chat
         this.addMessage(message, 'user');
-
-        // Clear input
         input.value = '';
-
-        // Show typing indicator
         this.showTypingIndicator();
-
-        // Process message
         this.processMessage(message);
     }
 
@@ -131,7 +109,6 @@ class Chatbot {
         messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
 
-        // Store in conversation history
         this.conversationHistory.push({
             content: content,
             sender: sender,
@@ -142,13 +119,9 @@ class Chatbot {
     }
 
     formatMessage(content) {
-        // Convert URLs to clickable links
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         content = content.replace(urlRegex, '<a href="$1" target="_blank" style="color: #667eea;">$1</a>');
-
-        // Convert line breaks to HTML
         content = content.replace(/\n/g, '<br>');
-
         return content;
     }
 
@@ -166,10 +139,8 @@ class Chatbot {
 
     async processMessage(message) {
         try {
-            // Show typing indicator
             this.showTypingIndicator();
 
-            // Send message to backend
             const response = await fetch('/chatbot/message', {
                 method: 'POST',
                 headers: {
@@ -203,28 +174,28 @@ class Chatbot {
     async generateResponse(message) {
         const lowerMessage = message.toLowerCase();
 
-        // Report-related responses
-        if (lowerMessage.includes('sales') || lowerMessage.includes('revenue')) {
+        if (strpos($lowerMessage, 'sales') !== false || strpos($lowerMessage, 'revenue') !== false) {
             return this.getSalesReportResponse();
         }
 
-        if (lowerMessage.includes('inventory') || lowerMessage.includes('stock')) {
+        if (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
             return this.getInventoryReportResponse();
         }
 
-        if (lowerMessage.includes('financial') || lowerMessage.includes('profit') || lowerMessage.includes('loss')) {
+        if (strpos($lowerMessage, 'financial') !== false ||
+            strpos($lowerMessage, 'profit') !== false ||
+            strpos($lowerMessage, 'loss') !== false) {
             return this.getFinancialReportResponse();
         }
 
-        if (lowerMessage.includes('custom') || lowerMessage.includes('specific')) {
+        if (strpos($lowerMessage, 'custom') !== false || strpos($lowerMessage, 'specific') !== false) {
             return this.getCustomReportResponse();
         }
 
-        if (lowerMessage.includes('help') || lowerMessage.includes('assist')) {
+        if (strpos($lowerMessage, 'help') !== false || strpos($lowerMessage, 'assist') !== false) {
             return this.getHelpResponse();
         }
 
-        // Default response
         return this.getDefaultResponse();
     }
 
@@ -289,7 +260,6 @@ The more details you provide, the better I can help you generate the exact repor
 • Answer questions about your data
 
 💡 **Quick Tips:**
-• Use the quick action buttons for common reports
 • Be specific about date ranges and filters
 • Ask for help if you're unsure about anything
 
@@ -305,18 +275,6 @@ What would you like to work on today?`;
         ];
 
         return responses[Math.floor(Math.random() * responses.length)];
-    }
-
-    handleQuickAction(action) {
-        const actionMessages = {
-            'sales-report': 'I can help you generate a sales report. What specific sales data do you need?',
-            'inventory-report': 'I can assist with inventory reporting. What inventory information are you looking for?',
-            'financial-report': 'I can help with financial reports. What financial data do you need?',
-            'custom-report': 'I can help you create a custom report. What specific data and criteria do you need?'
-        };
-
-        const message = actionMessages[action] || 'How can I help you with that?';
-        this.addMessage(message, 'bot');
     }
 
     scrollToBottom() {
@@ -345,11 +303,9 @@ What would you like to work on today?`;
             const saved = localStorage.getItem('chatbot_conversation');
             if (saved) {
                 this.conversationHistory = JSON.parse(saved);
-                // Only load last 10 messages to avoid clutter
                 const recentMessages = this.conversationHistory.slice(-10);
                 this.conversationHistory = recentMessages;
 
-                // Display recent messages
                 recentMessages.forEach(msg => {
                     this.addMessage(msg.content, msg.sender, msg.timestamp);
                 });
@@ -360,45 +316,27 @@ What would you like to work on today?`;
         }
     }
 
-    // Public method to add system messages
     addSystemMessage(content) {
         this.addMessage(content, 'bot');
     }
 
-    // Public method to clear conversation
     clearConversation() {
-        this.conversationHistory = [];
-        const messagesContainer = document.getElementById('chatbotMessages');
-        messagesContainer.innerHTML = `
-            <div class="welcome-message">
-                <h4>Welcome to Report Assistant!</h4>
-                <p>I'm here to help you with reporting and data analysis. How can I assist you today?</p>
-
-                <div class="quick-actions">
-                    <button class="quick-action-btn" data-action="sales-report">Sales Report</button>
-                    <button class="quick-action-btn" data-action="inventory-report">Inventory Report</button>
-                    <button class="quick-action-btn" data-action="financial-report">Financial Report</button>
-                    <button class="quick-action-btn" data-action="custom-report">Custom Report</button>
+        if (confirm('Are you sure you want to clear the conversation history?')) {
+            this.conversationHistory = [];
+            const messagesContainer = document.getElementById('chatbotMessages');
+            messagesContainer.innerHTML = `
+                <div class="welcome-message">
+                    <h4>Welcome to Report Assistant!</h4>
+                    <p>I'm here to help you with reporting and data analysis. How can I assist you today?</p>
                 </div>
-            </div>
-        `;
-
-        // Re-bind quick action events
-        document.querySelectorAll('.quick-action-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.target.getAttribute('data-action');
-                this.handleQuickAction(action);
-            });
-        });
-
-        this.saveConversationHistory();
+            `;
+            this.saveConversationHistory();
+        }
     }
 }
 
-// Initialize chatbot when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     window.chatbot = new Chatbot();
 });
 
-// Export for global access
 window.Chatbot = Chatbot;

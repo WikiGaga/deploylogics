@@ -1,4 +1,3 @@
-/* Chatbot Styles */
 .chatbot-container {
     position: fixed;
     bottom: 20px;
@@ -6,8 +5,6 @@
     z-index: 9999;
     font-family: 'Roboto', sans-serif;
 }
-
-/* Chatbot Toggle Button */
 .chatbot-toggle {
     width: 60px;
     height: 60px;
@@ -56,7 +53,6 @@
     transform: scale(1.1);
 }
 
-/* Chatbot Window */
 .chatbot-window {
     position: absolute;
     bottom: 80px;
@@ -88,7 +84,6 @@
     }
 }
 
-/* Chatbot Header */
 .chatbot-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -96,6 +91,27 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.chatbot-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chatbot-clear {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.chatbot-clear:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .chatbot-header h3 {
@@ -141,7 +157,6 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Chatbot Messages Area */
 .chatbot-messages {
     flex: 1;
     padding: 20px;
@@ -167,7 +182,6 @@
     background: #a8a8a8;
 }
 
-/* Message Styles */
 .chatbot-message {
     margin-bottom: 15px;
     display: flex;
@@ -216,7 +230,6 @@
     text-align: left;
 }
 
-/* Typing Indicator */
 .typing-indicator {
     display: none;
     align-items: center;
@@ -260,7 +273,6 @@
     }
 }
 
-/* Chatbot Input Area */
 .chatbot-input-area {
     padding: 15px 20px;
     background: white;
@@ -309,7 +321,6 @@
     transform: none;
 }
 
-/* Welcome Message */
 .welcome-message {
     text-align: center;
     padding: 20px;
@@ -328,32 +339,7 @@
     line-height: 1.5;
 }
 
-/* Quick Actions */
-.quick-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 15px;
-}
 
-.quick-action-btn {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 20px;
-    padding: 8px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #666;
-}
-
-.quick-action-btn:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
     .chatbot-window {
         width: 300px;
