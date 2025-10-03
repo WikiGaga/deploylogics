@@ -29,7 +29,7 @@ class Chatbot {
             this.sendMessage();
         });
 
-        document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
+        document.getElementById('chatbotInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 this.sendMessage();
