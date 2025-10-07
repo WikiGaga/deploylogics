@@ -7,9 +7,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class ChatbotController extends Controller
 {
+    private $apiKey;
+    private $baseUrl;
+
+    public function __construct()
+    {
+        $this->apiKey = env('OPENAI_API_KEY');
+        $this->baseUrl = 'https://api.openai.com/v1';
+    }
     public function processMessage(Request $request): JsonResponse
     {
         try {
@@ -24,7 +33,7 @@ class ChatbotController extends Controller
 
             $this->logConversation($user, $message, $conversationId);
 
-            $response = $this->generateResponse($message, $user);
+            $response = $this->generateAIResponse($message, $user);
 
             $this->logConversation($user, $response, $conversationId, 'bot');
 
@@ -43,6 +52,38 @@ class ChatbotController extends Controller
                 'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
+        }
+    }
+
+    private function generateAIResponse(string $message, $user): string
+    {
+        try {
+            $systemPrompt = $this->getSystemPrompt();
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $message],
+                ],
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+            ])->json();
+
+            $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
+
+            if ($this->shouldGenerateReport($message, $aiResponse)) {
+                return $this->handleReportGeneration($message, $aiResponse, $user);
+            }
+
+            return $aiResponse;
+
+        } catch (\Exception $e) {
+            Log::error('OpenAI API error: ' . $e->getMessage());
+            return $this->generateResponse($message, $user);
         }
     }
 
@@ -110,6 +151,221 @@ class ChatbotController extends Controller
         ];
 
         return $responses[array_rand($responses)];
+    }
+
+    private function getSystemPrompt(): string
+    {
+        return "You are a professional Oracle database expert and report generation assistant. Your role is to:
+
+1. Understand user requirements for reports and data analysis
+2. Generate appropriate Oracle SQL queries based on user needs
+3. Provide clear explanations of what data will be retrieved
+4. Suggest report formats and visualizations when appropriate
+
+When a user asks for a report, you should:
+- Ask clarifying questions about date ranges, filters, and specific data needed
+- Generate Oracle SQL queries that can be executed
+- Explain what the query will return
+- Suggest how the data should be presented
+
+Always be helpful, professional, and focus on Oracle database queries and report generation. If you need to generate a report, respond with 'GENERATE_REPORT:' followed by the Oracle query and report details.";
+    }
+
+    private function shouldGenerateReport(string $message, string $aiResponse): bool
+    {
+        $lowerMessage = strtolower($message);
+        $lowerResponse = strtolower($aiResponse);
+
+        return strpos($lowerMessage, 'report') !== false ||
+               strpos($lowerMessage, 'query') !== false ||
+               strpos($lowerMessage, 'data') !== false ||
+               strpos($lowerResponse, 'generate_report:') !== false;
+    }
+
+    private function handleReportGeneration(string $message, string $aiResponse, $user): string
+    {
+        try {
+            $reportData = $this->extractReportData($message, $aiResponse);
+            $reportId = $this->createReport($reportData, $user);
+
+            $response = $aiResponse;
+            if (strpos($aiResponse, 'GENERATE_REPORT:') === false) {
+                $response .= "\n\nI've prepared a report for you. Click the button below to view it in a new tab.";
+            }
+
+            return $response . "\n\n[REPORT_BUTTON:" . $reportId . "]";
+
+        } catch (\Exception $e) {
+            Log::error('Report generation error: ' . $e->getMessage());
+            return $aiResponse . "\n\nI encountered an error while generating the report. Please try again.";
+        }
+    }
+
+    private function extractReportData(string $message, string $aiResponse): array
+    {
+        $lowerMessage = strtolower($message);
+
+        $reportData = [
+            'title' => 'Generated Report',
+            'description' => $message,
+            'query' => '',
+            'type' => 'custom'
+        ];
+
+        if (strpos($lowerMessage, 'sales') !== false) {
+            $reportData['type'] = 'sales';
+            $reportData['title'] = 'Sales Report';
+            $reportData['query'] = $this->generateSalesQuery($message);
+        } elseif (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
+            $reportData['type'] = 'inventory';
+            $reportData['title'] = 'Inventory Report';
+            $reportData['query'] = $this->generateInventoryQuery($message);
+        } elseif (strpos($lowerMessage, 'financial') !== false) {
+            $reportData['type'] = 'financial';
+            $reportData['title'] = 'Financial Report';
+            $reportData['query'] = $this->generateFinancialQuery($message);
+        } else {
+            $reportData['query'] = $this->generateCustomQuery($message);
+        }
+
+        return $reportData;
+    }
+
+    private function generateSalesQuery(string $message): string
+    {
+        return "SELECT
+                    DATE_TRUNC('month', sale_date) as month,
+                    COUNT(*) as total_sales,
+                    SUM(amount) as total_revenue,
+                    AVG(amount) as average_sale
+                FROM sales
+                WHERE sale_date >= TRUNC(SYSDATE, 'MM') - INTERVAL '12' MONTH
+                GROUP BY DATE_TRUNC('month', sale_date)
+                ORDER BY month DESC";
+    }
+
+    private function generateInventoryQuery(string $message): string
+    {
+        return "SELECT
+                    p.product_name,
+                    p.product_code,
+                    i.current_stock,
+                    i.min_stock_level,
+                    i.max_stock_level,
+                    CASE
+                        WHEN i.current_stock <= i.min_stock_level THEN 'Low Stock'
+                        WHEN i.current_stock >= i.max_stock_level THEN 'Overstocked'
+                        ELSE 'Normal'
+                    END as stock_status
+                FROM products p
+                JOIN inventory i ON p.id = i.product_id
+                WHERE i.current_stock IS NOT NULL
+                ORDER BY i.current_stock ASC";
+    }
+
+    private function generateFinancialQuery(string $message): string
+    {
+        return "SELECT
+                    EXTRACT(YEAR FROM transaction_date) as year,
+                    EXTRACT(MONTH FROM transaction_date) as month,
+                    SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE 0 END) as total_income,
+                    SUM(CASE WHEN transaction_type = 'expense' THEN amount ELSE 0 END) as total_expenses,
+                    SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE -amount END) as net_profit
+                FROM financial_transactions
+                WHERE transaction_date >= TRUNC(SYSDATE, 'YYYY')
+                GROUP BY EXTRACT(YEAR FROM transaction_date), EXTRACT(MONTH FROM transaction_date)
+                ORDER BY year DESC, month DESC";
+    }
+
+    private function generateCustomQuery(string $message): string
+    {
+        return "SELECT
+                    'Custom Report' as report_type,
+                    COUNT(*) as record_count,
+                    SYSDATE as generated_at
+                FROM dual";
+    }
+
+    private function createReport(array $reportData, $user): string
+    {
+        $reportId = 'report_' . time() . '_' . rand(1000, 9999);
+
+        DB::table('generated_reports')->insert([
+            'report_id' => $reportId,
+            'user_id' => $user->id,
+            'title' => $reportData['title'],
+            'description' => $reportData['description'],
+            'query' => $reportData['query'],
+            'type' => $reportData['type'],
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return $reportId;
+    }
+
+    public function viewReport(Request $request, $reportId): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            $report = DB::table('generated_reports')
+                ->where('report_id', $reportId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$report) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Report not found'
+                ], 404);
+            }
+
+            $data = $this->executeQuery($report->query);
+
+            DB::table('generated_reports')
+                ->where('report_id', $reportId)
+                ->update([
+                    'status' => 'completed',
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'report' => [
+                    'id' => $report->report_id,
+                    'title' => $report->title,
+                    'description' => $report->description,
+                    'type' => $report->type,
+                    'data' => $data,
+                    'generated_at' => $report->created_at
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Report viewing error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading report: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function executeQuery(string $query): array
+    {
+        try {
+            $results = DB::select($query);
+            return array_map(function($row) {
+                return (array) $row;
+            }, $results);
+        } catch (\Exception $e) {
+            Log::error('Query execution error: ' . $e->getMessage());
+            return [
+                ['error' => 'Query execution failed', 'message' => $e->getMessage()]
+            ];
+        }
     }
 
     private function logConversation($user, string $message, string $conversationId, string $sender = 'user'): void

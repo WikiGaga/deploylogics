@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
     Route::post('/chatbot/generate-report', 'ChatbotController@generateReport');
     Route::get('/chatbot/analytics', 'ChatbotController@getAnalytics');
+    Route::get('/chatbot/report/{reportId}', 'ChatbotController@viewReport');
 });
 // ->middleware('wan_access');
 Route::any('web-service/{str}','WelcomeController@webservice');

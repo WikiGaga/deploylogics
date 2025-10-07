@@ -33,6 +33,7 @@
     <link href="/assets/css/skins/aside/dark.css" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('css/chatbot.css') }}" rel="stylesheet" type="text/css" />
     <!--end::Layout Skins -->
     <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
     <script>
@@ -113,6 +114,10 @@
     <i class="fa fa-arrow-up"></i>
 </div>
 
+@if (request()->ip() === '72.255.26.211')
+@include('elements/chatbot')
+@endif
+
 <!-- end::Scrolltop -->
 
 <!-- begin::Global Config(global config for global JS sciprts) -->
@@ -161,6 +166,8 @@
 <script src="/assets/plugins/global/plugins.bundle.js" type="text/javascript"></script>
 <script src="/assets/js/listing-scripts.bundle.js" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/shortcuts.js') }}" type="text/javascript"></script>
+<script src="{{ asset('js/chatbot.js') }}" type="text/javascript"></script>
+
 <!--end::Global Theme Bundle -->
 
 <!--begin::Page Vendors(used by this page) -->

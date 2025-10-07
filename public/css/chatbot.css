@@ -362,6 +362,30 @@
     }
 }
 
+.report-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 5px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.report-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.report-button i {
+    font-size: 10px;
+}
+
 @media (max-width: 480px) {
     .chatbot-window {
         width: calc(100vw - 30px);

@@ -116,9 +116,9 @@
     <i class="fa fa-arrow-up"></i>
 </div>
 @include('elements/popup')
-@if (request()->ip() === '72.255.26.211')
+{{-- @if (request()->ip() === '72.255.26.211') --}}
 @include('elements/chatbot')
-@endif
+{{-- @endif --}}
 <!-- end::Scrolltop -->
 
 <!-- begin::Global Config(global config for global JS sciprts) -->
