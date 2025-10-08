@@ -72,7 +72,6 @@ class ChatbotController extends Controller
                 'max_tokens' => 1000,
                 'temperature' => 0.7,
             ])->json();
-            dd(array_keys($response));
             $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
 
             if ($this->shouldGenerateReport($message, $aiResponse)) {
