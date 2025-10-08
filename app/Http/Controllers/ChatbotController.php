@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ChatbotController extends Controller
 {
@@ -19,28 +20,32 @@ class ChatbotController extends Controller
         $this->apiKey = env('OPENAI_API_KEY');
         $this->baseUrl = 'https://api.openai.com/v1';
     }
+
     public function processMessage(Request $request): JsonResponse
     {
         try {
             $request->validate([
                 'message' => 'required|string|max:500',
-                'conversation_id' => 'nullable|string'
+                'conversation_id' => 'nullable|string',
+                'category' => 'nullable|string|in:sales,general'
             ]);
 
             $message = $request->input('message');
+            $category = $request->input('category', 'general');
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
 
-            $this->logConversation($user, $message, $conversationId);
+            $this->logConversation($user, $message, $conversationId, 'user', $category);
 
-            $response = $this->generateAIResponse($message, $user);
+            $response = $this->generateAIResponse($message, $user, $category);
 
-            $this->logConversation($user, $response, $conversationId, 'bot');
+            $this->logConversation($user, $response, $conversationId, 'bot', $category);
 
             return response()->json([
                 'success' => true,
                 'response' => $response,
                 'conversation_id' => $conversationId,
+                'category' => $category,
                 'timestamp' => now()->format('H:i')
             ]);
 
@@ -55,10 +60,10 @@ class ChatbotController extends Controller
         }
     }
 
-    private function generateAIResponse(string $message, $user): string
+    private function generateAIResponse(string $message, $user, string $category = 'general'): string
     {
         try {
-            $systemPrompt = $this->getSystemPrompt();
+            $systemPrompt = $this->getSystemPromptForCategory($category);
 
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
@@ -70,104 +75,177 @@ class ChatbotController extends Controller
                     ['role' => 'user', 'content' => $message],
                 ],
                 'max_tokens' => 1000,
-                'temperature' => 0.7,
+                'temperature' => 0.3,
             ])->json();
+
             $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
 
             if ($this->shouldGenerateReport($message, $aiResponse)) {
-                return $this->handleReportGeneration($message, $aiResponse, $user);
+                return $this->handleReportGeneration($message, $aiResponse, $user, $category);
             }
 
             return $aiResponse;
 
         } catch (\Exception $e) {
             Log::error('OpenAI API error: ' . $e->getMessage());
-            return $this->generateResponse($message, $user);
+            return 'Sorry, I encountered an error connecting to the AI service. Please try again.';
         }
     }
 
-    private function generateResponse(string $message, $user): string
+    /**
+     * Get category-specific schema configurations
+     */
+    private function getCategorySchemas(): array
     {
-        $lowerMessage = strtolower($message);
-
-        if (strpos($lowerMessage, 'sales') !== false || strpos($lowerMessage, 'revenue') !== false) {
-            return $this->getSalesReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
-            return $this->getInventoryReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'financial') !== false ||
-            strpos($lowerMessage, 'profit') !== false ||
-            strpos($lowerMessage, 'loss') !== false) {
-            return $this->getFinancialReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'custom') !== false || strpos($lowerMessage, 'specific') !== false) {
-            return $this->getCustomReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'help') !== false || strpos($lowerMessage, 'assist') !== false) {
-            return $this->getHelpResponse();
-        }
-
-        return $this->getDefaultResponse();
-    }
-
-    private function getSalesReportResponse(): string
-    {
-        return "I can help you generate sales reports! Here are the available options:\n\n📊 **Sales Report Types:**\n• Daily Sales Summary\n• Monthly Sales Analysis\n• Product-wise Sales Performance\n• Customer Sales History\n• Sales Trend Analysis\n\nWould you like me to generate a specific sales report? Please specify the date range and any filters you need.";
-    }
-
-    private function getInventoryReportResponse(): string
-    {
-        return "I can assist with inventory reports! Here's what I can help you with:\n\n📦 **Inventory Report Options:**\n• Current Stock Levels\n• Low Stock Alerts\n• Inventory Valuation\n• Stock Movement History\n• Supplier Performance Analysis\n\nPlease let me know which inventory report you need and any specific criteria.";
-    }
-
-    private function getFinancialReportResponse(): string
-    {
-        return "I can help you with financial reporting! Available options include:\n\n💰 **Financial Report Types:**\n• Profit & Loss Statement\n• Balance Sheet Summary\n• Cash Flow Analysis\n• Budget vs Actual Comparison\n• Financial Performance Metrics\n\nWhat specific financial information do you need? Please specify the period and any particular metrics.";
-    }
-
-    private function getCustomReportResponse(): string
-    {
-        return "I can help you create custom reports! To assist you better, please provide:\n\n🔧 **Custom Report Requirements:**\n• What data do you need?\n• What time period?\n• Any specific filters or criteria?\n• Preferred format (PDF, Excel, etc.)\n\nThe more details you provide, the better I can help you generate the exact report you need.";
-    }
-
-    private function getHelpResponse(): string
-    {
-        return "I'm your Report Assistant! Here's how I can help you:\n\n🤖 **What I can do:**\n• Generate various types of reports\n• Analyze data and provide insights\n• Help with report customization\n• Answer questions about your data\n\n💡 **Quick Tips:**\n• Use the quick action buttons for common reports\n• Be specific about date ranges and filters\n• Ask for help if you're unsure about anything\n\nWhat would you like to work on today?";
-    }
-
-    private function getDefaultResponse(): string
-    {
-        $responses = [
-            "I understand you're looking for help with reporting. Could you be more specific about what type of report or data analysis you need?",
-            "I'm here to help with your reporting needs! What specific information are you looking for?",
-            "Let me help you with that. What kind of report would you like to generate?",
-            "I can assist you with various reporting tasks. Could you tell me more about what you need?"
+        return [
+            'sales' => [
+                'name' => 'Sales',
+                'description' => 'Sales orders, order details, and POS transactions',
+                'tables' => ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'],
+            ],
+            'general' => [
+                'name' => 'General',
+                'description' => 'All available tables for cross-category queries',
+                'tables' => 'ALL',
+            ]
         ];
-
-        return $responses[array_rand($responses)];
     }
 
-    private function getSystemPrompt(): string
+    /**
+     * Get system prompt for specific category
+     * Uses cached schema for performance
+     */
+    private function getSystemPromptForCategory(string $category): string
     {
-        return "You are a professional Oracle database expert and report generation assistant. Your role is to:
+        $cacheKey = "chatbot_schema_{$category}";
 
-1. Understand user requirements for reports and data analysis
-2. Generate appropriate Oracle SQL queries based on user needs
-3. Provide clear explanations of what data will be retrieved
-4. Suggest report formats and visualizations when appropriate
+        $schema = Cache::remember($cacheKey, now()->addHours(24), function() use ($category) {
+            return $this->buildSchemaForCategory($category);
+        });
 
-When a user asks for a report, you should:
-- Ask clarifying questions about date ranges, filters, and specific data needed
-- Generate Oracle SQL queries that can be executed
-- Explain what the query will return
-- Suggest how the data should be presented
+        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
 
-Always be helpful, professional, and focus on Oracle database queries and report generation. If you need to generate a report, respond with 'GENERATE_REPORT:' followed by the Oracle query and report details.";
+        return "You are an Oracle database expert specializing in {$categoryInfo['name']} reporting.
+
+DATABASE SCHEMA ({$categoryInfo['description']}):
+{$schema}
+
+YOUR ROLE:
+1. Analyze user requests and generate accurate Oracle SQL queries
+2. Ask clarifying questions if date ranges, filters, or specific data requirements are unclear
+3. Use proper Oracle SQL syntax (TO_DATE, TRUNC, NVL, etc.)
+4. When generating a report query, start your response with 'GENERATE_REPORT:' followed by the SQL query
+
+IMPORTANT RULES:
+- Only use the tables shown in the schema above
+- Use proper JOIN syntax for related tables
+- Apply appropriate WHERE clauses for date ranges
+- Use aggregate functions (SUM, COUNT, AVG) when calculating totals
+- Format dates properly for Oracle database
+- Be conversational and helpful
+
+Always focus on providing accurate, efficient queries based on user needs.";
+    }
+
+    /**
+     * Build database schema for specific category
+     * Dynamically fetches table structure from Oracle
+     */
+    private function buildSchemaForCategory(string $category): string
+    {
+        $categories = $this->getCategorySchemas();
+
+        if (!isset($categories[$category])) {
+            $category = 'general';
+        }
+
+        $categoryData = $categories[$category];
+
+        // For general category, build full schema
+        if ($category === 'general') {
+            return $this->buildFullDatabaseSchema();
+        }
+
+        // Build schema for specific category tables
+        return $this->buildCompactSchema($categoryData['tables']);
+    }
+
+    /**
+     * Build compact schema format for specified tables
+     */
+    private function buildCompactSchema(array $tables): string
+    {
+        $schema = "";
+
+        try {
+            foreach ($tables as $tableName) {
+                // Get columns for each table
+                $columns = DB::select("
+                    SELECT column_name, data_type, nullable
+                    FROM user_tab_columns
+                    WHERE table_name = ?
+                    ORDER BY column_id
+                ", [strtoupper($tableName)]);
+
+                if (empty($columns)) {
+                    continue;
+                }
+
+                $schema .= strtoupper($tableName) . "(\n";
+
+                $columnDefs = [];
+                foreach ($columns as $col) {
+                    $nullable = $col->nullable === 'N' ? ' NOT NULL' : '';
+                    $columnDefs[] = "  {$col->column_name} {$col->data_type}{$nullable}";
+                }
+
+                $schema .= implode(",\n", $columnDefs);
+                $schema .= "\n)\n\n";
+            }
+
+            // Get foreign key relationships
+            $schema .= "RELATIONSHIPS:\n";
+            $tableList = "'" . implode("','", array_map('strtoupper', $tables)) . "'";
+
+            $constraints = DB::select("
+                SELECT
+                    a.table_name child_table,
+                    a.column_name child_column,
+                    c_pk.table_name parent_table,
+                    b.column_name parent_column
+                FROM user_cons_columns a
+                JOIN user_constraints c ON a.constraint_name = c.constraint_name
+                JOIN user_constraints c_pk ON c.r_constraint_name = c_pk.constraint_name
+                JOIN user_cons_columns b ON c_pk.constraint_name = b.constraint_name
+                WHERE c.constraint_type = 'R'
+                AND a.table_name IN ({$tableList})
+            ");
+
+            foreach ($constraints as $fk) {
+                $schema .= "- {$fk->child_table}.{$fk->child_column} -> {$fk->parent_table}.{$fk->parent_column}\n";
+            }
+
+            if (empty($constraints)) {
+                $schema .= "- No foreign key relationships defined\n";
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error building schema: ' . $e->getMessage());
+            $schema = "Error fetching schema. Using basic structure.\n";
+            $schema .= implode(", ", $tables);
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Build full database schema for general category
+     */
+    private function buildFullDatabaseSchema(): string
+    {
+        // For general category, include common tables
+        $commonTables = ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'];
+        return $this->buildCompactSchema($commonTables);
     }
 
     private function shouldGenerateReport(string $message, string $aiResponse): bool
@@ -181,10 +259,10 @@ Always be helpful, professional, and focus on Oracle database queries and report
                strpos($lowerResponse, 'generate_report:') !== false;
     }
 
-    private function handleReportGeneration(string $message, string $aiResponse, $user): string
+    private function handleReportGeneration(string $message, string $aiResponse, $user, string $category): string
     {
         try {
-            $reportData = $this->extractReportData($message, $aiResponse);
+            $reportData = $this->extractReportData($message, $aiResponse, $category);
             $reportId = $this->createReport($reportData, $user);
 
             $response = $aiResponse;
@@ -200,89 +278,62 @@ Always be helpful, professional, and focus on Oracle database queries and report
         }
     }
 
-    private function extractReportData(string $message, string $aiResponse): array
+    private function extractReportData(string $message, string $aiResponse, string $category): array
     {
-        $lowerMessage = strtolower($message);
-
         $reportData = [
-            'title' => 'Generated Report',
+            'title' => ucfirst($category) . ' Report',
             'description' => $message,
             'query' => '',
-            'type' => 'custom'
+            'type' => $category
         ];
 
-        if (strpos($lowerMessage, 'sales') !== false) {
-            $reportData['type'] = 'sales';
-            $reportData['title'] = 'Sales Report';
-            $reportData['query'] = $this->generateSalesQuery($message);
-        } elseif (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
-            $reportData['type'] = 'inventory';
-            $reportData['title'] = 'Inventory Report';
-            $reportData['query'] = $this->generateInventoryQuery($message);
-        } elseif (strpos($lowerMessage, 'financial') !== false) {
-            $reportData['type'] = 'financial';
-            $reportData['title'] = 'Financial Report';
-            $reportData['query'] = $this->generateFinancialQuery($message);
-        } else {
-            $reportData['query'] = $this->generateCustomQuery($message);
+        // Extract SQL query from AI response if present
+        if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
+            $parts = explode('GENERATE_REPORT:', $aiResponse);
+            if (isset($parts[1])) {
+                $query = trim($parts[1]);
+                // Extract just the SQL query (remove any text after the query)
+                $query = $this->cleanSQLQuery($query);
+                $reportData['query'] = $query;
+            }
+        }
+
+        // If no query found, generate a basic one
+        if (empty($reportData['query'])) {
+            $reportData['query'] = $this->generateBasicQuery($category);
         }
 
         return $reportData;
     }
 
-    private function generateSalesQuery(string $message): string
+    /**
+     * Clean and extract SQL query from AI response
+     */
+    private function cleanSQLQuery(string $text): string
     {
-        return "SELECT
-                    DATE_TRUNC('month', sale_date) as month,
-                    COUNT(*) as total_sales,
-                    SUM(amount) as total_revenue,
-                    AVG(amount) as average_sale
-                FROM sales
-                WHERE sale_date >= TRUNC(SYSDATE, 'MM') - INTERVAL '12' MONTH
-                GROUP BY DATE_TRUNC('month', sale_date)
-                ORDER BY month DESC";
+        // Remove markdown code blocks if present
+        $text = preg_replace('/```sql\s*/i', '', $text);
+        $text = preg_replace('/```\s*$/i', '', $text);
+
+        // Extract query up to semicolon or end of text
+        if (preg_match('/^(.*?);/s', $text, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return trim($text);
     }
 
-    private function generateInventoryQuery(string $message): string
+    /**
+     * Generate basic query if AI doesn't provide one
+     */
+    private function generateBasicQuery(string $category): string
     {
-        return "SELECT
-                    p.product_name,
-                    p.product_code,
-                    i.current_stock,
-                    i.min_stock_level,
-                    i.max_stock_level,
-                    CASE
-                        WHEN i.current_stock <= i.min_stock_level THEN 'Low Stock'
-                        WHEN i.current_stock >= i.max_stock_level THEN 'Overstocked'
-                        ELSE 'Normal'
-                    END as stock_status
-                FROM products p
-                JOIN inventory i ON p.id = i.product_id
-                WHERE i.current_stock IS NOT NULL
-                ORDER BY i.current_stock ASC";
-    }
-
-    private function generateFinancialQuery(string $message): string
-    {
-        return "SELECT
-                    EXTRACT(YEAR FROM transaction_date) as year,
-                    EXTRACT(MONTH FROM transaction_date) as month,
-                    SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE 0 END) as total_income,
-                    SUM(CASE WHEN transaction_type = 'expense' THEN amount ELSE 0 END) as total_expenses,
-                    SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE -amount END) as net_profit
-                FROM financial_transactions
-                WHERE transaction_date >= TRUNC(SYSDATE, 'YYYY')
-                GROUP BY EXTRACT(YEAR FROM transaction_date), EXTRACT(MONTH FROM transaction_date)
-                ORDER BY year DESC, month DESC";
-    }
-
-    private function generateCustomQuery(string $message): string
-    {
-        return "SELECT
-                    'Custom Report' as report_type,
-                    COUNT(*) as record_count,
-                    SYSDATE as generated_at
-                FROM dual";
+        switch ($category) {
+            case 'sales':
+                return "SELECT COUNT(*) as total_orders FROM ORDERS WHERE ROWNUM <= 10";
+            default:
+                return "SELECT 'Report Generated' as status, SYSDATE as generated_at FROM dual";
+        }
     }
 
     private function createReport(array $reportData, $user): string
@@ -321,7 +372,7 @@ Always be helpful, professional, and focus on Oracle database queries and report
                 ], 404);
             }
 
-            $data = $this->executeQuery($report->query);
+            $data = $this->executeQuery((string) $report->query);
 
             DB::table('generated_reports')
                 ->where('report_id', $reportId)
@@ -355,6 +406,9 @@ Always be helpful, professional, and focus on Oracle database queries and report
     private function executeQuery(string $query): array
     {
         try {
+            // Validate query for security
+            $this->validateQuery($query);
+
             $results = DB::select($query);
             return array_map(function($row) {
                 return (array) $row;
@@ -367,7 +421,29 @@ Always be helpful, professional, and focus on Oracle database queries and report
         }
     }
 
-    private function logConversation($user, string $message, string $conversationId, string $sender = 'user'): void
+    /**
+     * Validate SQL query for security
+     * Only allows SELECT statements
+     */
+    private function validateQuery(string $query): void
+    {
+        $query = strtoupper(trim($query));
+
+        // Security checks - prevent dangerous operations
+        $dangerousKeywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
+        foreach ($dangerousKeywords as $keyword) {
+            if (strpos($query, $keyword) !== false) {
+                throw new \Exception('Query contains dangerous operations and cannot be executed');
+            }
+        }
+
+        // Only allow SELECT queries
+        if (strpos($query, 'SELECT') !== 0) {
+            throw new \Exception('Only SELECT queries are allowed');
+        }
+    }
+
+    private function logConversation($user, string $message, string $conversationId, string $sender = 'user', string $category = 'general'): void
     {
         try {
             DB::table('chatbot_conversations')->insert([
@@ -375,6 +451,7 @@ Always be helpful, professional, and focus on Oracle database queries and report
                 'conversation_id' => $conversationId,
                 'message' => $message,
                 'sender' => $sender,
+                'category' => $category,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
@@ -499,6 +576,118 @@ Always be helpful, professional, and focus on Oracle database queries and report
             return response()->json([
                 'success' => false,
                 'message' => 'Could not fetch analytics'
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear cached database schemas
+     * Use this after database structure changes
+     */
+    public function clearSchemaCache(Request $request): JsonResponse
+    {
+        try {
+            $categories = array_keys($this->getCategorySchemas());
+            $clearedCategories = [];
+
+            foreach ($categories as $category) {
+                $cacheKey = "chatbot_schema_{$category}";
+                Cache::forget($cacheKey);
+                $clearedCategories[] = $category;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Schema cache cleared successfully',
+                'cleared_categories' => $clearedCategories,
+                'note' => 'New schema will be fetched on next query'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing schema cache: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not clear schema cache'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available categories for chatbot
+     */
+    public function getCategories(Request $request): JsonResponse
+    {
+        try {
+            $categories = $this->getCategorySchemas();
+
+            $formattedCategories = [];
+            foreach ($categories as $key => $data) {
+                $formattedCategories[] = [
+                    'id' => $key,
+                    'name' => $data['name'],
+                    'description' => $data['description'],
+                    'icon' => $this->getCategoryIcon($key)
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'categories' => $formattedCategories
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching categories: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not fetch categories'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get icon for category
+     */
+    private function getCategoryIcon(string $category): string
+    {
+        $icons = [
+            'sales' => '💰',
+            'general' => '🔍'
+        ];
+
+        return $icons[$category] ?? '📊';
+    }
+
+    /**
+     * Preview schema for a category (for debugging)
+     */
+    public function previewSchema(Request $request, string $category): JsonResponse
+    {
+        try {
+            if (!array_key_exists($category, $this->getCategorySchemas())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid category'
+                ], 400);
+            }
+
+            $schema = $this->buildSchemaForCategory($category);
+
+            return response()->json([
+                'success' => true,
+                'category' => $category,
+                'schema' => $schema,
+                'cached' => Cache::has("chatbot_schema_{$category}")
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error previewing schema: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not preview schema',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

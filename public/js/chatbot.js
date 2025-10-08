@@ -4,11 +4,14 @@ class Chatbot {
         this.isTyping = false;
         this.conversationHistory = [];
         this.conversationId = null;
+        this.currentCategory = 'general';
+        this.categories = [];
         this.init();
     }
 
     init() {
         this.bindEvents();
+        this.loadCategories();
         this.loadConversationHistory();
     }
 
@@ -157,7 +160,8 @@ class Chatbot {
                 },
                 body: JSON.stringify({
                     message: message,
-                    conversation_id: this.conversationId || this.generateConversationId()
+                    conversation_id: this.conversationId || this.generateConversationId(),
+                    category: this.currentCategory
                 })
             });
 
@@ -179,111 +183,67 @@ class Chatbot {
         }
     }
 
-    async generateResponse(message) {
-        const lowerMessage = message.toLowerCase();
+    async loadCategories() {
+        try {
+            const response = await fetch('/chatbot/categories', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
 
-        if (strpos($lowerMessage, 'sales') !== false || strpos($lowerMessage, 'revenue') !== false) {
-            return this.getSalesReportResponse();
+            const data = await response.json();
+
+            if (data.success) {
+                this.categories = data.categories;
+                this.renderCategoryTabs();
+            }
+
+        } catch (error) {
+            console.error('Error loading categories:', error);
         }
+    }
 
-        if (strpos($lowerMessage, 'inventory') !== false || strpos($lowerMessage, 'stock') !== false) {
-            return this.getInventoryReportResponse();
+    renderCategoryTabs() {
+        const tabsContainer = document.getElementById('chatbotCategoryTabs');
+        if (!tabsContainer) return;
+
+        let tabsHtml = '';
+        this.categories.forEach(category => {
+            const isActive = category.id === this.currentCategory ? 'active' : '';
+            tabsHtml += `
+                <button class="category-tab ${isActive}" data-category="${category.id}" title="${category.description}">
+                    <span class="tab-icon">${category.icon}</span>
+                    <span class="tab-label">${category.name}</span>
+                </button>
+            `;
+        });
+
+        tabsContainer.innerHTML = tabsHtml;
+
+        // Bind tab click events
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchCategory(tab.dataset.category);
+            });
+        });
+    }
+
+    switchCategory(category) {
+        this.currentCategory = category;
+
+        // Update active tab
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.category === category);
+        });
+
+        // Clear input and show category message
+        const categoryInfo = this.categories.find(c => c.id === category);
+        if (categoryInfo) {
+            this.addSystemMessage(`Switched to ${categoryInfo.name} category. ${categoryInfo.description}`);
         }
-
-        if (strpos($lowerMessage, 'financial') !== false ||
-            strpos($lowerMessage, 'profit') !== false ||
-            strpos($lowerMessage, 'loss') !== false) {
-            return this.getFinancialReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'custom') !== false || strpos($lowerMessage, 'specific') !== false) {
-            return this.getCustomReportResponse();
-        }
-
-        if (strpos($lowerMessage, 'help') !== false || strpos($lowerMessage, 'assist') !== false) {
-            return this.getHelpResponse();
-        }
-
-        return this.getDefaultResponse();
     }
 
-    getSalesReportResponse() {
-        return `I can help you generate sales reports! Here are the available options:
-
-📊 **Sales Report Types:**
-• Daily Sales Summary
-• Monthly Sales Analysis
-• Product-wise Sales Performance
-• Customer Sales History
-• Sales Trend Analysis
-
-Would you like me to generate a specific sales report? Please specify the date range and any filters you need.`;
-    }
-
-    getInventoryReportResponse() {
-        return `I can assist with inventory reports! Here's what I can help you with:
-
-📦 **Inventory Report Options:**
-• Current Stock Levels
-• Low Stock Alerts
-• Inventory Valuation
-• Stock Movement History
-• Supplier Performance Analysis
-
-Please let me know which inventory report you need and any specific criteria.`;
-    }
-
-    getFinancialReportResponse() {
-        return `I can help you with financial reporting! Available options include:
-
-💰 **Financial Report Types:**
-• Profit & Loss Statement
-• Balance Sheet Summary
-• Cash Flow Analysis
-• Budget vs Actual Comparison
-• Financial Performance Metrics
-
-What specific financial information do you need? Please specify the period and any particular metrics.`;
-    }
-
-    getCustomReportResponse() {
-        return `I can help you create custom reports! To assist you better, please provide:
-
-🔧 **Custom Report Requirements:**
-• What data do you need?
-• What time period?
-• Any specific filters or criteria?
-• Preferred format (PDF, Excel, etc.)
-
-The more details you provide, the better I can help you generate the exact report you need.`;
-    }
-
-    getHelpResponse() {
-        return `I'm your Report Assistant! Here's how I can help you:
-
-🤖 **What I can do:**
-• Generate various types of reports
-• Analyze data and provide insights
-• Help with report customization
-• Answer questions about your data
-
-💡 **Quick Tips:**
-• Be specific about date ranges and filters
-• Ask for help if you're unsure about anything
-
-What would you like to work on today?`;
-    }
-
-    getDefaultResponse() {
-        const responses = [
-            "I understand you're looking for help with reporting. Could you be more specific about what type of report or data analysis you need?",
-            "I'm here to help with your reporting needs! What specific information are you looking for?",
-            "Let me help you with that. What kind of report would you like to generate?",
-            "I can assist you with various reporting tasks. Could you tell me more about what you need?"
-        ];
-
-        return responses[Math.floor(Math.random() * responses.length)];
-    }
 
     scrollToBottom() {
         const messagesContainer = document.getElementById('chatbotMessages');
