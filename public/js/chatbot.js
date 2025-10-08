@@ -122,15 +122,15 @@ class Chatbot {
     }
 
     formatMessage(content) {
+        const excelRegex = /\[DOWNLOAD_EXCEL:([^\]]+)\]/g;
+        content = content.replace(excelRegex, (match, downloadUrl) => {
+            return `<a href="${downloadUrl}" target="_blank" class="excel-download-button" download>
+                        <i class="fas fa-file-excel"></i> Download Excel Report
+                    </a>`;
+        });
+
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         content = content.replace(urlRegex, '<a href="$1" target="_blank" style="color: #667eea;">$1</a>');
-
-        const reportButtonRegex = /\[REPORT_BUTTON:([^\]]+)\]/g;
-        content = content.replace(reportButtonRegex, (match, reportId) => {
-            return `<button class="report-button" data-report-id="${reportId}" onclick="window.chatbot.openReport('${reportId}')">
-                        <i class="fas fa-chart-bar"></i> View Report
-                    </button>`;
-        });
 
         content = content.replace(/\n/g, '<br>');
         return content;
@@ -300,147 +300,6 @@ class Chatbot {
             `;
             this.saveConversationHistory();
         }
-    }
-
-    async openReport(reportId) {
-        try {
-            const response = await fetch(`/chatbot/report/${reportId}`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.generateReportPage(data.report);
-            } else {
-                alert('Error loading report: ' + data.message);
-            }
-
-        } catch (error) {
-            console.error('Report loading error:', error);
-            alert('Error loading report. Please try again.');
-        }
-    }
-
-    generateReportPage(report) {
-        const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-
-        const html = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${report.title}</title>
-                <style>
-                    body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background: #f8f9fa; }
-                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-                    .header h1 { margin: 0; font-size: 24px; }
-                    .header p { margin: 5px 0 0 0; opacity: 0.9; }
-                    .report-container { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-                    th { background: #f8f9fa; font-weight: 600; }
-                    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-                    .stat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-                    .stat-value { font-size: 24px; font-weight: bold; color: #667eea; }
-                    .stat-label { color: #666; margin-top: 5px; }
-                    .no-data { text-align: center; padding: 40px; color: #666; }
-                    .loading { text-align: center; padding: 40px; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${report.title}</h1>
-                    <p>Generated on ${new Date(report.generated_at).toLocaleString()}</p>
-                </div>
-
-                <div class="report-container">
-                    <h3>Report Description</h3>
-                    <p>${report.description}</p>
-
-                    ${this.generateReportContent(report)}
-                </div>
-            </body>
-            </html>
-        `;
-
-        reportWindow.document.write(html);
-        reportWindow.document.close();
-    }
-
-    generateReportContent(report) {
-        if (!report.data || report.data.length === 0) {
-            return '<div class="no-data">No data available for this report.</div>';
-        }
-
-        if (report.data.length === 1 && report.data[0].error) {
-            return `<div class="no-data">Error: ${report.data[0].message}</div>`;
-        }
-
-        const headers = Object.keys(report.data[0]);
-        const rows = report.data;
-
-        let tableHtml = '<table><thead><tr>';
-        headers.forEach(header => {
-            tableHtml += `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`;
-        });
-        tableHtml += '</tr></thead><tbody>';
-
-        rows.forEach(row => {
-            tableHtml += '<tr>';
-            headers.forEach(header => {
-                const value = row[header];
-                tableHtml += `<td>${value !== null ? value : '-'}</td>`;
-            });
-            tableHtml += '</tr>';
-        });
-        tableHtml += '</tbody></table>';
-
-        let statsHtml = '';
-        if (rows.length > 0) {
-            const numericColumns = headers.filter(header => {
-                return rows.some(row => !isNaN(parseFloat(row[header])) && isFinite(row[header]));
-            });
-
-            if (numericColumns.length > 0) {
-                statsHtml = '<div class="stats">';
-                numericColumns.forEach(column => {
-                    const values = rows.map(row => parseFloat(row[column])).filter(v => !isNaN(v));
-                    if (values.length > 0) {
-                        const sum = values.reduce((a, b) => a + b, 0);
-                        const avg = sum / values.length;
-                        const max = Math.max(...values);
-                        const min = Math.min(...values);
-
-                        statsHtml += `
-                            <div class="stat-card">
-                                <div class="stat-value">${sum.toLocaleString()}</div>
-                                <div class="stat-label">Total ${column.replace(/_/g, ' ')}</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${avg.toFixed(2)}</div>
-                                <div class="stat-label">Average ${column.replace(/_/g, ' ')}</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${max.toLocaleString()}</div>
-                                <div class="stat-label">Max ${column.replace(/_/g, ' ')}</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${min.toLocaleString()}</div>
-                                <div class="stat-label">Min ${column.replace(/_/g, ' ')}</div>
-                            </div>
-                        `;
-                    }
-                });
-                statsHtml += '</div>';
-            }
-        }
-
-        return statsHtml + tableHtml;
     }
 }
 

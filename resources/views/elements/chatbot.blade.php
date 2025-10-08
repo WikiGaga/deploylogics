@@ -22,6 +22,10 @@
             </div>
         </div>
 
+        <div class="chatbot-category-tabs" id="chatbotCategoryTabs">
+            <!-- Category tabs will be loaded dynamically -->
+        </div>
+
         <div class="chatbot-messages" id="chatbotMessages">
             <div class="welcome-message">
                 <h4>Welcome to Report Assistant!</h4>

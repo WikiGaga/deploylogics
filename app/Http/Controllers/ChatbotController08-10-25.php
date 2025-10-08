@@ -54,7 +54,7 @@ class ChatbotController extends Controller
 
             return response()->json([
                 'success' => false,
-                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+                'response' => 'Sorry, I encountered an error. Please try again.',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
@@ -80,21 +80,44 @@ class ChatbotController extends Controller
 
             $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
 
-            if ($this->shouldGenerateReport($message, $aiResponse)) {
-                return $this->handleReportGeneration($message, $aiResponse, $user, $category);
+            if ($this->needsExcelReport($message, $aiResponse)) {
+                return $this->handleExcelReportGeneration($message, $aiResponse, $user, $category);
             }
 
-            return $aiResponse;
+            return $this->cleanResponse($aiResponse);
 
         } catch (\Exception $e) {
             Log::error('OpenAI API error: ' . $e->getMessage());
-            return 'Sorry, I encountered an error connecting to the AI service. Please try again.';
+            return 'Sorry, I encountered an error. Please try again.';
         }
     }
 
-    /**
-     * Get category-specific schema configurations
-     */
+    private function cleanResponse(string $response): string
+    {
+        $response = preg_replace('/GENERATE_REPORT:.*$/s', '', $response);
+        $response = preg_replace('/```sql.*?```/s', '', $response);
+        $response = preg_replace('/SELECT.*?FROM.*?;/si', '', $response);
+        return trim($response);
+    }
+
+    private function needsExcelReport(string $message, string $aiResponse): bool
+    {
+        $reportKeywords = ['list', 'report', 'show all', 'export', 'download', 'details'];
+        $lowerMessage = strtolower($message);
+
+        foreach ($reportKeywords as $keyword) {
+            if (strpos($lowerMessage, $keyword) !== false) {
+                return true;
+            }
+        }
+
+        if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function getCategorySchemas(): array
     {
         return [
@@ -111,46 +134,37 @@ class ChatbotController extends Controller
         ];
     }
 
-    /**
-     * Get system prompt for specific category
-     * Uses cached schema for performance
-     */
     private function getSystemPromptForCategory(string $category): string
     {
         $cacheKey = "chatbot_schema_{$category}";
 
-        $schema = Cache::remember($cacheKey, now()->addHours(24), function() use ($category) {
+        $schema = Cache::remember($cacheKey, now()->addDays(30), function() use ($category) {
             return $this->buildSchemaForCategory($category);
         });
 
         $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
 
-        return "You are an Oracle database expert specializing in {$categoryInfo['name']} reporting.
+        return "You are a helpful business data assistant for {$categoryInfo['name']}.
 
-DATABASE SCHEMA ({$categoryInfo['description']}):
+DATABASE TABLES:
 {$schema}
 
-YOUR ROLE:
-1. Analyze user requests and generate accurate Oracle SQL queries
-2. Ask clarifying questions if date ranges, filters, or specific data requirements are unclear
-3. Use proper Oracle SQL syntax (TO_DATE, TRUNC, NVL, etc.)
-4. When generating a report query, start your response with 'GENERATE_REPORT:' followed by the SQL query
+INSTRUCTIONS:
+1. For simple questions (total, count, sum), answer directly in chat with the number/value
+2. For detailed lists or reports, respond with 'GENERATE_REPORT:' followed by a query
+3. Use proper date formats (TO_DATE, TRUNC, NVL)
+4. Be friendly and conversational
+5. Never mention SQL, database, or technical terms to the user
+6. If user asks for 'total sales' just calculate and tell them the number
+7. If user asks for 'list of orders' then generate a report
 
-IMPORTANT RULES:
-- Only use the tables shown in the schema above
-- Use proper JOIN syntax for related tables
-- Apply appropriate WHERE clauses for date ranges
-- Use aggregate functions (SUM, COUNT, AVG) when calculating totals
-- Format dates properly for Oracle database
-- Be conversational and helpful
+Examples:
+- 'What is total sales today?' → Answer: 'Total sales today is $5,240'
+- 'Show me all orders from last month' → GENERATE_REPORT: SELECT...
 
-Always focus on providing accurate, efficient queries based on user needs.";
+Always be helpful and user-friendly.";
     }
 
-    /**
-     * Build database schema for specific category
-     * Dynamically fetches table structure from Oracle
-     */
     private function buildSchemaForCategory(string $category): string
     {
         $categories = $this->getCategorySchemas();
@@ -168,16 +182,12 @@ Always focus on providing accurate, efficient queries based on user needs.";
         return $this->buildCompactSchema($categoryData['tables']);
     }
 
-    /**
-     * Build compact schema format for specified tables
-     */
     private function buildCompactSchema(array $tables): string
     {
         $schema = "";
 
         try {
             foreach ($tables as $tableName) {
-                // Get columns for each table
                 $columns = DB::select("
                     SELECT column_name, data_type, nullable
                     FROM user_tab_columns
@@ -201,7 +211,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
                 $schema .= "\n)\n\n";
             }
 
-            // Get foreign key relationships
             $schema .= "RELATIONSHIPS:\n";
             $tableList = "'" . implode("','", array_map('strtoupper', $tables)) . "'";
 
@@ -236,44 +245,79 @@ Always focus on providing accurate, efficient queries based on user needs.";
         return $schema;
     }
 
-    /**
-     * Build full database schema for general category
-     */
     private function buildFullDatabaseSchema(): string
     {
-        // For general category, include common tables
         $commonTables = ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'];
         return $this->buildCompactSchema($commonTables);
     }
 
-    private function shouldGenerateReport(string $message, string $aiResponse): bool
-    {
-        $lowerMessage = strtolower($message);
-        $lowerResponse = strtolower($aiResponse);
-
-        return strpos($lowerMessage, 'report') !== false ||
-               strpos($lowerMessage, 'query') !== false ||
-               strpos($lowerMessage, 'data') !== false ||
-               strpos($lowerResponse, 'generate_report:') !== false;
-    }
-
-    private function handleReportGeneration(string $message, string $aiResponse, $user, string $category): string
+    private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
     {
         try {
             $reportData = $this->extractReportData($message, $aiResponse, $category);
-            $reportId = $this->createReport($reportData, $user);
+            $query = $reportData['query'];
 
-            $response = $aiResponse;
-            if (strpos($aiResponse, 'GENERATE_REPORT:') === false) {
-                $response .= "\n\nI've prepared a report for you. Click the button below to view it in a new tab.";
+            $this->validateQuery($query);
+            $data = DB::select($query);
+
+            if (empty($data)) {
+                return "No data found for your request.";
             }
 
-            return $response . "\n\n[REPORT_BUTTON:" . $reportId . "]";
+            $filename = 'report_' . time() . '.xlsx';
+            $filePath = storage_path('app/public/reports/' . $filename);
+
+            if (!file_exists(dirname($filePath))) {
+                mkdir(dirname($filePath), 0755, true);
+            }
+
+            $this->generateExcelFile($data, $filePath);
+
+            $downloadUrl = url('storage/reports/' . $filename);
+
+            $cleanResponse = $this->cleanResponse($aiResponse);
+            return $cleanResponse . "\n\n📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
 
         } catch (\Exception $e) {
             Log::error('Report generation error: ' . $e->getMessage());
-            return $aiResponse . "\n\nI encountered an error while generating the report. Please try again.";
+            return "I encountered an error while generating the report. Please try again.";
         }
+    }
+
+    private function generateExcelFile($data, $filePath): void
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $dataArray = array_map(function($row) {
+            return (array) $row;
+        }, $data);
+
+        if (empty($dataArray)) {
+            return;
+        }
+
+        $headers = array_keys($dataArray[0]);
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $rowNum = 2;
+        foreach ($dataArray as $row) {
+            $sheet->fromArray(array_values($row), NULL, 'A' . $rowNum);
+            $rowNum++;
+        }
+
+        foreach (range('A', $sheet->getHighestColumn()) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $headerStyle = $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1');
+        $headerStyle->getFont()->setBold(true);
+        $headerStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('667EEA');
+        $headerStyle->getFont()->getColor()->setRGB('FFFFFF');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($filePath);
     }
 
     private function extractReportData(string $message, string $aiResponse, string $category): array
@@ -285,18 +329,15 @@ Always focus on providing accurate, efficient queries based on user needs.";
             'type' => $category
         ];
 
-        // Extract SQL query from AI response if present
         if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
             $parts = explode('GENERATE_REPORT:', $aiResponse);
             if (isset($parts[1])) {
                 $query = trim($parts[1]);
-                // Extract just the SQL query (remove any text after the query)
                 $query = $this->cleanSQLQuery($query);
                 $reportData['query'] = $query;
             }
         }
 
-        // If no query found, generate a basic one
         if (empty($reportData['query'])) {
             $reportData['query'] = $this->generateBasicQuery($category);
         }
@@ -304,16 +345,11 @@ Always focus on providing accurate, efficient queries based on user needs.";
         return $reportData;
     }
 
-    /**
-     * Clean and extract SQL query from AI response
-     */
     private function cleanSQLQuery(string $text): string
     {
-        // Remove markdown code blocks if present
         $text = preg_replace('/```sql\s*/i', '', $text);
         $text = preg_replace('/```\s*$/i', '', $text);
 
-        // Extract query up to semicolon or end of text
         if (preg_match('/^(.*?);/s', $text, $matches)) {
             return trim($matches[1]);
         }
@@ -321,9 +357,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
         return trim($text);
     }
 
-    /**
-     * Generate basic query if AI doesn't provide one
-     */
     private function generateBasicQuery(string $category): string
     {
         switch ($category) {
@@ -334,110 +367,19 @@ Always focus on providing accurate, efficient queries based on user needs.";
         }
     }
 
-    private function createReport(array $reportData, $user): string
-    {
-        $reportId = 'report_' . time() . '_' . rand(1000, 9999);
-
-        DB::table('generated_reports')->insert([
-            'report_id' => $reportId,
-            'user_id' => $user->id,
-            'title' => $reportData['title'],
-            'description' => $reportData['description'],
-            'query' => $reportData['query'],
-            'type' => $reportData['type'],
-            'status' => 'pending',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        return $reportId;
-    }
-
-    public function viewReport(Request $request, $reportId): JsonResponse
-    {
-        try {
-            $user = Auth::user();
-
-            $report = DB::table('generated_reports')
-                ->where('report_id', $reportId)
-                ->where('user_id', $user->id)
-                ->first();
-
-            if (!$report) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Report not found'
-                ], 404);
-            }
-
-            $data = $this->executeQuery((string) $report->query);
-
-            DB::table('generated_reports')
-                ->where('report_id', $reportId)
-                ->update([
-                    'status' => 'completed',
-                    'updated_at' => now()
-                ]);
-
-            return response()->json([
-                'success' => true,
-                'report' => [
-                    'id' => $report->report_id,
-                    'title' => $report->title,
-                    'description' => $report->description,
-                    'type' => $report->type,
-                    'data' => $data,
-                    'generated_at' => $report->created_at
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Report viewing error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error loading report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    private function executeQuery(string $query): array
-    {
-        try {
-            // Validate query for security
-            $this->validateQuery($query);
-
-            $results = DB::select($query);
-            return array_map(function($row) {
-                return (array) $row;
-            }, $results);
-        } catch (\Exception $e) {
-            Log::error('Query execution error: ' . $e->getMessage());
-            return [
-                ['error' => 'Query execution failed', 'message' => $e->getMessage()]
-            ];
-        }
-    }
-
-    /**
-     * Validate SQL query for security
-     * Only allows SELECT statements
-     */
     private function validateQuery(string $query): void
     {
         $query = strtoupper(trim($query));
 
-        // Security checks - prevent dangerous operations
         $dangerousKeywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
         foreach ($dangerousKeywords as $keyword) {
             if (strpos($query, $keyword) !== false) {
-                throw new \Exception('Query contains dangerous operations and cannot be executed');
+                throw new \Exception('Query contains dangerous operations');
             }
         }
 
-        // Only allow SELECT queries
         if (strpos($query, 'SELECT') !== 0) {
-            throw new \Exception('Only SELECT queries are allowed');
+            throw new \Exception('Only SELECT queries allowed');
         }
     }
 
@@ -487,55 +429,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
         }
     }
 
-    public function generateReport(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'report_type' => 'required|string',
-                'date_from' => 'nullable|date',
-                'date_to' => 'nullable|date|after_or_equal:date_from',
-                'filters' => 'nullable|array'
-            ]);
-
-            $reportType = $request->input('report_type');
-            $dateFrom = $request->input('date_from');
-            $dateTo = $request->input('date_to');
-            $filters = $request->input('filters', []);
-
-            $reportData = $this->processReportGeneration($reportType, $dateFrom, $dateTo, $filters);
-
-            return response()->json([
-                'success' => true,
-                'report_data' => $reportData,
-                'message' => 'Report generated successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error generating report: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not generate report: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    private function processReportGeneration(string $reportType, ?string $dateFrom, ?string $dateTo, array $filters): array
-    {
-
-        return [
-            'report_type' => $reportType,
-            'date_range' => [
-                'from' => $dateFrom,
-                'to' => $dateTo
-            ],
-            'filters' => $filters,
-            'data' => [],
-            'summary' => 'Report generation logic will be implemented here',
-            'generated_at' => now()->toISOString()
-        ];
-    }
-
     public function getAnalytics(Request $request): JsonResponse
     {
         try {
@@ -578,10 +471,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
         }
     }
 
-    /**
-     * Clear cached database schemas
-     * Use this after database structure changes
-     */
     public function clearSchemaCache(Request $request): JsonResponse
     {
         try {
@@ -596,24 +485,19 @@ Always focus on providing accurate, efficient queries based on user needs.";
 
             return response()->json([
                 'success' => true,
-                'message' => 'Schema cache cleared successfully',
-                'cleared_categories' => $clearedCategories,
-                'note' => 'New schema will be fetched on next query'
+                'message' => 'Schema cache cleared',
+                'cleared_categories' => $clearedCategories
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error clearing schema cache: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
-                'message' => 'Could not clear schema cache'
+                'message' => 'Could not clear cache'
             ], 500);
         }
     }
 
-    /**
-     * Get available categories for chatbot
-     */
     public function getCategories(Request $request): JsonResponse
     {
         try {
@@ -636,7 +520,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
 
         } catch (\Exception $e) {
             Log::error('Error fetching categories: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Could not fetch categories'
@@ -644,22 +527,15 @@ Always focus on providing accurate, efficient queries based on user needs.";
         }
     }
 
-    /**
-     * Get icon for category
-     */
     private function getCategoryIcon(string $category): string
     {
         $icons = [
             'sales' => '💰',
             'general' => '🔍'
         ];
-
         return $icons[$category] ?? '📊';
     }
 
-    /**
-     * Preview schema for a category (for debugging)
-     */
     public function previewSchema(Request $request, string $category): JsonResponse
     {
         try {
@@ -681,7 +557,6 @@ Always focus on providing accurate, efficient queries based on user needs.";
 
         } catch (\Exception $e) {
             Log::error('Error previewing schema: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Could not preview schema',

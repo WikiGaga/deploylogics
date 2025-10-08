@@ -44,9 +44,7 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/message', 'ChatbotController@processMessage');
     Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
-    Route::post('/chatbot/generate-report', 'ChatbotController@generateReport');
     Route::get('/chatbot/analytics', 'ChatbotController@getAnalytics');
-    Route::get('/chatbot/report/{reportId}', 'ChatbotController@viewReport');
     Route::get('/chatbot/categories', 'ChatbotController@getCategories');
     Route::post('/chatbot/clear-schema-cache', 'ChatbotController@clearSchemaCache');
     Route::get('/chatbot/preview-schema/{category}', 'ChatbotController@previewSchema');
