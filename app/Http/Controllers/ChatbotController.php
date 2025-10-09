@@ -369,7 +369,6 @@ RULES:
                 $reportData['query'] = $query;
             }
         }
-dd($reportData);
         if (empty($reportData['query'])) {
             $reportData['query'] = $this->generateBasicQuery($category);
         }
@@ -473,6 +472,7 @@ dd($reportData);
             $this->validateQuery($query);
 
             $results = DB::select($query);
+            dd($results);
             return array_map(function($row) {
                 return (array) $row;
             }, $results);
