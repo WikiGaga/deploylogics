@@ -491,7 +491,7 @@ RULES:
     private function validateQuery(string $query): void
     {
         $query = strtoupper(trim($query));
-
+dd($query);
         // Security checks - prevent dangerous operations
         $dangerousKeywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
         foreach ($dangerousKeywords as $keyword) {
