@@ -80,21 +80,64 @@ class ChatbotController extends Controller
 
             $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
 
-            if ($this->shouldGenerateReport($message, $aiResponse)) {
-                return $this->handleReportGeneration($message, $aiResponse, $user, $category);
+            if (strpos($aiResponse, 'SIMPLE_QUERY:') !== false) {
+                return $this->handleSimpleQuery($aiResponse);
             }
 
-            return $aiResponse;
+            if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
+                return $this->handleExcelReportGeneration($message, $aiResponse, $user, $category);
+            }
+
+            return $this->cleanResponse($aiResponse);
 
         } catch (\Exception $e) {
             Log::error('OpenAI API error: ' . $e->getMessage());
-            return 'Sorry, I encountered an error connecting to the AI service. Please try again.';
+            return 'Sorry, I encountered an error. Please try again.';
         }
     }
 
-    /**
-     * Get category-specific schema configurations
-     */
+    private function handleSimpleQuery(string $aiResponse): string
+    {
+        try {
+            $parts = explode('SIMPLE_QUERY:', $aiResponse);
+            if (!isset($parts[1])) {
+                return $this->cleanResponse($aiResponse);
+            }
+
+            $query = $this->cleanSQLQuery(trim($parts[1]));
+            $naturalText = trim($parts[0]);
+
+            $this->validateQuery($query);
+            $result = DB::select($query);
+
+            if (empty($result)) {
+                return "No data found.";
+            }
+
+            $firstRow = (array) $result[0];
+            $value = reset($firstRow);
+
+            if ($naturalText) {
+                return $naturalText . ": " . $value;
+            }
+
+            return "Result: " . $value;
+
+        } catch (\Exception $e) {
+            Log::error('Simple query error: ' . $e->getMessage());
+            return "I couldn't fetch that information. Please try again.";
+        }
+    }
+
+    private function cleanResponse(string $response): string
+    {
+        $response = preg_replace('/GENERATE_REPORT:.*$/s', '', $response);
+        $response = preg_replace('/SIMPLE_QUERY:.*$/s', '', $response);
+        $response = preg_replace('/```sql.*?```/s', '', $response);
+        $response = preg_replace('/SELECT.*?FROM.*?;/si', '', $response);
+        return trim($response);
+    }
+
     private function getCategorySchemas(): array
     {
         return [
@@ -111,37 +154,38 @@ class ChatbotController extends Controller
         ];
     }
 
-    /**
-     * Get system prompt for specific category
-     * Uses cached schema for performance
-     */
     private function getSystemPromptForCategory(string $category): string
     {
         $cacheKey = "chatbot_schema_{$category}";
 
-        $schema = Cache::remember($cacheKey, now()->addHours(24), function() use ($category) {
+        $schema = Cache::remember($cacheKey, now()->addDays(30), function() use ($category) {
             return $this->buildSchemaForCategory($category);
         });
 
         $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
 
-        return "You are an Oracle database expert specializing in {$categoryInfo['name']} reporting.
+        return "You are a business data assistant for {$categoryInfo['name']}.
 
-DATABASE SCHEMA ({$categoryInfo['description']}):
+DATABASE TABLES:
 {$schema}
 
-YOUR ROLE:
-1. Analyze user requests and generate accurate Oracle queries.
-2. Dont ask any questions unless very important about the data you need to generate the report.
-3. Run the query and return the result in case of simple answers.
-4. Generate excel report in case of list or table of data requested."
-;
+RESPONSE FORMAT:
+
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(TOTAL_AMOUNT), 0) FROM ORDERS WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE)'
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query
+   Example: 'GENERATE_REPORT: SELECT ORDER_ID, ORDER_DATE, TOTAL_AMOUNT FROM ORDERS WHERE ORDER_DATE >= SYSDATE - 30 ORDER BY ORDER_DATE DESC'
+
+RULES:
+- Use Oracle syntax (TRUNC, NVL, TO_DATE, SYSDATE)
+- Never mention SQL or technical terms
+- Query executes automatically
+- No explanations needed";
     }
 
-    /**
-     * Build database schema for specific category
-     * Dynamically fetches table structure from Oracle
-     */
     private function buildSchemaForCategory(string $category): string
     {
         $categories = $this->getCategorySchemas();
@@ -237,35 +281,6 @@ YOUR ROLE:
         return $this->buildCompactSchema($commonTables);
     }
 
-    private function shouldGenerateReport(string $message, string $aiResponse): bool
-    {
-        $lowerMessage = strtolower($message);
-        $lowerResponse = strtolower($aiResponse);
-
-        return strpos($lowerMessage, 'report') !== false ||
-               strpos($lowerMessage, 'query') !== false ||
-               strpos($lowerMessage, 'data') !== false ||
-               strpos($lowerResponse, 'generate_report:') !== false;
-    }
-
-    private function handleReportGeneration(string $message, string $aiResponse, $user, string $category): string
-    {
-        try {
-            $reportData = $this->extractReportData($message, $aiResponse, $category);
-            $reportId = $this->createReport($reportData, $user);
-
-            $response = $aiResponse;
-            if (strpos($aiResponse, 'GENERATE_REPORT:') === false) {
-                $response .= "\n\nI've prepared a report for you. Click the button below to view it in a new tab.";
-            }
-
-            return $response . "\n\n[REPORT_BUTTON:" . $reportId . "]";
-
-        } catch (\Exception $e) {
-            Log::error('Report generation error: ' . $e->getMessage());
-            return $aiResponse . "\n\nI encountered an error while generating the report. Please try again.";
-        }
-    }
 
     private function extractReportData(string $message, string $aiResponse, string $category): array
     {
