@@ -369,7 +369,7 @@ RULES:
                 $reportData['query'] = $query;
             }
         }
-
+dd($reportData);
         if (empty($reportData['query'])) {
             $reportData['query'] = $this->generateBasicQuery($category);
         }
