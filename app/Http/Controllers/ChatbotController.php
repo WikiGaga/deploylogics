@@ -493,6 +493,7 @@ RULES:
         $query = strtoupper(trim($query));
         // Security checks - prevent dangerous operations
         $dangerousKeywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
+        dd($query);
         foreach ($dangerousKeywords as $keyword) {
             if (strpos($query, $keyword) !== false) {
                 dd($keyword);
