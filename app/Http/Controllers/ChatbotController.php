@@ -131,7 +131,7 @@ DATABASE SCHEMA ({$categoryInfo['description']}):
 {$schema}
 
 YOUR ROLE:
-1. Analyze user requests and generate accurate Oracle SQL queries"
+1. Analyze user requests and generate accurate Oracle SQL queries and return only the SQL query without any other text"
 ;
     }
 
