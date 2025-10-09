@@ -279,7 +279,7 @@ RULES:
 
     private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
     {
-        try {
+        // try {
             $reportData = $this->extractReportData($message, $aiResponse, $category);
             $query = $reportData['query'];
 
@@ -308,10 +308,10 @@ RULES:
 
             return "📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
 
-        } catch (\Exception $e) {
-            Log::error('Report generation error: ' . $e->getMessage());
-            return "I encountered an error while generating the report. Please try again.";
-        }
+        // } catch (\Exception $e) {
+        //     Log::error('Report generation error: ' . $e->getMessage());
+        //     return "I encountered an error while generating the report. Please try again.";
+        // }
     }
 
     private function generateExcelFile($data, $filePath): void
