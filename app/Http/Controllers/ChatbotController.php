@@ -285,6 +285,7 @@ RULES:
             $query = $reportData['query'];
 
             $this->validateQuery($query);
+            dd($query);
             $data = DB::select($query);
 
             if (empty($data)) {
