@@ -62,7 +62,7 @@ class ChatbotController extends Controller
 
     private function generateAIResponse(string $message, $user, string $category = 'general'): string
     {
-        try {
+        // try {
             $systemPrompt = $this->getSystemPromptForCategory($category);
 
             $response = Http::withHeaders([
@@ -90,10 +90,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        } catch (\Exception $e) {
-            Log::error('OpenAI API error: ' . $e->getMessage());
-            return 'Sorry, I encountered an error. Please try again.';
-        }
+        // } catch (\Exception $e) {
+        //     Log::error('OpenAI API error: ' . $e->getMessage());
+        //     return 'Sorry, I encountered an error. Please try again.';
+        // }
     }
 
     private function handleSimpleQuery(string $aiResponse): string
