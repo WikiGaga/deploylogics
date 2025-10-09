@@ -280,12 +280,11 @@ RULES:
 
     private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
     {
-        // try {
+        try {
             $reportData = $this->extractReportData($message, $aiResponse, $category);
             $query = $reportData['query'];
 
             $this->validateQuery($query);
-            dd($query);
             $data = DB::select($query);
 
             if (empty($data)) {
@@ -310,10 +309,10 @@ RULES:
 
             return "📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
 
-        // } catch (\Exception $e) {
-        //     Log::error('Report generation error: ' . $e->getMessage());
-        //     return "I encountered an error while generating the report. Please try again.";
-        // }
+        } catch (\Exception $e) {
+            Log::error('Report generation error: ' . $e->getMessage());
+            return "I encountered an error while generating the report. Please try again.";
+        }
     }
 
     private function generateExcelFile($data, $filePath): void
@@ -472,7 +471,6 @@ RULES:
             $this->validateQuery($query);
 
             $results = DB::select($query);
-            dd($results);
             return array_map(function($row) {
                 return (array) $row;
             }, $results);
@@ -491,19 +489,17 @@ RULES:
     private function validateQuery(string $query): void
     {
         $query = strtoupper(trim($query));
-        // Security checks - prevent dangerous operations
+
         $dangerousKeywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
-        dd($query);
+
         foreach ($dangerousKeywords as $keyword) {
-            if (strpos($query, $keyword) !== false) {
-                dd($keyword);
-                throw new \Exception('Query contains dangerous operations and cannot be executed');
+            if (preg_match('/\b' . $keyword . '\b/', $query)) {
+                throw new \Exception('Query contains dangerous operations');
             }
         }
 
-        // Only allow SELECT queries
         if (strpos($query, 'SELECT') !== 0) {
-            throw new \Exception('Only SELECT queries are allowed');
+            throw new \Exception('Only SELECT queries allowed');
         }
     }
 
