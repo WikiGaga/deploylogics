@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        // try {
+        try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -49,20 +49,20 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        // } catch (\Exception $e) {
-        //     Log::error('Chatbot error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Chatbot error: ' . $e->getMessage());
 
-        //     return response()->json([
-        //         'success' => false,
-        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-        //     ], 500);
-        // }
+            return response()->json([
+                'success' => false,
+                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'general'): string
     {
-        // try {
+        try {
             $systemPrompt = $this->getSystemPromptForCategory($category);
 
             $response = Http::withHeaders([
@@ -90,10 +90,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        // } catch (\Exception $e) {
-        //     Log::error('OpenAI API error: ' . $e->getMessage());
-        //     return 'Sorry, I encountered an error. Please try again.';
-        // }
+        } catch (\Exception $e) {
+            Log::error('OpenAI API error: ' . $e->getMessage());
+            return 'Sorry, I encountered an error. Please try again.';
+        }
     }
 
     private function handleSimpleQuery(string $aiResponse): string
@@ -280,7 +280,7 @@ RULES:
 
     private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
     {
-        // try {
+        try {
             $reportData = $this->extractReportData($message, $aiResponse, $category);
             $query = $reportData['query'];
 
@@ -304,10 +304,10 @@ RULES:
 
             return "📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
 
-        // } catch (\Exception $e) {
-        //     Log::error('Report generation error: ' . $e->getMessage());
-        //     return "I encountered an error while generating the report. Please try again.";
-        // }
+        } catch (\Exception $e) {
+            Log::error('Report generation error: ' . $e->getMessage());
+            return "I encountered an error while generating the report. Please try again.";
+        }
     }
 
     private function generateExcelFile($data, $filePath): void
