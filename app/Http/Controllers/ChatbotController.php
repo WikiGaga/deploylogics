@@ -131,20 +131,8 @@ DATABASE SCHEMA ({$categoryInfo['description']}):
 {$schema}
 
 YOUR ROLE:
-1. Analyze user requests and generate accurate Oracle SQL queries
-2. Ask clarifying questions if date ranges, filters, or specific data requirements are unclear
-3. Use proper Oracle SQL syntax (TO_DATE, TRUNC, NVL, etc.)
-4. When generating a report query, start your response with 'GENERATE_REPORT:' followed by the SQL query
-
-IMPORTANT RULES:
-- Only use the tables shown in the schema above
-- Use proper JOIN syntax for related tables
-- Apply appropriate WHERE clauses for date ranges
-- Use aggregate functions (SUM, COUNT, AVG) when calculating totals
-- Format dates properly for Oracle database
-- Be conversational and helpful
-
-Always focus on providing accurate, efficient queries based on user needs.";
+1. Analyze user requests and generate accurate Oracle SQL queries"
+;
     }
 
     /**
