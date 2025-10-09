@@ -129,9 +129,6 @@ class Chatbot {
                     </a>`;
         });
 
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        content = content.replace(urlRegex, '<a href="$1" target="_blank" style="color: #667eea;">$1</a>');
-
         content = content.replace(/\n/g, '<br>');
         return content;
     }

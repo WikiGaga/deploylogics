@@ -302,11 +302,6 @@ RULES:
 
             $downloadUrl = url('storage/reports/' . $filename);
 
-            $cleanResponse = $this->cleanResponse($aiResponse);
-            if (!empty($cleanResponse)) {
-                return $cleanResponse . "\n\n📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
-            }
-
             return "📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
 
         // } catch (\Exception $e) {
