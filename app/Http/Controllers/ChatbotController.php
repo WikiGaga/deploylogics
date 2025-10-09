@@ -271,16 +271,84 @@ RULES:
         return $schema;
     }
 
-    /**
-     * Build full database schema for general category
-     */
     private function buildFullDatabaseSchema(): string
     {
-        // For general category, include common tables
         $commonTables = ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'];
         return $this->buildCompactSchema($commonTables);
     }
 
+    private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
+    {
+        try {
+            $reportData = $this->extractReportData($message, $aiResponse, $category);
+            $query = $reportData['query'];
+
+            $this->validateQuery($query);
+            $data = DB::select($query);
+
+            if (empty($data)) {
+                return "No data found for your request.";
+            }
+
+            $filename = 'report_' . time() . '.xlsx';
+            $filePath = storage_path('app/public/reports/' . $filename);
+
+            if (!file_exists(dirname($filePath))) {
+                mkdir(dirname($filePath), 0755, true);
+            }
+
+            $this->generateExcelFile($data, $filePath);
+
+            $downloadUrl = url('storage/reports/' . $filename);
+
+            $cleanResponse = $this->cleanResponse($aiResponse);
+            if (!empty($cleanResponse)) {
+                return $cleanResponse . "\n\n📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
+            }
+
+            return "📊 Your report is ready!\n[DOWNLOAD_EXCEL:" . $downloadUrl . "]";
+
+        } catch (\Exception $e) {
+            Log::error('Report generation error: ' . $e->getMessage());
+            return "I encountered an error while generating the report. Please try again.";
+        }
+    }
+
+    private function generateExcelFile($data, $filePath): void
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $dataArray = array_map(function($row) {
+            return (array) $row;
+        }, $data);
+
+        if (empty($dataArray)) {
+            return;
+        }
+
+        $headers = array_keys($dataArray[0]);
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $rowNum = 2;
+        foreach ($dataArray as $row) {
+            $sheet->fromArray(array_values($row), NULL, 'A' . $rowNum);
+            $rowNum++;
+        }
+
+        foreach (range('A', $sheet->getHighestColumn()) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $headerStyle = $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1');
+        $headerStyle->getFont()->setBold(true);
+        $headerStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('667EEA');
+        $headerStyle->getFont()->getColor()->setRGB('FFFFFF');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($filePath);
+    }
 
     private function extractReportData(string $message, string $aiResponse, string $category): array
     {
@@ -291,18 +359,15 @@ RULES:
             'type' => $category
         ];
 
-        // Extract SQL query from AI response if present
         if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
             $parts = explode('GENERATE_REPORT:', $aiResponse);
             if (isset($parts[1])) {
                 $query = trim($parts[1]);
-                // Extract just the SQL query (remove any text after the query)
                 $query = $this->cleanSQLQuery($query);
                 $reportData['query'] = $query;
             }
         }
 
-        // If no query found, generate a basic one
         if (empty($reportData['query'])) {
             $reportData['query'] = $this->generateBasicQuery($category);
         }
@@ -310,16 +375,11 @@ RULES:
         return $reportData;
     }
 
-    /**
-     * Clean and extract SQL query from AI response
-     */
     private function cleanSQLQuery(string $text): string
     {
-        // Remove markdown code blocks if present
         $text = preg_replace('/```sql\s*/i', '', $text);
         $text = preg_replace('/```\s*$/i', '', $text);
 
-        // Extract query up to semicolon or end of text
         if (preg_match('/^(.*?);/s', $text, $matches)) {
             return trim($matches[1]);
         }
@@ -327,9 +387,6 @@ RULES:
         return trim($text);
     }
 
-    /**
-     * Generate basic query if AI doesn't provide one
-     */
     private function generateBasicQuery(string $category): string
     {
         switch ($category) {
