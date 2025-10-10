@@ -143,8 +143,8 @@ class ChatbotController extends Controller
         return [
             'sales' => [
                 'name' => 'Sales',
-                'description' => 'Sales orders, order details, and POS transactions',
-                'tables' => ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'],
+                'description' => 'Sales orders report with comprehensive order information',
+                'tables' => ['ORDER_REPORT_VIEW'],
             ],
             'general' => [
                 'name' => 'General',
@@ -164,24 +164,44 @@ class ChatbotController extends Controller
 
         $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
 
+        $additionalInstructions = '';
+        if ($category === 'sales') {
+            $additionalInstructions = "\n\nSALES REPORT COLUMNS (ORDER_REPORT_VIEW):
+Available columns:
+- ORDER_SERIAL (Order ID)
+- CREATED_AT (Order Date)
+- CUSTOMER_NAME, CAR_NUMBER, PHONE (Customer Info)
+- ORDER_TYPE, ORDER_STATUS, PAYMENT_STATUS
+- GROSS_AMOUNT, RESTAURANT_DISCOUNT_AMOUNT (Discount)
+- DELIVERY_CHARGE, TOTAL_TAX_AMOUNT (VAT)
+- ORDER_AMOUNT (Net Amount)
+- CASH_PAID (Cash Amount), CARD_PAID (Visa Amount)
+
+Column Selection:
+- If user specifies columns, SELECT only those columns
+- If user doesn't specify columns, SELECT * to get all columns
+- Match user's natural language to exact column names";
+        }
+
         return "You are a business data assistant for {$categoryInfo['name']}.
 
 DATABASE TABLES:
 {$schema}
+{$additionalInstructions}
 
 RESPONSE FORMAT:
 
 1. Simple questions (total, count, sum):
    Format: Natural text SIMPLE_QUERY: SELECT query
-   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(TOTAL_AMOUNT), 0) FROM ORDERS WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE)'
+   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(NET_AMOUNT), 0) FROM ORDER_REPORT_VIEW WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE)'
 
 2. Detailed lists/reports:
    Format: GENERATE_REPORT: SELECT query
-   Example: 'GENERATE_REPORT: SELECT ID, CREATED_AT, ORDER_AMOUNT FROM ORDERS WHERE CREATED_AT >= SYSDATE - 30 ORDER BY ORDER_DATE DESC'
-   But this is just an example, generate report for tables provided in the schema.
+   Example: 'GENERATE_REPORT: SELECT * FROM ORDER_REPORT_VIEW WHERE ORDER_DATE >= SYSDATE - 30 ORDER BY ORDER_DATE DESC'
 
 RULES:
 - Use Oracle syntax (TRUNC, NVL, TO_DATE, SYSDATE)
+- For sales, always use ORDER_REPORT_VIEW
 - Never mention SQL or technical terms
 - Query executes automatically
 - No explanations needed";
@@ -274,7 +294,7 @@ RULES:
 
     private function buildFullDatabaseSchema(): string
     {
-        $commonTables = ['ORDERS', 'ORDER_DETAILS', 'POS_ORDER_ADDITIONAL_DTL'];
+        $commonTables = ['ORDER_REPORT_VIEW'];
         return $this->buildCompactSchema($commonTables);
     }
 
@@ -332,6 +352,15 @@ RULES:
             $rowNum++;
         }
 
+        $totalsRow = $this->calculateTotals($dataArray, $headers);
+        if (!empty($totalsRow)) {
+            $sheet->fromArray($totalsRow, NULL, 'A' . $rowNum);
+            $totalStyle = $sheet->getStyle('A' . $rowNum . ':' . $sheet->getHighestColumn() . $rowNum);
+            $totalStyle->getFont()->setBold(true);
+            $totalStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                       ->getStartColor()->setRGB('F3F6F9');
+        }
+
         foreach (range('A', $sheet->getHighestColumn()) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
@@ -344,6 +373,37 @@ RULES:
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save($filePath);
+    }
+
+    private function calculateTotals(array $dataArray, array $headers): array
+    {
+        $numericColumns = [
+            'GROSS_AMOUNT', 'RESTAURANT_DISCOUNT_AMOUNT', 'DELIVERY_CHARGE',
+            'TOTAL_TAX_AMOUNT', 'ORDER_AMOUNT', 'CASH_PAID', 'CARD_PAID'
+        ];
+
+        $totals = [];
+        $hasNumericData = false;
+
+        foreach ($headers as $index => $header) {
+            $upperHeader = strtoupper($header);
+
+            if (in_array($upperHeader, $numericColumns)) {
+                $sum = 0;
+                foreach ($dataArray as $row) {
+                    $value = array_values($row)[$index];
+                    if (is_numeric($value)) {
+                        $sum += $value;
+                        $hasNumericData = true;
+                    }
+                }
+                $totals[] = number_format($sum, 3);
+            } else {
+                $totals[] = ($index === 0) ? 'TOTAL' : '';
+            }
+        }
+
+        return $hasNumericData ? $totals : [];
     }
 
     private function extractReportData(string $message, string $aiResponse, string $category): array
@@ -386,7 +446,7 @@ RULES:
     {
         switch ($category) {
             case 'sales':
-                return "SELECT COUNT(*) as total_orders FROM ORDERS WHERE ROWNUM <= 10";
+                return "SELECT * FROM ORDER_REPORT_VIEW WHERE ROWNUM <= 100";
             default:
                 return "SELECT 'Report Generated' as status, SYSDATE as generated_at FROM dual";
         }
