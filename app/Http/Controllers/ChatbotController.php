@@ -180,7 +180,8 @@ Available columns:
 Column Selection:
 - If user specifies columns, SELECT only those columns
 - If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names";
+- Match user's natural language to exact column names
+- Use Headings for the columns instead of field names";
         }
 
         return "You are a business data assistant for {$categoryInfo['name']}.
