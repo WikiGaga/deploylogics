@@ -777,13 +777,14 @@ RULES:
     private function storeReportMetadata(string $filename, ?string $conversationId, int $userId): void
     {
         try {
-            DB::table('chatbot_reports')->insert([
-                'filename' => $filename,
-                'conversation_id' => $conversationId,
-                'user_id' => $userId,
-                'created_at' => now(),
-                'updated_at' => now()
+            DB::table('CHATBOT_REPORTS')->insert([
+                'FILENAME' => $filename,
+                'CONVERSATION_ID' => $conversationId,
+                'USER_ID' => $userId,
+                'CREATED_AT' => now(),
+                'UPDATED_AT' => now()
             ]);
+            Log::info('Stored report metadata: ' . $filename . ' for conversation: ' . $conversationId);
         } catch (\Exception $e) {
             Log::warning('Could not store report metadata: ' . $e->getMessage());
         }
@@ -798,45 +799,94 @@ RULES:
 
             $conversationId = $request->input('conversation_id');
             $user = Auth::user();
-
-            if ($conversationId) {
-                $reports = DB::table('chatbot_reports')
-                    ->where('conversation_id', $conversationId)
-                    ->where('user_id', $user->id)
-                    ->get();
-            } else {
-                $reports = DB::table('chatbot_reports')
-                    ->where('user_id', $user->id)
-                    ->get();
-            }
-
             $deletedCount = 0;
-            foreach ($reports as $report) {
-                $filePath = storage_path('app/public/reports/' . $report->filename);
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                    $deletedCount++;
+            $reports = [];
+
+            try {
+                if ($conversationId) {
+                    $reports = DB::table('CHATBOT_REPORTS')
+                        ->where('CONVERSATION_ID', $conversationId)
+                        ->where('USER_ID', $user->id)
+                        ->get();
+                } else {
+                    $reports = DB::table('CHATBOT_REPORTS')
+                        ->where('USER_ID', $user->id)
+                        ->get();
+                }
+
+                Log::info('Found ' . count($reports) . ' report(s) to delete for user ' . $user->id .
+                         ($conversationId ? ' and conversation ' . $conversationId : ''));
+
+                foreach ($reports as $report) {
+                    $filename = $report->filename ?? $report->FILENAME ?? null;
+
+                    if (!$filename) {
+                        Log::warning('No filename found in report object: ' . json_encode($report));
+                        continue;
+                    }
+
+                    $filePath = storage_path('app/public/reports/' . $filename);
+                    Log::info('Attempting to delete report: ' . $filePath . ' (exists: ' . (file_exists($filePath) ? 'yes' : 'no') . ')');
+
+                    if (file_exists($filePath)) {
+                        if (unlink($filePath)) {
+                            $deletedCount++;
+                            Log::info('Successfully deleted: ' . $filePath);
+                        } else {
+                            Log::warning('Failed to delete (permission denied?): ' . $filePath);
+                        }
+                    } else {
+                        Log::warning('File not found: ' . $filePath);
+
+                        $altPath = public_path('storage/reports/' . $filename);
+                        Log::info('Checking alternative path: ' . $altPath);
+                        if (file_exists($altPath)) {
+                            if (unlink($altPath)) {
+                                $deletedCount++;
+                                Log::info('Successfully deleted from alt path: ' . $altPath);
+                            }
+                        }
+                    }
+                }
+
+                if ($conversationId) {
+                    DB::table('CHATBOT_REPORTS')
+                        ->where('CONVERSATION_ID', $conversationId)
+                        ->where('USER_ID', $user->id)
+                        ->delete();
+                } else {
+                    DB::table('CHATBOT_REPORTS')
+                        ->where('USER_ID', $user->id)
+                        ->delete();
+                }
+            } catch (\Exception $e) {
+                Log::warning('chatbot_reports table might not exist, scanning directory instead: ' . $e->getMessage());
+
+                $reportsDir = storage_path('app/public/reports');
+                if (is_dir($reportsDir)) {
+                    $files = glob($reportsDir . '/report_*.xlsx');
+                    foreach ($files as $file) {
+                        if (file_exists($file) && unlink($file)) {
+                            $deletedCount++;
+                            Log::info('Deleted report file: ' . $file);
+                        }
+                    }
                 }
             }
 
-            if ($conversationId) {
-                DB::table('chatbot_reports')
-                    ->where('conversation_id', $conversationId)
-                    ->where('user_id', $user->id)
-                    ->delete();
-
-                DB::table('chatbot_conversations')
-                    ->where('conversation_id', $conversationId)
-                    ->where('user_id', $user->id)
-                    ->delete();
-            } else {
-                DB::table('chatbot_reports')
-                    ->where('user_id', $user->id)
-                    ->delete();
-
-                DB::table('chatbot_conversations')
-                    ->where('user_id', $user->id)
-                    ->delete();
+            try {
+                if ($conversationId) {
+                    DB::table('CHATBOT_CONVERSATIONS')
+                        ->where('CONVERSATION_ID', $conversationId)
+                        ->where('USER_ID', $user->id)
+                        ->delete();
+                } else {
+                    DB::table('CHATBOT_CONVERSATIONS')
+                        ->where('USER_ID', $user->id)
+                        ->delete();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not clear conversation history: ' . $e->getMessage());
             }
 
             return response()->json([
@@ -850,7 +900,7 @@ RULES:
 
             return response()->json([
                 'success' => false,
-                'message' => 'Could not clear conversation reports'
+                'message' => 'Could not clear conversation reports: ' . $e->getMessage()
             ], 500);
         }
     }
