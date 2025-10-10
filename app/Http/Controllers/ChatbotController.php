@@ -37,7 +37,7 @@ class ChatbotController extends Controller
 
             $this->logConversation($user, $message, $conversationId, 'user', $category);
 
-            $response = $this->generateAIResponse($message, $user, $category);
+            $response = $this->generateAIResponse($message, $user, $category, $conversationId);
 
             $this->logConversation($user, $response, $conversationId, 'bot', $category);
 
@@ -60,7 +60,7 @@ class ChatbotController extends Controller
         }
     }
 
-    private function generateAIResponse(string $message, $user, string $category = 'general'): string
+    private function generateAIResponse(string $message, $user, string $category = 'general', string $conversationId = null): string
     {
         try {
             $systemPrompt = $this->getSystemPromptForCategory($category);
@@ -85,7 +85,7 @@ class ChatbotController extends Controller
             }
 
             if (strpos($aiResponse, 'GENERATE_REPORT:') !== false) {
-                return $this->handleExcelReportGeneration($message, $aiResponse, $user, $category);
+                return $this->handleExcelReportGeneration($message, $aiResponse, $user, $category, $conversationId);
             }
 
             return $this->cleanResponse($aiResponse);
@@ -299,7 +299,7 @@ RULES:
         return $this->buildCompactSchema($commonTables);
     }
 
-    private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category): string
+    private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category, string $conversationId = null): string
     {
         try {
             $reportData = $this->extractReportData($message, $aiResponse, $category);
@@ -320,6 +320,8 @@ RULES:
             }
 
             $this->generateExcelFile($data, $filePath);
+
+            $this->storeReportMetadata($filename, $conversationId, $user->id);
 
             $downloadUrl = url('storage/reports/' . $filename);
 
@@ -762,9 +764,6 @@ RULES:
         }
     }
 
-    /**
-     * Get icon for category
-     */
     private function getCategoryIcon(string $category): string
     {
         $icons = [
@@ -773,6 +772,87 @@ RULES:
         ];
 
         return $icons[$category] ?? '📊';
+    }
+
+    private function storeReportMetadata(string $filename, ?string $conversationId, int $userId): void
+    {
+        try {
+            DB::table('chatbot_reports')->insert([
+                'filename' => $filename,
+                'conversation_id' => $conversationId,
+                'user_id' => $userId,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Could not store report metadata: ' . $e->getMessage());
+        }
+    }
+
+    public function clearConversationReports(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'conversation_id' => 'nullable|string'
+            ]);
+
+            $conversationId = $request->input('conversation_id');
+            $user = Auth::user();
+
+            if ($conversationId) {
+                $reports = DB::table('chatbot_reports')
+                    ->where('conversation_id', $conversationId)
+                    ->where('user_id', $user->id)
+                    ->get();
+            } else {
+                $reports = DB::table('chatbot_reports')
+                    ->where('user_id', $user->id)
+                    ->get();
+            }
+
+            $deletedCount = 0;
+            foreach ($reports as $report) {
+                $filePath = storage_path('app/public/reports/' . $report->filename);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                    $deletedCount++;
+                }
+            }
+
+            if ($conversationId) {
+                DB::table('chatbot_reports')
+                    ->where('conversation_id', $conversationId)
+                    ->where('user_id', $user->id)
+                    ->delete();
+
+                DB::table('chatbot_conversations')
+                    ->where('conversation_id', $conversationId)
+                    ->where('user_id', $user->id)
+                    ->delete();
+            } else {
+                DB::table('chatbot_reports')
+                    ->where('user_id', $user->id)
+                    ->delete();
+
+                DB::table('chatbot_conversations')
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Conversation and reports cleared successfully',
+                'deleted_reports' => $deletedCount
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error clearing conversation reports: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not clear conversation reports'
+            ], 500);
+        }
     }
 
     /**

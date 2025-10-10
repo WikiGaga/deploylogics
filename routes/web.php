@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chatbot/analytics', 'ChatbotController@getAnalytics');
     Route::get('/chatbot/categories', 'ChatbotController@getCategories');
     Route::post('/chatbot/clear-schema-cache', 'ChatbotController@clearSchemaCache');
+    Route::post('/chatbot/clear-conversation', 'ChatbotController@clearConversationReports');
     Route::get('/chatbot/preview-schema/{category}', 'ChatbotController@previewSchema');
 });
 // ->middleware('wan_access');

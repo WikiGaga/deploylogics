@@ -286,16 +286,43 @@ class Chatbot {
     }
 
     clearConversation() {
-        if (confirm('Are you sure you want to clear the conversation history?')) {
-            this.conversationHistory = [];
-            const messagesContainer = document.getElementById('chatbotMessages');
-            messagesContainer.innerHTML = `
-                <div class="welcome-message">
-                    <h4>Welcome to Report Assistant!</h4>
-                    <p>I'm here to help you with reporting and data analysis. How can I assist you today?</p>
-                </div>
-            `;
-            this.saveConversationHistory();
+        if (confirm('Are you sure you want to clear the conversation history and delete all generated reports?')) {
+            fetch('/chatbot/clear-conversation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    conversation_id: this.conversationId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.conversationHistory = [];
+                    this.conversationId = null;
+                    const messagesContainer = document.getElementById('chatbotMessages');
+                    messagesContainer.innerHTML = `
+                        <div class="welcome-message">
+                            <h4>Welcome to Report Assistant!</h4>
+                            <p>I'm here to help you with reporting and data analysis. How can I assist you today?</p>
+                        </div>
+                    `;
+                    this.saveConversationHistory();
+
+                    if (data.deleted_reports > 0) {
+                        this.addMessage(`✅ Cleared conversation and deleted ${data.deleted_reports} report(s).`, 'bot');
+                    }
+                } else {
+                    console.error('Failed to clear conversation:', data.message);
+                    alert('Failed to clear conversation. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing conversation:', error);
+                alert('An error occurred while clearing the conversation.');
+            });
         }
     }
 }
