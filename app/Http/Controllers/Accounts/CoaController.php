@@ -118,6 +118,8 @@ class CoaController extends Controller
             $supplier_group = substr($chart_supplier_group->chart_code,0,4);
         }
         $customer_group = "";
+dd($request->chart_code);
+
         if(isset(Session::get('dataSession')->customer_group) && !empty(Session::get('dataSession')->customer_group)) {
             $chart_customer_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->customer_group)->where(Utilities::currentBC())->first('chart_code');
             $customer_group = substr($chart_customer_group->chart_code,0,4);
