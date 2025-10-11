@@ -115,9 +115,8 @@ class CoaController extends Controller
         $supplier_group = "";
 
         if(isset(Session::get('dataSession')->supplier_group) && !empty(Session::get('dataSession')->supplier_group)){
-            $chart_supplier_group = TblAccCoa::where('chart_account_id',Session::get('dataSession')->supplier_group)->where(Utilities::currentBC())->first();
-            dd($chart_supplier_group);
-            // ->first('chart_code');
+            $chart_supplier_group = TblAccCoa::where('chart_account_id',Session::get('dataSession')->supplier_group)->where(Utilities::currentBC())->first('chart_code');
+
             $supplier_group = substr($chart_supplier_group->chart_code,0,4);
         }
         $customer_group = "";
@@ -126,7 +125,6 @@ class CoaController extends Controller
             $chart_customer_group = TblAccCoa::where('chart_account_id',Session::get('dataSession')->customer_group)->where(Utilities::currentBC())->first();
             $customer_group = substr($chart_customer_group->chart_code,0,4);
         }
-dd($request->chart_code);
         if(isset($request->chart_code)){
             $code = substr($request->chart_code,0,4);
             if($code == $customer_group || $code == $supplier_group){
