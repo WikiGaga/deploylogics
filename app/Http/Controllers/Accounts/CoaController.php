@@ -113,12 +113,13 @@ class CoaController extends Controller
 
         //supplier and customer not open in chart of accouunt
         $supplier_group = "";
+dd($request->chart_code);
+
         if(isset(Session::get('dataSession')->supplier_group) && !empty(Session::get('dataSession')->supplier_group)){
             $chart_supplier_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->supplier_group)->where(Utilities::currentBC())->first('chart_code');
             $supplier_group = substr($chart_supplier_group->chart_code,0,4);
         }
         $customer_group = "";
-dd($request->chart_code);
 
         if(isset(Session::get('dataSession')->customer_group) && !empty(Session::get('dataSession')->customer_group)) {
             $chart_customer_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->customer_group)->where(Utilities::currentBC())->first('chart_code');
