@@ -27,7 +27,7 @@ class ChatbotController extends Controller
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
-                'category' => 'nullable|string|in:sales,purchases,inventory'
+                'category' => 'nullable|string|in:sales,purchases,inventory,accounts'
             ]);
 
             $message = $request->input('message');
@@ -155,6 +155,11 @@ class ChatbotController extends Controller
                 'name' => 'Inventory',
                 'description' => 'Stock inventory report with product quantities',
                 'tables' => ['VW_PURC_GRN'],
+            ],
+            'accounts' => [
+                'name' => 'Accounts',
+                'description' => 'Accounting reports with financial information',
+                'tables' => ['VW_ACC_VOUCHER'],
             ]
         ];
     }
@@ -1033,7 +1038,8 @@ RULES:
         $icons = [
             'sales' => '💰',
             'purchases' => '🛒',
-            'inventory' => '📦'
+            'inventory' => '📦',
+            'accounts' => '💳'
         ];
 
         return $icons[$category] ?? '📊';
