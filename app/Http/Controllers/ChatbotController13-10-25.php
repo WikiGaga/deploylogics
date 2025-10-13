@@ -27,11 +27,11 @@ class ChatbotController extends Controller
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
-                'category' => 'nullable|string|in:sales,purchases,inventory'
+                'category' => 'nullable|string|in:sales,general'
             ]);
 
             $message = $request->input('message');
-            $category = $request->input('category', 'sales');
+            $category = $request->input('category', 'general');
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
 
@@ -60,7 +60,7 @@ class ChatbotController extends Controller
         }
     }
 
-    private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
+    private function generateAIResponse(string $message, $user, string $category = 'general', string $conversationId = null): string
     {
         try {
             $systemPrompt = $this->getSystemPromptForCategory($category);
@@ -146,15 +146,10 @@ class ChatbotController extends Controller
                 'description' => 'Sales orders report with comprehensive order information',
                 'tables' => ['ORDER_REPORT_VIEW'],
             ],
-            'purchases' => [
-                'name' => 'Purchases',
-                'description' => 'Purchase orders report with comprehensive purchase information',
-                'tables' => ['VW_PURC_PURCHASE_ORDER'],
-            ],
-            'inventory' => [
-                'name' => 'Inventory',
-                'description' => 'Stock inventory report with product quantities',
-                'tables' => ['VW_PURC_GRN'],
+            'general' => [
+                'name' => 'General',
+                'description' => 'All available tables for cross-category queries',
+                'tables' => 'ALL',
             ]
         ];
     }
@@ -181,46 +176,6 @@ Available columns:
 - DELIVERY_CHARGE, TOTAL_TAX_AMOUNT (VAT)
 - ORDER_AMOUNT (Net Amount)
 - CASH_PAID (Cash Amount), CARD_PAID (Visa Amount)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        if ($category === 'purchases') {
-            $additionalInstructions = "\n\nPURCHASE REPORT COLUMNS (VW_PURC_PURCHASE_ORDER):
-Available columns:
-- PURCHASE_ORDER_ENTRY_DATE (Purchase Date)
-- PURCHASE_ORDER_CODE (Purchase Order Code)
-- SUPPLIER_NAME (Supplier Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- PRODUCT_NAME (Product Name)
-- UOM_NAME (Unit of Measure)
-- PURCHASE_ORDER_DTLPACKING (Packing)
-- PURCHASE_ORDER_DTLQUANTITY (Quantity)
-- PURCHASE_ORDER_DTLRATE (Rate)
-- PURCHASE_ORDER_DTLAMOUNT (Amount)
-- PURCHASE_ORDER_DTLDISC_AMOUNT (Discount Amount)
-- PURCHASE_ORDER_DTLVAT_AMOUNT (VAT Amount)
-- PURCHASE_ORDER_DTLTOTAL_AMOUNT (Net Amount)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        if ($category === 'inventory') {
-            $additionalInstructions = "\n\nINVENTORY REPORT COLUMNS (VW_PURC_GRN):
-Available columns:
-- PRODUCT_ID (Product ID)
-- PRODUCT_NAME (Product Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- TBL_PURC_GRN_DTL_QUANTITY (Quantity)
-- TBL_PURC_GRN_DTL_RATE (Rate)
 
 Column Selection:
 - If user specifies columns, SELECT only those columns
@@ -258,12 +213,12 @@ RULES:
         $categories = $this->getCategorySchemas();
 
         if (!isset($categories[$category])) {
-            $category = 'sales';
+            $category = 'general';
         }
 
         $categoryData = $categories[$category];
 
-        if ($category === 'sales') {
+        if ($category === 'general') {
             return $this->buildFullDatabaseSchema();
         }
 
@@ -364,14 +319,7 @@ RULES:
                 mkdir(dirname($filePath), 0755, true);
             }
 
-
-            if ($category === 'purchases') {
-                $this->generatePurchaseOrderExcelFile($data, $filePath);
-            } elseif ($category === 'inventory') {
-                $this->generateInventoryExcelFile($data, $filePath);
-            } else {
-                $this->generateExcelFile($data, $filePath);
-            }
+            $this->generateExcelFile($data, $filePath);
 
             $this->storeReportMetadata($filename, $conversationId, $user->id);
 
@@ -430,219 +378,11 @@ RULES:
         $writer->save($filePath);
     }
 
-    private function generatePurchaseOrderExcelFile($data, $filePath): void
-    {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Convert data to array format
-        $dataArray = array_map(function($row) {
-            return (array) $row;
-        }, $data);
-
-        if (empty($dataArray)) {
-            return;
-        }
-
-        $groupedData = [];
-        foreach ($dataArray as $row) {
-            $date = date('d-m-Y', strtotime($row['PURCHASE_ORDER_ENTRY_DATE'] ?? $row['purchase_order_entry_date']));
-            $poCode = $row['PURCHASE_ORDER_CODE'] ?? $row['purchase_order_code'];
-            $supplierName = $row['SUPPLIER_NAME'] ?? $row['supplier_name'];
-
-            $groupedData[$date][$poCode . ' ' . $supplierName][] = $row;
-        }
-
-        $headers = ['Barcode', 'Product Name', 'UOM', 'Packing', 'Quantity', 'Rate', 'Amount', 'Disc Amount', 'Vat Amount'];
-        $sheet->fromArray($headers, NULL, 'A1');
-
-        $headerStyle = $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1');
-        $headerStyle->getFont()->setBold(true);
-        $headerStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('D3D3D3');
-        $headerStyle->getFont()->getColor()->setRGB('000000');
-
-        $currentRow = 2;
-
-        foreach ($groupedData as $date => $purchaseOrders) {
-
-            $sheet->setCellValue('A' . $currentRow, $date);
-            $sheet->mergeCells('A' . $currentRow . ':I' . $currentRow);
-            $dateStyle = $sheet->getStyle('A' . $currentRow);
-            $dateStyle->getFont()->setBold(true);
-            $dateStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                      ->getStartColor()->setRGB('F0F0F0');
-            $currentRow++;
-
-            foreach ($purchaseOrders as $poHeader => $items) {
-
-                $sheet->setCellValue('A' . $currentRow, $poHeader);
-                $sheet->mergeCells('A' . $currentRow . ':I' . $currentRow);
-                $poStyle = $sheet->getStyle('A' . $currentRow);
-                $poStyle->getFont()->setBold(true);
-                $poStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('FFFACD'); // Light yellow/gold
-                $currentRow++;
-
-                $poTotals = [
-                    'quantity' => 0,
-                    'amount' => 0,
-                    'disc_amount' => 0,
-                    'vat_amount' => 0
-                ];
-
-                foreach ($items as $item) {
-                    $rowData = [
-                        $item['PRODUCT_BARCODE_BARCODE'] ?? $item['product_barcode_barcode'] ?? '',
-                        $item['PRODUCT_NAME'] ?? $item['product_name'] ?? '',
-                        $item['UOM_NAME'] ?? $item['uom_name'] ?? '',
-                        $item['PURCHASE_ORDER_DTLPACKING'] ?? $item['purchase_order_dtlpacking'] ?? '',
-                        $item['PURCHASE_ORDER_DTLQUANTITY'] ?? $item['purchase_order_dtlquantity'] ?? '',
-                        number_format($item['PURCHASE_ORDER_DTLRATE'] ?? $item['purchase_order_dtlrate'] ?? 0, 3),
-                        number_format($item['PURCHASE_ORDER_DTLAMOUNT'] ?? $item['purchase_order_dtlamount'] ?? 0, 3),
-                        number_format($item['PURCHASE_ORDER_DTLDISC_AMOUNT'] ?? $item['purchase_order_dtldisc_amount'] ?? 0, 3),
-                        number_format($item['PURCHASE_ORDER_DTLVAT_AMOUNT'] ?? $item['purchase_order_dtlvat_amount'] ?? 0, 3)
-                    ];
-
-                    $sheet->fromArray($rowData, NULL, 'A' . $currentRow);
-
-                    $itemStyle = $sheet->getStyle('A' . $currentRow . ':I' . $currentRow);
-                    $itemStyle->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-                    $poTotals['quantity'] += (float)($item['PURCHASE_ORDER_DTLQUANTITY'] ?? $item['purchase_order_dtlquantity'] ?? 0);
-                    $poTotals['amount'] += (float)($item['PURCHASE_ORDER_DTLAMOUNT'] ?? $item['purchase_order_dtlamount'] ?? 0);
-                    $poTotals['disc_amount'] += (float)($item['PURCHASE_ORDER_DTLDISC_AMOUNT'] ?? $item['purchase_order_dtldisc_amount'] ?? 0);
-                    $poTotals['vat_amount'] += (float)($item['PURCHASE_ORDER_DTLVAT_AMOUNT'] ?? $item['purchase_order_dtlvat_amount'] ?? 0);
-
-                    $currentRow++;
-                }
-
-                $totalRowData = [
-                    'Total:',
-                    '',
-                    '',
-                    '',
-                    number_format($poTotals['quantity'], 0),
-                    '',
-                    number_format($poTotals['amount'], 3),
-                    number_format($poTotals['disc_amount'], 3),
-                    number_format($poTotals['vat_amount'], 3)
-                ];
-
-                $sheet->fromArray($totalRowData, NULL, 'A' . $currentRow);
-                $totalStyle = $sheet->getStyle('A' . $currentRow . ':I' . $currentRow);
-                $totalStyle->getFont()->setBold(true);
-                $totalStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                           ->getStartColor()->setRGB('F3F6F9');
-                $totalStyle->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-                $currentRow++;
-            }
-        }
-
-        // Auto-size columns
-        foreach (range('A', 'I') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($filePath);
-    }
-
-    private function generateInventoryExcelFile($data, $filePath): void
-    {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $dataArray = array_map(function($row) {
-            return (array) $row;
-        }, $data);
-
-        if (empty($dataArray)) {
-            return;
-        }
-
-        $headers = ['Sr. No', 'BarCode', 'Product Name', 'Quantity', 'Rate'];
-        $sheet->fromArray($headers, NULL, 'A1');
-
-        $headerStyle = $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1');
-        $headerStyle->getFont()->setBold(true);
-        $headerStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('D3D3D3');
-        $headerStyle->getFont()->getColor()->setRGB('000000');
-
-        $currentRow = 2;
-        $totalQuantity = 0;
-        $totalRate = 0;
-        $serialNumber = 1;
-
-        foreach ($dataArray as $row) {
-            $barcode = $row['PRODUCT_BARCODE_BARCODE'] ?? $row['product_barcode_barcode'] ?? '';
-            $productName = $row['PRODUCT_NAME'] ?? $row['product_name'] ?? '';
-            $quantity = $row['TBL_PURC_GRN_DTL_QUANTITY'] ?? $row['tbl_purc_grn_dtl_quantity'] ?? 0;
-            $rate = $row['TBL_PURC_GRN_DTL_RATE'] ?? $row['tbl_purc_grn_dtl_rate'] ?? 0;
-
-            // Format quantity to 3 decimal places if it's a decimal, otherwise show as integer
-            $formattedQuantity = (float)$quantity;
-            if ($formattedQuantity == (int)$formattedQuantity) {
-                $formattedQuantity = (int)$formattedQuantity;
-            } else {
-                $formattedQuantity = number_format($formattedQuantity, 3);
-            }
-
-            // Format rate to 3 decimal places
-            $formattedRate = number_format((float)$rate, 3);
-
-            $rowData = [
-                $serialNumber,
-                $barcode,
-                strtoupper($productName),
-                $formattedQuantity,
-                $formattedRate
-            ];
-
-            $sheet->fromArray($rowData, NULL, 'A' . $currentRow);
-
-            $itemStyle = $sheet->getStyle('A' . $currentRow . ':E' . $currentRow);
-            $itemStyle->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-            $totalQuantity += (float)$quantity;
-            $totalRate += (float)$rate;
-
-            $currentRow++;
-            $serialNumber++;
-        }
-
-        $totalRowData = [
-            '',
-            '',
-            'Total:',
-            number_format($totalQuantity, 3),
-            number_format($totalRate, 3)
-        ];
-
-        $sheet->fromArray($totalRowData, NULL, 'A' . $currentRow);
-        $totalStyle = $sheet->getStyle('A' . $currentRow . ':E' . $currentRow);
-        $totalStyle->getFont()->setBold(true);
-        $totalStyle->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                   ->getStartColor()->setRGB('F3F6F9');
-        $totalStyle->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-        foreach (range('A', 'E') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($filePath);
-    }
-
     private function calculateTotals(array $dataArray, array $headers): array
     {
         $numericColumns = [
             'GROSS_AMOUNT', 'RESTAURANT_DISCOUNT_AMOUNT', 'DELIVERY_CHARGE',
-            'TOTAL_TAX_AMOUNT', 'ORDER_AMOUNT', 'CASH_PAID', 'CARD_PAID',
-            'PURCHASE_ORDER_DTLQUANTITY', 'PURCHASE_ORDER_DTLRATE', 'PURCHASE_ORDER_DTLAMOUNT',
-            'PURCHASE_ORDER_DTLDISC_AMOUNT', 'PURCHASE_ORDER_DTLVAT_AMOUNT', 'PURCHASE_ORDER_DTLTOTAL_AMOUNT',
-            'STOCK_QTY', 'PRODUCT_QTY', 'TBL_PURC_GRN_DTL_QUANTITY', 'TBL_PURC_GRN_DTL_RATE'
+            'TOTAL_TAX_AMOUNT', 'ORDER_AMOUNT', 'CASH_PAID', 'CARD_PAID'
         ];
 
         $totals = [];
@@ -709,11 +449,7 @@ RULES:
     {
         switch ($category) {
             case 'sales':
-                return "SELECT * FROM ORDER_REPORT_VIEW WHERE ROWNUM <= 500";
-            case 'purchases':
-                return "SELECT * FROM VW_PURC_PURCHASE_ORDER WHERE ROWNUM <= 500";
-            case 'inventory':
-                return "SELECT PRODUCT_ID, PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, TBL_PURC_GRN_DTL_QUANTITY, TBL_PURC_GRN_DTL_RATE FROM VW_PURC_GRN WHERE ROWNUM <= 500 ORDER BY PRODUCT_NAME";
+                return "SELECT * FROM ORDER_REPORT_VIEW WHERE ROWNUM <= 100";
             default:
                 return "SELECT 'Report Generated' as status, SYSDATE as generated_at FROM dual";
         }
@@ -825,7 +561,7 @@ RULES:
         }
     }
 
-    private function logConversation($user, string $message, string $conversationId, string $sender = 'user', string $category = 'sales'): void
+    private function logConversation($user, string $message, string $conversationId, string $sender = 'user', string $category = 'general'): void
     {
         try {
             DB::table('chatbot_conversations')->insert([
@@ -1032,8 +768,7 @@ RULES:
     {
         $icons = [
             'sales' => '💰',
-            'purchases' => '🛒',
-            'inventory' => '📦'
+            'general' => '🔍'
         ];
 
         return $icons[$category] ?? '📊';
