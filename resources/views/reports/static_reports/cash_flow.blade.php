@@ -330,7 +330,7 @@ AND  UPPER(VOUCHER_TYPE)   IN ('RV')
                                 BRANCH_NAME
                                 ORDER BY CHART_CODE";
                         }
-                        /*
+                        
                         if($data['cash_flow'] == "both")
                         {
 
@@ -454,7 +454,7 @@ GROUP BY CHART_ACCOUNT_ID,
   BRANCH_NAME 
 ORDER BY CHART_CODE";
                         }
-                        */
+                        
 
 //dd($qry);
                         $getdata = \Illuminate\Support\Facades\DB::select($qry);
