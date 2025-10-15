@@ -348,7 +348,7 @@ var KTFormRepeater = function() {
                 $('.uom_packing_color_tag, #uom_packing_color_tag_validate').select2({
                     placeholder: "Select"
                 });
-                $('.uom_packing_size_tag, #uom_packing_size_tag_validate').select2({
+                $('#uom_packing_size_tag_validate').select2({
                     placeholder: "Select"
                 });
                 $('.uom_packing_other_tag, #uom_packing_other_tag_validate').select2({
