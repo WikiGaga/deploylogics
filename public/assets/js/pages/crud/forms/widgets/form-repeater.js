@@ -291,11 +291,17 @@ var KTFormRepeater = function() {
                     tblRArray.push($(this).val());
                 });
 
-                var tblSaleRate = $("#rate_"+t).find('.tblR>tbody');
-                tblSaleRate.find("td").each(function(){
-                    $(this).find("input[type='hidden']").val(tblRArray[x]);
+                var tblSaleRate = $("#rate_"+t).find('.tblR>tbody>tr');
+                tblSaleRate.find("td:first-child").each(function(){
+                    $(this).find("input[type='hidden']").val(tblBranchArray[x]);
                     x++;
                 });
+                
+                // tblSaleRate.find("td").each(function(){
+                //     $(this).find("input[type='hidden']").val(tblRArray[x]);
+                //     x++;
+                // });
+
                 var tblPurcRate = $("#rate_"+t).find('.tblPurcRate>tbody>tr>td:first-child');
                 tblPurcRate.each(function(index){
                     console.log(tblBranchArray[index]);
