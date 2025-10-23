@@ -181,7 +181,8 @@ var KTDatatableRemoteAjaxDemo = function() {
                         map: function(raw) {
                             if (raw.downloadMessage) {
                                 toastr.success(raw.downloadMessage);
-                            }
+                                window.location.href = '/export-csv';
+                            }  
 
                             // sample data mapping
                             var dataSet = raw;

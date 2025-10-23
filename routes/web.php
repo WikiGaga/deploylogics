@@ -40,6 +40,8 @@ Route::get('/', function () {
     }
 });
 
+
+Route::get('/export-csv','ReportDownloadController@download')->name('export.csv');
 // Chatbot Routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/message', 'ChatbotController@processMessage');

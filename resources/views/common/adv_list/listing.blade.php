@@ -192,8 +192,8 @@
                                 <div class="form-group d-inline-block">
                                     <select class="form-select btn btn-md btn-default" name="radioDate"
                                         style="padding: 0.545rem 0.75rem;">
-                                        <option value="all">All</option>
-                                        <option value="today" selected>Today</option>
+                                        <option value="all" selected>All</option>
+                                        <option value="today" >Today</option>
                                         <option value="yesterday">Yesterday</option>
                                         <option value="last_7_days">Last 7 Days</option>
                                         <option value="last_30_days">Last 30 Days</option>
