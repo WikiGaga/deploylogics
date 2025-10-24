@@ -29,7 +29,7 @@ Route::get('/test-pdf', function () {
     $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE);
 
     return response()->download($filePath);
-}); 
+});  
 
 Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('/', function () {
