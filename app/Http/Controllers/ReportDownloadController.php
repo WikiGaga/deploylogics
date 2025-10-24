@@ -19,7 +19,7 @@ class ReportDownloadController extends Controller
 
      */
     public function download()
-    {
+    { 
         $qry = Session::pull('report_download_qry');
         $case_name =  Session::pull('report_download_case_name');
         $fileName =  Session::pull('report_download_fileName');
