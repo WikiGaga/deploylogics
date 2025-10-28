@@ -40,7 +40,7 @@ Route::get('/', function () {
     }
 });
 
-// Chatbot Routes
+// Chatbot Routes (OpenAI Assistants API)
 Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/message', 'ChatbotController@processMessage');
     Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
@@ -49,6 +49,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/clear-schema-cache', 'ChatbotController@clearSchemaCache');
     Route::post('/chatbot/clear-conversation', 'ChatbotController@clearConversationReports');
     Route::get('/chatbot/preview-schema/{category}', 'ChatbotController@previewSchema');
+
+    // OpenAI Assistants Management
+    Route::get('/chatbot/assistants', 'ChatbotController@listAssistants');
+    Route::delete('/chatbot/assistants/{category}', 'ChatbotController@deleteAssistant');
 });
 // ->middleware('wan_access');
 Route::any('web-service/{str}','WelcomeController@webservice');
