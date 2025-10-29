@@ -75,6 +75,8 @@ class VoucherController extends Controller
      */
     public function create($type,$id = null)
     {
+
+        // dd('ds');
         $chart_cash_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->cash_group)->where(Utilities::currentBC())->first('chart_code');
         $chart_bank_group = TblAccCoa::where('chart_Account_id',Session::get('dataSession')->bank_group)->where(Utilities::currentBC())->first('chart_code');
         $cash_group = substr($chart_cash_group->chart_code,0,7);
@@ -177,6 +179,8 @@ class VoucherController extends Controller
             'code_type'         => $type,
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
+
+        // dd($formUrl);
         return view('accounts.'.$formUrl.'.form',compact('data'));
     }
 
