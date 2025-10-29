@@ -121,12 +121,6 @@ class ChatbotController extends Controller
 
         Log::info("Creating new assistant for category: {$category}");
 
-        // Check if API key is configured
-        if (empty($this->apiKey)) {
-            Log::error('OpenAI API key is not configured. Please set OPENAI_API_KEY in your .env file');
-            throw new \Exception('OpenAI API key is not configured. Please contact your system administrator.');
-        }
-
         $response = Http::timeout(30)->withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
