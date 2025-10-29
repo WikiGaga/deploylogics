@@ -62,16 +62,23 @@ class ChatbotController extends Controller
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        // try {
-            $assistantId = $this->getOrCreateAssistant($category);
+        try {
+            $systemPrompt = $this->getSystemPromptForCategory($category);
 
-            $threadId = $this->getOrCreateThread($conversationId, $user->id);
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $message],
+                ],
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+            ])->json();
 
-            $this->addMessageToThread($threadId, $message);
-
-            $runId = $this->runAssistant($threadId, $assistantId);
-
-            $aiResponse = $this->waitForRunCompletion($threadId, $runId);
+            $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
 
             if (strpos($aiResponse, 'SIMPLE_QUERY:') !== false) {
                 return $this->handleSimpleQuery($aiResponse);
@@ -83,235 +90,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        // } catch (\Exception $e) {
-        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage());
-        //     return 'Sorry, I encountered an error. Please try again.';
-        // }
-    }
-
-    private function getOrCreateAssistant(string $category): string
-    {
-        $cacheKey = "openai_assistant_id_{$category}";
-
-        $assistantId = Cache::get($cacheKey);
-
-        if ($assistantId) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'OpenAI-Beta' => 'assistants=v2'
-                ])->get($this->baseUrl . "/assistants/{$assistantId}");
-
-                if ($response->successful()) {
-                    Log::info("Using existing assistant: {$assistantId} for category: {$category}");
-                    return $assistantId;
-                }
-            } catch (\Exception $e) {
-                Log::warning("Cached assistant not found, creating new one: " . $e->getMessage());
-            }
+        } catch (\Exception $e) {
+            Log::error('OpenAI API error: ' . $e->getMessage());
+            return 'Sorry, I encountered an error. Please try again.';
         }
-
-        return $this->createAssistant($category);
-    }
-
-    private function createAssistant(string $category): string
-    {
-        $systemPrompt = $this->getSystemPromptForCategory($category);
-        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General'];
-
-        Log::info("Creating new assistant for category: {$category}");
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-            'OpenAI-Beta' => 'assistants=v2'
-        ])->post($this->baseUrl . '/assistants', [
-            'name' => $categoryInfo['name'] . ' Data Assistant',
-            'instructions' => $systemPrompt,
-            'model' => 'gpt-4o-mini',
-            'temperature' => 0.3,
-            'tools' => []
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Failed to create assistant: ' . $response->body());
-            throw new \Exception('Failed to create assistant');
-        }
-
-        $data = $response->json();
-        $assistantId = $data['id'];
-
-        Cache::put("openai_assistant_id_{$category}", $assistantId, now()->addDays(30));
-
-        Log::info("Created new assistant: {$assistantId} for category: {$category}");
-
-        return $assistantId;
-    }
-
-    private function getOrCreateThread(string $conversationId, int $userId): string
-    {
-        $cacheKey = "openai_thread_{$conversationId}_{$userId}";
-
-        $threadId = Cache::get($cacheKey);
-
-        if ($threadId) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'OpenAI-Beta' => 'assistants=v2'
-                ])->get($this->baseUrl . "/threads/{$threadId}");
-
-                if ($response->successful()) {
-                    Log::info("Using existing thread: {$threadId} for conversation: {$conversationId}");
-                    return $threadId;
-                }
-            } catch (\Exception $e) {
-                Log::warning("Cached thread not found, creating new one: " . $e->getMessage());
-            }
-        }
-
-        return $this->createThread($conversationId, $userId);
-    }
-
-    private function createThread(string $conversationId, int $userId): string
-    {
-        Log::info("Creating new thread for conversation: {$conversationId}");
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-            'OpenAI-Beta' => 'assistants=v2'
-        ])->post($this->baseUrl . '/threads', [
-            'metadata' => [
-                'conversation_id' => $conversationId,
-                'user_id' => $userId
-            ]
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Failed to create thread: ' . $response->body());
-            throw new \Exception('Failed to create thread');
-        }
-
-        $data = $response->json();
-        $threadId = $data['id'];
-
-        Cache::put("openai_thread_{$conversationId}_{$userId}", $threadId, now()->addHours(24));
-
-        Log::info("Created new thread: {$threadId} for conversation: {$conversationId}");
-
-        return $threadId;
-    }
-
-    private function addMessageToThread(string $threadId, string $message): void
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-            'OpenAI-Beta' => 'assistants=v2'
-        ])->post($this->baseUrl . "/threads/{$threadId}/messages", [
-            'role' => 'user',
-            'content' => $message
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Failed to add message to thread: ' . $response->body());
-            throw new \Exception('Failed to add message to thread');
-        }
-
-        Log::info("Added message to thread: {$threadId}");
-    }
-
-    private function runAssistant(string $threadId, string $assistantId): string
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-            'OpenAI-Beta' => 'assistants=v2'
-        ])->post($this->baseUrl . "/threads/{$threadId}/runs", [
-            'assistant_id' => $assistantId
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Failed to run assistant: ' . $response->body());
-            throw new \Exception('Failed to run assistant');
-        }
-
-        $data = $response->json();
-        $runId = $data['id'];
-
-        Log::info("Started assistant run: {$runId} on thread: {$threadId}");
-
-        return $runId;
-    }
-
-    private function waitForRunCompletion(string $threadId, string $runId): string
-    {
-        $maxAttempts = 60;
-        $attempts = 0;
-
-        while ($attempts < $maxAttempts) {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'OpenAI-Beta' => 'assistants=v2'
-            ])->get($this->baseUrl . "/threads/{$threadId}/runs/{$runId}");
-
-            if (!$response->successful()) {
-                Log::error('Failed to check run status: ' . $response->body());
-                throw new \Exception('Failed to check run status');
-            }
-
-            $run = $response->json();
-            $status = $run['status'];
-
-            Log::info("Run {$runId} status: {$status} (attempt {$attempts})");
-
-            if ($status === 'completed') {
-                return $this->getLatestAssistantMessage($threadId);
-            }
-
-            if (in_array($status, ['failed', 'cancelled', 'expired'])) {
-                $errorMessage = $run['last_error']['message'] ?? 'Unknown error';
-                Log::error("Assistant run failed with status {$status}: {$errorMessage}");
-                throw new \Exception("Assistant run {$status}: {$errorMessage}");
-            }
-
-            sleep(1);
-            $attempts++;
-        }
-
-        Log::error("Assistant run timeout after {$maxAttempts} seconds");
-        throw new \Exception('Assistant run timeout - please try again');
-    }
-
-    private function getLatestAssistantMessage(string $threadId): string
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'OpenAI-Beta' => 'assistants=v2'
-        ])->get($this->baseUrl . "/threads/{$threadId}/messages", [
-            'limit' => 1,
-            'order' => 'desc'
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Failed to retrieve messages: ' . $response->body());
-            throw new \Exception('Failed to retrieve assistant response');
-        }
-
-        $data = $response->json();
-
-        if (empty($data['data'])) {
-            throw new \Exception('No messages found in thread');
-        }
-
-        $message = $data['data'][0];
-
-        if (isset($message['content'][0]['text']['value'])) {
-            return $message['content'][0]['text']['value'];
-        }
-
-        throw new \Exception('Invalid message format');
     }
 
     private function handleSimpleQuery(string $aiResponse): string
@@ -517,12 +299,16 @@ RULES:
         return $this->buildCompactSchema($categoryData['tables']);
     }
 
+    /**
+     * Build compact schema format for specified tables
+     */
     private function buildCompactSchema(array $tables): string
     {
         $schema = "";
 
         try {
             foreach ($tables as $tableName) {
+                // Get columns for each table
                 $columns = DB::select("
                     SELECT column_name, data_type, nullable
                     FROM user_tab_columns
@@ -546,6 +332,7 @@ RULES:
                 $schema .= "\n)\n\n";
             }
 
+            // Get foreign key relationships
             $schema .= "RELATIONSHIPS:\n";
             $tableList = "'" . implode("','", array_map('strtoupper', $tables)) . "'";
 
@@ -677,6 +464,7 @@ RULES:
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
+        // Convert data to array format
         $dataArray = array_map(function($row) {
             return (array) $row;
         }, $data);
@@ -780,6 +568,7 @@ RULES:
             }
         }
 
+        // Auto-size columns
         foreach (range('A', 'I') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
@@ -821,6 +610,7 @@ RULES:
             $quantity = $row['TBL_PURC_GRN_DTL_QUANTITY'] ?? $row['tbl_purc_grn_dtl_quantity'] ?? 0;
             $rate = $row['TBL_PURC_GRN_DTL_RATE'] ?? $row['tbl_purc_grn_dtl_rate'] ?? 0;
 
+            // Format quantity to 3 decimal places if it's a decimal, otherwise show as integer
             $formattedQuantity = (float)$quantity;
             if ($formattedQuantity == (int)$formattedQuantity) {
                 $formattedQuantity = (int)$formattedQuantity;
@@ -828,6 +618,7 @@ RULES:
                 $formattedQuantity = number_format($formattedQuantity, 3);
             }
 
+            // Format rate to 3 decimal places
             $formattedRate = number_format((float)$rate, 3);
 
             $rowData = [
@@ -1027,6 +818,7 @@ RULES:
     private function executeQuery(string $query): array
     {
         try {
+            // Validate query for security
             $this->validateQuery($query);
 
             $results = DB::select($query);
@@ -1041,6 +833,10 @@ RULES:
         }
     }
 
+    /**
+     * Validate SQL query for security
+     * Only allows SELECT statements
+     */
     private function validateQuery(string $query): void
     {
         $query = strtoupper(trim($query));
@@ -1195,51 +991,27 @@ RULES:
         }
     }
 
+    /**
+     * Clear cached database schemas
+     * Use this after database structure changes
+     */
     public function clearSchemaCache(Request $request): JsonResponse
     {
         try {
             $categories = array_keys($this->getCategorySchemas());
             $clearedCategories = [];
-            $recreatedAssistants = [];
 
             foreach ($categories as $category) {
                 $cacheKey = "chatbot_schema_{$category}";
                 Cache::forget($cacheKey);
-
-                $assistantKey = "openai_assistant_id_{$category}";
-                $oldAssistantId = Cache::get($assistantKey);
-
-                if ($oldAssistantId) {
-                    try {
-                        Http::withHeaders([
-                            'Authorization' => 'Bearer ' . $this->apiKey,
-                            'OpenAI-Beta' => 'assistants=v2'
-                        ])->delete($this->baseUrl . "/assistants/{$oldAssistantId}");
-
-                        Log::info("Deleted old assistant: {$oldAssistantId}");
-                    } catch (\Exception $e) {
-                        Log::warning("Could not delete old assistant: " . $e->getMessage());
-                    }
-                }
-
-                Cache::forget($assistantKey);
-
-                try {
-                    $newAssistantId = $this->createAssistant($category);
-                    $recreatedAssistants[$category] = $newAssistantId;
-                } catch (\Exception $e) {
-                    Log::error("Failed to recreate assistant for {$category}: " . $e->getMessage());
-                }
-
                 $clearedCategories[] = $category;
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Schema cache cleared and assistants recreated successfully',
+                'message' => 'Schema cache cleared successfully',
                 'cleared_categories' => $clearedCategories,
-                'recreated_assistants' => $recreatedAssistants,
-                'note' => 'All conversations will use the new schema'
+                'note' => 'New schema will be fetched on next query'
             ]);
 
         } catch (\Exception $e) {
@@ -1252,111 +1024,9 @@ RULES:
         }
     }
 
-    public function listAssistants(Request $request): JsonResponse
-    {
-        try {
-            $assistants = [];
-            $categories = array_keys($this->getCategorySchemas());
-
-            foreach ($categories as $category) {
-                $cacheKey = "openai_assistant_id_{$category}";
-                $assistantId = Cache::get($cacheKey);
-
-                if ($assistantId) {
-                    try {
-                        $response = Http::withHeaders([
-                            'Authorization' => 'Bearer ' . $this->apiKey,
-                            'OpenAI-Beta' => 'assistants=v2'
-                        ])->get($this->baseUrl . "/assistants/{$assistantId}");
-
-                        if ($response->successful()) {
-                            $data = $response->json();
-                            $assistants[] = [
-                                'category' => $category,
-                                'assistant_id' => $assistantId,
-                                'name' => $data['name'] ?? 'Unknown',
-                                'created_at' => $data['created_at'] ?? null,
-                                'model' => $data['model'] ?? 'Unknown',
-                            ];
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning("Failed to fetch assistant for {$category}: " . $e->getMessage());
-                    }
-                } else {
-                    $assistants[] = [
-                        'category' => $category,
-                        'assistant_id' => null,
-                        'status' => 'Not created yet'
-                    ];
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'assistants' => $assistants
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error listing assistants: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not list assistants'
-            ], 500);
-        }
-    }
-
-    public function deleteAssistant(Request $request, string $category): JsonResponse
-    {
-        try {
-            if (!array_key_exists($category, $this->getCategorySchemas())) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid category'
-                ], 400);
-            }
-
-            $cacheKey = "openai_assistant_id_{$category}";
-            $assistantId = Cache::get($cacheKey);
-
-            if (!$assistantId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No assistant found for this category'
-                ], 404);
-            }
-
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'OpenAI-Beta' => 'assistants=v2'
-            ])->delete($this->baseUrl . "/assistants/{$assistantId}");
-
-            if (!$response->successful()) {
-                throw new \Exception('Failed to delete assistant from OpenAI');
-            }
-
-            Cache::forget($cacheKey);
-
-            Log::info("Deleted assistant {$assistantId} for category: {$category}");
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Assistant deleted successfully',
-                'category' => $category,
-                'assistant_id' => $assistantId
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error deleting assistant: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not delete assistant',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
+    /**
+     * Get available categories for chatbot
+     */
     public function getCategories(Request $request): JsonResponse
     {
         try {
@@ -1530,6 +1200,9 @@ RULES:
         }
     }
 
+    /**
+     * Preview schema for a category (for debugging)
+     */
     public function previewSchema(Request $request, string $category): JsonResponse
     {
         try {
