@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        // try {
+        try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -49,20 +49,20 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        // } catch (\Exception $e) {
-        //     Log::error('Chatbot error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
 
-        //     return response()->json([
-        //         'success' => false,
-        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-        //     ], 500);
-        // }
+            return response()->json([
+                'success' => false,
+                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        // try {
+        try {
             $assistantId = $this->getOrCreateAssistant($category);
 
             $threadId = $this->getOrCreateThread($conversationId, $user->id);
@@ -83,10 +83,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        // } catch (\Exception $e) {
-        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage());
-        //     return 'Sorry, I encountered an error. Please try again.';
-        // }
+        } catch (\Exception $e) {
+            Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            return 'Sorry, I encountered an error. Please try again.';
+        }
     }
 
     private function getOrCreateAssistant(string $category): string
@@ -121,7 +121,13 @@ class ChatbotController extends Controller
 
         Log::info("Creating new assistant for category: {$category}");
 
-        $response = Http::withHeaders([
+        // Check if API key is configured
+        if (empty($this->apiKey)) {
+            Log::error('OpenAI API key is not configured. Please set OPENAI_API_KEY in your .env file');
+            throw new \Exception('OpenAI API key is not configured. Please contact your system administrator.');
+        }
+
+        $response = Http::timeout(30)->withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
             'OpenAI-Beta' => 'assistants=v2'
@@ -134,8 +140,31 @@ class ChatbotController extends Controller
         ]);
 
         if (!$response->successful()) {
-            Log::error('Failed to create assistant: ' . $response->body());
-            throw new \Exception('Failed to create assistant');
+            $statusCode = $response->status();
+            $errorBody = $response->body();
+            $errorMessage = 'Failed to create assistant';
+
+            // Try to parse error details from OpenAI response
+            try {
+                $errorData = $response->json();
+                if (isset($errorData['error']['message'])) {
+                    $errorMessage = $errorData['error']['message'];
+                }
+            } catch (\Exception $e) {
+                // If parsing fails, use the raw body
+            }
+
+            Log::error("Failed to create assistant for category {$category}. Status: {$statusCode}, Error: {$errorBody}");
+
+            if ($statusCode === 401) {
+                throw new \Exception('Invalid OpenAI API key. Please check your configuration.');
+            } elseif ($statusCode === 429) {
+                throw new \Exception('OpenAI API rate limit exceeded. Please try again later.');
+            } elseif ($statusCode >= 500) {
+                throw new \Exception('OpenAI service is currently unavailable. Please try again later.');
+            } else {
+                throw new \Exception('Failed to create assistant: ' . $errorMessage);
+            }
         }
 
         $data = $response->json();
