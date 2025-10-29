@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        try {
+        // try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -49,20 +49,20 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Chatbot error: ' . $e->getMessage());
+        // } catch (\Exception $e) {
+        //     Log::error('Chatbot error: ' . $e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-            ], 500);
-        }
+        //     return response()->json([
+        //         'success' => false,
+        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+        //     ], 500);
+        // }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        try {
+        // try {
             $assistantId = $this->getOrCreateAssistant($category);
 
             $threadId = $this->getOrCreateThread($conversationId, $user->id);
@@ -83,10 +83,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        } catch (\Exception $e) {
-            Log::error('OpenAI Assistants API error: ' . $e->getMessage());
-            return 'Sorry, I encountered an error. Please try again.';
-        }
+        // } catch (\Exception $e) {
+        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage());
+        //     return 'Sorry, I encountered an error. Please try again.';
+        // }
     }
 
     private function getOrCreateAssistant(string $category): string
