@@ -322,7 +322,7 @@ class CustomerController extends Controller
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
 
-        return view('sales.customer.form',compact('data'));
+        return view('sales.customer.form',compact('data','id'));
     }
 
     /**

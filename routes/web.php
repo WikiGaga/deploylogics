@@ -325,6 +325,15 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('whatsapp-message-sending','Sales\CustomerController@sendWhatsappMsg');
         });
 
+        Route::prefix('order-partners')->group(function () {
+            Route::get('form/{id?}','Sales\OrderPartnerController@create');
+            Route::post('form/{id?}','Sales\OrderPartnerController@store')->name('storeOrderPartner');
+        //     Route::post('get-custom-by-phone' , 'Sales\OrderPartnerController@getByPhone')->name('get-OrderPartner-by-phone');
+        //     Route::post('delete/{id}','Sales\OrderPartnerController@destroy');
+        // Route::get('fetch-customer-info','Sales\OrderPartnerController@fetchCustomerInfo');
+        // Route::post('whatsapp-message-sending','Sales\OrderPartnerController@sendWhatsappMsg');
+        });
+
 
         Route::prefix('member-inquery')->group(function () {
            Route::get('form/{id?}',function($id =null){
