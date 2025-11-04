@@ -29,7 +29,7 @@ Route::get('/test-pdf', function () {
     $mpdf->Output($filePath, \Mpdf\Output\Destination::FILE);
 
     return response()->download($filePath);
-});
+});  
 
 Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('/', function () {
@@ -40,7 +40,9 @@ Route::get('/', function () {
     }
 });
 
-// Chatbot Routes (OpenAI Assistants API)
+
+Route::get('/export-csv','ReportDownloadController@download')->name('export.csv');
+// Chatbot Routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/message', 'ChatbotController@processMessage');
     Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
@@ -325,6 +327,15 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('delete/{id}','Sales\CustomerController@destroy');
         Route::get('fetch-customer-info','Sales\CustomerController@fetchCustomerInfo');
         Route::post('whatsapp-message-sending','Sales\CustomerController@sendWhatsappMsg');
+        });
+
+        Route::prefix('order-partners')->group(function () {
+            Route::get('form/{id?}','Sales\OrderPartnerController@create');
+            Route::post('form/{id?}','Sales\OrderPartnerController@store')->name('storeOrderPartner');
+        //     Route::post('get-custom-by-phone' , 'Sales\OrderPartnerController@getByPhone')->name('get-OrderPartner-by-phone');
+        //     Route::post('delete/{id}','Sales\OrderPartnerController@destroy');
+        // Route::get('fetch-customer-info','Sales\OrderPartnerController@fetchCustomerInfo');
+        // Route::post('whatsapp-message-sending','Sales\OrderPartnerController@sendWhatsappMsg');
         });
 
 

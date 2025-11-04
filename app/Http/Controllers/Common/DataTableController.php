@@ -846,6 +846,8 @@ class DataTableController extends Controller
 
     public function inlineHelpOpen(Request $request, $helpType, $str = null)
     {
+
+        // dd($request->all(), $helpType, $str);
         $data['case'] = $helpType;
         if (isset($request['query']['generalSearch']) && !empty($request['query']['generalSearch'])) {
             $str = $request['query']['generalSearch'];

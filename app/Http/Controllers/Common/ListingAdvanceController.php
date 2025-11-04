@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\TblSoftListingStudio;
 use App\Jobs\GenerateReport;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Session;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 // db and Validator
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +39,7 @@ class ListingAdvanceController extends Controller
     // event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
 
         // event(new PusherNotifyEvent('test', 'Test Message', 'https://example.com'));
-
+ 
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
@@ -141,8 +144,12 @@ class ListingAdvanceController extends Controller
 
                 // Define file name based on the download type
                 $fileName = 'listing_'. $case_name . '_' . time() . '.' . $download;
+                
+                Session::put('report_download_qry', $qry);
+                Session::put('report_download_case_name', $case_name);
+                Session::put('report_download_fileName', $fileName);
 
-                dispatch(new GenerateReport($qry, $fileName, $case_name, Auth::user()->id));
+                // dispatch(new GenerateReport($qry, $fileName, $case_name, Auth::user()->id));
 
                 $downloadMessage = 'Your report is being generated.';
             }
