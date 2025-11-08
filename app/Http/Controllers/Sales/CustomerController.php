@@ -382,9 +382,9 @@ class CustomerController extends Controller
 
                 $customer->update_id = Utilities::uuid();
             }else{
-                /*if(isset($request->member_status)){
+                //if(isset($request->member_status)){
                     $customer_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
-                }*/
+                //}
                 $customer = new TblSaleCustomer();
                 $customer->customer_id = Utilities::uuid();
 
@@ -413,9 +413,9 @@ class CustomerController extends Controller
                     $customer->customer_code = Utilities::documentCode($doc_data);
                 }
 
-                /*if(isset($request->member_status)) {
+                //if(isset($request->member_status)) {
                     $customer->customer_account_id = $customer_account_id;
-                }*/
+                //}
                 $customer->created_at = Carbon::now();
                 $customer->updated_at = Carbon::now();
             }
@@ -448,7 +448,7 @@ class CustomerController extends Controller
             $customer->customer_zip_code = $request->customer_zip_code;
             $customer->customer_contact_person = $request->customer_contact_person_name;
             $customer->customer_contact_person_mobile = $request->customer_contact_person_mobile_no;
-            //$customer->customer_branch_id = isset($request->customer_branch_id)?implode(', ', $request->customer_branch_id):'';
+            // $customer->customer_branch_id = isset($request->customer_branch_id)?implode(', ', $request->customer_branch_id):'';
             $customer->customer_po_box = $request->customer_po_box;
             $customer->customer_phone_1 = $request->customer_phone_1;
             $customer->loyalty_opnening = $request->loyalty_opnening;

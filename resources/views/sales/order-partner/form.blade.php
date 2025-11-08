@@ -17,7 +17,7 @@
                 $code = $data['current']->partner_code;
                 $name = $data['current']->partner_name;
                 $local_name = $data['current']->partner_local_name;
-
+                $type = $data['current']->partner_type;
                 $status = $data['current']->partner_entry_status;
                 $image = $data['current']->partner_image;
                 $referenced_by = $data['current']->referenced_by;
@@ -83,8 +83,20 @@
                                 <input type="text" onkeyup="arabicValue(partner_local_name)" dir="rtl" name="partner_local_name" class="form-control erp-form-control-sm medium_text" value="{{isset($local_name)?$local_name:""}}">
                             </div>
                         </div>
-                     
-                        
+                        <div class="form-group-block row">
+                            <label class="col-lg-6 erp-col-form-label">Partner Type: <span class="required"> * </span></label>
+                            <div class="col-lg-6">
+                                <div class="erp-select2 form-group">
+                                    <select class="form-control erp-form-control-sm kt-select2" id="partner_type" name="partner_type">
+                                        <option value="0">Select</option>
+                                        @foreach($data['type'] as $list_type)
+                                            @php $select_type = isset($type)?$type:0; @endphp
+                                            <option value="{{$list_type->customer_type_id}}" {{$list_type->customer_type_id == $select_type ?"selected":""}}>{{$list_type->customer_type_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="form-group-block row">

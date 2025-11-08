@@ -113,7 +113,7 @@ class OrderPartnerController extends Controller
 
         $data['city'] = TblDefiCountry::with('country_cities')->where('country_entry_status',1)->where(Utilities::currentBC())->get();
 
-        // $data['type'] = TblSaleCustomerType::where('customer_type_entry_status',1)->where(Utilities::currentBC())->get();
+        $data['type'] = TblSaleCustomerType::where('customer_type_entry_status',1)->where(Utilities::currentBC())->get();
 
         // $data['refrence'] = [];//TblSaleCustomer::where('customer_entry_status',1)->where(Utilities::currentBC())->get();
 
@@ -144,12 +144,10 @@ class OrderPartnerController extends Controller
      */
     public function store(Request $request, $id = null)
     {
-        // dd($id,$request->toArray());
         $data = [];
 
         $validator = Validator::make($request->all(), [
             'partner_name' => 'required|max:100',
-            // 'partner_type' => 'required|not_in:0',
         ]);
 
         if ($validator->fails()) {
@@ -165,8 +163,10 @@ class OrderPartnerController extends Controller
 
         DB::beginTransaction();
         try{
-          $level_no = 4;
-            // $parent_account_code = $acc_code->chart_code;
+            $cust_type = TblSaleCustomerType::where('customer_type_id',$request->partner_type)->where(Utilities::currentBC())->first();
+            $acc_code = TblAccCoa::where('chart_account_id',$cust_type->customer_type_account_id)->where(Utilities::currentBC())->first();
+            $level_no = 4;
+            $parent_account_code = $acc_code->chart_code;
             $business_id = auth()->user()->business_id;
             $company_id = auth()->user()->company_id;
             $branch_id = auth()->user()->branch_id;
@@ -174,37 +174,31 @@ class OrderPartnerController extends Controller
             $chart_name = $request->partner_name;
             if(isset($id)){
                 $OrderPartner =TblSaleOrderPartner::where('partner_id',$id)->where(Utilities::currentBC())->first();
+                
+                $acc_id = $OrderPartner->customer_account_id;
+                if(empty($acc_id)){
+                    $partner_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
+                    $OrderPartner->partner_account_id = $partner_account_id;
+                }else{
+                    $this->proPurcChartUpdate($business_id,$company_id,$branch_id,$chart_name,$acc_id);
+                }
+
                 $OrderPartner->update_id = Utilities::uuid();
             }else{
-             
+                $partner_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
                 $OrderPartner = new TblSaleOrderPartner();
                 $OrderPartner->partner_id = Utilities::uuid();
 
-                // Check SubDomain Of the Project
-                if(TblDefiConstants::where('constants_key','subdomain')->where('constants_status',1)->exists()){
-                    $subdomain = TblDefiConstants::where('constants_key','subdomain')->first()->constants_value;
-                }
+                $doc_data = [
+                    'biz_type'          => 'business',
+                    'model'             => 'TblSaleOrderPartner',
+                    'code_field'        => 'partner_code',
+                    'code_prefix'       => strtoupper('op')
+                ];
 
-                if(isset($subdomain) && $subdomain == 'adminalnawras'){
-                    $doc_data = [
-                        'biz_type'          => 'branch',
-                        'model'             => 'TblSaleCustomer',
-                        'code_field'        => 'customer_code',
-                        'code_prefix'       => strtoupper('a')
-                    ];
+                $OrderPartner->partner_code = Utilities::documentCode($doc_data);
 
-                    $OrderPartner->partner_code = Utilities::customCustomerCode($doc_data);
-                }else{
-                    $doc_data = [
-                        'biz_type'          => 'branch',
-                        'model'             => 'TblSaleCustomer',
-                        'code_field'        => 'customer_code',
-                        'code_prefix'       => strtoupper('cu')
-                    ];
-
-                    $OrderPartner->partner_code = Utilities::documentCode($doc_data);
-                }
-
+                $OrderPartner->partner_account_id = $partner_account_id;
                 $OrderPartner->created_at = Carbon::now();
                 $OrderPartner->updated_at = Carbon::now();
             }
@@ -233,7 +227,7 @@ class OrderPartnerController extends Controller
                 $OrderPartner->city_id = '';
                 $OrderPartner->country_id = '';
             }
-
+            
             $OrderPartner->partner_zip_code = $request->partner_zip_code;
             $OrderPartner->partner_contact_person = $request->partner_contact_person_name;
             $OrderPartner->partner_contact_person_mobile = $request->partner_contact_person_mobile_no;
@@ -244,8 +238,6 @@ class OrderPartnerController extends Controller
             $OrderPartner->partner_whatapp_no = $request->partner_whatapp_no;
             $OrderPartner->partner_email = $request->partner_email;
             $OrderPartner->partner_website = $request->partner_website;
-            //$OrderPartner->partner_can_scale = isset($request->partner_can_scale)?"1":"0";
-            //$OrderPartner->membership_type_id = $request->membership_type_id;
             $OrderPartner->member_status = isset($request->member_status)?1:0;
             $OrderPartner->business_id = auth()->user()->business_id;
             $OrderPartner->company_id = auth()->user()->company_id;

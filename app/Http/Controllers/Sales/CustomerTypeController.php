@@ -80,7 +80,7 @@ class CustomerTypeController extends Controller
         DB::beginTransaction();
         try{
             $level_no = 3;
-            $parent_account_code = "6-02-00-0000";
+            $parent_account_code = "6-03-00-0000";
             $customer_group = TblAccCoa::where('chart_code',$parent_account_code)->where(Utilities::currentBC())->first('chart_code');
             $parent_account_code = $customer_group->chart_code;
             $business_id = auth()->user()->business_id;
