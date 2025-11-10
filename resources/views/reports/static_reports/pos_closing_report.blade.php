@@ -61,6 +61,11 @@
             font-weight: 600;
         }
 
+        .subtotal-row {
+            background-color: #f1f3f5;
+            font-weight: 600;
+        }
+
         /* Table styling */
         .table th {
             font-weight: 600;
@@ -315,28 +320,81 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @php
+                                            $currentOrderDateKey = null;
+                                            $currentOrderDateLabel = '';
+                                            $dateSubtotalGross = 0;
+                                            $dateSubtotalDiscount = 0;
+                                            $dateSubtotalDelivery = 0;
+                                            $dateSubtotalTax = 0;
+                                            $dateSubtotalNet = 0;
+                                            $dateSubtotalCash = 0;
+                                            $dateSubtotalCard = 0;
+                                        @endphp
                                         @foreach ($sessionOrders as $k => $detail)
                                             @php
-                                                $sessionTotalGrossAmt += $detail->gross_amount;
-                                                $sessionTotalDiscount += $detail->restaurant_discount_amount;
-                                                $sessionTotalDeliveryCharge += $detail->delivery_charge;
-                                                $sessionTotalTax += $detail->total_tax_amount;
-                                                $sessionTotalCash += $detail->cash_paid;
-                                                $sessionTotalCard += $detail->card_paid;
-                                                $sessionTotalAmount += $detail->order_amount;
+                                                $isCanceled = strtolower($detail->order_status ?? '') === 'canceled';
+                                                $orderDateTime = $detail->order_date ? strtotime($detail->order_date) : null;
+                                                $orderDateKey = $orderDateTime ? date('Y-m-d', $orderDateTime) : 'unknown';
+                                                $orderDateLabel = $orderDateTime ? date('d-m-Y', $orderDateTime) : 'N/A';
+                                                $createdAtLabel = $detail->created_at ? date('d-m-Y H:i', strtotime($detail->created_at)) : 'N/A';
 
-                                                $gTotalGrossAmt += $detail->gross_amount;
-                                                $gTotalDiscount += $detail->restaurant_discount_amount;
-                                                $gTotalDeliveryCharge += $detail->delivery_charge;
-                                                $gTotalTax += $detail->total_tax_amount;
-                                                $gTotalCash += $detail->cash_paid;
-                                                $gTotalCard += $detail->card_paid;
-                                                $gTotalAmount += $detail->order_amount;
+                                                if ($currentOrderDateKey !== null && $currentOrderDateKey !== $orderDateKey) {
+                                                    echo '<tr class="table-secondary subtotal-row">';
+                                                    echo '<td colspan="5" class="text-right"><strong>Subtotal (' . $currentOrderDateLabel . ')</strong></td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalGross, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalDiscount, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalDelivery, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalTax, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalNet, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalCash, 3) . '</td>';
+                                                    echo '<td class="text-center">' . number_format($dateSubtotalCard, 3) . '</td>';
+                                                    echo '</tr>';
+
+                                                    $dateSubtotalGross = 0;
+                                                    $dateSubtotalDiscount = 0;
+                                                    $dateSubtotalDelivery = 0;
+                                                    $dateSubtotalTax = 0;
+                                                    $dateSubtotalNet = 0;
+                                                    $dateSubtotalCash = 0;
+                                                    $dateSubtotalCard = 0;
+                                                }
+
+                                                if ($currentOrderDateKey !== $orderDateKey) {
+                                                    $currentOrderDateKey = $orderDateKey;
+                                                    $currentOrderDateLabel = $orderDateLabel;
+                                                }
+
+                                                if (! $isCanceled) {
+                                                    $dateSubtotalGross += $detail->gross_amount;
+                                                    $dateSubtotalDiscount += $detail->restaurant_discount_amount;
+                                                    $dateSubtotalDelivery += $detail->delivery_charge;
+                                                    $dateSubtotalTax += $detail->total_tax_amount;
+                                                    $dateSubtotalNet += $detail->order_amount;
+                                                    $dateSubtotalCash += $detail->cash_paid;
+                                                    $dateSubtotalCard += $detail->card_paid;
+
+                                                    $sessionTotalGrossAmt += $detail->gross_amount;
+                                                    $sessionTotalDiscount += $detail->restaurant_discount_amount;
+                                                    $sessionTotalDeliveryCharge += $detail->delivery_charge;
+                                                    $sessionTotalTax += $detail->total_tax_amount;
+                                                    $sessionTotalCash += $detail->cash_paid;
+                                                    $sessionTotalCard += $detail->card_paid;
+                                                    $sessionTotalAmount += $detail->order_amount;
+
+                                                    $gTotalGrossAmt += $detail->gross_amount;
+                                                    $gTotalDiscount += $detail->restaurant_discount_amount;
+                                                    $gTotalDeliveryCharge += $detail->delivery_charge;
+                                                    $gTotalTax += $detail->total_tax_amount;
+                                                    $gTotalCash += $detail->cash_paid;
+                                                    $gTotalCard += $detail->card_paid;
+                                                    $gTotalAmount += $detail->order_amount;
+                                                }
                                             @endphp
-                                            <tr>
+                                            <tr class="{{ $isCanceled ? 'table-danger' : '' }}">
                                                 <td class="text-left">{{ $detail->order_serial }}</td>
-                                                <td class="text-center">{{ date('d-m-Y', strtotime($detail->order_date)) }}</td>
-                                                <td class="text-center">{{ date('d-m-Y H:i', strtotime($detail->created_at)) }}</td>
+                                                <td class="text-center">{{ $orderDateLabel }}</td>
+                                                <td class="text-center">{{ $createdAtLabel }}</td>
                                                 <td class="text-center">{{ $detail->order_taker_name ?? 'N/A' }}</td>
                                                 <td class="text-center">{{ $detail->order_status }}</td>
                                                 <td class="text-center">{{ number_format($detail->gross_amount, 3) }}</td>
@@ -348,6 +406,18 @@
                                                 <td class="text-center">{{ number_format($detail->card_paid, 3) }}</td>
                                             </tr>
                                         @endforeach
+                                        @if ($currentOrderDateKey !== null)
+                                            <tr class="table-secondary subtotal-row">
+                                                <td colspan="5" class="text-right"><strong>Subtotal ({{ $currentOrderDateLabel }})</strong></td>
+                                                <td class="text-center">{{ number_format($dateSubtotalGross, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalDiscount, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalDelivery, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalTax, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalNet, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalCash, 3) }}</td>
+                                                <td class="text-center">{{ number_format($dateSubtotalCard, 3) }}</td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
