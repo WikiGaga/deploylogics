@@ -82,6 +82,18 @@
             gap: 15px;
         }
 
+        .session-header .session-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .session-header .session-summary span {
+            font-size: 0.9rem;
+            color: #0d47a1;
+        }
+
         .session-header .session-info {
             display: flex;
             flex-wrap: wrap;
@@ -398,13 +410,29 @@
 
                                 @foreach ($paymentGroup['sessions'] as $sessionId => $sessionOrders)
                                     @php
-                                        $sessionTotalGrossAmt = 0;
-                                        $sessionTotalDiscount = 0;
-                                        $sessionTotalDeliveryCharge = 0;
-                                        $sessionTotalTax = 0;
-                                        $sessionTotalCash = 0;
-                                        $sessionTotalCard = 0;
-                                        $sessionTotalAmount = 0;
+                                        $sessionOrderCount = count($sessionOrders);
+                                        $sessionSummaryGross = 0;
+                                        $sessionSummaryDiscount = 0;
+                                        $sessionSummaryDelivery = 0;
+                                        $sessionSummaryTax = 0;
+                                        $sessionSummaryNet = 0;
+                                        $sessionSummaryCash = 0;
+                                        $sessionSummaryCard = 0;
+
+                                        foreach ($sessionOrders as $summaryDetail) {
+                                            $summaryIsCanceled = strtolower($summaryDetail->order_status ?? '') === 'canceled';
+                                            if ($summaryIsCanceled) {
+                                                continue;
+                                            }
+
+                                            $sessionSummaryGross += $summaryDetail->gross_amount;
+                                            $sessionSummaryDiscount += $summaryDetail->restaurant_discount_amount;
+                                            $sessionSummaryDelivery += $summaryDetail->delivery_charge;
+                                            $sessionSummaryTax += $summaryDetail->total_tax_amount;
+                                            $sessionSummaryNet += $summaryDetail->order_amount;
+                                            $sessionSummaryCash += $summaryDetail->cash_paid;
+                                            $sessionSummaryCard += $summaryDetail->card_paid;
+                                        }
                                     @endphp
 
                                     <div class="session-group">
@@ -417,8 +445,17 @@
                                             </div>
                                             <div class="session-stats">
                                                 <span>
-                                                    <i class="fas fa-shopping-cart"></i> {{ count($sessionOrders) }} Orders
+                                                    <i class="fas fa-shopping-cart"></i> {{ $sessionOrderCount }} Orders
                                                 </span>
+                                            </div>
+                                            <div class="session-summary">
+                                                <span>Gross: {{ number_format($sessionSummaryGross, 3) }}</span>
+                                                <span>Discount: {{ number_format($sessionSummaryDiscount, 3) }}</span>
+                                                <span>Delivery: {{ number_format($sessionSummaryDelivery, 3) }}</span>
+                                                <span>VAT: {{ number_format($sessionSummaryTax, 3) }}</span>
+                                                <span>Net: {{ number_format($sessionSummaryNet, 3) }}</span>
+                                                <span>Cash: {{ number_format($sessionSummaryCash, 3) }}</span>
+                                                <span>Card: {{ number_format($sessionSummaryCard, 3) }}</span>
                                             </div>
                                         </div>
 
@@ -495,14 +532,6 @@
                                                                 $dateSubtotalCash += $detail->cash_paid;
                                                                 $dateSubtotalCard += $detail->card_paid;
 
-                                                                $sessionTotalGrossAmt += $detail->gross_amount;
-                                                                $sessionTotalDiscount += $detail->restaurant_discount_amount;
-                                                                $sessionTotalDeliveryCharge += $detail->delivery_charge;
-                                                                $sessionTotalTax += $detail->total_tax_amount;
-                                                                $sessionTotalCash += $detail->cash_paid;
-                                                                $sessionTotalCard += $detail->card_paid;
-                                                                $sessionTotalAmount += $detail->order_amount;
-
                                                                 $gTotalGrossAmt += $detail->gross_amount;
                                                                 $gTotalDiscount += $detail->restaurant_discount_amount;
                                                                 $gTotalDeliveryCharge += $detail->delivery_charge;
@@ -543,25 +572,6 @@
                                             </table>
                                         </div>
 
-                                        <div class="session-totals">
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6 class="mb-3"><i class="fas fa-calculator"></i> Session Sales Summary</h6>
-                                                    <div class="d-flex justify-content-between">
-                                                        <span><strong>Session Total:</strong></span>
-                                                        <div class="d-flex">
-                                                            <span class="mr-4"><strong>Gross:</strong> {{ number_format($sessionTotalGrossAmt, 3) }}</span>
-                                                            <span class="mr-4"><strong>Discount:</strong> {{ number_format($sessionTotalDiscount, 3) }}</span>
-                                                            <span class="mr-4"><strong>Delivery:</strong> {{ number_format($sessionTotalDeliveryCharge, 3) }}</span>
-                                                            <span class="mr-4"><strong>VAT:</strong> {{ number_format($sessionTotalTax, 3) }}</span>
-                                                            <span class="mr-4"><strong>Net:</strong> {{ number_format($sessionTotalAmount, 3) }}</span>
-                                                            <span class="mr-4"><strong>Cash:</strong> {{ number_format($sessionTotalCash, 3) }}</span>
-                                                            <span><strong>Card:</strong> {{ number_format($sessionTotalCard, 3) }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 @endforeach
                             </div>
