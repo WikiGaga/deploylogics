@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\OrderRecipeUsageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -107,4 +108,6 @@ Route::group(['middleware'=>['auth:api']], function () {
             Route::post('store/{id?}','Api\Inventory\StockAdjustmentController@store');
         });
     });
+
+    Route::post('ingredient-usage', [OrderRecipeUsageController::class, 'store']);
 });

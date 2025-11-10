@@ -120,6 +120,7 @@
                 o.ID,
                 o.ORDER_SERIAL,
                 o.ORDER_AMOUNT,
+                o.ORDER_DATE,
                 o.TOTAL_TAX_AMOUNT,
                 o.DELIVERY_CHARGE,
                 o.RESTAURANT_DISCOUNT_AMOUNT,
@@ -134,13 +135,16 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
-                COALESCE(SUM(od.price), 0) AS gross_amount
+                COALESCE(SUM(od.price), 0) AS gross_amount,
+                u.name AS order_taker_name
             FROM
                 ORDERS o
             LEFT JOIN
                 POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
             LEFT JOIN
                 order_details od ON od.order_id = o.ID
+            LEFT JOIN
+                users u ON u.id = o.ORDER_TAKEN_BY
             WHERE
                 o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
                 AND o.SESSION_ID IS NOT NULL
@@ -151,6 +155,7 @@
                 o.ID,
                 o.ORDER_SERIAL,
                 o.ORDER_AMOUNT,
+                o.ORDER_DATE,
                 o.TOTAL_TAX_AMOUNT,
                 o.DELIVERY_CHARGE,
                 o.RESTAURANT_DISCOUNT_AMOUNT,
@@ -164,7 +169,8 @@
                 d.CAR_NUMBER,
                 d.PHONE,
                 d.cash_paid,
-                d.card_paid
+                d.card_paid,
+                u.name
             ORDER BY
                 o.SESSION_ID,
                 o.CREATED_AT DESC,
@@ -179,6 +185,7 @@
                     o.ID,
                     o.ORDER_SERIAL,
                     o.ORDER_AMOUNT,
+                    o.ORDER_DATE,
                     o.TOTAL_TAX_AMOUNT,
                     o.DELIVERY_CHARGE,
                     o.RESTAURANT_DISCOUNT_AMOUNT,
@@ -193,19 +200,23 @@
                     d.PHONE,
                     d.cash_paid,
                     d.card_paid,
-                    COALESCE(SUM(od.price), 0) AS gross_amount
+                    COALESCE(SUM(od.price), 0) AS gross_amount,
+                    u.name AS order_taker_name
                 FROM
                     ORDERS o
                 LEFT JOIN
                     POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
                 LEFT JOIN
                     order_details od ON od.order_id = o.ID
+                LEFT JOIN
+                    users u ON u.id = o.ORDER_TAKEN_BY
                 WHERE
                     o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
                 GROUP BY
                     o.ID,
                     o.ORDER_SERIAL,
                     o.ORDER_AMOUNT,
+                    o.ORDER_DATE,
                     o.TOTAL_TAX_AMOUNT,
                     o.DELIVERY_CHARGE,
                     o.RESTAURANT_DISCOUNT_AMOUNT,
@@ -219,7 +230,8 @@
                     d.CAR_NUMBER,
                     d.PHONE,
                     d.cash_paid,
-                    d.card_paid
+                    d.card_paid,
+                    u.name
                 ORDER BY
                     o.SESSION_ID,
                     o.CREATED_AT DESC,
@@ -290,6 +302,9 @@
                                         <tr>
                                             <th class="text-left">Order ID</th>
                                             <th class="text-center">Order Date</th>
+                                            <th class="text-center">Created At</th>
+                                            <th class="text-center">Order By</th>
+                                            <th class="text-center">Order Status</th>
                                             <th class="text-center">Gross Amount</th>
                                             <th class="text-center">Discount</th>
                                             <th class="text-center">Delivery Charges</th>
@@ -320,7 +335,10 @@
                                             @endphp
                                             <tr>
                                                 <td class="text-left">{{ $detail->order_serial }}</td>
+                                                <td class="text-center">{{ date('d-m-Y', strtotime($detail->order_date)) }}</td>
                                                 <td class="text-center">{{ date('d-m-Y H:i', strtotime($detail->created_at)) }}</td>
+                                                <td class="text-center">{{ $detail->order_taker_name ?? 'N/A' }}</td>
+                                                <td class="text-center">{{ $detail->order_status }}</td>
                                                 <td class="text-center">{{ number_format($detail->gross_amount, 3) }}</td>
                                                 <td class="text-center">{{ number_format($detail->restaurant_discount_amount, 3) }}</td>
                                                 <td class="text-center">{{ number_format($detail->delivery_charge, 3) }}</td>
@@ -359,7 +377,7 @@
                         <div class="mt-4">
                             <table width="100%" class="table table-bordered">
                                 <tr class="grand-total-row">
-                                    <td colspan="2" class="fw-bold rep-font-bold text-center">
+                                    <td colspan="5" class="fw-bold rep-font-bold text-center">
                                         <i class="fas fa-calculator"></i> GRAND TOTAL (All Sessions)
                                     </td>
                                     <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalGrossAmt, 3) }}</td>
