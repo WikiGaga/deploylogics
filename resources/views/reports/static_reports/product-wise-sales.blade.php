@@ -105,6 +105,7 @@
             'net' => 0.0,
         ];
         $groupedSessions = [];
+        $reportError = null;
         $dateTimeFrom = $data['date_time_from'] ?? now()->startOfDay()->toDateTimeString();
         $dateTimeTo = $data['date_time_to'] ?? now()->endOfDay()->toDateTimeString();
     @endphp
@@ -153,68 +154,191 @@
                 }
             }
 
-            $query = "
-                WITH base_usage AS (
-                    SELECT DISTINCT
-                        oru.order_detail_id,
-                        oru.order_id,
-                        oru.option_list_id,
-                        oru.food_recipe_id,
-                        oru.restaurant_id,
-                        CAST(oru.usage_date AS DATE) AS usage_date
-                    FROM order_recipe_usages oru
-                    WHERE oru.usage_date BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
-                )
-                SELECT
-                    bu.usage_date AS session_date,
-                    COALESCE(ol.name, fr.food_name, 'N/A') AS option_list_name,
-                    COALESCE(f.name, fr.food_name, ol.name, 'N/A') AS food_name,
-                    SUM(COALESCE(od.quantity, 0)) AS total_qty,
-                    SUM(COALESCE(od.price, 0) * COALESCE(od.quantity, 0)) AS total_amount,
-                    SUM(COALESCE(od.discount_on_food, 0)) AS total_discount,
-                    SUM(
-                        (COALESCE(od.price, 0) * COALESCE(od.quantity, 0))
-                        - COALESCE(od.discount_on_food, 0)
-                        + COALESCE(od.total_add_on_price, 0)
-                    ) AS total_net_amount
-                FROM base_usage bu
-                JOIN order_details od ON od.id = bu.order_detail_id
-                JOIN orders o ON o.id = bu.order_id
-                LEFT JOIN food_recipes fr ON fr.id = bu.food_recipe_id
-                LEFT JOIN options_list ol ON ol.id = bu.option_list_id
-                LEFT JOIN food f ON f.id = od.food_id
-                WHERE o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
-                    {$branchFilter}
-                GROUP BY
-                    bu.usage_date,
-                    COALESCE(ol.name, fr.food_name, 'N/A'),
-                    COALESCE(f.name, fr.food_name, ol.name, 'N/A')
-                ORDER BY
-                    bu.usage_date ASC,
-                    COALESCE(ol.name, fr.food_name, 'N/A') ASC,
-                    COALESCE(f.name, fr.food_name, ol.name, 'N/A') ASC
-            ";
+            try {
+                $query = "
+                    SELECT
+                        od.id AS order_detail_id,
+                        od.order_id,
+                        od.food_id,
+                        od.quantity,
+                        od.price,
+                        od.discount_on_food,
+                        od.total_add_on_price,
+                        od.variation,
+                        o.created_at,
+                        o.restaurant_id
+                    FROM order_details od
+                    JOIN orders o ON o.id = od.order_id
+                    WHERE o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
+                        {$branchFilter}
+                ";
 
-            $summaryRows = \Illuminate\Support\Facades\DB::select($query);
+                $detailRows = \Illuminate\Support\Facades\DB::select($query);
+                echo '<!-- DEBUG: Product wise sales retrieved ' . count($detailRows) . ' order detail rows -->';
 
-            echo '<!-- DEBUG: Product wise sales query returned ' . count($summaryRows) . ' rows -->';
-            ?>
-            @php
-                foreach ($summaryRows as $row) {
-                    $dateValue = $row->session_date ?? null;
-                    $dateKey = 'N/A';
-                    $displayDate = 'N/A';
+                $decodeVariation = static function ($payload) {
+                    if (empty($payload)) {
+                        return [];
+                    }
 
-                    if ($dateValue instanceof \DateTimeInterface) {
-                        $dateKey = $dateValue->format('Y-m-d');
-                        $displayDate = $dateValue->format('d-m-Y');
-                    } else {
-                        $timestamp = strtotime($dateValue);
-                        if ($timestamp !== false) {
-                            $dateKey = date('Y-m-d', $timestamp);
-                            $displayDate = date('d-m-Y', $timestamp);
+                    if (is_array($payload)) {
+                        return $payload;
+                    }
+
+                    if (! is_string($payload)) {
+                        return [];
+                    }
+
+                    $payload = trim($payload);
+
+                    if ($payload === '' || $payload === 'null') {
+                        return [];
+                    }
+
+                    $decoded = json_decode($payload, true);
+
+                    if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                        return [];
+                    }
+
+                    return $decoded;
+                };
+
+                $extractOptionListIds = static function (array $variation) {
+                    $ids = [];
+
+                    if (! empty($variation['option_list_id'])) {
+                        $ids[] = (int) $variation['option_list_id'];
+                    }
+
+                    if (! empty($variation['options_list_id'])) {
+                        $ids[] = (int) $variation['options_list_id'];
+                    }
+
+                    if (! empty($variation['values']) && is_array($variation['values'])) {
+                        foreach ($variation['values'] as $value) {
+                            if (! is_array($value)) {
+                                continue;
+                            }
+
+                            if (! empty($value['options_list_id'])) {
+                                $ids[] = (int) $value['options_list_id'];
+                            } elseif (! empty($value['option_list_id'])) {
+                                $ids[] = (int) $value['option_list_id'];
+                            }
                         }
                     }
+
+                    return array_values(array_unique(array_filter($ids)));
+                };
+
+                $aggregated = [];
+                $optionIds = [];
+                $foodIds = [];
+
+                foreach ($detailRows as $row) {
+                    $sessionDate = $row->created_at ? date('Y-m-d', strtotime($row->created_at)) : null;
+                    if (! $sessionDate) {
+                        continue;
+                    }
+
+                    $variations = $decodeVariation($row->variation);
+                    if (empty($variations)) {
+                        continue;
+                    }
+
+                    $resolvedOptionIds = [];
+                    foreach ($variations as $variation) {
+                        if (! is_array($variation)) {
+                            continue;
+                        }
+
+                        $resolvedOptionIds = array_merge($resolvedOptionIds, $extractOptionListIds($variation));
+                    }
+
+                    $resolvedOptionIds = array_values(array_unique(array_filter($resolvedOptionIds)));
+
+                    if (empty($resolvedOptionIds)) {
+                        continue;
+                    }
+
+                    $foodId = (int) ($row->food_id ?? 0);
+                    if ($foodId <= 0) {
+                        continue;
+                    }
+
+                    $quantity = (float) ($row->quantity ?? 0);
+                    $grossAmount = (float) ($row->price ?? 0) * $quantity;
+                    $discount = (float) ($row->discount_on_food ?? 0);
+                    $addons = (float) ($row->total_add_on_price ?? 0);
+                    $netAmount = $grossAmount - $discount + $addons;
+
+                    $optionCount = count($resolvedOptionIds);
+                    if ($optionCount === 0) {
+                        continue;
+                    }
+
+                    $splitQuantity = $quantity / $optionCount;
+                    $splitGross = $grossAmount / $optionCount;
+                    $splitDiscount = $discount / $optionCount;
+                    $splitNet = $netAmount / $optionCount;
+
+                    foreach ($resolvedOptionIds as $optionId) {
+                        $aggregateKey = $sessionDate . '|' . $optionId . '|' . $foodId;
+
+                        if (! isset($aggregated[$aggregateKey])) {
+                            $aggregated[$aggregateKey] = [
+                                'session_date' => $sessionDate,
+                                'option_list_id' => $optionId,
+                                'food_id' => $foodId,
+                                'qty' => 0.0,
+                                'amount' => 0.0,
+                                'discount' => 0.0,
+                                'net' => 0.0,
+                            ];
+                        }
+
+                        $aggregated[$aggregateKey]['qty'] += $splitQuantity;
+                        $aggregated[$aggregateKey]['amount'] += $splitGross;
+                        $aggregated[$aggregateKey]['discount'] += $splitDiscount;
+                        $aggregated[$aggregateKey]['net'] += $splitNet;
+
+                        $optionIds[$optionId] = true;
+                        $foodIds[$foodId] = true;
+                    }
+                }
+
+                if (empty($aggregated)) {
+                    echo '<!-- DEBUG: No aggregated records generated -->';
+                }
+
+                $optionNames = [];
+                if (! empty($optionIds)) {
+                    $optionNames = \Illuminate\Support\Facades\DB::table('options_list')
+                        ->whereIn('id', array_keys($optionIds))
+                        ->pluck('name', 'id')
+                        ->map(function ($name) {
+                            return $name ?: 'N/A';
+                        })
+                        ->toArray();
+                }
+
+                $foodNames = [];
+                if (! empty($foodIds)) {
+                    $foodNames = \Illuminate\Support\Facades\DB::table('food')
+                        ->whereIn('id', array_keys($foodIds))
+                        ->pluck('name', 'id')
+                        ->map(function ($name) {
+                            return $name ?: 'N/A';
+                        })
+                        ->toArray();
+                }
+
+                foreach ($aggregated as $entry) {
+                    $dateKey = $entry['session_date'];
+                    $displayDate = date('d-m-Y', strtotime($entry['session_date']));
+                    $optionId = $entry['option_list_id'];
+                    $foodId = $entry['food_id'];
 
                     if (! isset($groupedSessions[$dateKey])) {
                         $groupedSessions[$dateKey] = [
@@ -229,29 +353,41 @@
                         ];
                     }
 
-                    $rowQty = (float) ($row->total_qty ?? 0);
-                    $rowAmount = (float) ($row->total_amount ?? 0);
-                    $rowDiscount = (float) ($row->total_discount ?? 0);
-                    $rowNet = (float) ($row->total_net_amount ?? 0);
+                    $row = (object) [
+                        'option_list_name' => $optionNames[$optionId] ?? 'N/A',
+                        'food_name' => $foodNames[$foodId] ?? 'N/A',
+                        'total_qty' => $entry['qty'],
+                        'total_amount' => $entry['amount'],
+                        'total_discount' => $entry['discount'],
+                        'total_net_amount' => $entry['net'],
+                    ];
 
                     $groupedSessions[$dateKey]['rows'][] = $row;
-                    $groupedSessions[$dateKey]['totals']['qty'] += $rowQty;
-                    $groupedSessions[$dateKey]['totals']['amount'] += $rowAmount;
-                    $groupedSessions[$dateKey]['totals']['discount'] += $rowDiscount;
-                    $groupedSessions[$dateKey]['totals']['net'] += $rowNet;
+                    $groupedSessions[$dateKey]['totals']['qty'] += $entry['qty'];
+                    $groupedSessions[$dateKey]['totals']['amount'] += $entry['amount'];
+                    $groupedSessions[$dateKey]['totals']['discount'] += $entry['discount'];
+                    $groupedSessions[$dateKey]['totals']['net'] += $entry['net'];
 
-                    $grandTotals['qty'] += $rowQty;
-                    $grandTotals['amount'] += $rowAmount;
-                    $grandTotals['discount'] += $rowDiscount;
-                    $grandTotals['net'] += $rowNet;
+                    $grandTotals['qty'] += $entry['qty'];
+                    $grandTotals['amount'] += $entry['amount'];
+                    $grandTotals['discount'] += $entry['discount'];
+                    $grandTotals['net'] += $entry['net'];
                 }
 
                 ksort($groupedSessions);
-            @endphp
+            } catch (\Throwable $exception) {
+                $reportError = $exception->getMessage();
+                echo '<!-- DEBUG: Product wise sales processing failed with message: ' . e($reportError) . ' -->';
+            }
+            ?>
 
             <div class="row row-block">
                 <div class="col-lg-12">
-                    @if (empty($groupedSessions))
+            @if ($reportError)
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-circle"></i> {{ $reportError }}
+                </div>
+            @elseif (empty($groupedSessions))
                         <div class="alert alert-warning text-center">
                             <i class="fas fa-exclamation-triangle"></i> No product wise sales data found for the selected filters.
                         </div>
