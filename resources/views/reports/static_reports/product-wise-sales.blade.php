@@ -150,7 +150,7 @@
 
                 if (! empty($sanitizedBranchIds)) {
                     $branchList = implode(',', $sanitizedBranchIds);
-                    $branchFilter = ' AND bu.restaurant_id IN (' . $branchList . ') AND o.RESTAURANT_ID IN (' . $branchList . ')';
+                    $branchFilter = ' AND o.RESTAURANT_ID IN (' . $branchList . ')';
                 }
             }
 
