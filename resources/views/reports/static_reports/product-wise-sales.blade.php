@@ -133,26 +133,26 @@
                 }
             }
 
-            if (is_array($rawBranchIds) && ! empty($rawBranchIds)) {
-                $sanitizedBranchIds = array_values(
-                    array_filter(
-                        array_map(function ($value) {
-                            if (is_numeric($value)) {
-                                return (int) $value;
-                            }
-                            return null;
-                        }, $rawBranchIds),
-                        function ($value) {
-                            return ! is_null($value);
-                        }
-                    )
-                );
-
-                if (! empty($sanitizedBranchIds)) {
-                    $branchList = implode(',', $sanitizedBranchIds);
-                    $branchFilter = ' AND o.RESTAURANT_ID IN (' . $branchList . ')';
-                }
-            }
+            // if (is_array($rawBranchIds) && ! empty($rawBranchIds)) {
+            //     $sanitizedBranchIds = array_values(
+            //         array_filter(
+            //             array_map(function ($value) {
+            //                 if (is_numeric($value)) {
+            //                     return (int) $value;
+            //                 }
+            //                 return null;
+            //             }, $rawBranchIds),
+            //             function ($value) {
+            //                 return ! is_null($value);
+            //             }
+            //         )
+            //     );
+            //
+            //     if (! empty($sanitizedBranchIds)) {
+            //         $branchList = implode(',', $sanitizedBranchIds);
+            //         $branchFilter = ' AND o.RESTAURANT_ID IN (' . $branchList . ')';
+            //     }
+            // }
 
             try {
                 $query = "
