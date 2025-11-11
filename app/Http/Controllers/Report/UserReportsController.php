@@ -1074,7 +1074,7 @@ class UserReportsController extends Controller
                 'item_wise_purchase_summary','category_wise_purchase_analysis','invoice_wise_purchase_summary',
                 'invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount',
                 'branch_wise_stock','product_list','product_change_rate','product_pl','stock_audit',
-                'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','monthly_sale_pur_summary',];
+                'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','monthly_sale_pur_summary',];
 
             $data['branch_ids'] = $request->report_branch_ids;
             $data['supplier_ids'] = $request->report_supplier_ids;
@@ -2174,7 +2174,7 @@ class UserReportsController extends Controller
 
             // Sale Reports
             $sale_reports = ['payment_mode_wise_sale','product_price_comparison','sale_analysis',
-            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','category_wise_profit',
+            'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','product-wise-sales','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['report_case'],$sale_reports)){
@@ -2266,6 +2266,12 @@ class UserReportsController extends Controller
                 if($data['report_case'] == 'pos_closing_report'){
                     $data['key'] = 'pos_closing_report';
                     $data['page_title'] = 'POS Closing Report';
+                    $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
+                    $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
+                }
+                if($data['report_case'] == 'product-wise-sales'){
+                    $data['key'] = 'product-wise-sales';
+                    $data['page_title'] = 'Prodduct Wise Sales Report';
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                 }
@@ -2593,7 +2599,7 @@ class UserReportsController extends Controller
                 'month_wise_account_summary','vat_report','daily_purchase','supplier_wise_purchase_summary',
                 'item_wise_purchase_summary','category_wise_purchase_analysis','invoice_wise_purchase_summary',
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
-                'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product_pl','monthly_sale_pur_summary',];
+                'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
 
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
@@ -2649,7 +2655,7 @@ class UserReportsController extends Controller
              ********/
 
             $sale_keys = ['payment_mode_wise_sale','product_price_comparison','sale_analysis','monthly_sale_pur_summ'
-            ,'pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','category_wise_profit',
+            ,'pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','product-wise-sales','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
             if(in_array($data['key'],$sale_keys)){
