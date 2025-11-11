@@ -178,6 +178,7 @@
         $gTotalCash = 0;
         $gTotalCard = 0;
         $gTotalAmount = 0;
+       $SHIFT_SESSIONS= DB::table('SHIFT_SESSIONS')->pluck('closing_cash','session_id')->all();
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -433,6 +434,12 @@
                                             $sessionSummaryCash += $summaryDetail->cash_paid;
                                             $sessionSummaryCard += $summaryDetail->card_paid;
                                         }
+
+ 
+
+                                        $closingCash = $SHIFT_SESSIONS[$sessionId] ?? 0;
+                                     
+
                                     @endphp
 
                                     <div class="session-group">
@@ -456,6 +463,9 @@
                                                 <span>Net: {{ number_format($sessionSummaryNet, 3) }}</span>
                                                 <span>Cash: {{ number_format($sessionSummaryCash, 3) }}</span>
                                                 <span>Card: {{ number_format($sessionSummaryCard, 3) }}</span>
+                                           
+                                                <span>Collected Cash: {{ number_format($closingCash, 3)  }}</span>
+                                                <span>Diff: {{   number_format($closingCash - $sessionSummaryCash, 3)  }}</span>
                                             </div>
                                         </div>
 
