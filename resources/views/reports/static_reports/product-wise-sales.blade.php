@@ -181,6 +181,11 @@
                         return [];
                     }
 
+                    if (is_string($payload)) {
+                        $payload = html_entity_decode($payload, ENT_QUOTES | ENT_HTML5);
+                        $payload = stripslashes($payload);
+                    }
+
                     if (is_array($payload)) {
                         return $payload;
                     }
@@ -201,10 +206,33 @@
                         return [];
                     }
 
+                    if (isset($decoded['variations']) && is_array($decoded['variations'])) {
+                        return $decoded['variations'];
+                    }
+
+                    if (isset($decoded['variation']) && is_array($decoded['variation'])) {
+                        return $decoded['variation'];
+                    }
+
+                    if (isset($decoded['data']) && is_array($decoded['data'])) {
+                        return $decoded['data'];
+                    }
+
                     return $decoded;
                 };
 
-                $extractOptionListIds = static function (array $variation) {
+                $normalizeVariationEntry = static function ($variation) {
+                    if (is_string($variation)) {
+                        $decodedEntry = json_decode($variation, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decodedEntry)) {
+                            $variation = $decodedEntry;
+                        }
+                    }
+
+                    if (! is_array($variation)) {
+                        return [];
+                    }
+
                     $ids = [];
 
                     if (! empty($variation['option_list_id'])) {
@@ -225,11 +253,62 @@
                                 $ids[] = (int) $value['options_list_id'];
                             } elseif (! empty($value['option_list_id'])) {
                                 $ids[] = (int) $value['option_list_id'];
+                            } else {
+                                $nested = json_decode(is_string($value) ? $value : json_encode($value), true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($nested)) {
+                                    if (! empty($nested['option_list_id'])) {
+                                        $ids[] = (int) $nested['option_list_id'];
+                                    }
+                                    if (! empty($nested['options_list_id'])) {
+                                        $ids[] = (int) $nested['options_list_id'];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (! empty($variation['options']) && is_array($variation['options'])) {
+                        foreach ($variation['options'] as $option) {
+                            if (is_array($option)) {
+                                if (! empty($option['option_list_id'])) {
+                                    $ids[] = (int) $option['option_list_id'];
+                                }
+                                if (! empty($option['options_list_id'])) {
+                                    $ids[] = (int) $option['options_list_id'];
+                                }
+                            }
+                        }
+                    }
+
+                    if (! empty($variation['variation_options']) && is_array($variation['variation_options'])) {
+                        foreach ($variation['variation_options'] as $option) {
+                            if (! empty($option['option_list_id'])) {
+                                $ids[] = (int) $option['option_list_id'];
+                            }
+                            if (! empty($option['options_list_id'])) {
+                                $ids[] = (int) $option['options_list_id'];
                             }
                         }
                     }
 
                     return array_values(array_unique(array_filter($ids)));
+                };
+
+                $extractOptionListIds = static function ($variation, $normalizeEntry) {
+                    $normalizedIds = [];
+
+                    if (is_array($variation) && array_keys($variation) !== range(0, count($variation) - 1)) {
+                        $variation = [$variation];
+                    }
+
+                    foreach ((array) $variation as $entry) {
+                        $ids = $normalizeEntry($entry);
+                        if (! empty($ids)) {
+                            $normalizedIds = array_merge($normalizedIds, $ids);
+                        }
+                    }
+
+                    return array_values(array_unique(array_filter($normalizedIds)));
                 };
 
                 $aggregated = [];
@@ -243,20 +322,11 @@
                     }
 
                     $variations = $decodeVariation($row->variation);
-                    if (empty($variations)) {
-                        continue;
+                    if (empty($variations) && ! empty($row->food_id)) {
+                        $variations = [];
                     }
 
-                    $resolvedOptionIds = [];
-                    foreach ($variations as $variation) {
-                        if (! is_array($variation)) {
-                            continue;
-                        }
-
-                        $resolvedOptionIds = array_merge($resolvedOptionIds, $extractOptionListIds($variation));
-                    }
-
-                    $resolvedOptionIds = array_values(array_unique(array_filter($resolvedOptionIds)));
+                    $resolvedOptionIds = $extractOptionListIds($variations, $normalizeVariationEntry);
 
                     if (empty($resolvedOptionIds)) {
                         continue;
@@ -310,6 +380,11 @@
 
                 if (empty($aggregated)) {
                     echo '<!-- DEBUG: No aggregated records generated -->';
+                    if (empty($detailRows)) {
+                        $reportError = 'No order details found for the supplied filters.';
+                    } else {
+                        $reportError = 'Order details retrieved but no option list identifiers were resolved from variations.';
+                    }
                 }
 
                 $optionNames = [];
