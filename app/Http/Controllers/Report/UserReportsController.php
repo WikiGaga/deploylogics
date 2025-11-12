@@ -2271,7 +2271,7 @@ class UserReportsController extends Controller
                 }
                 if($data['report_case'] == 'product-wise-sales'){
                     $data['key'] = 'product-wise-sales';
-                    $data['page_title'] = 'Prodduct Wise Sales Report';
+                    $data['page_title'] = 'Product Wise Sales Report';
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                 }
