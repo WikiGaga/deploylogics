@@ -103,6 +103,7 @@
             'amount' => 0.0,
             'discount' => 0.0,
             'net' => 0.0,
+            'addon' => 0.0,
         ];
         $groupedSessions = [];
         $reportError = null;
@@ -169,9 +170,16 @@
                         o.restaurant_id
                     FROM order_details od
                     JOIN orders o ON o.id = od.order_id
-                    WHERE o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
+                    WHERE od.is_deleted <> 'Y' and o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
                         {$branchFilter}
                 ";
+
+                // $a=DB::table('order_details')
+                // // ->where('food_id',85)
+                // ->first();
+
+                // $b=json_decode($a->variation);
+                // dd($b,$a);
 
                 $detailRows = \Illuminate\Support\Facades\DB::select($query);
                 echo '<!-- DEBUG: Product wise sales retrieved ' . count($detailRows) . ' order detail rows -->';
@@ -341,14 +349,16 @@
                     $grossAmount = (float) ($row->price ?? 0) * $quantity;
                     $discount = (float) ($row->discount_on_food ?? 0);
                     $addons = (float) ($row->total_add_on_price ?? 0);
-                    $netAmount = $grossAmount - $discount + $addons;
+                    $netAmount = $grossAmount - $discount;
+                    // $netAmount = $grossAmount - $discount + $addons;
 
                     $optionCount = count($resolvedOptionIds);
                     if ($optionCount === 0) {
                         continue;
                     }
 
-                    $splitQuantity = $quantity / $optionCount;
+                    $splitQuantity = $quantity;
+                    // $splitQuantity = $quantity / $optionCount;
                     $splitGross = $grossAmount / $optionCount;
                     $splitDiscount = $discount / $optionCount;
                     $splitNet = $netAmount / $optionCount;
@@ -365,6 +375,7 @@
                                 'amount' => 0.0,
                                 'discount' => 0.0,
                                 'net' => 0.0,
+                                'addon' => 0.0,
                             ];
                         }
 
@@ -372,6 +383,7 @@
                         $aggregated[$aggregateKey]['amount'] += $splitGross;
                         $aggregated[$aggregateKey]['discount'] += $splitDiscount;
                         $aggregated[$aggregateKey]['net'] += $splitNet;
+                        $aggregated[$aggregateKey]['addon'] += $addons;
 
                         $optionIds[$optionId] = true;
                         $foodIds[$foodId] = true;
@@ -410,7 +422,9 @@
                 }
 
                 foreach ($aggregated as $entry) {
-                    $dateKey = $entry['session_date'];
+                    $dateKey =  'all';
+                    // $dateKey = $optionNames[$optionId] ?? 'N/A';
+                    // $dateKey = $entry['session_date'];
                     $displayDate = date('d-m-Y', strtotime($entry['session_date']));
                     $optionId = $entry['option_list_id'];
                     $foodId = $entry['food_id'];
@@ -424,6 +438,7 @@
                                 'amount' => 0.0,
                                 'discount' => 0.0,
                                 'net' => 0.0,
+                                'addon' => 0.0,
                             ],
                         ];
                     }
@@ -435,6 +450,7 @@
                         'total_amount' => $entry['amount'],
                         'total_discount' => $entry['discount'],
                         'total_net_amount' => $entry['net'],
+                        'addon_net_amount' => $entry['addon'],
                     ];
 
                     $groupedSessions[$dateKey]['rows'][] = $row;
@@ -442,11 +458,13 @@
                     $groupedSessions[$dateKey]['totals']['amount'] += $entry['amount'];
                     $groupedSessions[$dateKey]['totals']['discount'] += $entry['discount'];
                     $groupedSessions[$dateKey]['totals']['net'] += $entry['net'];
+                    $groupedSessions[$dateKey]['totals']['addon'] += $entry['addon'];
 
                     $grandTotals['qty'] += $entry['qty'];
                     $grandTotals['amount'] += $entry['amount'];
                     $grandTotals['discount'] += $entry['discount'];
                     $grandTotals['net'] += $entry['net'];
+                    $grandTotals['addon'] += $entry['addon'];
                 }
 
                 ksort($groupedSessions);
@@ -467,6 +485,8 @@
                             <i class="fas fa-exclamation-triangle"></i> No product wise sales data found for the selected filters.
                         </div>
                     @else
+
+
                         @foreach ($groupedSessions as $sessionKey => $sessionData)
                             @php
                                 $rows = $sessionData['rows'];
@@ -491,6 +511,7 @@
                                     <span>Total Amount: {{ number_format($sessionTotals['amount'], 3) }}</span>
                                     <span>Total Discount: {{ number_format($sessionTotals['discount'], 3) }}</span>
                                     <span>Net Amount: {{ number_format($sessionTotals['net'], 3) }}</span>
+                                    <span>Addon Amount: {{ number_format($sessionTotals['addon'], 3) }}</span>
                                 </div>
                                 <div class="table-responsive">
                                     <table width="100%" class="table table-bordered mb-0">
@@ -502,15 +523,18 @@
                                                 <th class="text-center">Amount</th>
                                                 <th class="text-center">Discount</th>
                                                 <th class="text-center">Net Amount</th>
+                                                <th class="text-center">Addon Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach ($rows as $row)
                                                 @php
+                                               // dd($row);
                                                     $rowQty = (float) ($row->total_qty ?? 0);
                                                     $rowAmount = (float) ($row->total_amount ?? 0);
                                                     $rowDiscount = (float) ($row->total_discount ?? 0);
                                                     $rowNet = (float) ($row->total_net_amount ?? 0);
+                                                    $rowaddon = (float) ($row->addon_net_amount ?? 0);
                                                 @endphp
                                                 <tr>
                                                     <td class="text-left">{{ $row->option_list_name }}</td>
@@ -519,14 +543,17 @@
                                                     <td class="text-center">{{ number_format($rowAmount, 3) }}</td>
                                                     <td class="text-center">{{ number_format($rowDiscount, 3) }}</td>
                                                     <td class="text-center">{{ number_format($rowNet, 3) }}</td>
+                                                    <td class="text-center">{{ number_format($rowaddon, 3) }}</td>
                                                 </tr>
                                             @endforeach
                                             <tr class="subtotal-row">
-                                                <td colspan="2" class="text-right"><strong>Subtotal ({{ $sessionData['display_date'] }})</strong></td>
+                                                <td colspan="2" class="text-right"><strong>Subtotal </strong></td>
+                                                <!-- <td colspan="2" class="text-right"><strong>Subtotal ({{ $sessionData['display_date'] }})</strong></td> -->
                                                 <td class="text-center">{{ number_format($sessionTotals['qty'], 3) }}</td>
                                                 <td class="text-center">{{ number_format($sessionTotals['amount'], 3) }}</td>
                                                 <td class="text-center">{{ number_format($sessionTotals['discount'], 3) }}</td>
                                                 <td class="text-center">{{ number_format($sessionTotals['net'], 3) }}</td>
+                                                <td class="text-center">{{ number_format($sessionTotals['addon'], 3) }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -544,6 +571,54 @@
                                     <td class="text-center">{{ number_format($grandTotals['amount'], 3) }}</td>
                                     <td class="text-center">{{ number_format($grandTotals['discount'], 3) }}</td>
                                     <td class="text-center">{{ number_format($grandTotals['net'], 3) }}</td>
-                                <td class="text-center">{{ number_format($grandTotals['addon'], 3) }}</td>
-ection
+                                    <td class="text-center">{{ number_format($grandTotals['addon'], 3) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="kt-portlet__foot sale_invoice_footer" style="background: #f7f8fa">
+            <div class="row">
+                <div class="col-lg-12 kt-align-right">
+                    <div class="date">
+                        <span>Date: </span>{{ date('d-m-Y') }} -
+                        <span>User: </span>{{ auth()->user()->name }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('pageJS')
+@endsection
+
+@section('customJS')
+    <script>
+        $(document).ready(function() {
+            console.log('Product Wise Sales Report loaded successfully');
+        });
+    </script>
+@endsection
+
+@section('exportXls')
+    @if (($data['form_file_type'] ?? null) === 'xls')
+        <script>
+            $(document).ready(function() {
+                var tables = document.querySelectorAll('table');
+                tables.forEach(function(table, index) {
+                    if (index === 0) {
+                        return;
+                    }
+
+                    $(table).table2excel({
+                        filename: "product_wise_sales_" + index + ".xls",
+                    });
+                });
+            });
+        </script>
+    @endif
+@endsection
 
