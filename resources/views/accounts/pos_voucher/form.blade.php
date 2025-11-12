@@ -94,6 +94,68 @@
                 </div>
             </div>
         </div>
+        <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
+            <div class="kt-portlet kt-portlet--mobile">
+                <div class="kt-portlet__head">
+                    <div class="kt-portlet__head-label">
+                        <h3 class="kt-portlet__head-title">
+                            Ingredient Usage Sync
+                        </h3>
+                    </div>
+                </div>
+                <div class="kt-portlet__body">
+                    <form id="ingredient_usage_form" class="form">
+                        <div class="form-group-block row">
+                            <div class="col-lg-6">
+                                <div class="row form-group-block">
+                                    <div class="col-lg-3">
+                                        <label class="erp-col-form-label">Date:<span class="required">*</span></label>
+                                    </div>
+                                    <div class="col-lg-9">
+                                        <div class="erp-selectDateRange">
+                                            <div class="input-daterange input-group kt_datepicker_5">
+                                                <input type="text" class="pos_date form-control erp-form-control-sm ingredient-date" value="{{$date}}" name="ingredient_date_from" autocomplete="off">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text erp-form-control-sm">To</span>
+                                                </div>
+                                                <input type="text" class="pos_date form-control erp-form-control-sm ingredient-date" value="{{$date}}" name="ingredient_date_to" autocomplete="off">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-block row">
+                            <div class="col-lg-6">
+                                <div class="row form-group-block">
+                                    <div class="col-lg-3">
+                                        <label class="erp-col-form-label">Branch:<span class="required">*</span></label>
+                                    </div>
+                                    <div class="col-lg-9">
+                                        <div class="erp-select2">
+                                            <select class="form-control kt-select2 erp-form-control-sm" id="ingredient_branch_id" name="ingredient_branch_id" data-placeholder="Select branch">
+                                                <option value="">Select branch</option>
+                                                @foreach($data['branches'] as $branch)
+                                                    <option value="{{$branch->branch_id}}" {{$branch->branch_id == auth()->user()->branch_id?"selected":""}}>{{$branch->branch_name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-block row">
+                            <div class="col-lg-6">
+                                <button type="button" id="ingredient_usage_sync_btn" class="btn btn-brand btn-sm">
+                                    Sync Ingredient Usage
+                                </button>
+                            </div>
+                        </div>
+                        <div id="ingredient_usage_feedback" class="mt-3"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </form>
     <!--end::Form-->
     @endpermission
