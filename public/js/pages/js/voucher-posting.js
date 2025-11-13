@@ -182,10 +182,12 @@ var KTFormWidgets = function() {
                         var message = response.inserted_rows > 0
                             ? 'Ingredient usage synced successfully. Inserted rows: ' + response.inserted_rows + '.'
                             : (response.message || 'No ingredient usage records were generated.');
-                        ingredientFeedback
-                            .removeClass()
-                            .addClass('mt-3')
-                            .html('<div class="alert ' + alertClass + ' mb-0">' + message + '</div>');
+                        if (response.inserted_rows > 0) {
+                            toastr.success(message);
+                        } else {
+                            toastr.warning(message);
+                        }
+                        ingredientFeedback.empty();
                     } else {
                         ingredientFeedback
                             .removeClass()
