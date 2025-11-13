@@ -47,7 +47,6 @@ class OrderRecipeUsageController extends Controller
             ->where('o.restaurant_id', $branchId)
             ->whereBetween('o.order_date', [$dateFrom, $dateTo])
             ->get();
-dd($orderDetails->toArray());
         if ($orderDetails->isEmpty()) {
             return response()->json([
                 'success' => true,
@@ -85,6 +84,7 @@ dd($orderDetails->toArray());
                 'order_date'      => Carbon::parse($detail->order_date),
             ];
 
+            dd($structuredDetails);
             $optionListIds = array_merge($optionListIds, $optionIds);
         }
 
