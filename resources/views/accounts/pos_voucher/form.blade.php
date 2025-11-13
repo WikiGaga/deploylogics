@@ -165,16 +165,16 @@
 @endsection
 
 @section('customJS')
-    <script src="{{ asset('js/pages/js/voucher-posting.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/voucher-posting.js?v=1.1') }}" type="text/javascript"></script>
     <script>
-        @php
-            try {
-                $ingredientUsageToken = \Tymon\JWTAuth\Facades\JWTAuth::fromUser(auth()->user());
-            } catch (\Exception $exception) {
-                $ingredientUsageToken = null;
-            }
-        @endphp
-        window.apiAccessToken = {!! json_encode($ingredientUsageToken) !!};
+        // @php
+        //     try {
+        //         $ingredientUsageToken = \Tymon\JWTAuth\Facades\JWTAuth::fromUser(auth()->user());
+        //     } catch (\Exception $exception) {
+        //         $ingredientUsageToken = null;
+        //     }
+        // @endphp
+        // window.apiAccessToken = {!! json_encode($ingredientUsageToken) !!};
         var arrows = {
             leftArrow: '<i class="la la-angle-left"></i>',
             rightArrow: '<i class="la la-angle-right"></i>'

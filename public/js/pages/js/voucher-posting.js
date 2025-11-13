@@ -115,6 +115,7 @@ var KTFormWidgets = function() {
         }
 
         triggerButton.on("click", function () {
+            console.log('[IngredientUsage] Sync button clicked');
             var dateFromRaw = ingredientForm.find('[name="ingredient_date_from"]').val();
             var dateToRaw = ingredientForm.find('[name="ingredient_date_to"]').val();
             var branchId = ingredientForm.find('#ingredient_branch_id').val();
