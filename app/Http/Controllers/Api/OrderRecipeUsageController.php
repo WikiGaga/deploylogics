@@ -47,7 +47,7 @@ class OrderRecipeUsageController extends Controller
             ->where('o.restaurant_id', $branchId)
             ->whereBetween('o.order_date', [$dateFrom, $dateTo])
             ->get();
-
+dd($orderDetails->toArray());
         if ($orderDetails->isEmpty()) {
             return response()->json([
                 'success' => true,

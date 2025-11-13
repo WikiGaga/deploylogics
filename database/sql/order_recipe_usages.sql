@@ -7,7 +7,7 @@ CREATE TABLE order_recipe_usages (
     order_id             NUMBER(19)        NOT NULL,
     order_detail_id      NUMBER(19)        NOT NULL,
     restaurant_id        NUMBER(19)        NOT NULL,
-    food_id              NUMBER(19)        NOT NULL,
+    food_id              NUMBER(19)        NULL,
     option_list_id       NUMBER(19)        NOT NULL,
     food_recipe_id       NUMBER(19)        NOT NULL,
     product_id           NUMBER(19)        NOT NULL,
