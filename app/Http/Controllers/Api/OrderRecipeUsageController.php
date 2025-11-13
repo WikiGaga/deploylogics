@@ -168,6 +168,7 @@ class OrderRecipeUsageController extends Controller
                     [
                         'order_id'        => $row['order_id'],
                         'restaurant_id'   => $row['restaurant_id'],
+                        'food_id'         => $row['food_id'] ?: null,
                         'option_list_id'  => $row['option_list_id'],
                         'food_recipe_id'  => $row['food_recipe_id'],
                         'product_quantity'=> $row['product_quantity'],
