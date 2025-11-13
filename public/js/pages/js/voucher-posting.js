@@ -152,11 +152,6 @@ var KTFormWidgets = function() {
 
             var token = window.apiAccessToken || $('meta[name="jwt-token"]').attr('content');
 
-            if (!token) {
-                toastr.error('Missing API token. Please refresh the page or contact the administrator.');
-                return;
-            }
-
             triggerButton.prop('disabled', true).addClass('kt-spinner kt-spinner--sm kt-spinner--light');
             ingredientFeedback
                 .removeClass()
@@ -168,10 +163,12 @@ var KTFormWidgets = function() {
                 dataType: 'json',
                 contentType: 'application/json',
                 processData: false,
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
+                headers: $.extend(
+                    {
+                        'Accept': 'application/json'
+                    },
+                    token ? { 'Authorization': 'Bearer ' + token } : {}
+                ),
                 data: JSON.stringify({
                     branch_id: branchId,
                     date_from: dateFrom,

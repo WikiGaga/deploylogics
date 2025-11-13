@@ -166,7 +166,7 @@
 @endsection
 
 @section('customJS')
-    <script src="{{ asset('js/pages/js/voucher-posting.js?v=1.2') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/voucher-posting.js?v=1.3') }}" type="text/javascript"></script>
     <script>
         var arrows = {
             leftArrow: '<i class="la la-angle-left"></i>',
