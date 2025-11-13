@@ -159,7 +159,6 @@ class OrderRecipeUsageController extends Controller
 
         try {
             foreach ($rowsToPersist as $row) {
-                dd($row);
                 OrderRecipeUsage::updateOrCreate(
                     [
                         'order_detail_id' => $row['order_detail_id'],
@@ -192,7 +191,7 @@ class OrderRecipeUsageController extends Controller
                 $summary[$summaryKey]['total_quantity'] += $row['product_quantity'];
                 $summary[$summaryKey]['order_count'] += 1;
             }
-
+            dd($summary);
             DB::commit();
         } catch (Throwable $exception) {
             DB::rollBack();
