@@ -141,7 +141,6 @@ class OrderRecipeUsageController extends Controller
                         'measure_unit'    => $component->uom_id ?? null,
                     ];
                 }
-                dd($rowsToPersist);
             }
         }
 
@@ -160,6 +159,7 @@ class OrderRecipeUsageController extends Controller
 
         try {
             foreach ($rowsToPersist as $row) {
+                dd($row);
                 OrderRecipeUsage::updateOrCreate(
                     [
                         'order_detail_id' => $row['order_detail_id'],
