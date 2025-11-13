@@ -158,7 +158,7 @@ var KTFormWidgets = function() {
                 .html('<div class="alert alert-info mb-0">Sync in progress...</div>');
 
             $.ajax({
-                url: '/api/ingredient-usage',
+                url: '/ingredient-usage',
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json',

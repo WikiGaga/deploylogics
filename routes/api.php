@@ -25,6 +25,8 @@ Route::post('/whatsapp-webhook', 'Api\WhatsApp\WhatsAppApiController@handleWebho
 Route::get('/whatsapp-send-bill/{text?}/{link?}/{to?}', 'Api\WhatsApp\WhatsAppApiController@sendWhatsAppDocument');
 Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@sendWhatsAppOfferFile');
 
+Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
+
 
 Route::group(['middleware'=>['auth:api']], function () {
 
@@ -108,5 +110,4 @@ Route::group(['middleware'=>['auth:api']], function () {
         });
     });
 
-    Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 });
