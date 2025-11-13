@@ -8,10 +8,19 @@ var KTFormWidgets = function() {
     var formId = $("#voucher_form");
     var ingredientForm = $("#ingredient_usage_form");
     var ingredientFeedback = $("#ingredient_usage_feedback");
-    $.validator.addMethod("valueNotEquals", function(value, element, arg){
-        return arg !== value;
-    }, "This field is required");
+    var hasValidator = typeof $.validator !== "undefined" && typeof $.validator.addMethod === "function";
+
+    if (hasValidator) {
+        $.validator.addMethod("valueNotEquals", function(value, element, arg){
+            return arg !== value;
+        }, "This field is required");
+    } else {
+        console.warn('[IngredientUsage] jQuery validation plugin not found; skipping voucher form validation setup.');
+    }
     var initValidation = function() {
+        if (!hasValidator || !formId.length) {
+            return;
+        }
 
         validator = formId.validate({
             // define validation rules
