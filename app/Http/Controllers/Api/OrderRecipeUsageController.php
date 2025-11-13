@@ -191,7 +191,6 @@ class OrderRecipeUsageController extends Controller
                 $summary[$summaryKey]['total_quantity'] += $row['product_quantity'];
                 $summary[$summaryKey]['order_count'] += 1;
             }
-            dd($summary);
             DB::commit();
         } catch (Throwable $exception) {
             DB::rollBack();
