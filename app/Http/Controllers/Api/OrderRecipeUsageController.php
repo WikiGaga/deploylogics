@@ -107,7 +107,7 @@ class OrderRecipeUsageController extends Controller
             ->map(function ($group) {
                 return $group->first();
             });
-dd($recipes->toArray());
+
         if ($recipes->isEmpty()) {
             return response()->json([
                 'success' => true,
@@ -141,6 +141,7 @@ dd($recipes->toArray());
                         'measure_unit'    => $component->uom_id ?? null,
                     ];
                 }
+                dd($rowsToPersist);
             }
         }
 
