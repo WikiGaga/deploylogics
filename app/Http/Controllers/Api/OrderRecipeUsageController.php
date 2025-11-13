@@ -40,6 +40,7 @@ class OrderRecipeUsageController extends Controller
                 'od.order_id',
                 'od.quantity',
                 'od.variation',
+                'od.food_id',
                 'o.restaurant_id',
                 'o.order_date',
             ])
@@ -79,6 +80,7 @@ class OrderRecipeUsageController extends Controller
                 'order_detail_id' => (int) $detail->order_detail_id,
                 'order_id'        => (int) $detail->order_id,
                 'order_quantity'  => (float) $detail->quantity,
+                'food_id'         => (int) ($detail->food_id ?? 0),
                 'option_list_ids' => $optionIds,
                 'order_date'      => Carbon::parse($detail->order_date),
             ];
@@ -133,6 +135,7 @@ class OrderRecipeUsageController extends Controller
                         'restaurant_id'   => $branchId,
                         'option_list_id'  => $optionListId,
                         'food_recipe_id'  => $recipe->id,
+                        'food_id'         => $detail['food_id'] ?: null,
                         'product_id'      => $component->product_id,
                         'product_quantity'=> round((float) $component->quantity * $detail['order_quantity'], 4),
                         'usage_date'      => $detail['order_date']->toDateString(),
