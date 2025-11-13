@@ -41,10 +41,10 @@ class OrderRecipeUsageController extends Controller
                 'od.quantity',
                 'od.variation',
                 'o.restaurant_id',
-                'o.created_at as order_created_at',
+                'o.order_date',
             ])
             ->where('o.restaurant_id', $branchId)
-            ->whereBetween('o.created_at', [$dateFrom, $dateTo])
+            ->whereBetween('o.order_date', [$dateFrom, $dateTo])
             ->get();
 
         if ($orderDetails->isEmpty()) {
@@ -80,7 +80,7 @@ class OrderRecipeUsageController extends Controller
                 'order_id'        => (int) $detail->order_id,
                 'order_quantity'  => (float) $detail->quantity,
                 'option_list_ids' => $optionIds,
-                'order_date'      => Carbon::parse($detail->order_created_at),
+                'order_date'      => Carbon::parse($detail->order_date),
             ];
 
             $optionListIds = array_merge($optionListIds, $optionIds);
