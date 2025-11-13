@@ -135,7 +135,6 @@ class OrderRecipeUsageController extends Controller
                         'restaurant_id'   => $branchId,
                         'option_list_id'  => $optionListId,
                         'food_recipe_id'  => $recipe->id,
-                        'food_id'         => $detail['food_id'] ?: null,
                         'product_id'      => $component->product_id,
                         'product_quantity'=> round((float) $component->quantity * $detail['order_quantity'], 4),
                         'usage_date'      => $detail['order_date']->toDateString(),
