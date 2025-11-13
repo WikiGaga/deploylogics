@@ -113,8 +113,11 @@ var KTFormWidgets = function() {
         var branchSelect = $("#ingredient_branch_id");
 
         if (!triggerButton.length || !ingredientForm.length) {
+            console.warn('[IngredientUsage] Required elements not found; skipping sync binding.');
             return;
         }
+
+        console.log('[IngredientUsage] bindIngredientSync initialized');
 
         if (branchSelect.length && $.fn.select2) {
             branchSelect.select2({
@@ -123,7 +126,7 @@ var KTFormWidgets = function() {
             });
         }
 
-        triggerButton.on("click", function () {
+        triggerButton.off("click").on("click", function () {
             console.log('[IngredientUsage] Sync button clicked');
             var dateFromRaw = ingredientForm.find('[name="ingredient_date_from"]').val();
             var dateToRaw = ingredientForm.find('[name="ingredient_date_to"]').val();

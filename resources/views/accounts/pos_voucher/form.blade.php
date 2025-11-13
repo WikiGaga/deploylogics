@@ -94,7 +94,8 @@
                 </div>
             </div>
         </div>
-        <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
+    </form>
+    <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
                 <div class="kt-portlet__head">
                     <div class="kt-portlet__head-label">
@@ -156,8 +157,8 @@
                 </div>
             </div>
         </div>
-    </form>
-    <!--end::Form-->
+    </div>
+    <!--end::Forms-->
     @endpermission
 @endsection
 @section('pageJS')
