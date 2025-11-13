@@ -40,7 +40,6 @@ class OrderRecipeUsageController extends Controller
                 'od.order_id',
                 'od.quantity',
                 'od.variation',
-                'od.food_id',
                 'o.restaurant_id',
                 'o.order_date',
             ])
@@ -79,7 +78,6 @@ class OrderRecipeUsageController extends Controller
             $structuredDetails[] = [
                 'order_detail_id' => (int) $detail->order_detail_id,
                 'order_id'        => (int) $detail->order_id,
-                'food_id'         => (int) ($detail->food_id ?? 0),
                 'order_quantity'  => (float) $detail->quantity,
                 'option_list_ids' => $optionIds,
                 'order_date'      => Carbon::parse($detail->order_date),
@@ -133,7 +131,6 @@ class OrderRecipeUsageController extends Controller
                         'order_detail_id' => $detail['order_detail_id'],
                         'order_id'        => $detail['order_id'],
                         'restaurant_id'   => $branchId,
-                        'food_id'         => $detail['food_id'] ?? null,
                         'option_list_id'  => $optionListId,
                         'food_recipe_id'  => $recipe->id,
                         'product_id'      => $component->product_id,
@@ -168,7 +165,6 @@ class OrderRecipeUsageController extends Controller
                     [
                         'order_id'        => $row['order_id'],
                         'restaurant_id'   => $row['restaurant_id'],
-                        'food_id'         => $row['food_id'] ?? null,
                         'option_list_id'  => $row['option_list_id'],
                         'food_recipe_id'  => $row['food_recipe_id'],
                         'product_quantity'=> $row['product_quantity'],
@@ -182,7 +178,6 @@ class OrderRecipeUsageController extends Controller
                 if (!isset($summary[$summaryKey])) {
                     $summary[$summaryKey] = [
                         'product_id'      => $row['product_id'],
-                        'food_id'         => $row['food_id'] ?? null,
                         'usage_date'      => $row['usage_date'],
                         'total_quantity'  => 0,
                         'order_count'     => 0,
