@@ -159,7 +159,6 @@ class OrderRecipeUsageController extends Controller
 
         try {
             foreach ($rowsToPersist as $row) {
-                dd($row['food_id']);
                 OrderRecipeUsage::updateOrCreate(
                     [
                         'order_detail_id' => $row['order_detail_id'],
