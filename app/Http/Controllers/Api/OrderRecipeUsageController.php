@@ -84,7 +84,6 @@ class OrderRecipeUsageController extends Controller
                 'order_date'      => Carbon::parse($detail->order_date),
             ];
 
-            dd($structuredDetails);
             $optionListIds = array_merge($optionListIds, $optionIds);
         }
 
@@ -108,7 +107,7 @@ class OrderRecipeUsageController extends Controller
             ->map(function ($group) {
                 return $group->first();
             });
-
+dd($recipes->toArray());
         if ($recipes->isEmpty()) {
             return response()->json([
                 'success' => true,
