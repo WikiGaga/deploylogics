@@ -127,7 +127,11 @@ class OrderRecipeUsageController extends Controller
                     continue;
                 }
 
-                foreach ($recipe->dtls as $component) {
+                    foreach ($recipe->dtls as $component) {
+                        $orderQty = (float) $detail['order_quantity'];
+                        $productQty = (float) $component->quantity;
+                        $productQtyUsed = round($productQty * $orderQty, 4);
+
                     $rowsToPersist[] = [
                         'order_detail_id' => $detail['order_detail_id'],
                         'order_id'        => $detail['order_id'],
@@ -136,7 +140,9 @@ class OrderRecipeUsageController extends Controller
                         'food_recipe_id'  => $recipe->id,
                         'food_id'         => $detail['food_id'],
                         'product_id'      => $component->product_id,
-                        'product_quantity'=> round((float) $component->quantity * $detail['order_quantity'], 4),
+                        'order_quantity'  => $orderQty,
+                        'product_quantity'=> $productQty,
+                        'product_quantity_used'=> $productQtyUsed,
                         'usage_date'      => $detail['order_date']->toDateString(),
                         'measure_unit'    => $component->uom_id ?? null,
                     ];
@@ -170,7 +176,9 @@ class OrderRecipeUsageController extends Controller
                         'food_id'         => $row['food_id'],
                         'option_list_id'  => $row['option_list_id'],
                         'food_recipe_id'  => $row['food_recipe_id'],
+                        'order_quantity'  => $row['order_quantity'],
                         'product_quantity'=> $row['product_quantity'],
+                        'product_quantity_used'=> $row['product_quantity_used'],
                         'usage_date'      => $row['usage_date'],
                         'measure_unit'    => $row['measure_unit'],
                     ]
@@ -188,7 +196,7 @@ class OrderRecipeUsageController extends Controller
                     ];
                 }
 
-                $summary[$summaryKey]['total_quantity'] += $row['product_quantity'];
+                $summary[$summaryKey]['total_quantity'] += $row['product_quantity_used'];
                 $summary[$summaryKey]['order_count'] += 1;
             }
             DB::commit();
