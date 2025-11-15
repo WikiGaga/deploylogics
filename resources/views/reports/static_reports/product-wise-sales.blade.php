@@ -364,7 +364,8 @@
                     $splitNet = $netAmount / $optionCount;
 
                     foreach ($resolvedOptionIds as $optionId) {
-                        $aggregateKey = $sessionDate . '|' . $optionId . '|' . $foodId;
+                        // $aggregateKey = $sessionDate . '|' . $optionId . '|' . $foodId;
+                        $aggregateKey =  $optionId . '|' . $foodId;
 
                         if (! isset($aggregated[$aggregateKey])) {
                             $aggregated[$aggregateKey] = [
@@ -476,11 +477,11 @@
 
             <div class="row row-block">
                 <div class="col-lg-12">
-            @if ($reportError)
-                <div class="alert alert-danger text-center">
-                    <i class="fas fa-exclamation-circle"></i> {{ $reportError }}
-                </div>
-            @elseif (empty($groupedSessions))
+                    @if ($reportError)
+                        <div class="alert alert-danger text-center">
+                            <i class="fas fa-exclamation-circle"></i> {{ $reportError }}
+                        </div>
+                    @elseif (empty($groupedSessions))
                         <div class="alert alert-warning text-center">
                             <i class="fas fa-exclamation-triangle"></i> No product wise sales data found for the selected filters.
                         </div>
