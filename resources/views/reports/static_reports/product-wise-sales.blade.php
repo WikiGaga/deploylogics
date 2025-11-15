@@ -167,23 +167,25 @@
                         od.total_add_on_price,
                         od.variation,
                         o.created_at,
+                        od.is_deleted,
                         o.restaurant_id
                     FROM order_details od
                     JOIN orders o ON o.id = od.order_id
-                    WHERE od.is_deleted <> 'Y' and o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
+                     and o.CREATED_AT BETWEEN '{$dateTimeFrom}' AND '{$dateTimeTo}'
                         {$branchFilter}
                 ";
 
+                //WHERE od.is_deleted <> 'Y'
                 // $a=DB::table('order_details')
                 // // ->where('food_id',85)
                 // ->first();
 
                 // $b=json_decode($a->variation);
-                // dd($b,$a);
+         
 
                 $detailRows = \Illuminate\Support\Facades\DB::select($query);
                 echo '<!-- DEBUG: Product wise sales retrieved ' . count($detailRows) . ' order detail rows -->';
-
+    //    dd($detailRows);
                 $decodeVariation = static function ($payload) {
                     if (empty($payload)) {
                         return [];
@@ -365,13 +367,16 @@
 
                     foreach ($resolvedOptionIds as $optionId) {
                         // $aggregateKey = $sessionDate . '|' . $optionId . '|' . $foodId;
-                        $aggregateKey =  $optionId . '|' . $foodId;
+                        // $aggregateKey =  $optionId . '|' . $foodId;
+                        $aggregateKey =  trim($row->is_deleted ). '|' . $optionId . '|' . $foodId;
+                        
 
                         if (! isset($aggregated[$aggregateKey])) {
                             $aggregated[$aggregateKey] = [
                                 'session_date' => $sessionDate,
                                 'option_list_id' => $optionId,
                                 'food_id' => $foodId,
+                                'status' => (trim($row->is_deleted )=='Y')?'Cancel':'Approved',
                                 'qty' => 0.0,
                                 'amount' => 0.0,
                                 'discount' => 0.0,
@@ -448,6 +453,7 @@
                         'option_list_name' => $optionNames[$optionId] ?? 'N/A',
                         'food_name' => $foodNames[$foodId] ?? 'N/A',
                         'total_qty' => $entry['qty'],
+                        'status' => $entry['status'],
                         'total_amount' => $entry['amount'],
                         'total_discount' => $entry['discount'],
                         'total_net_amount' => $entry['net'],
@@ -520,6 +526,7 @@
                                             <tr>
                                                 <th class="text-left">Option List Name</th>
                                                 <th class="text-left">Food Name</th>
+                                                <th class="text-center">Status</th>
                                                 <th class="text-center">Option List Qty</th>
                                                 <th class="text-center">Amount</th>
                                                 <th class="text-center">Discount</th>
@@ -540,6 +547,7 @@
                                                 <tr>
                                                     <td class="text-left">{{ $row->option_list_name }}</td>
                                                     <td class="text-left">{{ $row->food_name }}</td>
+                                                    <td class="text-left">{{ $row->status }}</td>
                                                     <td class="text-center">{{ number_format($rowQty, 3) }}</td>
                                                     <td class="text-center">{{ number_format($rowAmount, 3) }}</td>
                                                     <td class="text-center">{{ number_format($rowDiscount, 3) }}</td>
