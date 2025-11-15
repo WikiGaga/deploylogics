@@ -428,7 +428,7 @@
                 }
 
                 foreach ($aggregated as $entry) {
-                    $dateKey =  'all';
+                    $dateKey =  trim($entry['status']);
                     // $dateKey = $optionNames[$optionId] ?? 'N/A';
                     // $dateKey = $entry['session_date'];
                     $displayDate = date('d-m-Y', strtotime($entry['session_date']));
@@ -437,7 +437,8 @@
 
                     if (! isset($groupedSessions[$dateKey])) {
                         $groupedSessions[$dateKey] = [
-                            'display_date' => $displayDate,
+                            // 'display_date' => $displayDate,
+                            'display_date' => trim($entry['status'])=='Y'?'Cancel':'Approved',
                             'rows' => [],
                             'totals' => [
                                 'qty' => 0.0,
@@ -506,7 +507,7 @@
                             <div class="report-group">
                                 <div class="report-header">
                                     <div class="report-info">
-                                        <span><i class="fas fa-calendar-day"></i> Session Date: {{ $sessionData['display_date'] }}</span>
+                                        <span><i class="fas fa-calendar-day"></i> Satus: {{ $sessionData['display_date'] }}</span>
                                     </div>
                                     <div class="report-stats">
                                         <span><i class="fas fa-th-list"></i> Options: {{ $optionCount }}</span>
@@ -556,7 +557,7 @@
                                                 </tr>
                                             @endforeach
                                             <tr class="subtotal-row">
-                                                <td colspan="2" class="text-right"><strong>Subtotal </strong></td>
+                                                <td colspan="3" class="text-right"><strong>Subtotal </strong></td>
                                                 <!-- <td colspan="2" class="text-right"><strong>Subtotal ({{ $sessionData['display_date'] }})</strong></td> -->
                                                 <td class="text-center">{{ number_format($sessionTotals['qty'], 3) }}</td>
                                                 <td class="text-center">{{ number_format($sessionTotals['amount'], 3) }}</td>
