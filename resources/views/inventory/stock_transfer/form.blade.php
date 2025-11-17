@@ -339,8 +339,9 @@
                                                 <i class="la la-barcode"></i>
                                             </button>
                                         </div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                        <div class="erp_form__grid_th_input" style="position:relative;display:inline-block;width:100%;">
+                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                         @include('layouts.selectview')
                                         </div>
                                     </th>
                                     <th scope="col">

@@ -462,7 +462,7 @@
                                             Account Code
                                         </div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="account_code" type="text" class="acc_code tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" data-require="true" data-readonly="true">
+                                            <input id="account_code" type="text" class="acc_code tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" data-require="true" data-readonly="true">
                                         </div>
                                     </th>
                                     <th scope="col">

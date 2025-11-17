@@ -215,8 +215,9 @@
                                                     <i class="la la-barcode"></i>
                                                 </button>
                                             </div>
-                                            <div class="erp_form__grid_th_input">
-                                                <input id="account_code" type="text" class="acc_code  tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
+                                            <div class="erp_form__grid_th_input" style="position:relative;display:inline-block;width:100%;">
+                                                <input id="account_code" type="text"  style="padding-right:25px;width:100%;" class="acc_code  tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
+                                                @include('layouts.selectview')
                                             </div>
                                         </th>
                                         <th scope="col">

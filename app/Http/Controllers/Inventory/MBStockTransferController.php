@@ -81,6 +81,7 @@ class MBStockTransferController extends Controller
             'col_code' => 'mb_stock_transfer_code',
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
+        // dd('fd');
         return view('inventory.multi_branch_stock_transfer.form', compact('data'));
     }
 

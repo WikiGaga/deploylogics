@@ -1769,8 +1769,9 @@ FETCH FIRST 50 ROWS ONLY";
             ];
             return response()->json($result);
         } else {
+            $search= $request->val ?? null;
             // return $this->jsonSuccessResponse($data, "", 200);
-            return Response::json(['body' => View::make('common.inline-help', compact('data'))->render()]);
+            return Response::json(['body' => View::make('common.inline-help', compact('data','search'))->render()]);
         }
     }
 }

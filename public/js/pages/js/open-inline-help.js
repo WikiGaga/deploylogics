@@ -1,9 +1,13 @@
 var currentRequest = null;
+var currentForm = null;
+var currenturl = null;
+var currentinLineHelp = null;
 
 $(document).on('focusin', '.open_inline__help', function(e) {
     $(document).find('.open_inline__help').removeClass('open_inline__help__focus');
     $(this).addClass('open_inline__help__focus');
 });
+
 
 function display_help(that, table_block, table_block__table) {
     table_block__table.append('<div id="inLineHelp"><div class="inLineHelp"></div></div>');
@@ -40,6 +44,53 @@ function display_help(that, table_block, table_block__table) {
         inLineHelp.addClass("inline_help_table");
     }
 }
+
+$(document).on('keyup', ' #helper_search', function(e) {
+
+    var that = $(this);
+    
+    if( that.val().length >= 3){
+        //  $('#inLineHelp').remove();
+
+        console.log(currenturl)
+
+        currentForm.val = that.val();
+        currentRequest = $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            beforeSend : function(){
+                if(currentRequest != null) {
+                    currentRequest.abort();
+                }
+            },
+            type: 'POST',
+            url: currenturl+'/' +encodeURIComponent(that.val()),
+            dataType: 'json',
+            data: currentForm,
+            success: function(response) {
+                if (response['body'] != null) {
+                    currentinLineHelp.html(response['body']);
+                    var input = $('#helper_search');
+                    input.focus();
+                    var tmp = input.val();
+                    input.val('');
+                    input.val(tmp);
+
+                    // $('#helper_search').focus();
+                    // setTimeout(function() {
+                    //     currentinLineHelp.html('');
+                    // }, 1000);
+
+                   
+                }
+            }
+        });
+
+    }
+   
+});
+
 $(document).on('keyup click', '.open_inline__help', function(e) {
     var that = $(this);
     var table_block = that.closest('.erp_form___block');
@@ -102,6 +153,10 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                 formData.supplier_id = $('#supplier_id').val();
             }
             formData.val = that.val();
+            currentForm=formData;
+            currenturl=data_url;
+            currentinLineHelp=inLineHelp;
+
             currentRequest = $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -115,9 +170,12 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                 url: data_url,
                 dataType: 'json',
                 data: formData,
+                
                 success: function(response) {
                     if (response['body'] != null) {
                         inLineHelp.html(response['body']);
+                        $('#helper_search').focus();
+                        
                     }
                 }
             });

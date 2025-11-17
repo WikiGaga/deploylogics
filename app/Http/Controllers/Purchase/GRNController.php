@@ -343,6 +343,7 @@ class GRNController extends Controller
             'code_type'         => strtoupper('grn'),
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
+        // dd('fdd');
         return view('purchase.grn.form', compact('data'));
     }
 

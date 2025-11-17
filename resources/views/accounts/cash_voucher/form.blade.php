@@ -8,46 +8,6 @@
         }
     </style>
 @endsection
-<style>
-
-/* Ensure the container allows absolute positioning of the icon */
-.input-select-container {
-    position: relative;
-    display: inline-block; 
-}
-
-/* Style the icon span */
-.select-icon {
-    /* --- CRUCIAL: Centers the icon vertically --- */
-    position: absolute;
-    top: 50%; /* Position the top edge at the container's vertical mid-point */
-    transform: translateY(-50%); /* Pulls the icon up by half its own height */
-    /* ------------------------------------------- */
-    
-    right: 8px; /* Control horizontal position (pushed left from the edge) */
-    
-    /* Ensure mouse clicks pass through to the input */
-    pointer-events: none; 
-    color: #999; 
-}
-
-/* Create the down arrow */
-.select-icon::after {
-    content: '';
-    display: block;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #999;
-}
-
-/* Adjust the input's padding to make room for the icon */
-.input-select-container .form-control {
-    padding-right: 25px;
-}
-</style>
-
 
 @section('content')
     @php
@@ -282,9 +242,9 @@
                                                     <i class="la la-barcode"></i>
                                                 </button>
                                             </div>
-                                            <div class="erp_form__grid_th_input">
-                                                <input id="account_code" type="text" class="acc_code  tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
-                                                <span class="select-icon"></span>
+                                            <div class="erp_form__grid_th_input"  style="position:relative;display:inline-block;width:100%;">
+                                                <input id="account_code" type="text" style="padding-right:25px;width:100%;" class="acc_code  tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
+                                                @include('layouts.selectview')
                                             </div>
                                         </th>
                                         <th scope="col">
