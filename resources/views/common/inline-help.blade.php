@@ -75,9 +75,9 @@
     }
 </style>
 <div class="data_thead_row" id="{{$data['case']}}">
-    <h5>Search :</h5>
+    <!-- <h5>Search :</h5>
     <input type="text" name="helper_search" value="{{ $search }}" class="on_click_event" id="helper_search" style="width: 100%; box-sizing: border-box; margin-bottom: 5px;">
-    <br>
+    <br> -->
     <table border="1" class="" width="100%">
         <thead>
         <tr>

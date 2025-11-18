@@ -45,51 +45,50 @@ function display_help(that, table_block, table_block__table) {
     }
 }
 
-$(document).on('keyup', ' #helper_search', function(e) {
+// $(document).on('keyup', ' #helper_search', function(e) {
 
-    var that = $(this);
+//     var that = $(this);
     
-    if( that.val().length >= 3){
-        //  $('#inLineHelp').remove();
+//     // if( that.val().length >= 1){
+//         //  $('#inLineHelp').remove();
 
-        console.log(currenturl)
+//         // console.log(currenturl)
+//   currentForm.val = that.val();
 
-        currentForm.val = that.val();
-        currentRequest = $.ajax({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            beforeSend : function(){
-                if(currentRequest != null) {
-                    currentRequest.abort();
-                }
-            },
-            type: 'POST',
-            url: currenturl+'/' +encodeURIComponent(that.val()),
-            dataType: 'json',
-            data: currentForm,
-            success: function(response) {
-                if (response['body'] != null) {
-                    currentinLineHelp.html(response['body']);
-                    var input = $('#helper_search');
-                    input.focus();
-                    var tmp = input.val();
-                    input.val('');
-                    input.val(tmp);
+//     setTimeout(function() {
 
-                    // $('#helper_search').focus();
-                    // setTimeout(function() {
-                    //     currentinLineHelp.html('');
-                    // }, 1000);
-
-                   
-                }
-            }
-        });
-
-    }
+//         currentRequest = $.ajax({
+//             headers: {
+//                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//             },
+//             beforeSend : function(){
+//                 if(currentRequest != null) {
+//                     currentRequest.abort();
+//                 }
+//             },
+//             type: 'POST',
+//             url: currenturl+'/' +encodeURIComponent(that.val()),
+//             dataType: 'json',
+//             data: currentForm,
+//             success: function(response) {
+//                 if (response['body'] != null) {
+//                     currentinLineHelp.html(response['body']);
+//                     var input = $('#helper_search');
+//                     input.focus();
+//                     var tmp = input.val();
+//                     input.val('');
+//                     input.val(tmp);
+//                     // $('#helper_search').focus();
+//                     // setTimeout(function() {
+//                     //     currentinLineHelp.html('');
+//                     // }, 1000);
+//                 }
+//             }
+//         });
+//     }, 1000);
+//     // }
    
-});
+// });
 
 $(document).on('keyup click', '.open_inline__help', function(e) {
     var that = $(this);

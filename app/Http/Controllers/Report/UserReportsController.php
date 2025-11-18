@@ -120,6 +120,7 @@ class UserReportsController extends Controller
         $data['date_to'] = new \DateTime("now");
         $data['branches'] = Utilities::getAllBranches();//TblSoftBranch::where(Utilities::currentBC())->where('branch_active_status',1)->get();
         $data['customers'] = TblSaleCustomer::get();
+        // dd('fsd');
         if($reportType == 'static'){
             return view('reports.report_static_create', compact('data'));
         } elseif($reportType == 'dynamic'){
@@ -940,7 +941,7 @@ class UserReportsController extends Controller
 
     public function staticStore(Request $request, $id = null)
     {
-       // dd($request->toArray());
+    //    dd($request->toArray());
         $data = [];
         session()->forget('data');
         $msg = [];
@@ -2601,10 +2602,12 @@ class UserReportsController extends Controller
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
 
+               
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.static_reports.'.$data['key'], compact('data'))->render();
                 }else{
+                    //  dd('jk',$data['report_type'],$data['key'],$data);
                     return view('reports.static_reports.'.$data['key']);
                 }
             }

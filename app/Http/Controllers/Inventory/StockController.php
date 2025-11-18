@@ -212,7 +212,7 @@ class StockController extends Controller
      */
     public function store(Request $request,$type, $id = null)
     {
-        //dd($request);
+        // dd($request);
         $data = [];
         $errData = [];
         $valid = [
@@ -794,6 +794,7 @@ class StockController extends Controller
             return $this->jsonErrorResponse($errData, $e->getMessage(), 200);
         }
         DB::commit();
+        
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
             $data['redirect'] = $this->prefixIndexPage.'stock/'.$type;

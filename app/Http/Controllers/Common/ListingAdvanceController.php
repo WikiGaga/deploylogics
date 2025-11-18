@@ -33,7 +33,7 @@ class ListingAdvanceController extends Controller
 {
 
     public function index(Request $request,$caseType,$subType = null){
-    //    dd($request->all());
+    //    dd($request->all(),$caseType,$subType);
     //    dd($request['query']['globalFilters']['download']);
 
     // event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
@@ -332,6 +332,7 @@ class ListingAdvanceController extends Controller
                             $to = "TO_DATE('".$today." ".$time_to."', 'dd/mm/yyyy HH:MI:SS pm')";
                         }
                     }
+                    //  dd( $from, $to);
                     if($date == 'all'){
                         $from = "TO_DATE('01/01/2010 ".$time_from."', 'dd/mm/yyyy HH:MI:SS pm')";
                         $to = "TO_DATE('".$today." ".$time_to."', 'dd/mm/yyyy HH:MI:SS pm')";

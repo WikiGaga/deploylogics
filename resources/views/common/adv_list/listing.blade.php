@@ -190,15 +190,18 @@
                             </button>
                             <form method="get" name="getRecordsByDateFilter" class="form-group d-inline-block">
                                 <div class="form-group d-inline-block">
-                                    <select class="form-select btn btn-md btn-default" name="radioDate"
+                                    <select class="form-select btn btn-md btn-default" name="radioDate" id="date_filter_select"
                                         style="padding: 0.545rem 0.75rem;">
                                         <option value="all" selected>All</option>
                                         <option value="today" >Today</option>
                                         <option value="yesterday">Yesterday</option>
                                         <option value="last_7_days">Last 7 Days</option>
                                         <option value="last_30_days">Last 30 Days</option>
+                                        <option value="custom_date">Custom Date</option>
                                     </select>
                                 </div>
+                                <input type="hidden" class="form-control erp-form-control-sm kt_datepicker_bcs" format="dd-mm-yyyy" value="{{isset($from_date)?$from_date:""}}" id="from_date" name="from" autocomplete="off">
+                                <input type="hidden" class="form-control erp-form-control-sm kt_datepicker_bcs" value="{{isset($to_date)?$to_date:""}}" id="to_date" name="to" autocomplete="off">
                                 <div class="btn-group btn-group-md" role="group"
                                     aria-label="Button group with nested dropdown">
                                     <button type="submit" class="btn btn-md btn-default" id="getRecordsByDateFilter">
@@ -237,6 +240,20 @@
                             </div>
 
                             <div class="dropdown dropdown-inline">
+                                <div class="col-lg-8" id="custom_date_div">
+                                    <div class="erp-selectDateRange">
+                                        <div class="input-daterange input-group kt_datepicker_5">
+                                              <div class="input-group-append">
+                                                <span class="input-group-text erp-form-control-sm">From</span>
+                                            </div>
+                                            <input type="text" class="form-control erp-form-control-sm kt_datepicker_bcs" format="dd-mm-yyyy" value="{{isset($from_date)?$from_date:""}}" id="from_d" name="from_d" autocomplete="off">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text erp-form-control-sm">To</span>
+                                            </div>
+                                            <input type="text" class="form-control erp-form-control-sm kt_datepicker_bcs" value="{{isset($to_date)?$to_date:""}}" id="to_d" name="to_d" autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
                                 <button type="button" class="btn btn-default btn-md" data-toggle="dropdown"
                                     aria-haspopup="true" aria-expanded="false">
                                     <i class="la la-table"></i> Columns
@@ -389,6 +406,70 @@
     </div>
     <script>
         var userId = @json(Auth::user()->id);
+
+
+        $('#from_d').on('change', function() {
+            var selectedDate = $(this).val();
+            $('#from_date').val(selectedDate);
+        });
+
+         $('#to_d').on('change', function() {
+            var selectedDate = $(this).val();
+            $('#to_date').val(selectedDate);
+        });
+
+        var arrows;
+        if (KTUtil.isRTL()) {
+            arrows = {
+                leftArrow: '<i class="la la-angle-right"></i>',
+                rightArrow: '<i class="la la-angle-left"></i>'
+            }
+        } else {
+            arrows = {
+                leftArrow: '<i class="la la-angle-left"></i>',
+                rightArrow: '<i class="la la-angle-right"></i>'
+            }
+        }
+        $('.kt_datepicker_bcs').datepicker({
+            rtl: KTUtil.isRTL(),
+            todayBtn: "linked",
+            autoclose: true,
+            format: "dd-mm-yyyy",
+            todayHighlight: true,
+            templates: arrows
+        });
+
+        function toggleCustomDateDiv() {
+            var val = $('#date_filter_select').val();
+
+            if (val == 'custom_date') {
+                $('#custom_date_div').show();
+            } else {
+                $('#custom_date_div').hide();
+            }
+        }
+
+        // 1. Run the logic when the document is ready (on page load)
+        $(document).ready(function() {
+            toggleCustomDateDiv();
+        });
+
+        // 2. Run the logic on change (as you already have)
+        $(document).on('change', '#date_filter_select', toggleCustomDateDiv);
+
+        $(document).on('change', '#date_filter_select', function() {
+            $('#custom_date_div').hide();
+            val = $(this).val();
+
+            console.log(val)
+            if(val == 'custom_date'){
+                $('#custom_date_div').show();
+
+            }else{
+                 $('#custom_date_div').hide();
+
+            }
+        });
 
         $('#listing_user_filter').on('click', function(e) {
             var data_url = $(this).attr('data-url');

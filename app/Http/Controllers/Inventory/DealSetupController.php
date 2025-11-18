@@ -111,6 +111,8 @@ class DealSetupController extends Controller
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
 
+        // dd($formUrl);
+
         return view('inventory.'.$formUrl.'.form',compact('data'));
     }
 

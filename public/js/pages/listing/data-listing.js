@@ -231,6 +231,7 @@ var KTDatatableRemoteAjaxDemo = function() {
         });
 
         $('body').on('submit', 'form[name="getRecordsByDateFilter"]', function(event) {
+            // alert('fsd');
             event.preventDefault();
             var filterData = {};
             var date_type = $(document).find('form select[name="radioDate"]').val();
@@ -258,10 +259,12 @@ var KTDatatableRemoteAjaxDemo = function() {
             filterData.voucher_from = $(document).find('input[name="voucher_from"]').val();
             filterData.voucher_to = $(document).find('input[name="voucher_to"]').val();
 
+            console.log('b',filterData);
             // inline column filter
             filterData.inline = {};
             var tr = $('.listing_data_table>table>thead>tr');
             for (var key in dataFields) {
+                console.log(key);
                 var val = tr.find('input[name='+key+']').val();
                 if(!valueEmpty(val)){
                     filterData.inline[key] = val;
@@ -276,6 +279,8 @@ var KTDatatableRemoteAjaxDemo = function() {
             $('.kt-container').css({'pointer-events':'none','opacity':'0.5'});
 
             localStorage.removeItem('ajax_data-1-meta');
+
+            console.log('a',filterData);
 
             datatable.search(filterData, 'globalFilters');
             downloadClicked = false;
