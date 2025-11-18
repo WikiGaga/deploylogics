@@ -385,22 +385,6 @@
                                             <i class="la la-barcode"></i>
                                         </button>
                                     </div>
-                                    <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Load Favorite"
-                                            data-toggle="tooltip"
-                                            class="btn btn-brand btn-elevate btn-circle btn-icon"
-                                            id="loadFavoriteBtn">
-                                            <i class="la la-star"></i>
-                                        </button>
-                                    </div>
-                                    <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Save as Favorite"
-                                            data-toggle="tooltip"
-                                            class="btn btn-brand btn-elevate btn-circle btn-icon"
-                                            id="saveFavoriteBtn">
-                                            <i class="la la-star-o"></i>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -503,7 +487,7 @@
                                                 </th>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_input" style="position:relative;display:inline-block;width:100%;">
-                                                        <input id="pd_barcode" type="text"
+                                                        <input id="pd_barcode" type="text" 
                                                             class="pd_barcode tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm"
                                                             data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
                                                             data-url_popup="{{ action('Common\DataTableController@helpOpen', 'productHelp') }}">
@@ -969,23 +953,23 @@
                                                                 $expense_perc = '';
                                                                 $expense = \App\Models\TblPurcGrnExpense::where(
                                                                     'grn_id',
-                                                                    $id
+                                                                    $id,
                                                                 )
                                                                     ->where(
                                                                         'chart_account_id',
-                                                                        $expense_accounts->chart_account_id
+                                                                        $expense_accounts->chart_account_id,
                                                                     )
                                                                     ->first(['grn_expense_amount', 'grn_expense_perc']);
                                                                 if ($expense != null) {
                                                                     $expense_amount = number_format(
                                                                         $expense->grn_expense_amount,
-                                                                        3
+                                                                        3,
                                                                     );
                                                                 }
                                                                 if ($expense != null) {
                                                                     $expense_perc = number_format(
                                                                         $expense->grn_expense_perc,
-                                                                        3
+                                                                        3,
                                                                     );
                                                                 }
                                                             @endphp
@@ -1770,314 +1754,6 @@
                 });
             }
         });
-
-        // ========== FAVORITES FUNCTIONALITY ==========
-
-        $('#loadFavoriteBtn').click(function() {
-            showFavoritesMenu();
-        });
-
-        $('#saveFavoriteBtn').click(function() {
-            saveCurrentAsFavorite();
-        });
-
-        function showFavoritesMenu() {
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            var moduleType = $('#form_type').val() || 'GRN';
-
-            $.ajax({
-                type: 'GET',
-                url: '/common/favorites',
-                data: {
-                    module_type: moduleType
-                },
-                success: function(response) {
-                    if (response.status === 'success' && response.data.favorites.length > 0) {
-                        showFavoritesModal(response.data.favorites);
-                    } else {
-                        toastr.info('No favorites found. Create one by clicking "Save as Favorite" button.');
-                    }
-                },
-                error: function() {
-                    toastr.error('Error loading favorites');
-                }
-            });
-        }
-
-        function showFavoritesModal(favorites) {
-            var html = '<div class="modal fade" id="favoritesModal" tabindex="-1" role="dialog">';
-            html += '<div class="modal-dialog" role="document">';
-            html += '<div class="modal-content">';
-            html += '<div class="modal-header">';
-            html += '<h5 class="modal-title">Select Favorite</h5>';
-            html += '<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>';
-            html += '</div>';
-            html += '<div class="modal-body">';
-            html += '<div class="list-group">';
-
-            favorites.forEach(function(favorite) {
-                html += '<a href="javascript:void(0)" class="list-group-item list-group-item-action favorite-item" data-id="' + favorite.favorite_id + '">';
-                html += '<h6 class="mb-1">' + favorite.favorite_name + '</h6>';
-                if (favorite.favorite_description) {
-                    html += '<p class="mb-1 text-muted small">' + favorite.favorite_description + '</p>';
-                }
-                html += '</a>';
-            });
-
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-
-            $('body').append(html);
-            $('#favoritesModal').modal('show');
-
-            $(document).off('click', '.favorite-item').on('click', '.favorite-item', function() {
-                var favoriteId = $(this).data('id');
-                $('#favoritesModal').modal('hide');
-                loadFavorite(favoriteId);
-            });
-
-            $('#favoritesModal').on('hidden.bs.modal', function() {
-                $(this).remove();
-            });
-        }
-
-        var favoriteItemsQueue = [];
-        var favoriteProcessing = false;
-
-        function loadFavorite(favoriteId) {
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            $('body').addClass('pointerEventsNone');
-
-            $.ajax({
-                type: 'GET',
-                url: '/common/favorites/' + favoriteId + '/items',
-                success: function(response) {
-                    if (response.status === 'success' && response.data.items.length > 0) {
-                        favoriteItemsQueue = response.data.items.slice();
-                        favoriteProcessing = true;
-                        processFavoriteItemsQueue();
-                    } else {
-                        toastr.warning('No items found in this favorite');
-                        $('body').removeClass('pointerEventsNone');
-                    }
-                },
-                error: function() {
-                    toastr.error('Error loading favorite');
-                    $('body').removeClass('pointerEventsNone');
-                }
-            });
-        }
-
-        function processFavoriteItemsQueue() {
-            if (!favoriteItemsQueue.length) {
-                favoriteProcessing = false;
-                $('body').removeClass('pointerEventsNone');
-                toastr.success('Favorite loaded successfully');
-                return;
-            }
-
-            var item = favoriteItemsQueue.shift();
-            loadSingleFavoriteItem(item)
-                .then(function() {
-                    processFavoriteItemsQueue();
-                })
-                .catch(function() {
-                    toastr.error('Unable to load favorite item.');
-                    processFavoriteItemsQueue();
-                });
-        }
-
-        function loadSingleFavoriteItem(item) {
-            return new Promise(function(resolve, reject) {
-                $.ajax({
-                    type: 'GET',
-                    url: '/common/get-product-barcode/' + item.product_barcode_id,
-                    success: function(barcodeResponse) {
-                        if (barcodeResponse && barcodeResponse.status === 'success' && barcodeResponse.data && barcodeResponse.data.barcode) {
-                            var formType = $('#form_type').val();
-                            var supplierId = $('#supplier_id').val();
-                            var headerRow = $('.erp_form__grid_header_bottom tr').first();
-
-                            if (!headerRow.length) {
-                                reject();
-                                return;
-                            }
-
-                            var barcodeValue = barcodeResponse.data.barcode;
-                            var formData = {
-                                form_type: formType,
-                                val: barcodeValue,
-                                from_favorite: 1
-                            };
-                            if (supplierId) {
-                                formData.supplier_id = supplierId;
-                            }
-
-                            headerRow.find('#pd_barcode').val(barcodeValue);
-
-                            var handler = function() {
-                                clearTimeout(timeoutId);
-                                setTimeout(function() {
-                                    $('#addData').trigger('click');
-                                    resolve();
-                                }, 50);
-                            };
-
-                            $(document).one('favoriteRowReady', handler);
-
-                            var timeoutId = setTimeout(function() {
-                                $(document).off('favoriteRowReady', handler);
-                                reject();
-                            }, 5000);
-
-                            initBarcode(13, headerRow, formType, formData);
-                        } else {
-                            reject();
-                        }
-                    },
-                    error: function() {
-                        reject();
-                    }
-                });
-            });
-        }
-
-        function saveCurrentAsFavorite() {
-            var gridRows = $('.erp_form__grid_body tr');
-
-            if (gridRows.length === 0) {
-                toastr.warning('No products in grid to save as favorite');
-                return;
-            }
-
-            var items = [];
-            var srNo = 1;
-            var hasValidItems = false;
-
-            gridRows.each(function() {
-                var tr = $(this);
-                var productId = tr.find('.product_id').val();
-                var productBarcodeId = tr.find('.product_barcode_id').val();
-                var uomId = tr.find('.uom_id').val();
-
-                if (productId && productBarcodeId) {
-                    items.push({
-                        sr_no: srNo++,
-                        product_id: productId,
-                        product_barcode_id: productBarcodeId,
-                        uom_id: uomId || null
-                    });
-                    hasValidItems = true;
-                }
-            });
-
-            if (!hasValidItems) {
-                toastr.warning('No valid products found in grid. Please add products first.');
-                return;
-            }
-
-            showSaveFavoriteModal(items);
-        }
-
-        function showSaveFavoriteModal(items) {
-            var html = '<div class="modal fade" id="saveFavoriteModal" tabindex="-1" role="dialog">';
-            html += '<div class="modal-dialog" role="document">';
-            html += '<div class="modal-content">';
-            html += '<div class="modal-header">';
-            html += '<h5 class="modal-title">Save as Favorite</h5>';
-            html += '<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>';
-            html += '</div>';
-            html += '<div class="modal-body">';
-            html += '<form id="saveFavoriteForm">';
-            html += '<div class="form-group">';
-            html += '<label>Favorite Name <span class="text-danger">*</span></label>';
-            html += '<input type="text" class="form-control" id="favorite_name" name="favorite_name" required>';
-            html += '</div>';
-            html += '<div class="form-group">';
-            html += '<label>Description (Optional)</label>';
-            html += '<textarea class="form-control" id="favorite_description" name="favorite_description" rows="2"></textarea>';
-            html += '</div>';
-            html += '<input type="hidden" id="favorite_items" value=\'' + JSON.stringify(items) + '\'>';
-            html += '</form>';
-            html += '</div>';
-            html += '<div class="modal-footer">';
-            html += '<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>';
-            html += '<button type="button" class="btn btn-primary" id="saveFavoriteSubmitBtn">Save</button>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-            html += '</div>';
-
-            $('body').append(html);
-            $('#saveFavoriteModal').modal('show');
-
-            $('#saveFavoriteSubmitBtn').off('click').on('click', function() {
-                processSaveFavorite();
-            });
-
-            $('#saveFavoriteModal').on('hidden.bs.modal', function() {
-                $(this).remove();
-            });
-        }
-
-        function processSaveFavorite() {
-            var favoriteName = $('#favorite_name').val().trim();
-
-            if (!favoriteName) {
-                toastr.error('Please enter a favorite name');
-                return;
-            }
-
-            var itemsJson = $('#favorite_items').val();
-            var items = JSON.parse(itemsJson);
-
-            var formData = {
-                favorite_name: favoriteName,
-                favorite_description: $('#favorite_description').val().trim() || null,
-                module_type: $('#form_type').val() || 'GRN',
-                items: items
-            };
-
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            $.ajax({
-                type: 'POST',
-                url: '/common/favorites',
-                data: formData,
-                success: function(response) {
-                    if (response.status === 'success') {
-                        toastr.success('Favorite saved successfully');
-                        $('#saveFavoriteModal').modal('hide');
-                    } else {
-                        toastr.error(response.message || 'Error saving favorite');
-                    }
-                },
-                error: function(xhr) {
-                    var errorMsg = 'Error saving favorite';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    }
-                    toastr.error(errorMsg);
-                }
-            });
-        }
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v=1') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>

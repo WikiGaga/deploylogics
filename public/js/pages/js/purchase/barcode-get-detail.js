@@ -407,17 +407,21 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                 }
                 if (response['barcode_type'] == 'grn_verify') {
                     if (response['current_product'] !== "") {
-                        swal.fire({
-                            title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
-                            text: 'Are you sure add this?',
-                            type: 'warning',
-                            showCancelButton: true,
-                            showConfirmButton: true
-                        }).then(function(result) {
-                            if (result.value) {
-                                barcodeCommonData(tr, response, formData);
-                            }
-                        });
+                        if (formData.from_favorite) {
+                            barcodeCommonData(tr, response, formData);
+                        } else {
+                            swal.fire({
+                                title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
+                                text: 'Are you sure add this?',
+                                type: 'warning',
+                                showCancelButton: true,
+                                showConfirmButton: true
+                            }).then(function(result) {
+                                if (result.value) {
+                                    barcodeCommonData(tr, response, formData);
+                                }
+                            });
+                        }
                     }
                 }
                 // sales_contract =  Sales Contract
@@ -823,7 +827,9 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.pd_tax_on').val(pd_tax_on);
         tr.find('.pd_disc').val(pd_disc);
         $('#current_product_stock').val(store_stock);
-        funcHeaderCalc(tr); // function making on po form
+        if (typeof funcHeaderCalc === 'function') {
+            funcHeaderCalc(tr); // function making on po form
+        }
     }
     if(form_type == 'grn'){
         var qty = 1;
@@ -853,7 +859,9 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.pd_tax_on').val(pd_tax_on);
         tr.find('.pd_disc').val(pd_disc);
         $('#current_product_stock').val(store_stock);
-        funcHeaderCalc(tr); // function making on po form
+        if (typeof funcHeaderCalc === 'function') {
+            funcHeaderCalc(tr); // function making on po form
+        }
     }
     // if(form_type == "purc_demand" && response['supplier_has_returnable'] && !alertShowed){
     //     swal.fire({
@@ -921,6 +929,9 @@ function barcodeCommonData(tr, response, formData) {
     if(form_type == 'os'){
         var sale_rate = !valueEmpty(tbl_purc_rate['product_barcode_cost_rate'])?tbl_purc_rate['product_barcode_cost_rate']:0;
         tr.find('.tblGridCal_rate').val(sale_rate);
+    }
+    if (formData && formData.from_favorite) {
+        $(document).trigger('favoriteRowReady');
     }
 }
 function setPurchaseReturn(tr, response, formData){
