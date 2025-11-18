@@ -930,8 +930,12 @@ function barcodeCommonData(tr, response, formData) {
         var sale_rate = !valueEmpty(tbl_purc_rate['product_barcode_cost_rate'])?tbl_purc_rate['product_barcode_cost_rate']:0;
         tr.find('.tblGridCal_rate').val(sale_rate);
     }
-    if (formData && formData.from_favorite) {
-        $(document).trigger('favoriteRowReady');
+    if (formData && typeof formData.favoriteResolver === 'function') {
+        formData.favoriteResolver();
+        formData.favoriteResolver = null;
+        if (formData.favoriteReject) {
+            formData.favoriteReject = null;
+        }
     }
 }
 function setPurchaseReturn(tr, response, formData){

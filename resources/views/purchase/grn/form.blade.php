@@ -1935,28 +1935,37 @@
 
                             headerRow.find('#pd_barcode').val(barcodeValue);
 
-                            var handler = function() {
+                            var resolved = false;
+                            function finalizeSuccess() {
+                                if (resolved) { return; }
+                                resolved = true;
                                 clearTimeout(timeoutId);
                                 setTimeout(function() {
                                     $('#addData').trigger('click');
                                     resolve();
                                 }, 50);
-                            };
+                            }
+                            function finalizeFailure() {
+                                if (resolved) { return; }
+                                resolved = true;
+                                clearTimeout(timeoutId);
+                                reject();
+                            }
 
-                            $(document).one('favoriteRowReady', handler);
+                            formData.favoriteResolver = finalizeSuccess;
+                            formData.favoriteReject = finalizeFailure;
 
                             var timeoutId = setTimeout(function() {
-                                $(document).off('favoriteRowReady', handler);
-                                reject();
+                                finalizeFailure();
                             }, 5000);
 
                             initBarcode(13, headerRow, formType, formData);
                         } else {
-                            reject();
+                            finalizeFailure();
                         }
                     },
                     error: function() {
-                        reject();
+                        finalizeFailure();
                     }
                 });
             });
