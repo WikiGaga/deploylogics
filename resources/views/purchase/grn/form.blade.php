@@ -1935,45 +1935,36 @@
 
                             headerRow.find('#pd_barcode').val(barcodeValue);
 
-                            var resolved = false;
-                            function finalizeSuccess() {
-                                if (resolved) { return; }
-                                resolved = true;
+                            var handler = function() {
                                 clearTimeout(timeoutId);
                                 setTimeout(function() {
                                     $('#addData').trigger('click');
                                     resolve();
                                 }, 50);
-                            }
-                            function finalizeFailure() {
-                                if (resolved) { return; }
-                                resolved = true;
-                                clearTimeout(timeoutId);
-                                reject();
-                            }
+                            };
 
-                            formData.favoriteResolver = finalizeSuccess;
-                            formData.favoriteReject = finalizeFailure;
+                            $(document).one('favoriteRowReady', handler);
 
                             var timeoutId = setTimeout(function() {
-                                finalizeFailure();
+                                $(document).off('favoriteRowReady', handler);
+                                reject();
                             }, 5000);
 
                             initBarcode(13, headerRow, formType, formData);
                         } else {
-                            finalizeFailure();
+                            reject();
                         }
                     },
                     error: function() {
-                        finalizeFailure();
+                        reject();
                     }
                 });
             });
         }
 
-        // Save current grid as favorite
         function saveCurrentAsFavorite() {
-            var gridRows = $('.erp_form__grid_body tr').not(':first'); // Exclude header row
+            // var gridRows = $('.erp_form__grid_body tr').not(':first');
+            var gridRows = $('.erp_form__grid_body tr');
 
             if (gridRows.length === 0) {
                 toastr.warning('No products in grid to save as favorite');
@@ -1990,7 +1981,6 @@
                 var productBarcodeId = tr.find('.product_barcode_id').val();
                 var uomId = tr.find('.uom_id').val();
 
-                // Only add if we have valid product data
                 if (productId && productBarcodeId) {
                     items.push({
                         sr_no: srNo++,
@@ -2007,11 +1997,9 @@
                 return;
             }
 
-            // Show save favorite modal
             showSaveFavoriteModal(items);
         }
 
-        // Show save favorite modal
         function showSaveFavoriteModal(items) {
             var html = '<div class="modal fade" id="saveFavoriteModal" tabindex="-1" role="dialog">';
             html += '<div class="modal-dialog" role="document">';
@@ -2044,18 +2032,15 @@
             $('body').append(html);
             $('#saveFavoriteModal').modal('show');
 
-            // Handle form submission
             $('#saveFavoriteSubmitBtn').off('click').on('click', function() {
                 processSaveFavorite();
             });
 
-            // Remove modal on close
             $('#saveFavoriteModal').on('hidden.bs.modal', function() {
                 $(this).remove();
             });
         }
 
-        // Process save favorite form
         function processSaveFavorite() {
             var favoriteName = $('#favorite_name').val().trim();
 

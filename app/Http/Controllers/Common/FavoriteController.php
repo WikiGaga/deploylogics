@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Validator;
 
 class FavoriteController extends Controller
 {
-
+    /**
+     * Get user's favorites list (optionally filtered by module_type)
+     */
     public function getFavorites(Request $request)
     {
         $data = [];
@@ -19,6 +21,7 @@ class FavoriteController extends Controller
         $query = TblPurchaseFavorite::where('user_id', auth()->user()->id)
             ->where('is_active', 1);
 
+        // Optional filter by module_type
         if ($request->has('module_type') && !empty($request->module_type)) {
             $query->where('module_type', $request->module_type);
         }
@@ -30,7 +33,9 @@ class FavoriteController extends Controller
         return $this->jsonSuccessResponse($data, 'Favorites retrieved successfully');
     }
 
-
+    /**
+     * Get favorite items (returns only IDs)
+     */
     public function getFavoriteItems($favorite_id)
     {
         $data = [];
@@ -55,6 +60,9 @@ class FavoriteController extends Controller
         return $this->jsonSuccessResponse($data, 'Favorite items retrieved successfully');
     }
 
+    /**
+     * Save current grid as favorite
+     */
     public function saveFavorite(Request $request)
     {
         $data = [];
@@ -76,6 +84,7 @@ class FavoriteController extends Controller
         }
 
         try {
+            // Create favorite header
             $favorite = new TblPurchaseFavorite();
             $favorite->favorite_id = Utilities::uuid();
             $favorite->favorite_name = $request->favorite_name;
@@ -89,6 +98,7 @@ class FavoriteController extends Controller
             $favorite->created_by = auth()->user()->name ?? 'System';
             $favorite->save();
 
+            // Create favorite items
             foreach ($request->items as $item) {
                 $favoriteItem = new TblPurchaseFavoriteItem();
                 $favoriteItem->favorite_item_id = Utilities::uuid();
@@ -109,6 +119,9 @@ class FavoriteController extends Controller
         }
     }
 
+    /**
+     * Update favorite name/description
+     */
     public function updateFavorite(Request $request, $favorite_id)
     {
         $data = [];
@@ -142,6 +155,9 @@ class FavoriteController extends Controller
         return $this->jsonSuccessResponse($data, 'Favorite updated successfully');
     }
 
+    /**
+     * Delete favorite
+     */
     public function deleteFavorite($favorite_id)
     {
         $data = [];
@@ -154,14 +170,20 @@ class FavoriteController extends Controller
             return $this->jsonErrorResponse($data, 'Favorite not found or access denied', 404);
         }
 
+        // Soft delete by setting is_active to 0
         $favorite->is_active = 0;
         $favorite->updated_by = auth()->user()->name ?? 'System';
         $favorite->save();
 
+        // Items will be cascade deleted if foreign key is set up, or we can manually delete
+        // For now, we'll rely on database cascade delete
 
         return $this->jsonSuccessResponse($data, 'Favorite deleted successfully');
     }
 
+    /**
+     * Get barcode string from product_barcode_id (helper for loading favorites)
+     */
     public function getProductBarcode($product_barcode_id)
     {
         $data = [];
