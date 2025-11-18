@@ -1856,6 +1856,9 @@
         }
 
         // Load favorite items into grid
+        var favoriteItemsQueue = [];
+        var favoriteProcessing = false;
+
         function loadFavorite(favoriteId) {
             $.ajaxSetup({
                 headers: {
@@ -1870,45 +1873,13 @@
                 url: '/common/favorites/' + favoriteId + '/items',
                 success: function(response) {
                     if (response.status === 'success' && response.data.items.length > 0) {
-                        // Clear existing grid rows (optional - you may want to append instead)
-                        // $('.erp_form__grid_body tr').not(':first').remove();
-
-                        var total_length = $('.erp_form__grid_body>tr').length;
-                        var form_type = $('#form_type').val();
-                        var supplier_id = $('#supplier_id').val();
-
-                        // Load each item
-                        response.data.items.forEach(function(item, index) {
-                            // Get the header row (first row in grid body)
-                            var headerRow = $('.erp_form__grid_body tr:first');
-
-                            // Clone header row for new item
-                            var newRow = headerRow.clone();
-                            newRow.find('input, select').val('');
-                            newRow.find('input[type="hidden"]').val('');
-
-                            // Set product barcode ID to trigger product fetch
-                            var barcodeInput = newRow.find('.pd_barcode');
-                            barcodeInput.val(''); // Clear first
-
-                            // We need to get the barcode string from product_barcode_id
-                            // For now, we'll use the product_barcode_id directly via initBarcode
-                            // But first, we need to get the barcode string
-
-                            // Add row to grid
-                            $('.erp_form__grid_body').append(newRow);
-
-                            // Get barcode string from product_barcode_id and trigger product fetch
-                            setTimeout(function() {
-                                fetchBarcodeAndLoadProduct(newRow, item.product_barcode_id, form_type, supplier_id);
-                            }, index * 100); // Small delay to avoid race conditions
-                        });
-
-                        toastr.success('Favorite loaded successfully');
+                        favoriteItemsQueue = response.data.items.slice();
+                        favoriteProcessing = true;
+                        processFavoriteItemsQueue();
                     } else {
                         toastr.warning('No items found in this favorite');
+                        $('body').removeClass('pointerEventsNone');
                     }
-                    $('body').removeClass('pointerEventsNone');
                 },
                 error: function() {
                     toastr.error('Error loading favorite');
@@ -1917,54 +1888,77 @@
             });
         }
 
-        // Fetch barcode string from product_barcode_id and load product
-        function fetchBarcodeAndLoadProduct(tr, productBarcodeId, formType, supplierId) {
-            // We need to get the barcode string from the product_barcode_id
-            // For now, we'll make an AJAX call to get the barcode, or we can use the existing mechanism
-            // The simplest approach: set product_barcode_id in hidden field and trigger via barcode field
+        function processFavoriteItemsQueue() {
+            if (!favoriteItemsQueue.length) {
+                favoriteProcessing = false;
+                $('body').removeClass('pointerEventsNone');
+                toastr.success('Favorite loaded successfully');
+                return;
+            }
 
-            tr.find('.product_barcode_id').val(productBarcodeId);
+            var item = favoriteItemsQueue.shift();
+            loadSingleFavoriteItem(item)
+                .then(function() {
+                    processFavoriteItemsQueue();
+                })
+                .catch(function() {
+                    toastr.error('Unable to load favorite item.');
+                    processFavoriteItemsQueue();
+                });
+        }
 
-            // Get barcode string - we'll need to fetch it or use a different approach
-            // Option: Use the existing product help mechanism with product_barcode_id
-            // For now, let's trigger the product fetch using the barcode ID directly
+        function loadSingleFavoriteItem(item) {
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    type: 'GET',
+                    url: '/common/get-product-barcode/' + item.product_barcode_id,
+                    success: function(barcodeResponse) {
+                        if (barcodeResponse && barcodeResponse.status === 'success' && barcodeResponse.data && barcodeResponse.data.barcode) {
+                            var formType = $('#form_type').val();
+                            var supplierId = $('#supplier_id').val();
+                            var headerRow = $('.erp_form__grid_header_bottom tr').first();
 
-            // Since initBarcode expects a barcode string, we need to get it first
-            // Let's make a quick AJAX call to get the barcode string
-            $.ajax({
-                type: 'GET',
-                url: '/common/get-product-barcode/' + productBarcodeId,
-                success: function(barcodeResponse) {
-                    if (barcodeResponse && barcodeResponse.status === 'success' && barcodeResponse.data && barcodeResponse.data.barcode) {
-                        var barcodeInput = tr.find('.pd_barcode');
-                        barcodeInput.val(barcodeResponse.data.barcode);
+                            if (!headerRow.length) {
+                                reject();
+                                return;
+                            }
 
-                        // Trigger product detail fetch
-                        var formData = {
-                            form_type: formType,
-                            val: barcodeResponse.data.barcode,
-                            from_favorite: 1
-                        };
-                        if (supplierId) {
-                            formData.supplier_id = supplierId;
-                        }
+                            var barcodeValue = barcodeResponse.data.barcode;
+                            var formData = {
+                                form_type: formType,
+                                val: barcodeValue,
+                                from_favorite: 1
+                            };
+                            if (supplierId) {
+                                formData.supplier_id = supplierId;
+                            }
 
-                        // Use existing initBarcode function
-                        if (typeof initBarcode !== 'undefined') {
-                            initBarcode(13, tr, formType, formData);
+                            headerRow.find('#pd_barcode').val(barcodeValue);
+
+                            var handler = function() {
+                                clearTimeout(timeoutId);
+                                setTimeout(function() {
+                                    $('#addData').trigger('click');
+                                    resolve();
+                                }, 50);
+                            };
+
+                            $(document).one('favoriteRowReady', handler);
+
+                            var timeoutId = setTimeout(function() {
+                                $(document).off('favoriteRowReady', handler);
+                                reject();
+                            }, 5000);
+
+                            initBarcode(13, headerRow, formType, formData);
                         } else {
-                            // Fallback: trigger the barcode field change
-                            barcodeInput.trigger('change');
+                            reject();
                         }
-                    } else {
-                        console.log('Could not fetch barcode for ID: ' + productBarcodeId);
+                    },
+                    error: function() {
+                        reject();
                     }
-                },
-                error: function() {
-                    // Fallback: try to get barcode from product_barcode_id via another method
-                    // Or use the product help directly
-                    console.log('Error fetching barcode for ID: ' + productBarcodeId);
-                }
+                });
             });
         }
 
