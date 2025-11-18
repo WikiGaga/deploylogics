@@ -827,7 +827,9 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.pd_tax_on').val(pd_tax_on);
         tr.find('.pd_disc').val(pd_disc);
         $('#current_product_stock').val(store_stock);
-        funcHeaderCalc(tr); // function making on po form
+        if (typeof funcHeaderCalc === 'function') {
+            funcHeaderCalc(tr); // function making on po form
+        }
     }
     if(form_type == 'grn'){
         var qty = 1;
@@ -857,7 +859,9 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.pd_tax_on').val(pd_tax_on);
         tr.find('.pd_disc').val(pd_disc);
         $('#current_product_stock').val(store_stock);
-        funcHeaderCalc(tr); // function making on po form
+        if (typeof funcHeaderCalc === 'function') {
+            funcHeaderCalc(tr); // function making on po form
+        }
     }
     // if(form_type == "purc_demand" && response['supplier_has_returnable'] && !alertShowed){
     //     swal.fire({
