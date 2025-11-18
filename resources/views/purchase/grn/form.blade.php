@@ -1773,17 +1773,14 @@
 
         // ========== FAVORITES FUNCTIONALITY ==========
 
-        // Load Favorite Button Click
         $('#loadFavoriteBtn').click(function() {
             showFavoritesMenu();
         });
 
-        // Save as Favorite Button Click
         $('#saveFavoriteBtn').click(function() {
             saveCurrentAsFavorite();
         });
 
-        // Show favorites dropdown/modal
         function showFavoritesMenu() {
             $.ajaxSetup({
                 headers: {
@@ -1812,7 +1809,6 @@
             });
         }
 
-        // Show favorites selection modal
         function showFavoritesModal(favorites) {
             var html = '<div class="modal fade" id="favoritesModal" tabindex="-1" role="dialog">';
             html += '<div class="modal-dialog" role="document">';
@@ -1842,20 +1838,17 @@
             $('body').append(html);
             $('#favoritesModal').modal('show');
 
-            // Handle favorite selection
             $(document).off('click', '.favorite-item').on('click', '.favorite-item', function() {
                 var favoriteId = $(this).data('id');
                 $('#favoritesModal').modal('hide');
                 loadFavorite(favoriteId);
             });
 
-            // Remove modal on close
             $('#favoritesModal').on('hidden.bs.modal', function() {
                 $(this).remove();
             });
         }
 
-        // Load favorite items into grid
         var favoriteItemsQueue = [];
         var favoriteProcessing = false;
 
@@ -1963,7 +1956,6 @@
         }
 
         function saveCurrentAsFavorite() {
-            // var gridRows = $('.erp_form__grid_body tr').not(':first');
             var gridRows = $('.erp_form__grid_body tr');
 
             if (gridRows.length === 0) {
