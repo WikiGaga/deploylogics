@@ -969,23 +969,23 @@
                                                                 $expense_perc = '';
                                                                 $expense = \App\Models\TblPurcGrnExpense::where(
                                                                     'grn_id',
-                                                                    $id,
+                                                                    $id
                                                                 )
                                                                     ->where(
                                                                         'chart_account_id',
-                                                                        $expense_accounts->chart_account_id,
+                                                                        $expense_accounts->chart_account_id
                                                                     )
                                                                     ->first(['grn_expense_amount', 'grn_expense_perc']);
                                                                 if ($expense != null) {
                                                                     $expense_amount = number_format(
                                                                         $expense->grn_expense_amount,
-                                                                        3,
+                                                                        3
                                                                     );
                                                                 }
                                                                 if ($expense != null) {
                                                                     $expense_perc = number_format(
                                                                         $expense->grn_expense_perc,
-                                                                        3,
+                                                                        3
                                                                     );
                                                                 }
                                                             @endphp
@@ -1942,7 +1942,8 @@
                         // Trigger product detail fetch
                         var formData = {
                             form_type: formType,
-                            val: barcodeResponse.data.barcode
+                            val: barcodeResponse.data.barcode,
+                            from_favorite: 1
                         };
                         if (supplierId) {
                             formData.supplier_id = supplierId;
