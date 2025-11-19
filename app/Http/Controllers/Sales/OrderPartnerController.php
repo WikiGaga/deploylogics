@@ -172,10 +172,11 @@ class OrderPartnerController extends Controller
             $branch_id = auth()->user()->branch_id;
             $user_id = auth()->user()->id;
             $chart_name = $request->partner_name;
+            
             if(isset($id)){
                 $OrderPartner =TblSaleOrderPartner::where('partner_id',$id)->where(Utilities::currentBC())->first();
                 
-                $acc_id = $OrderPartner->customer_account_id;
+                $acc_id = $OrderPartner->partner_account_id;
                 if(empty($acc_id)){
                     $partner_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
                     $OrderPartner->partner_account_id = $partner_account_id;
@@ -207,7 +208,8 @@ class OrderPartnerController extends Controller
             $OrderPartner->partner_name = $request->partner_name;
             $OrderPartner->partner_local_name = $request->partner_local_name;
             $OrderPartner->partner_entry_status = isset($request->partner_entry_status)?"1":"0";
-           
+            $OrderPartner->partner_type = $request->partner_type;
+
             if($request->hasFile('customer_image'))
             {
                 $image = $request->file('customer_image');

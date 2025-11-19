@@ -63,8 +63,8 @@
                             {{isset($code)?$code:""}}
                         </div>
                         <div>
-                            @if(isset($customer_account_id))
-                                Account Id: <b>{{$customer_account_id}}</b>
+                            @if(isset($partner_account_id))
+                                Account Id: <b>{{$partner_account_id}}</b>
                             @endif
                         </div>
                     </div>
@@ -89,6 +89,7 @@
                                 <div class="erp-select2 form-group">
                                     <select class="form-control erp-form-control-sm kt-select2" id="partner_type" name="partner_type">
                                         <option value="0">Select</option>
+                                        
                                         @foreach($data['type'] as $list_type)
                                             @php $select_type = isset($type)?$type:0; @endphp
                                             <option value="{{$list_type->customer_type_id}}" {{$list_type->customer_type_id == $select_type ?"selected":""}}>{{$list_type->customer_type_name}}</option>

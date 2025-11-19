@@ -211,7 +211,7 @@ class Controller extends BaseController
         $stmt->execute();
     }
 
-    public function proAccoVoucherInsert($id,$action,$table_name,$data,$where_clause = null){
+    public function proAccoVoucherInsert($id,$action,$table_name,$data,$where_clause,$multiVoucher = false){
         if($action == 'update'){
             if($data['voucher_type'] == 'POS' || $data['voucher_type'] == 'RPOS'){
                 TblAccoVoucher::where('voucher_document_id',$id)->delete();
@@ -219,9 +219,18 @@ class Controller extends BaseController
                 TblAccoVoucher::where('voucher_id',$id)->delete();
             }
         }
-        $data['created_at'] = Carbon::now();
-        $data['updated_at'] = Carbon::now();
-        DB::table($table_name)->insert($data);
+        // Check If the Voucher Is For Cash & Visa OR Cash & Credit
+        if($multiVoucher){
+            unset($data['voucher_type']);
+            // create_at and updated_at should come in data array
+            foreach ($data as $voucher) {
+                DB::table($table_name)->insert($voucher);
+            }
+        }else{
+            $data['created_at'] = Carbon::now();
+            $data['updated_at'] = Carbon::now();
+            DB::table($table_name)->insert($data);
+        }
     }
 
     public function proAccoVoucherDelete($id){

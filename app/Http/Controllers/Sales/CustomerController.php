@@ -404,7 +404,7 @@ class CustomerController extends Controller
                     $customer->customer_code = Utilities::customCustomerCode($doc_data);
                 }else{
                     $doc_data = [
-                        'biz_type'          => 'branch',
+                        'biz_type'          => 'business',
                         'model'             => 'TblSaleCustomer',
                         'code_field'        => 'customer_code',
                         'code_prefix'       => strtoupper('cu')

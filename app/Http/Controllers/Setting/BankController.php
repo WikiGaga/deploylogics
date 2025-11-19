@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Setting;
 
-use App\Http\Controllers\Controller;
+use Exception;
+use Validator;
+use App\Models\TblAccCoa;
 use App\Library\Utilities;
 use App\Models\TblDefiBank;
-use App\Models\TblPurcSupplierAccount;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Setting\UserActivityLogController;
 
 
 // db and Validator
 use Illuminate\Validation\Rule;
-use Validator;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use App\Models\TblPurcSupplierAccount;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Http\Controllers\Setting\UserActivityLogController;
 
 
 class BankController extends Controller
@@ -81,11 +82,29 @@ class BankController extends Controller
         }
         DB::beginTransaction();
         try{
+            
+            $acc_code = TblAccCoa::where('chart_account_id','20319825131541')->where(Utilities::currentBC())->first();
+            $level_no = 4;
+            $parent_account_code = $acc_code->chart_code;
+            $business_id = auth()->user()->business_id;
+            $company_id = auth()->user()->company_id;
+            $branch_id = auth()->user()->branch_id;
+            $user_id = auth()->user()->id;
+            $chart_name = $request->name;
+
             if(isset($id)){
                 $bank = TblDefiBank::where('bank_id',$id)->first();
+                $acc_id = $bank->bank_account_id;
+                if(empty($acc_id)){
+                    $bank_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
+                    $bank->bank_account_id = $bank_account_id;
+                }else{
+                    $this->proPurcChartUpdate($business_id,$company_id,$branch_id,$chart_name,$acc_id);
+                }
             }else{
                 $bank = new TblDefiBank();
                 $bank->bank_id = Utilities::uuid();
+                // $bank->bank_account_id = $this->proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name);
             }
             $form_id = $bank->bank_id;
             $bank->bank_name = $request->name;
