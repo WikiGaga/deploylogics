@@ -277,6 +277,7 @@
     @php
         $data = Session::get('data');
         $gTotalGrossAmt = 0;
+        $gTotalAddons = 0;
         $gTotalDiscount = 0;
         $gTotalDeliveryCharge = 0;
         $gTotalTax = 0;
@@ -337,6 +338,7 @@
                 d.cash_paid,
                 d.card_paid,
                 COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.price * od.quantity ELSE 0 END), 0) AS gross_amount,
+                COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.total_add_on_price ELSE 0 END), 0) AS total_addons,
                 MAX(CASE WHEN od.is_deleted = 'Y' THEN 1 ELSE 0 END) as has_cancelled_items
             FROM
                 ORDERS o
@@ -388,6 +390,7 @@
                             <th class="text-center">Order Status</th>
                             <th class="text-center">Payment Status</th>
                             <th class="text-center">Gross Amount</th>
+                            <th class="text-center">Addons</th>
                             <th class="text-center">Discount</th>
                             <th class="text-center">Delivery Charges</th>
                             <th class="text-center">VAT</th>
@@ -401,6 +404,7 @@
                                 $hasCancelledItems = isset($detail->has_cancelled_items) && $detail->has_cancelled_items == 1;
                                 $shouldHighlight = $isCanceled || $hasCancelledItems;
                                 $gTotalGrossAmt += $detail->gross_amount;
+                                $gTotalAddons += $detail->total_addons ?? 0;
                                 $gTotalDiscount += $detail->restaurant_discount_amount;
                                 $gTotalDeliveryCharge += $detail->delivery_charge;
                                 $gTotalTax += $detail->total_tax_amount;
@@ -417,6 +421,7 @@
                                 <td class="text-center">{{ $detail->order_status }}</td>
                                 <td class="text-center">{{ $detail->payment_status }}</td>
                                 <td class="text-center">{{ $detail->gross_amount }}</td>
+                                <td class="text-center">{{ $detail->total_addons ?? 0 }}</td>
                                 <td class="text-center">{{ $detail->restaurant_discount_amount }}</td>
                                 <td class="text-center">{{ $detail->delivery_charge }}</td>
                                 <td class="text-center">{{ $detail->total_tax_amount }}</td>
@@ -428,6 +433,7 @@
                         <tr class="grand_total">
                             <td colspan="6" class="fw-bold rep-font-bold">Total</td>
                             <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalGrossAmt, 3) }}</td>
+                            <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalAddons, 3) }}</td>
                             <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDiscount, 3) }}</td>
                             <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalDeliveryCharge, 3) }}</td>
                             <td class="text-center fw-bold rep-font-bold">{{ number_format($gTotalTax, 3) }}</td>
