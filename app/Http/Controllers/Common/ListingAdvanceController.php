@@ -325,8 +325,12 @@ class ListingAdvanceController extends Controller
                     }
                     if($date == 'custom_date'){
                         if(isset($globalFilters['from']) && isset($globalFilters['to'])){
-                            $from = "TO_DATE('".date('d/m/Y',strtotime($globalFilters['from']))." ".$time_from."', 'dd/mm/yyyy HH:MI:SS pm')";
-                            $to = "TO_DATE('".date('d/m/Y',strtotime($globalFilters['to']))." ".$time_to."', 'dd/mm/yyyy HH:MI:SS pm')";
+                            $from_timestamp = strtotime($globalFilters['from']);
+                            $to_timestamp = strtotime($globalFilters['to']);
+                            $from_date = ($from_timestamp <= $to_timestamp)  ? $globalFilters['from']  : $globalFilters['to'];
+                            $to_date = ($from_timestamp > $to_timestamp)  ? $globalFilters['from']  : $globalFilters['to'];
+                            $from = "TO_DATE('".date('d/m/Y',strtotime( $from_date))." ".$time_from."', 'dd/mm/yyyy HH:MI:SS pm')";
+                            $to = "TO_DATE('".date('d/m/Y',strtotime($to_date))." ".$time_to."', 'dd/mm/yyyy HH:MI:SS pm')";
                         }else{
                             $from = "TO_DATE('".$today." ".$time_from."', 'dd/mm/yyyy HH:MI:SS pm')";
                             $to = "TO_DATE('".$today." ".$time_to."', 'dd/mm/yyyy HH:MI:SS pm')";
