@@ -336,9 +336,9 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
-                od.discount_on_food,
                 COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.price * od.quantity ELSE 0 END), 0) AS gross_amount,
                 COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.total_add_on_price ELSE 0 END), 0) AS total_addons,
+                COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.discount_on_food ELSE 0 END), 0) AS discount_on_food,
                 MAX(CASE WHEN od.is_deleted = 'Y' THEN 1 ELSE 0 END) as has_cancelled_items
             FROM
                 ORDERS o
@@ -363,8 +363,7 @@
                 d.CAR_NUMBER,
                 d.PHONE,
                 d.cash_paid,
-                d.card_paid,
-                od.discount_on_food,
+                d.card_paid
             ORDER BY
                 o.CREATED_AT DESC,
                 o.ORDER_SERIAL DESC";
