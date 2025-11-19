@@ -168,6 +168,7 @@
                         od.variation,
                         o.created_at,
                         od.is_deleted,
+                        o.ORDER_STATUS,
                         o.restaurant_id
                     FROM order_details od
                     JOIN orders o ON o.id = od.order_id
@@ -181,7 +182,7 @@
                 // ->first();
 
                 // $b=json_decode($a->variation);
-         
+
 
                 $detailRows = \Illuminate\Support\Facades\DB::select($query);
                 echo '<!-- DEBUG: Product wise sales retrieved ' . count($detailRows) . ' order detail rows -->';
@@ -368,15 +369,18 @@
                     foreach ($resolvedOptionIds as $optionId) {
                         // $aggregateKey = $sessionDate . '|' . $optionId . '|' . $foodId;
                         // $aggregateKey =  $optionId . '|' . $foodId;
-                        $aggregateKey =  trim($row->is_deleted ). '|' . $optionId . '|' . $foodId;
-                        
+                        $isItemDeleted = trim($row->is_deleted ?? '') == 'Y';
+                        $isOrderCanceled = strtolower($row->ORDER_STATUS ?? '') === 'canceled' || strtolower($row->ORDER_STATUS ?? '') === 'cancelled';
+                        $isCancelled = $isItemDeleted || $isOrderCanceled;
+                        $aggregateKey = ($isCancelled ? 'Y' : 'N') . '|' . $optionId . '|' . $foodId;
+
 
                         if (! isset($aggregated[$aggregateKey])) {
                             $aggregated[$aggregateKey] = [
                                 'session_date' => $sessionDate,
                                 'option_list_id' => $optionId,
                                 'food_id' => $foodId,
-                                'status' => (trim($row->is_deleted )=='Y')?'Cancel':'Approved',
+                                'status' => $isCancelled ? 'Cancel' : 'Approved',
                                 'qty' => 0.0,
                                 'amount' => 0.0,
                                 'discount' => 0.0,

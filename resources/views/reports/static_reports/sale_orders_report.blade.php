@@ -33,6 +33,23 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* Cancelled order highlighting */
+        .cancelled-order {
+            background-color: #f8d7da !important;
+            border-left: 4px solid #dc3545 !important;
+        }
+
+        .cancelled-order:hover {
+            background-color: #f5c6cb !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+        }
+
+        .cancelled-order td {
+            color: #721c24;
+            font-weight: 500;
+        }
+
         /* Modal styling */
         .modal-lg {
             max-width: 900px;
@@ -319,7 +336,8 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
-                COALESCE(SUM(od.price), 0) AS gross_amount
+                COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.price * od.quantity ELSE 0 END), 0) AS gross_amount,
+                MAX(CASE WHEN od.is_deleted = 'Y' THEN 1 ELSE 0 END) as has_cancelled_items
             FROM
                 ORDERS o
             LEFT JOIN
@@ -379,6 +397,9 @@
                         </tr>
                         @foreach ($list as $k => $detail)
                             @php
+                                $isCanceled = strtolower($detail->order_status ?? '') === 'canceled' || strtolower($detail->order_status ?? '') === 'cancelled';
+                                $hasCancelledItems = isset($detail->has_cancelled_items) && $detail->has_cancelled_items == 1;
+                                $shouldHighlight = $isCanceled || $hasCancelledItems;
                                 $gTotalGrossAmt += $detail->gross_amount;
                                 $gTotalDiscount += $detail->restaurant_discount_amount;
                                 $gTotalDeliveryCharge += $detail->delivery_charge;
@@ -387,7 +408,7 @@
                                 $gTotalCard += $detail->card_paid;
                                 $gTotalAmount += $detail->order_amount;
                             @endphp
-                            <tr class="order-row" data-order-id="{{ $detail->id }}" style="cursor: pointer;">
+                            <tr class="order-row {{ $shouldHighlight ? 'table-danger cancelled-order' : '' }}" data-order-id="{{ $detail->id }}" style="cursor: pointer;">
                                 <td class="text-left">{{ $detail->order_serial }}</td>
                                 <td class="text-center">{{ date('d-m-Y', strtotime($detail->created_at)) }}</td>
                                 <td class="text-center">{{ $detail->customer_name ?? '' }} <br>
