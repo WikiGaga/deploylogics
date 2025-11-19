@@ -326,7 +326,6 @@
                 o.ORDER_AMOUNT,
                 o.TOTAL_TAX_AMOUNT,
                 o.DELIVERY_CHARGE,
-                o.RESTAURANT_DISCOUNT_AMOUNT,
                 o.PAYMENT_STATUS,
                 o.ORDER_STATUS,
                 o.ORDER_TYPE,
@@ -337,6 +336,7 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
+                od.discount_on_food,
                 COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.price * od.quantity ELSE 0 END), 0) AS gross_amount,
                 COALESCE(SUM(CASE WHEN (od.is_deleted IS NULL OR od.is_deleted <> 'Y') THEN od.total_add_on_price ELSE 0 END), 0) AS total_addons,
                 MAX(CASE WHEN od.is_deleted = 'Y' THEN 1 ELSE 0 END) as has_cancelled_items
@@ -354,7 +354,6 @@
                 o.ORDER_AMOUNT,
                 o.TOTAL_TAX_AMOUNT,
                 o.DELIVERY_CHARGE,
-                o.RESTAURANT_DISCOUNT_AMOUNT,
                 o.PAYMENT_STATUS,
                 o.ORDER_STATUS,
                 o.ORDER_TYPE,
@@ -364,7 +363,8 @@
                 d.CAR_NUMBER,
                 d.PHONE,
                 d.cash_paid,
-                d.card_paid
+                d.card_paid,
+                od.discount_on_food,
             ORDER BY
                 o.CREATED_AT DESC,
                 o.ORDER_SERIAL DESC";
@@ -405,7 +405,7 @@
                                 $shouldHighlight = $isCanceled || $hasCancelledItems;
                                 $gTotalGrossAmt += $detail->gross_amount;
                                 $gTotalAddons += $detail->total_addons ?? 0;
-                                $gTotalDiscount += $detail->restaurant_discount_amount;
+                                $gTotalDiscount += $detail->discount_on_food;
                                 $gTotalDeliveryCharge += $detail->delivery_charge;
                                 $gTotalTax += $detail->total_tax_amount;
                                 $gTotalCash += $detail->cash_paid;
@@ -422,7 +422,7 @@
                                 <td class="text-center">{{ $detail->payment_status }}</td>
                                 <td class="text-center">{{ $detail->gross_amount }}</td>
                                 <td class="text-center">{{ $detail->total_addons ?? 0 }}</td>
-                                <td class="text-center">{{ $detail->restaurant_discount_amount }}</td>
+                                <td class="text-center">{{ $detail->discount_on_food }}</td>
                                 <td class="text-center">{{ $detail->delivery_charge }}</td>
                                 <td class="text-center">{{ $detail->total_tax_amount }}</td>
                                 <td class="text-center">{{ $detail->order_amount }}</td>
