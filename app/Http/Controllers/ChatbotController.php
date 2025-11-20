@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        try {
+        // try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -34,7 +34,6 @@ class ChatbotController extends Controller
             $category = $request->input('category', 'sales');
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
-
             $this->logConversation($user, $message, $conversationId, 'user', $category);
 
             $response = $this->generateAIResponse($message, $user, $category, $conversationId);
@@ -49,20 +48,20 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        // } catch (\Exception $e) {
+        //     Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
 
-            return response()->json([
-                'success' => false,
-                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-            ], 500);
-        }
+        //     return response()->json([
+        //         'success' => false,
+        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+        //     ], 500);
+        // }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        try {
+        // try {
             $assistantId = $this->getOrCreateAssistant($category);
 
             $threadId = $this->getOrCreateThread($conversationId, $user->id);
@@ -83,10 +82,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        } catch (\Exception $e) {
-            Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-            return 'Sorry, I encountered an error. Please try again.';
-        }
+        // } catch (\Exception $e) {
+        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        //     return 'Sorry, I encountered an error. Please try again.';
+        // }
     }
 
     private function getOrCreateAssistant(string $category): string
@@ -206,8 +205,8 @@ class ChatbotController extends Controller
             'OpenAI-Beta' => 'assistants=v2'
         ])->post($this->baseUrl . '/threads', [
             'metadata' => [
-                'conversation_id' => $conversationId,
-                'user_id' => $userId
+                'conversation_id' => (string) $conversationId,
+                'user_id' => (string) $userId
             ]
         ]);
 
