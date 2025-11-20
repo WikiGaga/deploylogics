@@ -173,7 +173,14 @@
             <div data-repeater-list="user_criteria">
                 @foreach($elements as $k=>$item)
                     <div data-repeater-item class="user_criteria_block" style="border-bottom: 1px dashed #fb0000;padding-bottom: 5px;margin-bottom: 15px;">
-                        <div class="row">
+                   <div class="row">
+                        <div class="col-lg-12">
+                            
+                        <h6>Sequens No :</h6>
+                        <input type="number" value="{{$k}}" class="col-lg-3 form-control sr" name="sr">
+                        </div>
+                    </div>      
+                    <div class="row">
                             <div class="col-lg-4">
                                 <div class="row">
                                     <div class="col-lg-12">

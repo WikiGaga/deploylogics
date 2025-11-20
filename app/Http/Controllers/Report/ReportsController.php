@@ -140,7 +140,14 @@ class ReportsController extends Controller
             // dd($request->user_criteria);
             if($request->report_static_dynamic == 'dynamic'){
                 TblSoftReportStyling::where('report_id',$report->report_id)->delete();
-                foreach ($request->user_criteria as $key=>$user_criteria){
+                $user_criteria_arr=$request->user_criteria;
+                usort($user_criteria_arr, function ($a, $b) {
+                    $sort_a = $a['sr'] ?? PHP_INT_MAX;
+                    $sort_b = $b['sr'] ?? PHP_INT_MAX;
+
+                    return $sort_a <=> $sort_b;
+                });
+                foreach ($user_criteria_arr as $key=>$user_criteria){
                     // row create criteria_active
                     $arr['report_id'] = $report->report_id;
                     $arr['key'] = $key;

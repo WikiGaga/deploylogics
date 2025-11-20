@@ -25,6 +25,7 @@
             //dump($data['qry']);
             $list = \Illuminate\Support\Facades\DB::select($data['qry']);
         }
+        $count_no=count($list);
 
         // styles
         $styles = isset($report_tb_data->report_styling)?$report_tb_data->report_styling:[];
@@ -58,6 +59,7 @@
         }
         // variables default value foe calulations
         $arr = [];
+        $count = [];
         foreach ($calc as $var)
         {
            //$a_{$var} = 0;
@@ -179,6 +181,12 @@
                 @endforeach
             }
         @endforeach
+
+        .table-responsive-scroll {
+            overflow-x: auto;
+            max-width: 100%;
+            width: 100%;
+        }
     </style>
 @endsection
 @section('content')
@@ -218,81 +226,95 @@
             </div>
             <div class="row row-block">
                 <div class="col-lg-12">
-                    <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
-                        <tr class="header">
-                            @if($sr == 1)
-                                <th>Sr.</th>
-                            @endif
-                            @foreach($headings as $heading)
-                                <th>{{$heading}}</th>
-                            @endforeach
-                        </tr>
-                        @if(count($list) != 0 && count($headings) == count($fieldsKeys))
-                            @foreach($list as $kd=>$dt)
-                                <tr class="item_row">
-                                    @if($sr == 1)
-                                        <td>{{$loop->iteration}}</td>
-                                    @endif
-                                    @foreach($fieldsKeys as $key=>$fieldsKey)
-                                            @if($column_types[$key] == 'varchar2')
-                                                <td>{!! $dt->$fieldsKey !!}</td>
-                                            @elseif($column_types[$key] == 'number')
-                                                @php
-                                                    $numVal = (int)$dt->$fieldsKey;
-                                                    if(in_array($key,$calc)){
-                                                        //$a_{$key} += $numVal;
-                                                        //$arr[$key] = $a_{$key};
-                                                        $a_[$key] += $numVal;
-                                                        $arr[$key] = $a_[$key];
-                                                    }
-                                                @endphp
-                                                <td>{!! $numVal !!}</td>
-                                            @elseif($column_types[$key] == 'float')
-                                                @php
-                                                    $floatVal = (float)$dt->$fieldsKey;
-                                                    if(in_array($key,$calc)){
-                                                        //$a_{$key} += $floatVal;
-                                                        //$arr[$key] = $a_{$key};
-                                                        $a_[$key]+= $floatVal;
-                                                        $arr[$key] = $a_[$key];
-                                                    }
-                                                @endphp
-                                                <td>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
-                                            @elseif($column_types[$key] == 'date')
-                                                <td>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
-                                            @endif
-
-                                    @endforeach
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
-                                    No Data Found......
-                                    @if(count($list) != 0 && count($headings) != count($fieldsKeys))
-                                        error...
-                                    @endif
-                                </td>
-                            </tr>
-                        @endif
-                        @if(count($calc) != 0)
-                            <tr class="grand_total">
+                    <div class="table-responsive-scroll">
+                        <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
+                            <tr class="header">
                                 @if($sr == 1)
-                                    <td class="rep-font-bold">Grand Total:</td>
-                                    <td class="rep-font-bold"></td>
-                                @else
-                                    <td class="rep-font-bold">Grand Total:</td>
+                                    <th>Sr.</th>
                                 @endif
-                                @for($i=1; $i < count($headings); $i++)
-                                    <td class="text-right rep-font-bold">
-                                        @if(isset($arr[$i]))
-                                            {{number_format($arr[$i],3)}}
+                                @foreach($headings as $heading)
+                                    <th>{{$heading}}</th>
+                                @endforeach
+                            </tr>
+                            @if(count($list) != 0 && count($headings) == count($fieldsKeys))
+                                @foreach($list as $kd=>$dt)
+                                    <tr class="item_row">
+                                        @if($sr == 1)
+                                            <td>{{$loop->iteration}}</td>
+                                        @endif
+                                        @foreach($fieldsKeys as $key=>$fieldsKey)
+                                                @if($column_types[$key] == 'varchar2')
+                                                    <td>{!! $dt->$fieldsKey !!}</td>
+                                                @elseif($column_types[$key] == 'number')
+                                                    @php
+                                                        $numVal = (int)$dt->$fieldsKey;
+                                                        
+                                                        if(in_array($key,$calc)){
+                                                            //$a_{$key} += $numVal;
+                                                            //$arr[$key] = $a_{$key};
+                                                            $a_[$key] += $numVal;
+                                                            $arr[$key] = $a_[$key];
+                                                        }
+                                                    @endphp
+                                                    <td>{!! $numVal !!}</td>
+                                                @elseif($column_types[$key] == 'float')
+                                                    @php
+                                                        $floatVal = (float)$dt->$fieldsKey;
+                                                        if(in_array($key,$calc)){
+                                                            //$a_{$key} += $floatVal;
+                                                            //$arr[$key] = $a_{$key};
+                                                            $a_[$key]+= $floatVal;
+                                                            $arr[$key] = $a_[$key];
+                                                        }
+                                                    @endphp
+                                                    <td>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                @elseif($column_types[$key] == 'date')
+                                                    <td>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                @endif
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
+                                        No Data Found......
+                                        @if(count($list) != 0 && count($headings) != count($fieldsKeys))
+                                            error...
                                         @endif
                                     </td>
-                                @endfor
-                            </tr>
-                        @endif
-                    </table>
+                                </tr>
+                            @endif
+                            @if(count($calc) != 0)
+                                <tr class="grand_total">
+                                    @if($sr == 1)
+                                        <td class="rep-font-bold">Grand Total:</td>
+                                        <td class="rep-font-bold"></td>
+                                    @else
+                                        <td class="rep-font-bold">Grand Total:</td>
+                                    @endif
+                                    @for($i=1; $i < count($headings); $i++)
+                                        <td class="text-right rep-font-bold">
+                                            @if(isset($arr[$i]))
+                                                {{number_format($arr[$i],3)}}
+                                            @endif
+                                        </td>
+                                    @endfor
+                                </tr>
+                                 <tr class="grand_total">
+                                    @if($sr == 1)
+                                        <td class="rep-font-bold">Count:</td>
+                                        <td class="rep-font-bold"></td>
+                                    @else
+                                        <td class="rep-font-bold">Count:</td>
+                                    @endif
+                                    
+                                    <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
+                                        {{$count_no}}
+                                    </td>
+                                </tr>
+                            @endif
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
