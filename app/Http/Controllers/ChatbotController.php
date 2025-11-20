@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        try {
+        // try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -49,15 +49,15 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        // } catch (\Exception $e) {
+        //     Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
 
-            return response()->json([
-                'success' => false,
-                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-            ], 500);
-        }
+        //     return response()->json([
+        //         'success' => false,
+        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+        //     ], 500);
+        // }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
