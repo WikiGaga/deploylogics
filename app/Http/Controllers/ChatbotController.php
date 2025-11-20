@@ -205,8 +205,8 @@ class ChatbotController extends Controller
             'OpenAI-Beta' => 'assistants=v2'
         ])->post($this->baseUrl . '/threads', [
             'metadata' => [
-                'conversation_id' => $conversationId,
-                'user_id' => $userId
+                'conversation_id' => (string) $conversationId,
+                'user_id' => (string) $userId
             ]
         ]);
 
