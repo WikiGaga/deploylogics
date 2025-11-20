@@ -34,7 +34,7 @@ class ChatbotController extends Controller
             $category = $request->input('category', 'sales');
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
-
+dd($user);
             $this->logConversation($user, $message, $conversationId, 'user', $category);
 
             $response = $this->generateAIResponse($message, $user, $category, $conversationId);
