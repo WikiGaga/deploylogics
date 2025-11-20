@@ -4,7 +4,7 @@ class Chatbot {
         this.isTyping = false;
         this.conversationHistory = [];
         this.conversationId = null;
-        this.currentCategory = 'general';
+        this.currentCategory = 'sales';
         this.categories = [];
         this.init();
     }
