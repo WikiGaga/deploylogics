@@ -9,7 +9,7 @@ class TblSaleCustomer extends Model
     protected $table = 'tbl_sale_customer';
     protected $primaryKey = 'customer_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
@@ -19,7 +19,7 @@ class TblSaleCustomer extends Model
         return $this->hasMany(TblSaleSubCustomer::class, 'parent_customer_id' , "customer_id")
         ->with('customer');
     }
-    
+
     public function contact_person()
     {
         return $this->hasMany(TblSaleCustomerDtl::class,"customer_id");
