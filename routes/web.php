@@ -43,7 +43,7 @@ Route::get('/', function () {
 
 Route::get('/export-csv','ReportDownloadController@download')->name('export.csv');
 // Chatbot Routes
-// Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::post('/chatbot/message', 'ChatbotController@processMessage');
     Route::get('/chatbot/history', 'ChatbotController@getConversationHistory');
     Route::get('/chatbot/analytics', 'ChatbotController@getAnalytics');
@@ -55,7 +55,7 @@ Route::get('/export-csv','ReportDownloadController@download')->name('export.csv'
     // OpenAI Assistants Management
     Route::get('/chatbot/assistants', 'ChatbotController@listAssistants');
     Route::delete('/chatbot/assistants/{category}', 'ChatbotController@deleteAssistant');
-// });
+});
 // ->middleware('wan_access');
 Route::any('web-service/{str}','WelcomeController@webservice');
 
