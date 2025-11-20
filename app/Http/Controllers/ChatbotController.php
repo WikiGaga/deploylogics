@@ -62,7 +62,7 @@ class ChatbotController extends Controller
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        try {
+        // try {
             $assistantId = $this->getOrCreateAssistant($category);
 
             $threadId = $this->getOrCreateThread($conversationId, $user->id);
@@ -83,10 +83,10 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        } catch (\Exception $e) {
-            Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-            return 'Sorry, I encountered an error. Please try again.';
-        }
+        // } catch (\Exception $e) {
+        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        //     return 'Sorry, I encountered an error. Please try again.';
+        // }
     }
 
     private function getOrCreateAssistant(string $category): string
