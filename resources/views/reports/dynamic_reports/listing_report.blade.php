@@ -69,6 +69,9 @@
                     'path' => request()->url(),
                     'query' => request()->query()
                 ]
+
+
+                
             );
 
             // $list = \Illuminate\Support\Facades\DB::select($baseQuery);
