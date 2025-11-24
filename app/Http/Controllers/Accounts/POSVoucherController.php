@@ -118,7 +118,7 @@ class POSVoucherController extends Controller
 
                 foreach ($all_dates as $insert_date_wise){
                     $branch_id = $insert_date_wise->branch_id;
-                    $date =  date('Y-m-d', strtotime($insert_date_wise->sales_date));
+                    $date =  date('Y-m-d', strtotime($insert_date_wise->order_date));
                     $del_data_qry = "Delete from TBL_ACCO_VOUCHER where $BC AND branch_id = $branch_id AND voucher_type = 'POS' and voucher_date = to_date('".$date."','yyyy/mm/dd')";
                     DB::delete($del_data_qry);
                     $del_data_qry = "Delete from TBL_ACCO_VOUCHER where $BC AND branch_id = $branch_id AND voucher_type = 'RPOS' and voucher_date = to_date('".$date."','yyyy/mm/dd')";
