@@ -197,7 +197,7 @@ class POSVoucherController extends Controller
                             $data = [
                                 'voucher_id'            =>  $voucher_id,
                                 'voucher_document_id'   =>  $sale_invoice->order_id,
-                                'voucher_no'            =>  $sale_invoice->sales_code,
+                                'voucher_no'            =>  $sale_invoice->order_serial,
                                 'voucher_date'          =>  date('Y-m-d', strtotime($date)),
                                 'voucher_descrip'       =>  'POS: '.$descrip,
                                 'voucher_type'          =>  "POS",
