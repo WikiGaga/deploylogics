@@ -59,6 +59,7 @@ var KTFormWidgets = function () {
                                     }, 2000);
                                     var win = window.open(response['data']['url'], "_blank");
                                     win.location.reload();
+                                    
                                     //  window.location.href = response['data']['redirect'];
                                 }else{
                                     toastr.error(response.message);

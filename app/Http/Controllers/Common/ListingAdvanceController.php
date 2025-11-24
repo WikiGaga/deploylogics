@@ -185,7 +185,7 @@ class ListingAdvanceController extends Controller
             $qry  = 'select '.$columns.' '.$metric.' from '.$table_name_alias.' '.$where.' '.$groupBy.' '.$orderBy.' '.$limit;
             $qry = str_replace('$user_id$',Auth::user()->id,$qry);
             $entries = DB::select($qry);
-//            dump($qry);
+            //            dump($qry);
             $meta = [
                 'page'    => $page,
                 'pages'   => $pages,
@@ -203,6 +203,7 @@ class ListingAdvanceController extends Controller
             ];
             return response()->json($result);
         }
+        // dd('df');
 
         return view('common.adv_list.listing',compact('data'));
     }

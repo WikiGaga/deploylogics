@@ -15,6 +15,12 @@
         $sr = $report_tb_data['report_column_sr_no'];
 
         $list = [];
+
+        // $selectedLimit = request('limit', 100);
+        // $page = request('page', 1);
+        // $limit = (isset($limit) && $limit == 'All') ? null : (int) request('limit', 100);
+        // $offset = ($page - 1) * $limit;
+
         //check report status according to criteria
 
         if(isset($data['report_status'])){
