@@ -70,8 +70,11 @@ class UserReportsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    
     public function create($reportType,$caseType, $id = null)
-    {   // TblSoftReportingUserStudio
+    { 
+        // dd($reportType,$caseType, $id);
+        // TblSoftReportingUserStudio
         $menu = TblSoftReports::select('parent_menu_id')->where('report_case',$caseType)->first();
         if(empty($menu)){
             abort('404');
@@ -130,6 +133,7 @@ class UserReportsController extends Controller
         }
     }
 
+    
     public function getStoreByName(Request $request){
         // dd($request->toArray());
         $data = [];
@@ -650,6 +654,7 @@ class UserReportsController extends Controller
 
     public function dynamicStore(Request $request, $id = null){
         $data = [];
+        // dd($request->all());
 
      //   return $this->jsonErrorResponse($data, "Report in developing process", 200);
 
@@ -933,6 +938,8 @@ class UserReportsController extends Controller
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
         DB::commit();
+
+        // dd('dfs');
 
         $dataJs['redirect'] =  ''; // $data['report_case'];
 
@@ -2560,11 +2567,14 @@ class UserReportsController extends Controller
          *  Dynamic Report
          ********/
 
+        // dd($data);
+
         if($data['report_type'] == 'dynamic'){
             if($data['report_listing_type'] == 'listing'){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.dynamic_reports.listing_report', compact('data'))->render();
                 }else{
+                    // dd('sd');
                     return view('reports.dynamic_reports.listing_report');
                 }
             }
@@ -2938,5 +2948,51 @@ class UserReportsController extends Controller
             }
         }
         return Excel::download(new BladeExport($data,$fieldsKeys), 'report.xlsx');
+    }
+
+    public function getReportData(Request $request)
+    {
+
+        // dd($request->all());
+        $query = Order::query();
+
+        // Global Search (KTDatatable sends search.value)
+        if ($request->has('query')) {
+            $search = $request->query('query')['general'] ?? null;
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%$search%")
+                      ->orWhere('customer_name', 'like', "%$search%")
+                      ->orWhere('status', 'like', "%$search%");
+                });
+            }
+        }
+
+        // Sorting
+        $sortField = $request->input('sort.field', 'id');
+        $sortOrder = $request->input('sort.sort', 'desc');
+        $query->orderBy($sortField, $sortOrder);
+
+        // Pagination
+        $page = (int) $request->input('pagination.page', 1);
+        $perpage = (int) $request->input('pagination.perpage', 10);
+        $total = $query->count();
+
+        $results = $query->skip(($page - 1) * $perpage)
+                         ->take($perpage)
+                         ->get();
+
+        return response()->json([
+            'meta' => [
+                'page'    => $page,
+                'perpage' => $perpage,
+                'total'   => $total,
+                'pages'   => ceil($total / $perpage),
+                'sort'    => $sortOrder,
+                'field'   => $sortField,
+            ],
+            'data' => $results,
+        ]);
     }
 }

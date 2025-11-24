@@ -1829,6 +1829,9 @@
             </div>
         </div>
     </form>
+
+
+    <div class="kt-datatable" id="order_datatable"></div>
     <!--end::Form-->
     @endpermission
 @endsection
@@ -1840,6 +1843,64 @@
 @endsection
 
 @section('customJS')
+<script>
+    var datatable = $('#order_datatable').KTDatatable({
+        data: {
+            type: 'remote',
+            source: {
+                read: {
+                    url: "{{ route('report.data') }}",
+                    method: 'GET',
+                },
+            },
+            pageSize: 10,
+            serverPaging: true,
+            serverFiltering: true,
+            serverSorting: true,
+        },
+
+        layout: {
+            scroll: true,
+            footer: false
+        },
+
+        sortable: true,
+        pagination: true,
+
+        search: {
+            input: $('#generalSearch')
+        },
+
+        columns: [
+            {
+                field: 'id',
+                title: '#',
+                width: 50,
+                sortable: true,
+            },
+            {
+                field: 'customer_name',
+                title: 'Customer Name',
+            },
+            {
+                field: 'status',
+                title: 'Status',
+                template: function(row){
+                    var statusClass = {
+                        'pending': 'kt-badge--warning',
+                        'completed': 'kt-badge--success',
+                        'cancelled': 'kt-badge--danger'
+                    };
+                    return '<span class="kt-badge ' + statusClass[row.status] + ' kt-badge--inline">' + row.status + '</span>';
+                }
+            },
+            {
+                field: 'total_amount',
+                title: 'Amount',
+            }
+        ]
+    });
+</script>
     <script>
         $("#kt_datepicker_3").datepicker({
             format: "dd-mm-yyyy",

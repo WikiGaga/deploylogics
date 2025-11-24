@@ -109,6 +109,7 @@
         $reportError = null;
         $dateTimeFrom = $data['date_time_from'] ?? now()->startOfDay()->toDateTimeString();
         $dateTimeTo = $data['date_time_to'] ?? now()->endOfDay()->toDateTimeString();
+        $limit = request('limit', 100); 
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -184,9 +185,51 @@
                 // $b=json_decode($a->variation);
 
 
-                $detailRows = \Illuminate\Support\Facades\DB::select($query);
+                // $detailRows = \Illuminate\Support\Facades\DB::select($query);
+
+                $detailRows = \Illuminate\Support\Facades\DB::table('order_details as od')
+                ->join('orders as o', function ($join) use ($dateTimeFrom, $dateTimeTo) {
+                    $join->on('o.id', '=', 'od.order_id')
+                        ->whereBetween('o.created_at', [$dateTimeFrom, $dateTimeTo]);
+                })->select(
+                    'od.id AS order_detail_id',
+                    'od.order_id',
+                    'od.food_id',
+                    'od.quantity',
+                    'od.price',
+                    'od.discount_on_food',
+                    'od.total_add_on_price',
+                    'od.variation',
+                    'o.created_at',
+                    'od.is_deleted',
+                    'o.ORDER_STATUS',
+                    'o.restaurant_id'
+                );
+
+                // 4. Apply the dynamic branch filter (if it's a simple WHERE clause)
+                if (!empty($branchFilter)) {
+                    // Assuming $branchFilter holds a WHERE clause for the 'orders' table, e.g., "AND o.branch_id = 5"
+                    // You would apply it here using proper methods:
+                    // Example: $queryBuilder->whereRaw($branchFilter);
+                    // BETTER: If $branchFilter is an ID: $queryBuilder->where('o.branch_id', $branchId);
+                    
+                    // For simplicity, if $branchFilter is a raw string, use whereRaw, but be cautious of SQL injection.
+                    // It's much safer to pass dynamic values as bindings.
+                }
+
+                 if ($limit === 'All') {
+                    // All records — no pagination
+                    $detailRows = $detailRows->get();
+                    $isAll = true;
+                } else {
+                    // Convert to integer
+                    $limit = (int) $limit;
+                    $detailRows = $detailRows->paginate($limit);
+                    $isAll = false;
+                }
+
                 echo '<!-- DEBUG: Product wise sales retrieved ' . count($detailRows) . ' order detail rows -->';
-    //    dd($detailRows);
+                //    dd($detailRows);
                 $decodeVariation = static function ($payload) {
                     if (empty($payload)) {
                         return [];
@@ -498,6 +541,13 @@
                         </div>
                     @else
 
+                    <select onchange="changeLimit(this.value)">
+                        <option value="100"  {{ $limit == 100 ? 'selected' : '' }}>100</option>
+                        <option value="1000" {{ $limit == 1000 ? 'selected' : '' }}>1000</option>
+                        <option value="2000" {{ $limit == 2000 ? 'selected' : '' }}>2000</option>
+                        <option value="All"  {{ $limit == 'All' ? 'selected' : '' }}>All</option>
+                    </select>
+
 
                         @foreach ($groupedSessions as $sessionKey => $sessionData)
                             @php
@@ -589,6 +639,10 @@
                                 </tr>
                             </table>
                         </div>
+                        @if (!$isAll)
+                            {{ $detailRows->appends(['limit' => $limit])->links() }}
+                        @endif
+
                     @endif
                 </div>
             </div>
@@ -614,7 +668,21 @@
         $(document).ready(function() {
             console.log('Product Wise Sales Report loaded successfully');
         });
-    </script>
+
+        function changeLimit(limit) {
+            const url = new URL(window.location.href);
+
+            url.searchParams.set('limit', limit);
+
+            if (limit === 'All') {
+                url.searchParams.delete('page');
+            } else {
+                url.searchParams.set('page', 1); // reset to first page
+            }
+
+            window.location.href = url;
+        }
+    </script>    
 @endsection
 
 @section('exportXls')

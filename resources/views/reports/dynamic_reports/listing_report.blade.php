@@ -1,7 +1,8 @@
 @extends('layouts.report')
 @php
 
-    try{
+// dd('$limit');
+    // try{
         $data = Session::get('data');
         $headings = [];
         $column_types = [];
@@ -23,7 +24,48 @@
             }
         }else{
             //dump($data['qry']);
-            $list = \Illuminate\Support\Facades\DB::select($data['qry']);
+           
+           $baseQuery = $data['qry']; 
+            $page = request('page', 1);
+
+            $requestedLimit = request('limit', 100); // "All" or number
+            $isAll = ($requestedLimit === 'All');
+
+            // get total
+            $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
+            $total = DB::select($sqlCount)[0]->total;
+
+            if ($isAll) {
+
+                // Fetch ALL records
+                $limit = $total;   // perPage must be > 0
+                $offset = 0;
+                $record = DB::select($baseQuery);
+
+            } else {
+                // convert to integer ONLY when not "All"
+                $limit = (int)$requestedLimit;
+                if ($limit < 1) { $limit = 1; }
+
+                $offset = ($page - 1) * $limit;
+
+                $sqlData = $baseQuery . " OFFSET {$offset} ROWS FETCH NEXT {$limit} ROWS ONLY";
+                $record = DB::select($sqlData);
+            }
+
+            // paginator
+            $list = new \Illuminate\Pagination\LengthAwarePaginator(
+                $record,
+                $total,
+                $limit,
+                $page,
+                [
+                    'path' => request()->url(),
+                    'query' => request()->query()
+                ]
+            );
+
+            // $list = \Illuminate\Support\Facades\DB::select($baseQuery);
         }
         $count_no=count($list);
 
@@ -67,10 +109,10 @@
         }
 
         $report_status = true;
-    }catch (Exception $e){
-        $report_status = false;
-        $report_message = $e->getMessage();
-    }
+    // }catch (Exception $e){
+    //     $report_status = false;
+    //     $report_message = $e->getMessage();
+    // }
 @endphp
 @section('title', $report_tb_data['report_title'])
 @if($report_status == true)
@@ -229,73 +271,15 @@
             </div>
             <div class="row row-block">
                 <div class="col-lg-12">
-                    <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
-                        <tr class="header">
-                            @if($sr == 1)
-                                <th>Sr.</th>
-                            @endif
-                            @foreach($headings as $heading)
-                                <th>{{$heading}}</th>
-                            @endforeach
-                        </tr>
-                        @if(count($list) != 0 && count($headings) == count($fieldsKeys))
-                            @foreach($list as $kd=>$dt)
-                                @php
-                                    // Detect which key exists
-                                    $orderValue = null;
-
-                                    if (isset($dt->order_id)) {
-                                        $orderValue = $dt->order_id ?? '';
-                                    }
-                                @endphp
-                                <tr class="item_row @if($orderValue) order-row cursor-pointer @endif" @if($orderValue) data-order-id="{{ $orderValue }}" @endif>
-                                    @if($sr == 1)
-                                        <td>{{$loop->iteration}}</td>
-                                    @endif
-                                    @foreach($fieldsKeys as $key=>$fieldsKey)
-                                            @if($column_types[$key] == 'varchar2')
-                                                <td>{!! $dt->$fieldsKey !!}</td>
-                                            @elseif($column_types[$key] == 'number')
-                                                @php
-                                                    $numVal = (int)$dt->$fieldsKey;
-                                                    if(in_array($key,$calc)){
-                                                        //$a_{$key} += $numVal;
-                                                        //$arr[$key] = $a_{$key};
-                                                        $a_[$key] += $numVal;
-                                                        $arr[$key] = $a_[$key];
-                                                    }
-                                                @endphp
-                                                <td>{!! $numVal !!}</td>
-                                            @elseif($column_types[$key] == 'float')
-                                                @php
-                                                    $floatVal = (float)$dt->$fieldsKey;
-                                                    if(in_array($key,$calc)){
-                                                        //$a_{$key} += $floatVal;
-                                                        //$arr[$key] = $a_{$key};
-                                                        $a_[$key]+= $floatVal;
-                                                        $arr[$key] = $a_[$key];
-                                                    }
-                                                @endphp
-                                                <td>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
-                                            @elseif($column_types[$key] == 'date')
-                                                <td>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
-                                            @endif
-
-                                    @endforeach
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
-                                    No Data Found......
-                                    @if(count($list) != 0 && count($headings) != count($fieldsKeys))
-                                        error...
-                                    @endif
-                                </td>
-                            </tr>
-                        @endif
-                        @if(count($calc) != 0)
-                            <tr class="grand_total">
+                    <div class="table-responsive-scroll">
+                          <select onchange="changeLimit(this.value)">
+                                <option value="100"  {{ $limit == 100 ? 'selected' : '' }}>100</option>
+                                <option value="1000" {{ $limit == 1000 ? 'selected' : '' }}>1000</option>
+                                <option value="2000" {{ $limit == 2000 ? 'selected' : '' }}>2000</option>
+                                <option value="All"  {{ $limit == $total ? 'selected' : '' }}>All</option>
+                            </select>
+                        <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
+                            <tr class="header">
                                 @if($sr == 1)
                                     <th>Sr.</th>
                                 @endif
@@ -381,6 +365,9 @@
                                 </tr>
                             @endif
                         </table>
+                        @if (!$isAll)
+                            {{ $list->appends(['limit' => request('limit')])->links() }}
+                        @endif
                     </div>
                 </div>
             </div>
@@ -399,6 +386,13 @@
 @endsection
 @section('customJS')
     <script>
+     function changeLimit(limit) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('limit', limit);
+            url.searchParams.set('page', 1);
+            window.location.href = url;
+        }
+
         $('.listing_dropdown>li>label>input[type="checkbox"]').on('click', function(e) {
             var table = document.getElementById('dynamic_report_table');
             var tr = table.querySelectorAll('tr');
