@@ -158,7 +158,7 @@ class POSVoucherController extends Controller
                             $descrip = 'Cash';
                         }
                         // 4 =Visa Card , 5 = Cash and Visa Card
-                        if($sale_invoice->payment_method == 'cash_card' || $sale_invoice->sales_sales_type == 'card'){
+                        if($sale_invoice->payment_method == 'cash_card' || $sale_invoice->payment_method == 'card'){
                             $ac = $sale_invoice->bank_id;
                             $descrip = 'Visa or (Cash and Visa)';
                         }
