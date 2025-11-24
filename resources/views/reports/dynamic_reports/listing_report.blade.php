@@ -76,6 +76,9 @@
 @if($report_status == true)
 @section('pageCSS')
     <style>
+        .cursor-pointer{
+            cursor: pointer;
+        }
         table#dynamic_report_table .grand_total>td{
             border-bottom: 2px solid #969696 !important;
             border-top: 2px solid #cecece !important;
@@ -226,9 +229,73 @@
             </div>
             <div class="row row-block">
                 <div class="col-lg-12">
-                    <div class="table-responsive-scroll">
-                        <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
-                            <tr class="header">
+                    <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
+                        <tr class="header">
+                            @if($sr == 1)
+                                <th>Sr.</th>
+                            @endif
+                            @foreach($headings as $heading)
+                                <th>{{$heading}}</th>
+                            @endforeach
+                        </tr>
+                        @if(count($list) != 0 && count($headings) == count($fieldsKeys))
+                            @foreach($list as $kd=>$dt)
+                                @php
+                                    // Detect which key exists
+                                    $orderValue = null;
+
+                                    if (isset($dt->order_id)) {
+                                        $orderValue = $dt->order_id ?? '';
+                                    }
+                                @endphp
+                                <tr class="item_row @if($orderValue) order-row cursor-pointer @endif" @if($orderValue) data-order-id="{{ $orderValue }}" @endif>
+                                    @if($sr == 1)
+                                        <td>{{$loop->iteration}}</td>
+                                    @endif
+                                    @foreach($fieldsKeys as $key=>$fieldsKey)
+                                            @if($column_types[$key] == 'varchar2')
+                                                <td>{!! $dt->$fieldsKey !!}</td>
+                                            @elseif($column_types[$key] == 'number')
+                                                @php
+                                                    $numVal = (int)$dt->$fieldsKey;
+                                                    if(in_array($key,$calc)){
+                                                        //$a_{$key} += $numVal;
+                                                        //$arr[$key] = $a_{$key};
+                                                        $a_[$key] += $numVal;
+                                                        $arr[$key] = $a_[$key];
+                                                    }
+                                                @endphp
+                                                <td>{!! $numVal !!}</td>
+                                            @elseif($column_types[$key] == 'float')
+                                                @php
+                                                    $floatVal = (float)$dt->$fieldsKey;
+                                                    if(in_array($key,$calc)){
+                                                        //$a_{$key} += $floatVal;
+                                                        //$arr[$key] = $a_{$key};
+                                                        $a_[$key]+= $floatVal;
+                                                        $arr[$key] = $a_[$key];
+                                                    }
+                                                @endphp
+                                                <td>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                            @elseif($column_types[$key] == 'date')
+                                                <td>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                            @endif
+
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
+                                    No Data Found......
+                                    @if(count($list) != 0 && count($headings) != count($fieldsKeys))
+                                        error...
+                                    @endif
+                                </td>
+                            </tr>
+                        @endif
+                        @if(count($calc) != 0)
+                            <tr class="grand_total">
                                 @if($sr == 1)
                                     <th>Sr.</th>
                                 @endif
