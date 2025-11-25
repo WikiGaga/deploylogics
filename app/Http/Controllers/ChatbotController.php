@@ -116,7 +116,7 @@ class ChatbotController extends Controller
     private function createAssistant(string $category): string
     {
         $systemPrompt = $this->getSystemPromptForCategory($category);
-        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General'];
+        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'Sales'];
 
         Log::info("Creating new assistant for category: {$category}");
 
@@ -137,14 +137,12 @@ class ChatbotController extends Controller
             $errorBody = $response->body();
             $errorMessage = 'Failed to create assistant';
 
-            // Try to parse error details from OpenAI response
             try {
                 $errorData = $response->json();
                 if (isset($errorData['error']['message'])) {
                     $errorMessage = $errorData['error']['message'];
                 }
             } catch (\Exception $e) {
-                // If parsing fails, use the raw body
             }
 
             Log::error("Failed to create assistant for category {$category}. Status: {$statusCode}, Error: {$errorBody}");
@@ -384,139 +382,321 @@ class ChatbotController extends Controller
             'sales' => [
                 'name' => 'Sales',
                 'description' => 'Sales orders report with comprehensive order information',
-                'tables' => ['ORDER_REPORT_VIEW'],
+                'prompt' => $this->getSalesPrompt(),
             ],
             'purchases' => [
                 'name' => 'Purchases',
                 'description' => 'Purchase orders report with comprehensive purchase information',
-                'tables' => ['VW_PURC_PURCHASE_ORDER'],
+                'prompt' => $this->getPurchasesPrompt(),
             ],
             'inventory' => [
                 'name' => 'Inventory',
                 'description' => 'Stock inventory report with product quantities',
-                'tables' => ['VW_PURC_GRN'],
+                'prompt' => $this->getInventoryPrompt(),
             ],
             'accounts' => [
                 'name' => 'Accounts',
                 'description' => 'Accounting reports with financial information',
-                'tables' => ['VW_ACC_VOUCHER'],
+                'prompt' => $this->getAccountsPrompt(),
             ]
         ];
     }
 
+    private function getSalesPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language sales question into ONE Oracle SELECT query.
+- Use only the views: VW_REST_SUMMARY_ORDER_WISE and VW_REST_ORDER_DTL.
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+
+1) VW_REST_SUMMARY_ORDER_WISE  (order-level summary)
+Columns:
+ORDER_DATE (DATE)
+BRANCH_ID (NUMBER)
+BRANCH_NAME (VARCHAR2)
+ORDER_ID (NUMBER or VARCHAR2)
+ORDER_SERIAL (VARCHAR2)
+ITEMS_AMOUNT (NUMBER)
+DISCOUNT_ON_ITEMS (NUMBER)
+TOTAL_ADD_ON_PRICE (NUMBER)
+GROSS_SALES (NUMBER)
+DISCOUNT_BY_RESTAURANT (NUMBER)
+COUPON_DISCOUNT (NUMBER)
+TOTAL_DISCOUNTS (NUMBER)
+DELIVERY_CHARGES (NUMBER)
+VAT (NUMBER)
+NET_SALES (NUMBER)
+PAYMENT_METHOD (VARCHAR2)
+BANK_ID (NUMBER)
+PAYMENT_STATUS (VARCHAR2)
+ORDER_STATUS (VARCHAR2)
+SALES_TYPE (VARCHAR2)
+CASH_SALES (NUMBER)
+CARD_SALES (NUMBER)
+CREDIT_SALES (NUMBER)
+DELIVERY_PARTNER_SALES (NUMBER)
+DELIVERY_SALES (NUMBER)
+DINE_IN_SALES (NUMBER)
+TAKEAWAY_SALES (NUMBER)
+PARTNER_NAME (VARCHAR2)
+CUSTOMER_NAME (VARCHAR2)
+CUSTOMER_ID (NUMBER)
+
+2) VW_REST_ORDER_DTL (item-level)
+Columns:
+ID (NUMBER)
+ORDER_ID (NUMBER or VARCHAR2)
+ORDER_SERIAL (VARCHAR2)
+ORDER_DATE (DATE)
+ORDER_STATUS (VARCHAR2)
+PAYMENT_STATUS (VARCHAR2)
+ORDER_TYPE (VARCHAR2)
+BRANCH_ID (NUMBER)
+BRANCH_NAME (VARCHAR2)
+FOOD_ID (NUMBER)
+FOOD_NAME (VARCHAR2)
+PRICE (NUMBER)
+QUANTITY (NUMBER)
+ITEM_AMOUNT (NUMBER)
+ITEM_DISCOUNT (NUMBER)
+ITEM_AMOUNT_AFTER_DISCOUNT (NUMBER)
+TOTAL_ADD_ON_PRICE (NUMBER)
+ITEM_NET_AMOUNT (NUMBER)
+IS_DELETED (VARCHAR2)
+
+-----------------------------------------------------
+BUSINESS RULES
+-----------------------------------------------------
+- \"Sales\", \"sale\", \"revenue\" → SUM(NET_SALES) from VW_REST_SUMMARY_ORDER_WISE.
+- ALWAYS apply:
+  PAYMENT_STATUS = 'paid'
+  ORDER_STATUS <> 'canceled'
+- For item-level queries:
+  TRIM(IS_DELETED) <> 'Y'
+
+-----------------------------------------------------
+DATE RULES
+-----------------------------------------------------
+- \"today\" → TRUNC(ORDER_DATE) = TRUNC(SYSDATE)
+- \"yesterday\" → TRUNC(ORDER_DATE) = TRUNC(SYSDATE-1)
+- \"last 7 days\" → ORDER_DATE >= TRUNC(SYSDATE-6)
+- Specific dates:
+  Accept formats:
+    \"7th Nov\", \"7th November\", \"07-11-25\", \"07/11/2025\"
+  Convert with TO_DATE using DD-MM-YYYY or YYYY-MM-DD.
+- If user gives day + month but no year → assume current year.
+- If user gives no date at all → assume TODAY.
+
+-----------------------------------------------------
+BRANCH NAME HANDLING
+-----------------------------------------------------
+- If user mentions a word that looks like a branch (example: \"mussanah\", \"seeb\", \"sohar\")
+  → Filter using:
+    LOWER(BRANCH_NAME) LIKE '%<term>%'
+- The branch name can be any unknown word; no predefined list.
+
+-----------------------------------------------------
+FOOD NAME HANDLING
+-----------------------------------------------------
+- If user mentions a food name (example: \"family meal\", \"chicken burger\", \"tuesday meal\")
+  → Filter using:
+    LOWER(FOOD_NAME) LIKE '%<term>%'
+
+-----------------------------------------------------
+PAYMENT METHOD HANDLING
+-----------------------------------------------------
+Interpret common synonyms:
+- \"cash\" → PAYMENT_METHOD = 'cash'
+- \"card\", \"visa\", \"master\", \"credit card\" → PAYMENT_METHOD IN ('card','visa','master')
+- \"credit\", \"on account\" → PAYMENT_METHOD = 'credit'
+- \"delivery partner\", partner name such as \"Talabat\", \"Akeed\":
+    LOWER(PARTNER_NAME) LIKE '%talabat%'
+
+If user says:
+\"give sales for cash, card and credit\"
+→ Use GROUP BY PAYMENT_METHOD.
+
+-----------------------------------------------------
+SALES TYPE HANDLING (service type)
+-----------------------------------------------------
+User terms → SALES_TYPE mapping:
+- dine in, dine-in, eat in → 'dine in'
+- take away, takeaway, pickup → 'take away'
+- delivery, home delivery → 'delivery'
+
+If user asks:
+\"sales for dine in, take away, delivery\"
+→ Group by SALES_TYPE.
+
+-----------------------------------------------------
+TOP TRENDING FOOD
+-----------------------------------------------------
+Top food by quantity:
+  SELECT FOOD_ID, FOOD_NAME, SUM(QUANTITY) ...
+  ORDER BY SUM(QUANTITY) DESC
+
+Top food by amount:
+  SELECT FOOD_ID, FOOD_NAME, SUM(ITEM_NET_AMOUNT) ...
+  ORDER BY SUM(ITEM_NET_AMOUNT) DESC
+
+-----------------------------------------------------
+AMBIGUITY HANDLING (IMPORTANT)
+-----------------------------------------------------
+IF a term can be BOTH:
+- a branch candidate AND
+- a food name candidate AND
+- not previously known
+THEN DO NOT generate SQL.
+
+Ask EXACTLY ONE SHORT QUESTION like:
+\"Is 'mussanah' a branch or a food item?\"
+\"Is 'tuesday meal' a food item or something else?\"
+\"Does 'royal' refer to a branch, partner, or food item?\"
+
+Only after the user clarifies → generate SQL.
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(NET_SALES), 0) FROM VW_REST_SUMMARY_ORDER_WISE WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE) AND PAYMENT_STATUS = ''paid'' AND ORDER_STATUS <> ''canceled'''
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query
+   Example: 'GENERATE_REPORT: SELECT * FROM VW_REST_SUMMARY_ORDER_WISE WHERE ORDER_DATE >= SYSDATE - 30 AND PAYMENT_STATUS = ''paid'' AND ORDER_STATUS <> ''canceled'' ORDER BY ORDER_DATE DESC'";
+    }
+
+    private function getPurchasesPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language purchase question into ONE Oracle SELECT query.
+- Use the views/tables for purchases (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your purchase tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
+    private function getInventoryPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language inventory question into ONE Oracle SELECT query.
+- Use the views/tables for inventory (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your inventory tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
+    private function getAccountsPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language accounts question into ONE Oracle SELECT query.
+- Use the views/tables for accounts (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your accounts tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
     private function getSystemPromptForCategory(string $category): string
     {
-        $cacheKey = "chatbot_schema_{$category}";
+        $categoryInfo = $this->getCategorySchemas()[$category] ?? null;
 
-        $schema = Cache::remember($cacheKey, now()->addDays(30), function() use ($category) {
-            return $this->buildSchemaForCategory($category);
-        });
-
-        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
-
-        $additionalInstructions = '';
-        if ($category === 'sales') {
-            $additionalInstructions = "\n\nSALES REPORT COLUMNS (ORDER_REPORT_VIEW):
-Available columns:
-- ORDER_SERIAL (Order ID)
-- CREATED_AT (Order Date) - Use for date filtering
-- CUSTOMER_NAME, CAR_NUMBER, PHONE (Customer Info)
-- ORDER_TYPE, ORDER_STATUS, PAYMENT_STATUS
-- GROSS_AMOUNT, RESTAURANT_DISCOUNT_AMOUNT (Discount)
-- DELIVERY_CHARGE, TOTAL_TAX_AMOUNT (VAT)
-- ORDER_AMOUNT (Net Amount)
-- CASH_PAID (Cash Amount), CARD_PAID (Visa Amount)
-
-Date Filtering:
-- For date ranges, use WHERE CREATED_AT >= TO_DATE('start_date', 'YYYY-MM-DD') AND CREATED_AT <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE CREATED_AT >= SYSDATE - 7
-- For today: WHERE TRUNC(CREATED_AT) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
+        if ($categoryInfo && isset($categoryInfo['prompt'])) {
+            return $categoryInfo['prompt'];
         }
 
-        if ($category === 'purchases') {
-            $additionalInstructions = "\n\nPURCHASE REPORT COLUMNS (VW_PURC_PURCHASE_ORDER):
-Available columns:
-- PURCHASE_ORDER_ENTRY_DATE (Purchase Date) - Use for date filtering
-- PURCHASE_ORDER_CODE (Purchase Order Code)
-- SUPPLIER_NAME (Supplier Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- PRODUCT_NAME (Product Name)
-- UOM_NAME (Unit of Measure)
-- PURCHASE_ORDER_DTLPACKING (Packing)
-- PURCHASE_ORDER_DTLQUANTITY (Quantity)
-- PURCHASE_ORDER_DTLRATE (Rate)
-- PURCHASE_ORDER_DTLAMOUNT (Amount)
-- PURCHASE_ORDER_DTLDISC_AMOUNT (Discount Amount)
-- PURCHASE_ORDER_DTLVAT_AMOUNT (VAT Amount)
-- PURCHASE_ORDER_DTLTOTAL_AMOUNT (Net Amount)
-
-Date Filtering:
-- For date ranges, use WHERE PURCHASE_ORDER_ENTRY_DATE >= TO_DATE('start_date', 'YYYY-MM-DD') AND PURCHASE_ORDER_ENTRY_DATE <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE PURCHASE_ORDER_ENTRY_DATE >= SYSDATE - 7
-- For today: WHERE TRUNC(PURCHASE_ORDER_ENTRY_DATE) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        if ($category === 'inventory') {
-            $additionalInstructions = "\n\nINVENTORY REPORT COLUMNS (VW_PURC_GRN):
-Available columns:
-- PRODUCT_ID (Product ID)
-- PRODUCT_NAME (Product Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- TBL_PURC_GRN_DTL_QUANTITY (Quantity)
-- TBL_PURC_GRN_DTL_RATE (Rate)
-- PO_DATE (Purchase Order Date) - Use for date filtering
-
-Date Filtering:
-- For date ranges, use WHERE PO_DATE >= TO_DATE('start_date', 'YYYY-MM-DD') AND PO_DATE <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE PO_DATE >= SYSDATE - 7
-- For today: WHERE TRUNC(PO_DATE) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        return "You are a business data assistant for {$categoryInfo['name']}.
-
-DATABASE TABLES:
-{$schema}
-{$additionalInstructions}
+        return "You are a business data assistant for " . ($categoryInfo['name'] ?? 'General') . ".
 
 RESPONSE FORMAT:
 
 1. Simple questions (total, count, sum):
    Format: Natural text SIMPLE_QUERY: SELECT query
-   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(NET_AMOUNT), 0) FROM ORDER_REPORT_VIEW WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE)'
 
 2. Detailed lists/reports:
    Format: GENERATE_REPORT: SELECT query
-   Example: 'GENERATE_REPORT: SELECT * FROM ORDER_REPORT_VIEW WHERE ORDER_DATE >= SYSDATE - 30 ORDER BY ORDER_DATE DESC'
 
 RULES:
 - Use Oracle syntax (TRUNC, NVL, TO_DATE, SYSDATE)
-- For sales, always use ORDER_REPORT_VIEW
-- For purchases, always use VW_PURC_PURCHASE_ORDER
-- For inventory, always use VW_PURC_GRN
-- DATE FILTERING: When users mention time periods, automatically add appropriate WHERE clauses:
-  * 'last 7 days' = WHERE date_column >= SYSDATE - 7
-  * 'today' = WHERE TRUNC(date_column) = TRUNC(SYSDATE)
-  * 'yesterday' = WHERE TRUNC(date_column) = TRUNC(SYSDATE) - 1
-  * 'this month' = WHERE date_column >= TRUNC(SYSDATE, 'MM')
-  * 'last month' = WHERE date_column >= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') AND date_column < TRUNC(SYSDATE, 'MM')
 - Never mention SQL or technical terms
 - Query executes automatically
 - No explanations needed";
@@ -532,80 +712,11 @@ RULES:
 
         $categoryData = $categories[$category];
 
-        if ($category === 'sales') {
-            return $this->buildFullDatabaseSchema();
+        if (isset($categoryData['prompt'])) {
+            return $categoryData['prompt'];
         }
 
-        return $this->buildCompactSchema($categoryData['tables']);
-    }
-
-    private function buildCompactSchema(array $tables): string
-    {
-        $schema = "";
-
-        try {
-            foreach ($tables as $tableName) {
-                $columns = DB::select("
-                    SELECT column_name, data_type, nullable
-                    FROM user_tab_columns
-                    WHERE table_name = ?
-                    ORDER BY column_id
-                ", [strtoupper($tableName)]);
-
-                if (empty($columns)) {
-                    continue;
-                }
-
-                $schema .= strtoupper($tableName) . "(\n";
-
-                $columnDefs = [];
-                foreach ($columns as $col) {
-                    $nullable = $col->nullable === 'N' ? ' NOT NULL' : '';
-                    $columnDefs[] = "  {$col->column_name} {$col->data_type}{$nullable}";
-                }
-
-                $schema .= implode(",\n", $columnDefs);
-                $schema .= "\n)\n\n";
-            }
-
-            $schema .= "RELATIONSHIPS:\n";
-            $tableList = "'" . implode("','", array_map('strtoupper', $tables)) . "'";
-
-            $constraints = DB::select("
-                SELECT
-                    a.table_name child_table,
-                    a.column_name child_column,
-                    c_pk.table_name parent_table,
-                    b.column_name parent_column
-                FROM user_cons_columns a
-                JOIN user_constraints c ON a.constraint_name = c.constraint_name
-                JOIN user_constraints c_pk ON c.r_constraint_name = c_pk.constraint_name
-                JOIN user_cons_columns b ON c_pk.constraint_name = b.constraint_name
-                WHERE c.constraint_type = 'R'
-                AND a.table_name IN ({$tableList})
-            ");
-
-            foreach ($constraints as $fk) {
-                $schema .= "- {$fk->child_table}.{$fk->child_column} -> {$fk->parent_table}.{$fk->parent_column}\n";
-            }
-
-            if (empty($constraints)) {
-                $schema .= "- No foreign key relationships defined\n";
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Error building schema: ' . $e->getMessage());
-            $schema = "Error fetching schema. Using basic structure.\n";
-            $schema .= implode(", ", $tables);
-        }
-
-        return $schema;
-    }
-
-    private function buildFullDatabaseSchema(): string
-    {
-        $commonTables = ['ORDER_REPORT_VIEW'];
-        return $this->buildCompactSchema($commonTables);
+        return "No schema defined for category: {$category}";
     }
 
     private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category, string $conversationId = null): string
@@ -1225,8 +1336,7 @@ RULES:
             $recreatedAssistants = [];
 
             foreach ($categories as $category) {
-                $cacheKey = "chatbot_schema_{$category}";
-                Cache::forget($cacheKey);
+                // Note: Schema cache no longer needed - prompts are now hardcoded
 
                 $assistantKey = "openai_assistant_id_{$category}";
                 $oldAssistantId = Cache::get($assistantKey);
@@ -1562,13 +1672,12 @@ RULES:
                 ], 400);
             }
 
-            $schema = $this->buildSchemaForCategory($category);
+            $prompt = $this->buildSchemaForCategory($category);
 
             return response()->json([
                 'success' => true,
                 'category' => $category,
-                'schema' => $schema,
-                'cached' => Cache::has("chatbot_schema_{$category}")
+                'prompt' => $prompt
             ]);
 
         } catch (\Exception $e) {
