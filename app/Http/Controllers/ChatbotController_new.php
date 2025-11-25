@@ -23,7 +23,7 @@ class ChatbotController extends Controller
 
     public function processMessage(Request $request): JsonResponse
     {
-        try {
+        // try {
             $request->validate([
                 'message' => 'required|string|max:500',
                 'conversation_id' => 'nullable|string',
@@ -34,7 +34,6 @@ class ChatbotController extends Controller
             $category = $request->input('category', 'sales');
             $conversationId = $request->input('conversation_id', uniqid());
             $user = Auth::user();
-
             $this->logConversation($user, $message, $conversationId, 'user', $category);
 
             $response = $this->generateAIResponse($message, $user, $category, $conversationId);
@@ -49,36 +48,29 @@ class ChatbotController extends Controller
                 'timestamp' => now()->format('H:i')
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Chatbot error: ' . $e->getMessage());
+        // } catch (\Exception $e) {
+        //     Log::error('Chatbot error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
 
-            return response()->json([
-                'success' => false,
-                'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-            ], 500);
-        }
+        //     return response()->json([
+        //         'success' => false,
+        //         'response' => 'Sorry, I encountered an error while processing your request. Please try again.',
+        //         'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+        //     ], 500);
+        // }
     }
 
     private function generateAIResponse(string $message, $user, string $category = 'sales', string $conversationId = null): string
     {
-        try {
-            $systemPrompt = $this->getSystemPromptForCategory($category);
+        // try {
+            $assistantId = $this->getOrCreateAssistant($category);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/chat/completions', [
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $message],
-                ],
-                'max_tokens' => 1000,
-                'temperature' => 0.3,
-            ])->json();
+            $threadId = $this->getOrCreateThread($conversationId, $user->id);
 
-            $aiResponse = $response['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
+            $this->addMessageToThread($threadId, $message);
+
+            $runId = $this->runAssistant($threadId, $assistantId);
+
+            $aiResponse = $this->waitForRunCompletion($threadId, $runId);
 
             if (strpos($aiResponse, 'SIMPLE_QUERY:') !== false) {
                 return $this->handleSimpleQuery($aiResponse);
@@ -90,10 +82,256 @@ class ChatbotController extends Controller
 
             return $this->cleanResponse($aiResponse);
 
-        } catch (\Exception $e) {
-            Log::error('OpenAI API error: ' . $e->getMessage());
-            return 'Sorry, I encountered an error. Please try again.';
+        // } catch (\Exception $e) {
+        //     Log::error('OpenAI Assistants API error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        //     return 'Sorry, I encountered an error. Please try again.';
+        // }
+    }
+
+    private function getOrCreateAssistant(string $category): string
+    {
+        $cacheKey = "openai_assistant_id_{$category}";
+
+        $assistantId = Cache::get($cacheKey);
+
+        if ($assistantId) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'OpenAI-Beta' => 'assistants=v2'
+                ])->get($this->baseUrl . "/assistants/{$assistantId}");
+
+                if ($response->successful()) {
+                    Log::info("Using existing assistant: {$assistantId} for category: {$category}");
+                    return $assistantId;
+                }
+            } catch (\Exception $e) {
+                Log::warning("Cached assistant not found, creating new one: " . $e->getMessage());
+            }
         }
+
+        return $this->createAssistant($category);
+    }
+
+    private function createAssistant(string $category): string
+    {
+        $systemPrompt = $this->getSystemPromptForCategory($category);
+        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'Sales'];
+
+        Log::info("Creating new assistant for category: {$category}");
+
+        $response = Http::timeout(30)->withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'OpenAI-Beta' => 'assistants=v2'
+        ])->post($this->baseUrl . '/assistants', [
+            'name' => $categoryInfo['name'] . ' Data Assistant',
+            'instructions' => $systemPrompt,
+            'model' => 'gpt-4o-mini',
+            'temperature' => 0.3,
+            'tools' => []
+        ]);
+
+        if (!$response->successful()) {
+            $statusCode = $response->status();
+            $errorBody = $response->body();
+            $errorMessage = 'Failed to create assistant';
+
+            try {
+                $errorData = $response->json();
+                if (isset($errorData['error']['message'])) {
+                    $errorMessage = $errorData['error']['message'];
+                }
+            } catch (\Exception $e) {
+            }
+
+            Log::error("Failed to create assistant for category {$category}. Status: {$statusCode}, Error: {$errorBody}");
+
+            if ($statusCode === 401) {
+                throw new \Exception('Invalid OpenAI API key. Please check your configuration.');
+            } elseif ($statusCode === 429) {
+                throw new \Exception('OpenAI API rate limit exceeded. Please try again later.');
+            } elseif ($statusCode >= 500) {
+                throw new \Exception('OpenAI service is currently unavailable. Please try again later.');
+            } else {
+                throw new \Exception('Failed to create assistant: ' . $errorMessage);
+            }
+        }
+
+        $data = $response->json();
+        $assistantId = $data['id'];
+
+        Cache::put("openai_assistant_id_{$category}", $assistantId, now()->addDays(30));
+
+        Log::info("Created new assistant: {$assistantId} for category: {$category}");
+
+        return $assistantId;
+    }
+
+    private function getOrCreateThread(string $conversationId, int $userId): string
+    {
+        $cacheKey = "openai_thread_{$conversationId}_{$userId}";
+
+        $threadId = Cache::get($cacheKey);
+
+        if ($threadId) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'OpenAI-Beta' => 'assistants=v2'
+                ])->get($this->baseUrl . "/threads/{$threadId}");
+
+                if ($response->successful()) {
+                    Log::info("Using existing thread: {$threadId} for conversation: {$conversationId}");
+                    return $threadId;
+                }
+            } catch (\Exception $e) {
+                Log::warning("Cached thread not found, creating new one: " . $e->getMessage());
+            }
+        }
+
+        return $this->createThread($conversationId, $userId);
+    }
+
+    private function createThread(string $conversationId, int $userId): string
+    {
+        Log::info("Creating new thread for conversation: {$conversationId}");
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'OpenAI-Beta' => 'assistants=v2'
+        ])->post($this->baseUrl . '/threads', [
+            'metadata' => [
+                'conversation_id' => (string) $conversationId,
+                'user_id' => (string) $userId
+            ]
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Failed to create thread: ' . $response->body());
+            throw new \Exception('Failed to create thread');
+        }
+
+        $data = $response->json();
+        $threadId = $data['id'];
+
+        Cache::put("openai_thread_{$conversationId}_{$userId}", $threadId, now()->addHours(24));
+
+        Log::info("Created new thread: {$threadId} for conversation: {$conversationId}");
+
+        return $threadId;
+    }
+
+    private function addMessageToThread(string $threadId, string $message): void
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'OpenAI-Beta' => 'assistants=v2'
+        ])->post($this->baseUrl . "/threads/{$threadId}/messages", [
+            'role' => 'user',
+            'content' => $message
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Failed to add message to thread: ' . $response->body());
+            throw new \Exception('Failed to add message to thread');
+        }
+
+        Log::info("Added message to thread: {$threadId}");
+    }
+
+    private function runAssistant(string $threadId, string $assistantId): string
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type' => 'application/json',
+            'OpenAI-Beta' => 'assistants=v2'
+        ])->post($this->baseUrl . "/threads/{$threadId}/runs", [
+            'assistant_id' => $assistantId
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Failed to run assistant: ' . $response->body());
+            throw new \Exception('Failed to run assistant');
+        }
+
+        $data = $response->json();
+        $runId = $data['id'];
+
+        Log::info("Started assistant run: {$runId} on thread: {$threadId}");
+
+        return $runId;
+    }
+
+    private function waitForRunCompletion(string $threadId, string $runId): string
+    {
+        $maxAttempts = 60;
+        $attempts = 0;
+
+        while ($attempts < $maxAttempts) {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->get($this->baseUrl . "/threads/{$threadId}/runs/{$runId}");
+
+            if (!$response->successful()) {
+                Log::error('Failed to check run status: ' . $response->body());
+                throw new \Exception('Failed to check run status');
+            }
+
+            $run = $response->json();
+            $status = $run['status'];
+
+            Log::info("Run {$runId} status: {$status} (attempt {$attempts})");
+
+            if ($status === 'completed') {
+                return $this->getLatestAssistantMessage($threadId);
+            }
+
+            if (in_array($status, ['failed', 'cancelled', 'expired'])) {
+                $errorMessage = $run['last_error']['message'] ?? 'Unknown error';
+                Log::error("Assistant run failed with status {$status}: {$errorMessage}");
+                throw new \Exception("Assistant run {$status}: {$errorMessage}");
+            }
+
+            sleep(1);
+            $attempts++;
+        }
+
+        Log::error("Assistant run timeout after {$maxAttempts} seconds");
+        throw new \Exception('Assistant run timeout - please try again');
+    }
+
+    private function getLatestAssistantMessage(string $threadId): string
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'OpenAI-Beta' => 'assistants=v2'
+        ])->get($this->baseUrl . "/threads/{$threadId}/messages", [
+            'limit' => 1,
+            'order' => 'desc'
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Failed to retrieve messages: ' . $response->body());
+            throw new \Exception('Failed to retrieve assistant response');
+        }
+
+        $data = $response->json();
+
+        if (empty($data['data'])) {
+            throw new \Exception('No messages found in thread');
+        }
+
+        $message = $data['data'][0];
+
+        if (isset($message['content'][0]['text']['value'])) {
+            return $message['content'][0]['text']['value'];
+        }
+
+        throw new \Exception('Invalid message format');
     }
 
     private function handleSimpleQuery(string $aiResponse): string
@@ -144,139 +382,321 @@ class ChatbotController extends Controller
             'sales' => [
                 'name' => 'Sales',
                 'description' => 'Sales orders report with comprehensive order information',
-                'tables' => ['ORDER_REPORT_VIEW'],
+                'prompt' => $this->getSalesPrompt(),
             ],
             'purchases' => [
                 'name' => 'Purchases',
                 'description' => 'Purchase orders report with comprehensive purchase information',
-                'tables' => ['VW_PURC_PURCHASE_ORDER'],
+                'prompt' => $this->getPurchasesPrompt(),
             ],
             'inventory' => [
                 'name' => 'Inventory',
                 'description' => 'Stock inventory report with product quantities',
-                'tables' => ['VW_PURC_GRN'],
+                'prompt' => $this->getInventoryPrompt(),
             ],
             'accounts' => [
                 'name' => 'Accounts',
                 'description' => 'Accounting reports with financial information',
-                'tables' => ['VW_ACC_VOUCHER'],
+                'prompt' => $this->getAccountsPrompt(),
             ]
         ];
     }
 
+    private function getSalesPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language sales question into ONE Oracle SELECT query.
+- Use only the views: VW_REST_SUMMARY_ORDER_WISE and VW_REST_ORDER_DTL.
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+
+1) VW_REST_SUMMARY_ORDER_WISE  (order-level summary)
+Columns:
+ORDER_DATE (DATE)
+BRANCH_ID (NUMBER)
+BRANCH_NAME (VARCHAR2)
+ORDER_ID (NUMBER or VARCHAR2)
+ORDER_SERIAL (VARCHAR2)
+ITEMS_AMOUNT (NUMBER)
+DISCOUNT_ON_ITEMS (NUMBER)
+TOTAL_ADD_ON_PRICE (NUMBER)
+GROSS_SALES (NUMBER)
+DISCOUNT_BY_RESTAURANT (NUMBER)
+COUPON_DISCOUNT (NUMBER)
+TOTAL_DISCOUNTS (NUMBER)
+DELIVERY_CHARGES (NUMBER)
+VAT (NUMBER)
+NET_SALES (NUMBER)
+PAYMENT_METHOD (VARCHAR2)
+BANK_ID (NUMBER)
+PAYMENT_STATUS (VARCHAR2)
+ORDER_STATUS (VARCHAR2)
+SALES_TYPE (VARCHAR2)
+CASH_SALES (NUMBER)
+CARD_SALES (NUMBER)
+CREDIT_SALES (NUMBER)
+DELIVERY_PARTNER_SALES (NUMBER)
+DELIVERY_SALES (NUMBER)
+DINE_IN_SALES (NUMBER)
+TAKEAWAY_SALES (NUMBER)
+PARTNER_NAME (VARCHAR2)
+CUSTOMER_NAME (VARCHAR2)
+CUSTOMER_ID (NUMBER)
+
+2) VW_REST_ORDER_DTL (item-level)
+Columns:
+ID (NUMBER)
+ORDER_ID (NUMBER or VARCHAR2)
+ORDER_SERIAL (VARCHAR2)
+ORDER_DATE (DATE)
+ORDER_STATUS (VARCHAR2)
+PAYMENT_STATUS (VARCHAR2)
+ORDER_TYPE (VARCHAR2)
+BRANCH_ID (NUMBER)
+BRANCH_NAME (VARCHAR2)
+FOOD_ID (NUMBER)
+FOOD_NAME (VARCHAR2)
+PRICE (NUMBER)
+QUANTITY (NUMBER)
+ITEM_AMOUNT (NUMBER)
+ITEM_DISCOUNT (NUMBER)
+ITEM_AMOUNT_AFTER_DISCOUNT (NUMBER)
+TOTAL_ADD_ON_PRICE (NUMBER)
+ITEM_NET_AMOUNT (NUMBER)
+IS_DELETED (VARCHAR2)
+
+-----------------------------------------------------
+BUSINESS RULES
+-----------------------------------------------------
+- \"Sales\", \"sale\", \"revenue\" → SUM(NET_SALES) from VW_REST_SUMMARY_ORDER_WISE.
+- ALWAYS apply:
+  PAYMENT_STATUS = 'paid'
+  ORDER_STATUS <> 'canceled'
+- For item-level queries:
+  TRIM(IS_DELETED) <> 'Y'
+
+-----------------------------------------------------
+DATE RULES
+-----------------------------------------------------
+- \"today\" → TRUNC(ORDER_DATE) = TRUNC(SYSDATE)
+- \"yesterday\" → TRUNC(ORDER_DATE) = TRUNC(SYSDATE-1)
+- \"last 7 days\" → ORDER_DATE >= TRUNC(SYSDATE-6)
+- Specific dates:
+  Accept formats:
+    \"7th Nov\", \"7th November\", \"07-11-25\", \"07/11/2025\"
+  Convert with TO_DATE using DD-MM-YYYY or YYYY-MM-DD.
+- If user gives day + month but no year → assume current year.
+- If user gives no date at all → assume TODAY.
+
+-----------------------------------------------------
+BRANCH NAME HANDLING
+-----------------------------------------------------
+- If user mentions a word that looks like a branch (example: \"mussanah\", \"seeb\", \"sohar\")
+  → Filter using:
+    LOWER(BRANCH_NAME) LIKE '%<term>%'
+- The branch name can be any unknown word; no predefined list.
+
+-----------------------------------------------------
+FOOD NAME HANDLING
+-----------------------------------------------------
+- If user mentions a food name (example: \"family meal\", \"chicken burger\", \"tuesday meal\")
+  → Filter using:
+    LOWER(FOOD_NAME) LIKE '%<term>%'
+
+-----------------------------------------------------
+PAYMENT METHOD HANDLING
+-----------------------------------------------------
+Interpret common synonyms:
+- \"cash\" → PAYMENT_METHOD = 'cash'
+- \"card\", \"visa\", \"master\", \"credit card\" → PAYMENT_METHOD IN ('card','visa','master')
+- \"credit\", \"on account\" → PAYMENT_METHOD = 'credit'
+- \"delivery partner\", partner name such as \"Talabat\", \"Akeed\":
+    LOWER(PARTNER_NAME) LIKE '%talabat%'
+
+If user says:
+\"give sales for cash, card and credit\"
+→ Use GROUP BY PAYMENT_METHOD.
+
+-----------------------------------------------------
+SALES TYPE HANDLING (service type)
+-----------------------------------------------------
+User terms → SALES_TYPE mapping:
+- dine in, dine-in, eat in → 'dine in'
+- take away, takeaway, pickup → 'take away'
+- delivery, home delivery → 'delivery'
+
+If user asks:
+\"sales for dine in, take away, delivery\"
+→ Group by SALES_TYPE.
+
+-----------------------------------------------------
+TOP TRENDING FOOD
+-----------------------------------------------------
+Top food by quantity:
+  SELECT FOOD_ID, FOOD_NAME, SUM(QUANTITY) ...
+  ORDER BY SUM(QUANTITY) DESC
+
+Top food by amount:
+  SELECT FOOD_ID, FOOD_NAME, SUM(ITEM_NET_AMOUNT) ...
+  ORDER BY SUM(ITEM_NET_AMOUNT) DESC
+
+-----------------------------------------------------
+AMBIGUITY HANDLING (IMPORTANT)
+-----------------------------------------------------
+IF a term can be BOTH:
+- a branch candidate AND
+- a food name candidate AND
+- not previously known
+THEN DO NOT generate SQL.
+
+Ask EXACTLY ONE SHORT QUESTION like:
+\"Is 'mussanah' a branch or a food item?\"
+\"Is 'tuesday meal' a food item or something else?\"
+\"Does 'royal' refer to a branch, partner, or food item?\"
+
+Only after the user clarifies → generate SQL.
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(NET_SALES), 0) FROM VW_REST_SUMMARY_ORDER_WISE WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE) AND PAYMENT_STATUS = ''paid'' AND ORDER_STATUS <> ''canceled'''
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query
+   Example: 'GENERATE_REPORT: SELECT * FROM VW_REST_SUMMARY_ORDER_WISE WHERE ORDER_DATE >= SYSDATE - 30 AND PAYMENT_STATUS = ''paid'' AND ORDER_STATUS <> ''canceled'' ORDER BY ORDER_DATE DESC'";
+    }
+
+    private function getPurchasesPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language purchase question into ONE Oracle SELECT query.
+- Use the views/tables for purchases (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your purchase tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
+    private function getInventoryPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language inventory question into ONE Oracle SELECT query.
+- Use the views/tables for inventory (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your inventory tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
+    private function getAccountsPrompt(): string
+    {
+        return "You are an expert Oracle SQL generator for a restaurant ERP system.
+
+Your job:
+- Convert the user's natural language accounts question into ONE Oracle SELECT query.
+- Use the views/tables for accounts (update this with your actual view names).
+- Always return ONLY the SQL query (no explanation, no markdown, no comments).
+- BUT if the user's question is unclear or ambiguous, ask a clarification question instead of creating a wrong query.
+
+-----------------------------------------------------
+DATABASE SCHEMA
+-----------------------------------------------------
+(Update this section with your accounts tables/views and columns)
+
+-----------------------------------------------------
+OUTPUT RULE
+-----------------------------------------------------
+- If the question is clear → return ONE complete Oracle SQL query.
+- If ambiguous → ask a clarification question.
+- NEVER output explanation, markdown, lists, steps, analysis, or text outside the SQL.
+
+-----------------------------------------------------
+RESPONSE FORMAT
+-----------------------------------------------------
+1. Simple questions (total, count, sum):
+   Format: Natural text SIMPLE_QUERY: SELECT query
+
+2. Detailed lists/reports:
+   Format: GENERATE_REPORT: SELECT query";
+    }
+
     private function getSystemPromptForCategory(string $category): string
     {
-        $cacheKey = "chatbot_schema_{$category}";
+        $categoryInfo = $this->getCategorySchemas()[$category] ?? null;
 
-        $schema = Cache::remember($cacheKey, now()->addDays(30), function() use ($category) {
-            return $this->buildSchemaForCategory($category);
-        });
-
-        $categoryInfo = $this->getCategorySchemas()[$category] ?? ['name' => 'General', 'description' => 'General queries'];
-
-        $additionalInstructions = '';
-        if ($category === 'sales') {
-            $additionalInstructions = "\n\nSALES REPORT COLUMNS (ORDER_REPORT_VIEW):
-Available columns:
-- ORDER_SERIAL (Order ID)
-- CREATED_AT (Order Date) - Use for date filtering
-- CUSTOMER_NAME, CAR_NUMBER, PHONE (Customer Info)
-- ORDER_TYPE, ORDER_STATUS, PAYMENT_STATUS
-- GROSS_AMOUNT, RESTAURANT_DISCOUNT_AMOUNT (Discount)
-- DELIVERY_CHARGE, TOTAL_TAX_AMOUNT (VAT)
-- ORDER_AMOUNT (Net Amount)
-- CASH_PAID (Cash Amount), CARD_PAID (Visa Amount)
-
-Date Filtering:
-- For date ranges, use WHERE CREATED_AT >= TO_DATE('start_date', 'YYYY-MM-DD') AND CREATED_AT <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE CREATED_AT >= SYSDATE - 7
-- For today: WHERE TRUNC(CREATED_AT) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
+        if ($categoryInfo && isset($categoryInfo['prompt'])) {
+            return $categoryInfo['prompt'];
         }
 
-        if ($category === 'purchases') {
-            $additionalInstructions = "\n\nPURCHASE REPORT COLUMNS (VW_PURC_PURCHASE_ORDER):
-Available columns:
-- PURCHASE_ORDER_ENTRY_DATE (Purchase Date) - Use for date filtering
-- PURCHASE_ORDER_CODE (Purchase Order Code)
-- SUPPLIER_NAME (Supplier Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- PRODUCT_NAME (Product Name)
-- UOM_NAME (Unit of Measure)
-- PURCHASE_ORDER_DTLPACKING (Packing)
-- PURCHASE_ORDER_DTLQUANTITY (Quantity)
-- PURCHASE_ORDER_DTLRATE (Rate)
-- PURCHASE_ORDER_DTLAMOUNT (Amount)
-- PURCHASE_ORDER_DTLDISC_AMOUNT (Discount Amount)
-- PURCHASE_ORDER_DTLVAT_AMOUNT (VAT Amount)
-- PURCHASE_ORDER_DTLTOTAL_AMOUNT (Net Amount)
-
-Date Filtering:
-- For date ranges, use WHERE PURCHASE_ORDER_ENTRY_DATE >= TO_DATE('start_date', 'YYYY-MM-DD') AND PURCHASE_ORDER_ENTRY_DATE <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE PURCHASE_ORDER_ENTRY_DATE >= SYSDATE - 7
-- For today: WHERE TRUNC(PURCHASE_ORDER_ENTRY_DATE) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        if ($category === 'inventory') {
-            $additionalInstructions = "\n\nINVENTORY REPORT COLUMNS (VW_PURC_GRN):
-Available columns:
-- PRODUCT_ID (Product ID)
-- PRODUCT_NAME (Product Name)
-- PRODUCT_BARCODE_BARCODE (Barcode)
-- TBL_PURC_GRN_DTL_QUANTITY (Quantity)
-- TBL_PURC_GRN_DTL_RATE (Rate)
-- PO_DATE (Purchase Order Date) - Use for date filtering
-
-Date Filtering:
-- For date ranges, use WHERE PO_DATE >= TO_DATE('start_date', 'YYYY-MM-DD') AND PO_DATE <= TO_DATE('end_date', 'YYYY-MM-DD')
-- For relative dates: 'last 7 days' = WHERE PO_DATE >= SYSDATE - 7
-- For today: WHERE TRUNC(PO_DATE) = TRUNC(SYSDATE)
-
-Column Selection:
-- If user specifies columns, SELECT only those columns
-- If user doesn't specify columns, SELECT * to get all columns
-- Match user's natural language to exact column names
-- Use Headings for the columns instead of field names";
-        }
-
-        return "You are a business data assistant for {$categoryInfo['name']}.
-
-DATABASE TABLES:
-{$schema}
-{$additionalInstructions}
+        return "You are a business data assistant for " . ($categoryInfo['name'] ?? 'General') . ".
 
 RESPONSE FORMAT:
 
 1. Simple questions (total, count, sum):
    Format: Natural text SIMPLE_QUERY: SELECT query
-   Example: 'Total sales today SIMPLE_QUERY: SELECT NVL(SUM(NET_AMOUNT), 0) FROM ORDER_REPORT_VIEW WHERE TRUNC(ORDER_DATE) = TRUNC(SYSDATE)'
 
 2. Detailed lists/reports:
    Format: GENERATE_REPORT: SELECT query
-   Example: 'GENERATE_REPORT: SELECT * FROM ORDER_REPORT_VIEW WHERE ORDER_DATE >= SYSDATE - 30 ORDER BY ORDER_DATE DESC'
 
 RULES:
 - Use Oracle syntax (TRUNC, NVL, TO_DATE, SYSDATE)
-- For sales, always use ORDER_REPORT_VIEW
-- For purchases, always use VW_PURC_PURCHASE_ORDER
-- For inventory, always use VW_PURC_GRN
-- DATE FILTERING: When users mention time periods, automatically add appropriate WHERE clauses:
-  * 'last 7 days' = WHERE date_column >= SYSDATE - 7
-  * 'today' = WHERE TRUNC(date_column) = TRUNC(SYSDATE)
-  * 'yesterday' = WHERE TRUNC(date_column) = TRUNC(SYSDATE) - 1
-  * 'this month' = WHERE date_column >= TRUNC(SYSDATE, 'MM')
-  * 'last month' = WHERE date_column >= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') AND date_column < TRUNC(SYSDATE, 'MM')
 - Never mention SQL or technical terms
 - Query executes automatically
 - No explanations needed";
@@ -292,85 +712,11 @@ RULES:
 
         $categoryData = $categories[$category];
 
-        if ($category === 'sales') {
-            return $this->buildFullDatabaseSchema();
+        if (isset($categoryData['prompt'])) {
+            return $categoryData['prompt'];
         }
 
-        return $this->buildCompactSchema($categoryData['tables']);
-    }
-
-    /**
-     * Build compact schema format for specified tables
-     */
-    private function buildCompactSchema(array $tables): string
-    {
-        $schema = "";
-
-        try {
-            foreach ($tables as $tableName) {
-                // Get columns for each table
-                $columns = DB::select("
-                    SELECT column_name, data_type, nullable
-                    FROM user_tab_columns
-                    WHERE table_name = ?
-                    ORDER BY column_id
-                ", [strtoupper($tableName)]);
-
-                if (empty($columns)) {
-                    continue;
-                }
-
-                $schema .= strtoupper($tableName) . "(\n";
-
-                $columnDefs = [];
-                foreach ($columns as $col) {
-                    $nullable = $col->nullable === 'N' ? ' NOT NULL' : '';
-                    $columnDefs[] = "  {$col->column_name} {$col->data_type}{$nullable}";
-                }
-
-                $schema .= implode(",\n", $columnDefs);
-                $schema .= "\n)\n\n";
-            }
-
-            // Get foreign key relationships
-            $schema .= "RELATIONSHIPS:\n";
-            $tableList = "'" . implode("','", array_map('strtoupper', $tables)) . "'";
-
-            $constraints = DB::select("
-                SELECT
-                    a.table_name child_table,
-                    a.column_name child_column,
-                    c_pk.table_name parent_table,
-                    b.column_name parent_column
-                FROM user_cons_columns a
-                JOIN user_constraints c ON a.constraint_name = c.constraint_name
-                JOIN user_constraints c_pk ON c.r_constraint_name = c_pk.constraint_name
-                JOIN user_cons_columns b ON c_pk.constraint_name = b.constraint_name
-                WHERE c.constraint_type = 'R'
-                AND a.table_name IN ({$tableList})
-            ");
-
-            foreach ($constraints as $fk) {
-                $schema .= "- {$fk->child_table}.{$fk->child_column} -> {$fk->parent_table}.{$fk->parent_column}\n";
-            }
-
-            if (empty($constraints)) {
-                $schema .= "- No foreign key relationships defined\n";
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Error building schema: ' . $e->getMessage());
-            $schema = "Error fetching schema. Using basic structure.\n";
-            $schema .= implode(", ", $tables);
-        }
-
-        return $schema;
-    }
-
-    private function buildFullDatabaseSchema(): string
-    {
-        $commonTables = ['ORDER_REPORT_VIEW'];
-        return $this->buildCompactSchema($commonTables);
+        return "No schema defined for category: {$category}";
     }
 
     private function handleExcelReportGeneration(string $message, string $aiResponse, $user, string $category, string $conversationId = null): string
@@ -464,7 +810,6 @@ RULES:
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Convert data to array format
         $dataArray = array_map(function($row) {
             return (array) $row;
         }, $data);
@@ -568,7 +913,6 @@ RULES:
             }
         }
 
-        // Auto-size columns
         foreach (range('A', 'I') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
@@ -610,7 +954,6 @@ RULES:
             $quantity = $row['TBL_PURC_GRN_DTL_QUANTITY'] ?? $row['tbl_purc_grn_dtl_quantity'] ?? 0;
             $rate = $row['TBL_PURC_GRN_DTL_RATE'] ?? $row['tbl_purc_grn_dtl_rate'] ?? 0;
 
-            // Format quantity to 3 decimal places if it's a decimal, otherwise show as integer
             $formattedQuantity = (float)$quantity;
             if ($formattedQuantity == (int)$formattedQuantity) {
                 $formattedQuantity = (int)$formattedQuantity;
@@ -618,7 +961,6 @@ RULES:
                 $formattedQuantity = number_format($formattedQuantity, 3);
             }
 
-            // Format rate to 3 decimal places
             $formattedRate = number_format((float)$rate, 3);
 
             $rowData = [
@@ -818,7 +1160,6 @@ RULES:
     private function executeQuery(string $query): array
     {
         try {
-            // Validate query for security
             $this->validateQuery($query);
 
             $results = DB::select($query);
@@ -833,10 +1174,6 @@ RULES:
         }
     }
 
-    /**
-     * Validate SQL query for security
-     * Only allows SELECT statements
-     */
     private function validateQuery(string $query): void
     {
         $query = strtoupper(trim($query));
@@ -991,27 +1328,50 @@ RULES:
         }
     }
 
-    /**
-     * Clear cached database schemas
-     * Use this after database structure changes
-     */
     public function clearSchemaCache(Request $request): JsonResponse
     {
         try {
             $categories = array_keys($this->getCategorySchemas());
             $clearedCategories = [];
+            $recreatedAssistants = [];
 
             foreach ($categories as $category) {
-                $cacheKey = "chatbot_schema_{$category}";
-                Cache::forget($cacheKey);
+                // Note: Schema cache no longer needed - prompts are now hardcoded
+
+                $assistantKey = "openai_assistant_id_{$category}";
+                $oldAssistantId = Cache::get($assistantKey);
+
+                if ($oldAssistantId) {
+                    try {
+                        Http::withHeaders([
+                            'Authorization' => 'Bearer ' . $this->apiKey,
+                            'OpenAI-Beta' => 'assistants=v2'
+                        ])->delete($this->baseUrl . "/assistants/{$oldAssistantId}");
+
+                        Log::info("Deleted old assistant: {$oldAssistantId}");
+                    } catch (\Exception $e) {
+                        Log::warning("Could not delete old assistant: " . $e->getMessage());
+                    }
+                }
+
+                Cache::forget($assistantKey);
+
+                try {
+                    $newAssistantId = $this->createAssistant($category);
+                    $recreatedAssistants[$category] = $newAssistantId;
+                } catch (\Exception $e) {
+                    Log::error("Failed to recreate assistant for {$category}: " . $e->getMessage());
+                }
+
                 $clearedCategories[] = $category;
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Schema cache cleared successfully',
+                'message' => 'Schema cache cleared and assistants recreated successfully',
                 'cleared_categories' => $clearedCategories,
-                'note' => 'New schema will be fetched on next query'
+                'recreated_assistants' => $recreatedAssistants,
+                'note' => 'All conversations will use the new schema'
             ]);
 
         } catch (\Exception $e) {
@@ -1024,9 +1384,111 @@ RULES:
         }
     }
 
-    /**
-     * Get available categories for chatbot
-     */
+    public function listAssistants(Request $request): JsonResponse
+    {
+        try {
+            $assistants = [];
+            $categories = array_keys($this->getCategorySchemas());
+
+            foreach ($categories as $category) {
+                $cacheKey = "openai_assistant_id_{$category}";
+                $assistantId = Cache::get($cacheKey);
+
+                if ($assistantId) {
+                    try {
+                        $response = Http::withHeaders([
+                            'Authorization' => 'Bearer ' . $this->apiKey,
+                            'OpenAI-Beta' => 'assistants=v2'
+                        ])->get($this->baseUrl . "/assistants/{$assistantId}");
+
+                        if ($response->successful()) {
+                            $data = $response->json();
+                            $assistants[] = [
+                                'category' => $category,
+                                'assistant_id' => $assistantId,
+                                'name' => $data['name'] ?? 'Unknown',
+                                'created_at' => $data['created_at'] ?? null,
+                                'model' => $data['model'] ?? 'Unknown',
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to fetch assistant for {$category}: " . $e->getMessage());
+                    }
+                } else {
+                    $assistants[] = [
+                        'category' => $category,
+                        'assistant_id' => null,
+                        'status' => 'Not created yet'
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'assistants' => $assistants
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error listing assistants: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not list assistants'
+            ], 500);
+        }
+    }
+
+    public function deleteAssistant(Request $request, string $category): JsonResponse
+    {
+        try {
+            if (!array_key_exists($category, $this->getCategorySchemas())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid category'
+                ], 400);
+            }
+
+            $cacheKey = "openai_assistant_id_{$category}";
+            $assistantId = Cache::get($cacheKey);
+
+            if (!$assistantId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No assistant found for this category'
+                ], 404);
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'OpenAI-Beta' => 'assistants=v2'
+            ])->delete($this->baseUrl . "/assistants/{$assistantId}");
+
+            if (!$response->successful()) {
+                throw new \Exception('Failed to delete assistant from OpenAI');
+            }
+
+            Cache::forget($cacheKey);
+
+            Log::info("Deleted assistant {$assistantId} for category: {$category}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Assistant deleted successfully',
+                'category' => $category,
+                'assistant_id' => $assistantId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting assistant: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not delete assistant',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getCategories(Request $request): JsonResponse
     {
         try {
@@ -1200,9 +1662,6 @@ RULES:
         }
     }
 
-    /**
-     * Preview schema for a category (for debugging)
-     */
     public function previewSchema(Request $request, string $category): JsonResponse
     {
         try {
@@ -1213,13 +1672,12 @@ RULES:
                 ], 400);
             }
 
-            $schema = $this->buildSchemaForCategory($category);
+            $prompt = $this->buildSchemaForCategory($category);
 
             return response()->json([
                 'success' => true,
                 'category' => $category,
-                'schema' => $schema,
-                'cached' => Cache::has("chatbot_schema_{$category}")
+                'prompt' => $prompt
             ]);
 
         } catch (\Exception $e) {
