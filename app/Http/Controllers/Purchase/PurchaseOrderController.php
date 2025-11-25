@@ -32,6 +32,7 @@ use App\Models\ViewPurcLpoDetail;
 use App\Models\ViewPurcProductBarcodeRate;
 use App\Models\ViewPurcPurchaseOrderListing;
 use App\Models\ViewSaleSalesInvoice;
+use App\Models\Sale\WhatsappLog;
 use Illuminate\Http\Request;
 use Dompdf\Dompdf;
 
@@ -965,6 +966,156 @@ class PurchaseOrderController extends Controller
         }
         DB::commit();
         return $this->jsonSuccessResponse($data, "PO Draft Entry Successfully deleted", 200);
+    }
+
+    public function fetchSupplierInfo(Request $request)
+    {
+        $supplierCode = $request->query('supplier_code');
+        if (!$supplierCode) {
+            return response()->json(['error' => 'Supplier code is required'], 400);
+        }
+        $supplier = TblPurcSupplier::where('supplier_id', $supplierCode)->first();
+        if (!$supplier) {
+            return response()->json(['error' => 'Supplier not found'], 404);
+        }
+        $supplierPhone = $supplier->supplier_phone_1;
+        if (!$supplierPhone) {
+            return response()->json(['error' => 'Supplier phone number not found'], 404);
+        }
+
+        return response()->json([
+            'phone' => $supplierPhone
+        ]);
+    }
+
+    public function generatePdfForWhatsApp(Request $request, $id)
+    {
+        $data['title'] = 'Purchase Order';
+        $data['type'] = '1'; // Use type 1 as requested
+        $data['id'] = $id;
+        $data['permission'] = self::$menu_dtl_id.'-print';
+
+        if(isset($id)){
+            if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
+                $data['current'] = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')->where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+            }else{
+                return response()->json(['error' => 'Purchase order not found'], 404);
+            }
+        }
+
+        $data['currency'] = TblDefiCurrency::where('currency_id',$data['current']->currency_id)->where(Utilities::currentBC())->first();
+        $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_id',$data['current']->payment_mode_id)->where('payment_term_entry_status',1)->where(Utilities::currentBC())->first();
+
+        // Generate PDF using type 1 template
+        $view = view('prints.purchase.purchase_order.purchase_order_print', compact('data'))->render();
+
+        $dompdf = new Dompdf();
+        $options = $dompdf->getOptions();
+        $options->set('dpi', 100);
+        $options->set('isPhpEnabled', TRUE);
+        $options->set('isHtml5ParserEnabled', TRUE);
+        $options->setDefaultFont('roboto');
+        $dompdf->setOptions($options);
+        $dompdf->loadHtml($view,'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        // Save PDF to public storage
+        $filename = 'po_' . $data['current']->purchase_order_code . '_' . time() . '.pdf';
+        $directory = public_path('uploads/purchase_orders');
+
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $filePath = $directory . '/' . $filename;
+        file_put_contents($filePath, $dompdf->output());
+
+        // Return public URL
+        $publicUrl = url('uploads/purchase_orders/' . $filename);
+
+        return response()->json([
+            'success' => true,
+            'url' => $publicUrl,
+            'filePath' => $publicUrl
+        ]);
+    }
+
+    public function sendWhatsappMsg(Request $request)
+    {
+        $to = $request->to;
+        $message = $request->message;
+        $filePath = $request->filePath;
+        $invoiceNumber = $request->invoiceNumber;
+        $title = $request->title;
+
+        $curl = curl_init();
+
+        $apiUrl = config('whatsapp.intelligent.api_url');
+        $appkey = config('whatsapp.intelligent.appkey');
+        $authkey = config('whatsapp.intelligent.authkey');
+        $sandbox = config('whatsapp.intelligent.sandbox');
+
+        if($filePath == '' || $filePath == null) {
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $apiUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array(
+                'appkey' => $appkey,
+                'authkey' => $authkey,
+                'to' => $to,
+                'message' => $message,
+                'sandbox' => $sandbox
+                ),
+            ));
+        } else {
+            curl_setopt_array($curl, array(
+            CURLOPT_URL => $apiUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+            'appkey' => $appkey,
+            'authkey' => $authkey,
+            'to' => $to,
+            'message' => $message,
+            'sandbox' => $sandbox,
+            'file' => $filePath
+                ),
+            ));
+        }
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        $responseData = @json_decode($response, true);
+
+        if ($responseData) {
+            if (isset($responseData['message_status']) && $responseData['message_status'] == 'Success') {
+                echo json_encode(['success' => 'Message sent successfully!']);
+
+                WhatsappLog::create([
+                    'user_id' => session('user_id'),
+                    'form_name' => $title,
+                    'entry_code' => $invoiceNumber,
+                    'created_at' => now()->format('Y-m-d H:i:s'),
+                ]);
+            } else {
+                echo json_encode(['error' => 'Message sending failed. API returned: ' . $responseData['message_status']]);
+            }
+        } else {
+            echo json_encode(['error' => 'Invalid JSON response or empty response.', 'raw_response' => $response]);
+        }
     }
 
 }

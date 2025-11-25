@@ -179,6 +179,9 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('ad/{ad_id}/{supplier_id?}','Purchase\PurchaseOrderController@getAutoDemand');
             Route::get('quotation/{id}','Purchase\PurchaseOrderController@getQuotation');
             Route::get('inventory/print/{id}/{type?}','Purchase\PurchaseOrderController@InventoryPrint')->name('inventory.po');
+            Route::get('fetch-supplier-info','Purchase\PurchaseOrderController@fetchSupplierInfo');
+            Route::get('generate-pdf-whatsapp/{id}','Purchase\PurchaseOrderController@generatePdfForWhatsApp');
+            Route::post('whatsapp-message-sending','Purchase\PurchaseOrderController@sendWhatsappMsg');
         });
         Route::prefix('purchase-order-draft')->group(function () {
             Route::post('list-draft','Purchase\PurchaseOrderController@listDraft');

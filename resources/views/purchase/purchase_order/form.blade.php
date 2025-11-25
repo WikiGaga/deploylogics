@@ -1436,6 +1436,134 @@
             }
         });
 
+        function sendWhatsAppMessage() {
+            var button = document.getElementById("whatsappmessagebtn");
+            if (button) {
+                buttonIcons = button.innerHTML;
+                button.disabled = true;
+                button.textContent = 'Sending..';
+            }
+
+            var supplier_code = $('#supplier_id').val();
+            var amount = $('#pro_tot').val() || $('.t_gross_total').text() || '0';
+            var title = @json($data['page_data']['title']);
+            var poCode = @json(isset($code) ? $code : '');
+            var poDate = $('input[name="po_date"]').val() || @json(isset($date) ? $date : '');
+            var formId = $('#form_id').val();
+
+            if (!supplier_code) {
+                toastr.error("Please select a supplier first");
+                if (button) {
+                    button.innerHTML = buttonIcons;
+                    button.disabled = false;
+                }
+                return;
+            }
+
+            if (!formId) {
+                toastr.error("Please save the purchase order first");
+                if (button) {
+                    button.innerHTML = buttonIcons;
+                    button.disabled = false;
+                }
+                return;
+            }
+
+            $.ajax({
+                url: '/purchase-order/fetch-supplier-info',
+                type: 'GET',
+                data: {
+                    supplier_code: supplier_code
+                },
+                success: function(response) {
+                    const data = JSON.parse(response);
+
+                    if (!data || !data.phone) {
+                        toastr.error("Supplier phone number not found");
+                        if (button) {
+                            button.innerHTML = buttonIcons;
+                            button.disabled = false;
+                        }
+                        return;
+                    }
+
+                    var to = formatOmanPhoneNumber(data.phone);
+                    const purchaseOrderNumber = poCode;
+                    const purchaseOrderDate = poDate;
+
+                    // Generate PDF using type 1 template and save it
+                    $.ajax({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        url: '/purchase-order/generate-pdf-whatsapp/' + formId,
+                        type: 'GET',
+                        success: function(pdfResponse) {
+                            const pdfData = JSON.parse(pdfResponse);
+                            var filePath = '';
+
+                            if (pdfData.success && pdfData.filePath) {
+                                filePath = pdfData.filePath;
+                            }
+
+                            const message = `*Purchase Order # ${purchaseOrderNumber}*, Dated ${purchaseOrderDate}, Amount: OMR ${amount}.\n\nThank you and regards,\nwww.malekalpizza.com`;
+
+                            $.ajax({
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                url: '/purchase-order/whatsapp-message-sending',
+                                type: 'POST',
+                                data: {
+                                    to: to,
+                                    message: message,
+                                    filePath: filePath,
+                                    invoiceNumber: purchaseOrderNumber,
+                                    title: title,
+                                },
+                                success: function(response) {
+                                    response = JSON.parse(response);
+                                    if (response.success) {
+                                        toastr.success("WhatsApp message sent at " + to);
+                                        if (button) {
+                                            button.innerHTML = buttonIcons + '<i class="icon wb-check" aria-hidden="true"></i>';
+                                            button.disabled = false;
+                                        }
+                                    } else {
+                                        toastr.error("Failed to send message check connection");
+                                        if (button) {
+                                            button.innerHTML = buttonIcons;
+                                            button.disabled = false;
+                                        }
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error("Failed to send WhatsApp message.");
+                                    if (button) {
+                                        button.innerHTML = buttonIcons;
+                                        button.disabled = false;
+                                    }
+                                }
+                            });
+                        },
+                        error: function() {
+                            toastr.error("Failed to generate PDF.");
+                            if (button) {
+                                button.innerHTML = buttonIcons;
+                                button.disabled = false;
+                            }
+                        }
+                    });
+                },
+                error: function() {
+                    toastr.error("Failed to fetch supplier data.");
+                    if (button) {
+                        button.innerHTML = buttonIcons;
+                        button.disabled = false;
+                    }
+                }
+            });
+        }
 
     </script>
 @endsection

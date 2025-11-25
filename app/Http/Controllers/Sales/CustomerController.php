@@ -735,10 +735,15 @@ class CustomerController extends Controller
 
         $curl = curl_init();
 
+        $apiUrl = config('whatsapp.intelligent.api_url');
+        $appkey = config('whatsapp.intelligent.appkey');
+        $authkey = config('whatsapp.intelligent.authkey');
+        $sandbox = config('whatsapp.intelligent.sandbox');
+
         if($filePath == '' || $filePath == null) {
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://whatsintelligent.com/api/create-message',
+            CURLOPT_URL => $apiUrl,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -747,18 +752,18 @@ class CustomerController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array(
-            'appkey' => '2fa4c714-9a38-4f81-851b-3470c758c18b',
-            'authkey' => 'yy3fbHr1GdTaP5D8Tte9w4BlvAmOk0yddf7s8tz0F8L4cZc1iA',
+            'appkey' => $appkey,
+            'authkey' => $authkey,
             'to' => $to,
             'message' => $message,
-            'sandbox' => 'false'
+            'sandbox' => $sandbox
             ),
             ));
 
         } else {
 
         curl_setopt_array($curl, array(
-        CURLOPT_URL => 'http://whatsintelligent.com/api/create-message',
+        CURLOPT_URL => $apiUrl,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
@@ -767,11 +772,11 @@ class CustomerController extends Controller
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => array(
-        'appkey' => '2fa4c714-9a38-4f81-851b-3470c758c18b',
-        'authkey' => 'yy3fbHr1GdTaP5D8Tte9w4BlvAmOk0yddf7s8tz0F8L4cZc1iA',
+        'appkey' => $appkey,
+        'authkey' => $authkey,
         'to' => $to,
         'message' => $message,
-        'sandbox' => 'false',
+        'sandbox' => $sandbox,
         'file' => $filePath
             ),
         ));
