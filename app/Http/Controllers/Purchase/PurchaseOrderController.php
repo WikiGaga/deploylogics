@@ -1010,39 +1010,48 @@ class PurchaseOrderController extends Controller
         }
         $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_id',$data['current']->payment_mode_id)->where('payment_term_entry_status',1)->where(Utilities::currentBC())->first();
 
-        // Generate PDF using type 1 template
-        $view = view('prints.purchase.purchase_order.purchase_order_print', compact('data'))->render();
+        try {
+            // Generate PDF using type 1 template
+            $view = view('prints.purchase.purchase_order.purchase_order_print', compact('data'))->render();
 
-        $dompdf = new Dompdf();
-        $options = $dompdf->getOptions();
-        $options->set('dpi', 100);
-        $options->set('isPhpEnabled', TRUE);
-        $options->set('isHtml5ParserEnabled', TRUE);
-        $options->setDefaultFont('roboto');
-        $dompdf->setOptions($options);
-        $dompdf->loadHtml($view,'UTF-8');
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
+            $dompdf = new Dompdf();
+            $options = $dompdf->getOptions();
+            $options->set('dpi', 100);
+            $options->set('isPhpEnabled', TRUE);
+            $options->set('isHtml5ParserEnabled', TRUE);
+            $options->setDefaultFont('roboto');
+            $dompdf->setOptions($options);
+            $dompdf->loadHtml($view,'UTF-8');
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
 
-        // Save PDF to public storage
-        $filename = 'po_' . $data['current']->purchase_order_code . '_' . time() . '.pdf';
-        $directory = public_path('uploads/purchase_orders');
+            // Save PDF to public storage
+            $filename = 'po_' . $data['current']->purchase_order_code . '_' . time() . '.pdf';
+            $directory = public_path('uploads/purchase_orders');
 
-        if (!file_exists($directory)) {
-            mkdir($directory, 0755, true);
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            $filePath = $directory . '/' . $filename;
+            file_put_contents($filePath, $dompdf->output());
+
+            // Return public URL
+            $publicUrl = url('uploads/purchase_orders/' . $filename);
+
+            return response()->json([
+                'success' => true,
+                'url' => $publicUrl,
+                'filePath' => $publicUrl
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-
-        $filePath = $directory . '/' . $filename;
-        file_put_contents($filePath, $dompdf->output());
-
-        // Return public URL
-        $publicUrl = url('uploads/purchase_orders/' . $filename);
-
-        return response()->json([
-            'success' => true,
-            'url' => $publicUrl,
-            'filePath' => $publicUrl
-        ]);
     }
 
     public function sendWhatsappMsg(Request $request)

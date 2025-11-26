@@ -97,7 +97,8 @@
         @if(isset($dtls))
             @foreach($dtls as $data)
                 @php
-                $new_dtls[$data->product->group_item->group_item_name_string][] = $data;
+                $groupName = $data->product->group_item->group_item_name_string ?? 'Uncategorized';
+                $new_dtls[$groupName][] = $data;
                 @endphp
             @endforeach
             @foreach($new_dtls as $key => $dtl)
@@ -107,18 +108,18 @@
                 @foreach ($dtl as $pro)
                     @php
                     $i++;
-                    $totQty += $pro->purchase_order_dtlquantity;
-                    $totAmt += $pro->purchase_order_dtlrate;
-                    $totNetAmt += $pro->purchase_order_dtltotal_amount;
+                    $totQty += floatval($pro->purchase_order_dtlquantity ?? 0);
+                    $totAmt += floatval($pro->purchase_order_dtlrate ?? 0);
+                    $totNetAmt += floatval($pro->purchase_order_dtltotal_amount ?? 0);
                     @endphp
                     <tr>
                         <td class="dtl-contents aligncenter">{{ $loop->iteration }}</td>
-                        <td class="dtl-contents aligncenter">{{$pro->barcode->product_barcode_barcode}}</td>
-                        <td class="dtl-contents alignleft">{{$pro->product->product_name}}</td>
+                        <td class="dtl-contents aligncenter">{{$pro->barcode->product_barcode_barcode ?? ''}}</td>
+                        <td class="dtl-contents alignleft">{{$pro->product->product_name ?? ''}}</td>
                         <td class="dtl-contents aligncenter">{{$pro->uom->uom_name ?? ''}}</td>
-                        <td class="dtl-contents alignright">{{number_format($pro->purchase_order_dtlnet_tp,3)}}</td>
-                        <td class="dtl-contents aligncenter">{{$pro->purchase_order_dtlquantity}}</td>
-                        <td class="dtl-contents alignright">{{number_format($pro->purchase_order_dtltotal_amount,3)}}</td>
+                        <td class="dtl-contents alignright">{{number_format(floatval($pro->purchase_order_dtlnet_tp ?? 0),3)}}</td>
+                        <td class="dtl-contents aligncenter">{{$pro->purchase_order_dtlquantity ?? 0}}</td>
+                        <td class="dtl-contents alignright">{{number_format(floatval($pro->purchase_order_dtltotal_amount ?? 0),3)}}</td>
                     </tr>
                 @endforeach
             @endforeach
@@ -129,7 +130,7 @@
                 <td class="dtl-head alignright border-right"></td>
                 <td class="dtl-head alignright"></td>
                 <td class="dtl-head aligncenter">{{$totQty}}</td>
-                <td class="dtl-head alignright">{{number_format($totNetAmt,3)}}</td>
+                <td class="dtl-head alignright">{{number_format(floatval($totNetAmt),3)}}</td>
             </tr>
         @endif
     </tbody>
