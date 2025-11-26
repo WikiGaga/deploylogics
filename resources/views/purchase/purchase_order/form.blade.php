@@ -1505,7 +1505,7 @@
                                 filePath = pdfData.filePath;
                             }
 
-                            const message = `*Purchase Order # ${purchaseOrderNumber}*, Dated ${purchaseOrderDate}, Amount: OMR ${amount}.\n\nThank you and regards,\nwww.malekalpizza.com`;
+                            const message = `*Purchase Order # ${purchaseOrderNumber}*, Dated ${purchaseOrderDate}, Amount: OMR ${amount}.\n\nThank you and regards,\nMalek Al Pizza`;
 
                             $.ajax({
                                 headers: {
