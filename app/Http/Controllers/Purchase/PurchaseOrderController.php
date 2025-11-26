@@ -1118,7 +1118,7 @@ class PurchaseOrderController extends Controller
                 echo json_encode(['success' => 'Message sent successfully!']);
 
                 WhatsappLog::create([
-                    'user_id' => session('user_id'),
+                    'user_id' => auth()->id(),
                     'form_name' => $title,
                     'entry_code' => $invoiceNumber,
                     'created_at' => now()->format('Y-m-d H:i:s'),
