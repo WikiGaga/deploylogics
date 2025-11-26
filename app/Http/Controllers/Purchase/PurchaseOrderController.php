@@ -998,13 +998,16 @@ class PurchaseOrderController extends Controller
 
         if(isset($id)){
             if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
-                $data['current'] = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')->where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                $data['current'] = TblPurcPurchaseOrder::with(['po_details.product.group_item','po_details.barcode','po_details.uom','supplier','lpo','comparative_quotation'])->where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
             }else{
                 return response()->json(['error' => 'Purchase order not found'], 404);
             }
         }
 
         $data['currency'] = TblDefiCurrency::where('currency_id',$data['current']->currency_id)->where(Utilities::currentBC())->first();
+        if(!$data['currency']){
+            $data['currency'] = (object)['currency_name' => ''];
+        }
         $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_id',$data['current']->payment_mode_id)->where('payment_term_entry_status',1)->where(Utilities::currentBC())->first();
 
         // Generate PDF using type 1 template

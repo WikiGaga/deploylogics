@@ -115,7 +115,7 @@
                         <td class="dtl-contents aligncenter">{{ $loop->iteration }}</td>
                         <td class="dtl-contents aligncenter">{{$pro->barcode->product_barcode_barcode}}</td>
                         <td class="dtl-contents alignleft">{{$pro->product->product_name}}</td>
-                        <td class="dtl-contents aligncenter">{{isset($pro->uom->uom_name)}}</td>
+                        <td class="dtl-contents aligncenter">{{$pro->uom->uom_name ?? ''}}</td>
                         <td class="dtl-contents alignright">{{number_format($pro->purchase_order_dtlnet_tp,3)}}</td>
                         <td class="dtl-contents aligncenter">{{$pro->purchase_order_dtlquantity}}</td>
                         <td class="dtl-contents alignright">{{number_format($pro->purchase_order_dtltotal_amount,3)}}</td>
