@@ -1487,7 +1487,7 @@
                         return;
                     }
 
-                    var to = formatPakPhoneNumber(data.phone);
+                    var to = formatOmanPhoneNumber(data.phone);
                     const purchaseOrderNumber = poCode;
                     const purchaseOrderDate = poDate;
 
