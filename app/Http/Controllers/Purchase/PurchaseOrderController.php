@@ -991,9 +991,10 @@ class PurchaseOrderController extends Controller
     public function generatePdfForWhatsApp(Request $request, $id)
     {
         $data['title'] = 'Purchase Order';
-        $data['type'] = '1'; // Use type 1 as requested
+        $data['type'] = '1'; // Use type 1
         $data['id'] = $id;
         $data['permission'] = self::$menu_dtl_id.'-print';
+        $data['print_link'] = '/purchase-order/print/'.$id;
 
         if(isset($id)){
             if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
