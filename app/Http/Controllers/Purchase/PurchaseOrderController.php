@@ -991,7 +991,7 @@ class PurchaseOrderController extends Controller
     public function generatePdfForWhatsApp(Request $request, $id)
     {
         $data['title'] = 'Purchase Order';
-        $data['type'] = '1'; // Use type 1
+        $data['type'] = 'pdf';
         $data['id'] = $id;
         $data['permission'] = self::$menu_dtl_id.'-print';
         $data['print_link'] = '/purchase-order/print/'.$id;
