@@ -1025,9 +1025,9 @@ class PurchaseOrderController extends Controller
             $dompdf->setPaper('A4', 'landscape');
             $dompdf->render();
 
-            // Save PDF to public storage
+            // Save PDF to storage
             $filename = 'po_' . $data['current']->purchase_order_code . '_' . time() . '.pdf';
-            $directory = public_path('uploads/purchase_orders');
+            $directory = storage_path('app/public/purchase_orders');
 
             if (!file_exists($directory)) {
                 mkdir($directory, 0755, true);
@@ -1036,8 +1036,8 @@ class PurchaseOrderController extends Controller
             $filePath = $directory . '/' . $filename;
             file_put_contents($filePath, $dompdf->output());
 
-            // Return public URL
-            $publicUrl = url('uploads/purchase_orders/' . $filename);
+            // Return public URL (requires: php artisan storage:link)
+            $publicUrl = url('storage/purchase_orders/' . $filename);
 
             return response()->json([
                 'success' => true,
