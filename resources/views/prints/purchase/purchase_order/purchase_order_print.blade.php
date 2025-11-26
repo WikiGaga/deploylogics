@@ -103,7 +103,7 @@
             @endforeach
             @foreach($new_dtls as $key => $dtl)
                 <tr>
-                    <td class="dtl-contents alignleft" colspan="100%"><b>{{ $key }}</b></td>
+                    <td class="dtl-contents alignleft" colspan="7"><b>{{ $key }}</b></td>
                 </tr>
                 @foreach ($dtl as $pro)
                     @php
