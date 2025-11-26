@@ -1487,11 +1487,10 @@
                         return;
                     }
 
-                    var to = formatOmanPhoneNumber(data.phone);
+                    var to = formatPakPhoneNumber(data.phone);
                     const purchaseOrderNumber = poCode;
                     const purchaseOrderDate = poDate;
 
-                    // Generate PDF using type 1 template and save it
                     $.ajax({
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
