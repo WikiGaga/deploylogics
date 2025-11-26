@@ -1476,7 +1476,7 @@
                     supplier_code: supplier_code
                 },
                 success: function(response) {
-                    const data = JSON.parse(response);
+                    const data = response;
 
                     if (!data || !data.phone) {
                         toastr.error("Supplier phone number not found");
@@ -1498,7 +1498,7 @@
                         url: '/purchase-order/generate-pdf-whatsapp/' + formId,
                         type: 'GET',
                         success: function(pdfResponse) {
-                            const pdfData = JSON.parse(pdfResponse);
+                            const pdfData = pdfResponse;
                             var filePath = '';
 
                             if (pdfData.success && pdfData.filePath) {
