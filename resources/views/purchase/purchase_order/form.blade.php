@@ -1,5 +1,5 @@
 @extends('layouts.layout')
-@section('title', 'Purchase Order')
+@section('title', __('message.purchase_order'))
 
 @section('pageCSS')
 @endsection
@@ -94,12 +94,12 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'lpoPoHelp') }}"
                                                     id="lpo_generation_no" name="lpo_generation_no"
                                                     class="open_inline__help form-control erp-form-control-sm moveIndex"
-                                                    placeholder="Enter here">
+                                                    placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="lpo_generation_no_id" name="lpo_generation_no_id"
                                                     value="{{ isset($lpo_id) ? $lpo_id : '' }}" />
                                                 <div class="input-group-append">
                                                     <span class="input-group-text group-input-btn get-lpo-data" id="lpoGetData">
-                                                        Go
+                                                        {{ __('message.go') }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -122,7 +122,7 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
                                                     id="supplier_name" name="supplier_name"
                                                     class="open_inline__help form-control erp-form-control-sm moveIndex"
-                                                    placeholder="Enter here">
+                                                    placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
                                                 <div class="input-group-append">
@@ -153,7 +153,7 @@
                                     <div class="input-group erp-select2-sm">
                                         <select name="payment_terms" id="payment_terms"
                                             class="moveIndex kt-select2 form-control erp-form-control-sm">
-                                            <option value="0">Select</option>
+                                            <option value="0">{{ __('message.select') }}</option>
                                             @foreach ($data['payment_terms'] as $payment_term)
                                                 @php $payment_terms_id = isset($payment_terms)?$payment_terms:""; @endphp
                                                 <option value="{{ $payment_term->payment_term_id }}"
@@ -177,7 +177,7 @@
                                     <div class="erp-select2">
                                         <select class="moveIndex form-control erp-form-control-sm kt-select2 currency"
                                             id="po_currency" name="po_currency">
-                                            <option value="0">Select</option>
+                                            <option value="0">{{ __('message.select') }}</option>
                                             @if ($case == 'edit')
                                                 @php $currency_id = isset($currency_id)?$currency_id:'';@endphp
                                                 @foreach ($data['currency'] as $currency)
@@ -229,7 +229,7 @@
                                                 name="comparative_quotation_code" id="comparative_quotation_code"
                                                 data-url="{{ action('Common\DataTableController@helpOpen', 'comparativeQuotationHelp') }}"
                                                 class="form-control erp-form-control-sm open_modal moveIndex moveIndex2 OnlyEnterAllow"
-                                                placeholder="Enter here">
+                                                placeholder="{{ __('message.enter_here') }}">
                                             <input type="hidden"
                                                 value="{{ isset($comparative_quotation_id) ? $comparative_quotation_id : '' }}"
                                                 name="comparative_quotation_id" id="comparative_quotation_id" readonly>
@@ -264,7 +264,7 @@
                                                 name="auto_demand_code" id="auto_demand_code"
                                                 data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'autoDemandHelp') }}"
                                                 class="open_inline__help form-control erp-form-control-sm open_modal moveIndex"
-                                                placeholder="Auto Demand Refrence">
+                                                placeholder="{{ __('message.auto_demand_refrence') }}">
                                             <input type="hidden" value="{{ isset($auto_demand_id) ? $auo_demand_id : '' }}"
                                                 name="auto_demand_id" id="auto_demand_id" readonly>
                                             <div class="input-group-append">
@@ -281,7 +281,7 @@
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
-                                <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> fields hide</div>
+                                <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> {{ __('message.fields_hide') }}</div>
                                 <div class="dropdown dropdown-inline">
                                     <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md"
                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
@@ -290,22 +290,22 @@
                                     </button>
                                     @php
                                         $headings = [
-                                            'Sr No',
-                                            'Barcode',
-                                            'Product Name',
-                                            'UOM',
-                                            'Packing',
-                                            'Notes',
-                                            'Qty',
-                                            'FOC Qty',
-                                            'FC Rate',
-                                            'Rate',
-                                            'Amount',
-                                            'Disc%',
-                                            'Disc Amt',
-                                            'VAT%',
-                                            'Vat Amt',
-                                            'Gross Amt',
+                                            __('message.sr_no'),
+                                            __('message.barcode'),
+                                            __('message.product_name'),
+                                            __('message.uom'),
+                                            __('message.packing'),
+                                            __('message.notes'),
+                                            __('message.qty'),
+                                            __('message.foc_qty'),
+                                            __('message.fc_rate'),
+                                            __('message.rate'),
+                                            __('message.amount'),
+                                            __('message.disc_percent'),
+                                            __('message.disc_amt'),
+                                            __('message.vat_percent'),
+                                            __('message.vat_amt'),
+                                            __('message.gross_amt'),
                                         ];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown"
@@ -321,7 +321,7 @@
                                     </ul>
                                 </div>
                                 <div class="kt-user-page-setting" style="display: inline-block">
-                                    <button type="button" style="width: 30px;height: 30px;" title="Setting Save"
+                                    <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.setting_save') }}"
                                         data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon"
                                         id="pageUserSettingSave">
                                         <i class="la la-floppy-o"></i>
@@ -337,7 +337,7 @@
                                     <thead class="erp_form__grid_header">
                                         <tr>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Sr.</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.sr') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="sr_no" readonly type="text"
                                                         class="sr_no form-control erp-form-control-sm">
@@ -351,7 +351,7 @@
                                             </th>
                                             <th scope="col">
                                                 <div class="erp_form__grid_th_title">
-                                                    Barcode
+                                                    {{ __('message.barcode') }}
                                                     <button type="button" id="mobOpenInlineHelp"
                                                         class="btn btn-primary btn-sm">
                                                         <i class="la la-barcode"></i>
@@ -365,106 +365,106 @@
                                                     </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Product Name</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.product_name') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="product_name" readonly type="text"
                                                         class="product_name form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">UOM</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.uom') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <select id="pd_uom" class="pd_uom form-control erp-form-control-sm">
-                                                        <option value="">Select</option>
+                                                        <option value="">{{ __('message.select') }}</option>
                                                     </select>
                                                 </div>
                                             </th>
                                             <th cope="col">
-                                                <div class="erp_form__grid_th_title">Packing</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.packing') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="pd_packing" readonly type="text"
                                                         class="pd_packing form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th cope="col">
-                                                <div class="erp_form__grid_th_title">Notes</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.notes') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="remarks" type="text"
                                                         class="form-control erp-form-control-sm tb_moveIndex">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Qty</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.qty') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="quantity" type="text"
                                                         class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">FOC Qty</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.foc_qty') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="foc_qty" type="text"
                                                         class="validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">FC Rate</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.fc_rate') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="fc_rate" type="text"
                                                         class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Rate</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.rate') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="rate" type="text"
                                                         class="tblGridCal_rate tb_moveIndex validNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Amount</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.amount') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="amount" type="text"
                                                         class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Disc %</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.disc_percent') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="dis_perc" type="text"
                                                         class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Disc Amt</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.disc_amt') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="dis_amount" type="text"
                                                         class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">VAT %</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.vat_percent') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="vat_perc" type="text"
                                                         class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">VAT Amt</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.vat_amt') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="vat_amount" type="text"
                                                         class="tblGridCal_vat_amount validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Gross Amt</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.gross_amt') }}</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input id="gross_amount" readonly type="text"
                                                         class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
                                                 </div>
                                             </th>
                                             <th scope="col">
-                                                <div class="erp_form__grid_th_title">Action</div>
+                                                <div class="erp_form__grid_th_title">{{ __('message.action') }}</div>
                                                 <div class="erp_form__grid_th_btn">
                                                     <button type="button" id="addData"
                                                         class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
@@ -657,7 +657,7 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <div class="t_total_label">Total:</div>
+                                            <div class="t_total_label">{{ __('message.total') }}:</div>
                                         </td>
                                         <td><span class="t_total t_gross_total">0</span><input type="hidden" id="pro_tot">
                                         </td>
@@ -667,7 +667,7 @@
                         </div>
                     </div>
                     <div class="row form-group-block">
-                        <label class="col-lg-2 erp-col-form-label">Remarks:</label>
+                        <label class="col-lg-2 erp-col-form-label">{{ __('message.remarks') }}:</label>
                         <div class="col-lg-10">
                             <textarea type="text" rows="2" id="po_notes" name="po_notes" maxlength="255"
                                 class="form-control erp-form-control-sm">{{ isset($remarks) ? $remarks : '' }}</textarea>

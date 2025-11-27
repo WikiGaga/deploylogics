@@ -1,5 +1,5 @@
 @extends('layouts.layout')
-@section('title', 'GRN')
+@section('title', __('message.grn'))
 
 @section('pageCSS')
     <style>
@@ -64,7 +64,7 @@
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Date:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.date') }}:</label>
                                     <div class="col-lg-6">
                                         <div class="input-group date">
                                             @if (isset($data['id']))
@@ -86,7 +86,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Supplier:<span class="required">*</span></label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.supplier') }}:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
@@ -100,7 +100,7 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
                                                     autocomplete="off" name="supplier_name"
                                                     class="open_inline__help form-control erp-form-control-sm moveIndex"
-                                                    placeholder="Enter here">
+                                                    placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($data['current']->supplier->supplier_id) ? $data['current']->supplier->supplier_id : '' }}" />
                                                 <div class="input-group-append">
@@ -116,7 +116,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">PO:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.po') }}:</label>
                                     <div class="col-lg-6">
                                         <div class="erp_form___block" id="select_po">
                                             <div class="input-group open-modal-group">
@@ -130,7 +130,7 @@
                                                     value="{{ isset($data['current']->PO->purchase_order_code) ? $data['current']->PO->purchase_order_code : '' }}"
                                                     id="purchase_order" name="purchase_order"
                                                     class="open_inline__help form-control erp-form-control-sm moveIndex"
-                                                    placeholder="Enter here">
+                                                    placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="purchase_order_id" name="purchase_order_id"
                                                     value="{{ isset($data['current']->PO->purchase_order_id) ? $data['current']->PO->purchase_order_id : '' }}" />
                                                 <div class="input-group-append">
@@ -139,7 +139,7 @@
                                                         <i class="la la-search"></i>
                                                     </span>
                                                     <span class="input-group-text group-input-btn" id="getPOData">
-                                                        GO
+                                                        {{ __('message.go') }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -151,12 +151,12 @@
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Currency:<span class="required">*</span></label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.currency') }}:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
                                             <select class="form-control kt-select2 erp-form-control-sm moveIndex currency"
                                                 id="kt_select2_1" name="grn_currency">
-                                                <option value="0">Select</option>
+                                                <option value="0">{{ __('message.select') }}</option>
                                                 @if (isset($data['current']->currency_id))
                                                     @php
                                                         $grn_currency = isset($data['current']->currency_id)
@@ -189,7 +189,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Exchange Rate:<span
+                                    <label class="col-lg-6 col-form-label">{{ __('message.exchange_rate') }}:<span
                                             class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <input type="text" id="exchange_rate" name="exchange_rate"
@@ -200,7 +200,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Bill No:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.bill_no') }}:</label>
                                     <div class="col-lg-6">
                                         <input type="text" id="grn_bill_no" name="grn_bill_no"
                                             value="{{ isset($data['current']->grn_bill_no) ? $data['current']->grn_bill_no : '' }}"
@@ -212,12 +212,12 @@
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Payment Terms:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.payment_terms') }}:</label>
                                     <div class="col-lg-6">
                                         <div class="input-group erp-select2-sm">
                                             <select name="grn_ageing_term_id" id="grn_ageing_term_id"
                                                 class="moveIndex kt-select2 width form-control erp-form-control-sm">
-                                                <option value="0">Select</option>
+                                                <option value="0">{{ __('message.select') }}</option>
                                                 @foreach ($data['payment_terms'] as $payment_term)
                                                     @php $payment_terms_id = isset($data['current']->grn_ageing_term_id)?$data['current']->grn_ageing_term_id:''; @endphp
                                                     <option value="{{ $payment_term->payment_term_id }}"
@@ -237,7 +237,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Store:<span class="required">*</span></label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.store') }}:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
                                             <select class="form-control kt-select2 erp-form-control-sm moveIndex"
@@ -286,11 +286,11 @@
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">Select Products:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.select_products') }}:</label>
                                     <div class="col-lg-6">
                                         <button type="button" class="btn btn-brand btn-sm" id="makePD"
                                             style="padding: 4px 6px;">
-                                            Select Multiple Products
+                                            {{ __('message.select_multiple_products') }}
                                         </button>
                                     </div>
                                 </div>
@@ -317,7 +317,7 @@
                         <div class="row">
                             <div class="col-lg-12 text-right">
                                 <div class="data_entry_header">
-                                    <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> fields hide
+                                    <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> {{ __('message.fields_hide') }}
                                     </div>
                                     <div class="dropdown dropdown-inline">
                                         <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md"
@@ -327,28 +327,28 @@
                                         </button>
                                         @php
                                             $headings = [
-                                                'Sr No',
-                                                'Barcode',
-                                                'Product Name',
-                                                'UOM',
-                                                'Packing',
-                                                'Sup Barcode',
-                                                'Qty',
-                                                'FOC Qty',
-                                                'Sale Rate',
+                                                __('message.sr_no'),
+                                                __('message.barcode'),
+                                                __('message.product_name'),
+                                                __('message.uom'),
+                                                __('message.packing'),
+                                                __('message.sup_barcode'),
+                                                __('message.qty'),
+                                                __('message.foc_qty'),
+                                                __('message.sale_rate'),
                                                 '<span class="fc_dynamic_title">' .
                                                 $currencySymbol .
-                                                ' Rate (FC)</span>',
-                                                'Rate',
-                                                'Amount',
-                                                'Disc%',
-                                                'Disc Amt',
-                                                'VAT%',
-                                                'Vat Amt',
-                                                'Batch #',
-                                                'Production Date',
-                                                'Expiry Date',
-                                                'Gross Amt',
+                                                ' ' . __('message.rate_fc') . '</span>',
+                                                __('message.rate'),
+                                                __('message.amount'),
+                                                __('message.disc_percent'),
+                                                __('message.disc_amt'),
+                                                __('message.vat_percent'),
+                                                __('message.vat_amt'),
+                                                __('message.batch_no'),
+                                                __('message.production_date'),
+                                                __('message.expiry_date'),
+                                                __('message.gross_amt'),
                                             ];
                                         @endphp
                                         <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown"
@@ -364,21 +364,21 @@
                                         </ul>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Setting Save"
+                                        <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.setting_save') }}"
                                             data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon"
                                             id="pageUserSettingSave">
                                             <i class="la la-floppy-o"></i>
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Barcode Print"
+                                        <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.barcode_print') }}"
                                             data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon"
                                             id="generatePriceTags">
                                             <i class="la la-barcode"></i>
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Shelf Barcode Print"
+                                        <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.shelf_barcode_print') }}"
                                             data-toggle="tooltip"
                                             class="btn btn-brand btn-success btn-elevate btn-circle btn-icon"
                                             id="generateShelfPriceTags">
@@ -386,7 +386,7 @@
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Load Favorite"
+                                        <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.load_favorite') }}"
                                             data-toggle="tooltip"
                                             class="btn btn-brand btn-elevate btn-circle btn-icon"
                                             id="loadFavoriteBtn">
@@ -394,7 +394,7 @@
                                         </button>
                                     </div>
                                     <div class="kt-user-page-setting" style="display: inline-block">
-                                        <button type="button" style="width: 30px;height: 30px;" title="Save as Favorite"
+                                        <button type="button" style="width: 30px;height: 30px;" title="{{ __('message.save_as_favorite') }}"
                                             data-toggle="tooltip"
                                             class="btn btn-brand btn-elevate btn-circle btn-icon"
                                             id="saveFavoriteBtn">
@@ -410,77 +410,77 @@
                                     <table class="table erp_form__grid erp_form__grid_th_resize table-resizable dtr-inline">
                                         <thead class="erp_form__grid_header">
                                             <tr>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Sr.</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">
-                                                        Barcode
-                                                        <button type="button" id="mobOpenInlineHelp"
-                                                            class="btn btn-primary btn-sm">
-                                                            <i class="la la-barcode"></i>
-                                                        </button>
-                                                    </div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Product Name</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">UOM</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Packing</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Sup Barcode</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Qty</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">FOC Qty</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title btn btn-sm sale_rate_barcode"
-                                                        id="sale_barcode">Sale Rate</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title fc_dynamic_title">
-                                                        {{ $currencySymbol }} Rate (FC)</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Rate</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Amount</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Disc %</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Disc Amt</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">VAT %</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">VAT Amt</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Batch No</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Production Date</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Expiry Date</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Gross Amt</div>
-                                                </th>
-                                                <th scope="col">
-                                                    <div class="erp_form__grid_th_title">Action</div>
-                                                </th>
+<th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.sr') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">
+                                                    {{ __('message.barcode') }}
+                                                    <button type="button" id="mobOpenInlineHelp"
+                                                        class="btn btn-primary btn-sm">
+                                                        <i class="la la-barcode"></i>
+                                                    </button>
+                                                </div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.product_name') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.uom') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.packing') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.sup_barcode') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.qty') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.foc_qty') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title btn btn-sm sale_rate_barcode"
+                                                    id="sale_barcode">{{ __('message.sale_rate') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title fc_dynamic_title">
+                                                    {{ $currencySymbol }} {{ __('message.rate_fc') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.rate') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.amount') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.disc_percent') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.disc_amt') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.vat_percent') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.vat_amt') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.batch_no') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.production_date') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.expiry_date') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.gross_amt') }}</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.action') }}</div>
+                                            </th>
                                             </tr>
                                         </thead>
                                         <tbody class="erp_form__grid_header erp_form__grid_header_bottom">
@@ -520,7 +520,7 @@
                                                     <div class="erp_form__grid_th_input">
                                                         <select id="pd_uom"
                                                             class="pd_uom tb_moveIndex form-control erp-form-control-sm">
-                                                            <option value="">Select</option>
+                                                            <option value="">{{ __('message.select') }}</option>
                                                         </select>
                                                     </div>
                                                 </th>
@@ -865,9 +865,9 @@
                                 <table class="tableTotal">
                                     <tbody>
                                         <tr>
-                                            <td>
-                                                <div class="t_total_label">Total Amount:</div>
-                                            </td>
+<td>
+                                            <div class="t_total_label">{{ __('message.total_amount') }}:</div>
+                                        </td>
                                             <td class="text-right"><span class="t_gross_total t_total">0</span><input
                                                     type="hidden" id="pro_tot"></td>
                                         </tr>
@@ -879,7 +879,7 @@
                     <div class="col-lg-12">
                         <div id="discount_calc_block">
                             <div class="row" style="float: right;">
-                                <span class="col-sm-3 col-lg-3 erp-col-form-label">Discount</span>
+                                <span class="col-sm-3 col-lg-3 erp-col-form-label">{{ __('message.discount') }}</span>
                                 <div class="col-lg-9 col-sm-9">
                                     <div class="input-group">
                                         <div class="input-group-prepend">
@@ -902,7 +902,7 @@
                         <div class="row form-group-block">
                             <div class="col-lg-5">
                                 <div class="row">
-                                    <label class="col-lg-2 erp-col-form-label">Notes:</label>
+                                    <label class="col-lg-2 erp-col-form-label">{{ __('message.notes') }}:</label>
                                     <div class="col-lg-10">
                                         <textarea type="text" rows="3" id="grn_notes" name="grn_notes" maxlength="255"
                                             class="form-control erp-form-control-sm">{{ isset($data['current']->grn_remarks) ? $data['current']->grn_remarks : '' }}</textarea>
@@ -914,7 +914,7 @@
                                     <div class="col-lg-12">
                                         <div id="discount_calc_block">
                                             <div class="row" style="float: right;">
-                                                <span class="col-sm-3 col-lg-3 erp-col-form-label">Discount</span>
+                                                <span class="col-sm-3 col-lg-3 erp-col-form-label">{{ __('message.discount') }}</span>
                                                 <div class="col-lg-9 col-sm-9">
                                                     <div class="input-group">
                                                         <div class="input-group-prepend">
@@ -943,7 +943,7 @@
                                 @if (count($data['accounts']) != 0)
                                     <div class="row">
                                         <div class="col-lg-12" style="font-weight: 500;">
-                                            Expense:
+                                            {{ __('message.expense') }}:
                                         </div>
                                     </div>{{-- /row --}}
                                     <div class="row">
@@ -954,12 +954,12 @@
                                                     style="margin-top:0px;">
                                                     <thead>
                                                         <tr>
-                                                            <th width="7%">Sr No</th>
-                                                            <th width="18%">Acc code</th>
-                                                            <th width="40%">Acc Name</th>
+                                                            <th width="7%">{{ __('message.sr_no') }}</th>
+                                                            <th width="18%">{{ __('message.acc_code') }}</th>
+                                                            <th width="40%">{{ __('message.acc_name') }}</th>
                                                             <th width="5%">+ / -</th>
-                                                            <th width="15%">Perc</th>
-                                                            <th width="15%">Amount</th>
+                                                            <th width="15%">{{ __('message.perc') }}</th>
+                                                            <th width="15%">{{ __('message.amount') }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="repeated_datasm">
@@ -1046,7 +1046,7 @@
                                 @else
                                     <div class="row">
                                         <div class="offset-lg-6 col-lg-6" style="font-weight: 500;">
-                                            Expense accounts not available.
+                                            {{ __('message.expense_accounts_not_available') }}
                                         </div>
                                     </div>{{-- /row --}}
                                 @endif
@@ -1059,7 +1059,7 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <div class="t_total_label">Total Expense:</div>
+                                                <div class="t_total_label">{{ __('message.total_expense') }}:</div>
                                             </td>
                                             <td class="voucher-total-amt align-middle">
                                                 <span id="tot_expenses">0</span>
@@ -1068,7 +1068,7 @@
                                         </tr>
                                         <tr>
                                             <td>
-                                                <div class="t_total_label">NetTotal:</div>
+                                                <div class="t_total_label">{{ __('message.net_total') }}:</div>
                                             </td>
                                             <td><span class="t_total" id="total_amountsm">0</span></td>
                                         </tr>
