@@ -64,7 +64,7 @@
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label">Document Date:</label>
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.document_date') }}:</label>
                                     <div class="col-lg-6">
                                         <div class="input-group date">
                                             <input type="text" name="po_date"
@@ -81,7 +81,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label">LPO Generation No:</label>
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.lpo_generation_no') }}:</label>
                                     <div class="col-lg-6">
                                         <div class="erp_form___block" id="select_lpo">
                                             <div class="input-group open-modal-group">
@@ -109,7 +109,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label">Supplier:<span class="required">*</span></label>
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.supplier') }}:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
@@ -148,7 +148,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Payment Terms:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.payment_terms') }}:</label>
                                 <div class="col-lg-6">
                                     <div class="input-group erp-select2-sm">
                                         <select name="payment_terms" id="payment_terms"
@@ -172,7 +172,7 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="row form-group-block">
-                                <label class="col-lg-6 erp-col-form-label">Currency:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.currency') }}:</label>
                                 <div class="col-lg-6 quotation_currency">
                                     <div class="erp-select2">
                                         <select class="moveIndex form-control erp-form-control-sm kt-select2 currency"
@@ -202,7 +202,7 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Exchange Rate:<span
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.exchange_rate') }}:<span
                                         class="required">*</span></label>
                                 <div class="col-lg-6">
                                     <input type="text" value="{{ isset($exchange_rate) ? $exchange_rate : '' }}"
@@ -215,7 +215,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Comparative Quotation:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.comparative_quotation') }}:</label>
                                 <div class="col-lg-6">
                                     <div class="erp_form___block">
                                         <div class="input-group open-modal-group">
@@ -246,12 +246,12 @@
                         </div>
                         <div class="col-lg-2">
                             <button type="button" class="btn btn-brand btn-sm" id="makePD" style="padding: 4px 6px;">
-                                Select Multiple Products
+                                {{ __('message.select_multiple_products') }}
                             </button>
                         </div>
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-4 erp-col-form-label">Auto Demand Refrence:</label>
+                                <label class="col-lg-4 erp-col-form-label">{{ __('message.auto_demand_refrence') }}:</label>
                                 <div class="col-lg-8">
                                     <div class="erp_form___block">
                                         <div class="input-group open-modal-group">
@@ -269,7 +269,7 @@
                                                 name="auto_demand_id" id="auto_demand_id" readonly>
                                             <div class="input-group-append">
                                                 <span class="input-group-text group-input-btn get-ad-data" id="adGetData">
-                                                    Go
+                                                    {{ __('message.go') }}
                                                 </span>
                                             </div>
                                         </div>
