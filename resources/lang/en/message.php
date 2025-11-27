@@ -79,4 +79,15 @@ return array (
   'expense_accounts_not_available' => 'Expense accounts not available.',
   'total_expense' => 'Total Expense',
   'net_total' => 'Net Total',
+  // Page header & action types
+  'new' => 'New',
+  'edit' => 'Edit',
+  'view' => 'View',
+  'back' => 'Back',
+  'save' => 'Save',
+  'post' => 'Post',
+  'send' => 'Send',
+  'print' => 'Print',
+  'create_new' => 'Create New',
+  'upload_documents' => 'Upload Documents',
 );

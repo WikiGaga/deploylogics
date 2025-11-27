@@ -3,7 +3,18 @@
         <i class="kt-font-brand flaticon2-file"></i>
     </span>
     <h3 class="kt-portlet__head-title">
-        {{isset($page_data['title'])?$page_data['title']:""}}<small class="text-capitalize">{{isset($page_data['type'])?ucwords($page_data['type']):""}}</small>
+        @php
+            $title = isset($page_data['title']) ? $page_data['title'] : '';
+            $title_key = 'message.' . strtolower(str_replace([' ', '-'], '_', $title));
+            $translated_title = __($title_key);
+            $display_title = ($translated_title !== $title_key) ? $translated_title : $title;
+
+            $type = isset($page_data['type']) ? $page_data['type'] : '';
+            $type_key = 'message.' . strtolower($type);
+            $translated_type = __($type_key);
+            $display_type = ($translated_type !== $type_key) ? $translated_type : ucwords($type);
+        @endphp
+        {{ $display_title }}<small class="text-capitalize">{{ $display_type }}</small>
     </h3>
     <div class="erp-page--actions">
         @if(isset($page_data['action']) && $page_data['action'] != '')

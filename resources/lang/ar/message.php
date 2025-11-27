@@ -79,4 +79,15 @@ return array (
   'expense_accounts_not_available' => 'حسابات المصروفات غير متوفرة.',
   'total_expense' => 'إجمالي المصروفات',
   'net_total' => 'الإجمالي الصافي',
+  // Page header & action types
+  'new' => 'جديد',
+  'edit' => 'تعديل',
+  'view' => 'عرض',
+  'back' => 'رجوع',
+  'save' => 'حفظ',
+  'post' => 'ترحيل',
+  'send' => 'إرسال',
+  'print' => 'طباعة',
+  'create_new' => 'إنشاء جديد',
+  'upload_documents' => 'رفع المستندات',
 );
