@@ -1,25 +1,71 @@
 <style>
+    .language-selector {
+        display: flex;
+        align-items: center;
+    }
+
+    .language-selector-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 2px;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .language-selector-wrapper:hover {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        transform: translateY(-1px);
+    }
+
+    .language-selector-inner {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-radius: 23px;
+        padding: 6px 12px;
+        gap: 8px;
+    }
+
+    .language-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        color: #fff;
+        font-size: 12px;
+    }
+
     .custom-language-select {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f8f9fa;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        padding: 0 5px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        min-width: 80px;
+    }
 
-.custom-language-select:hover {
-    border-color: #007bff;
-    background-color: #fff;
-}
+    .custom-language-select:focus {
+        outline: none;
+    }
 
-.custom-language-select:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
-}
-
+    .select-arrow {
+        display: flex;
+        align-items: center;
+        color: #667eea;
+        font-size: 10px;
+        margin-left: -5px;
+    }
 </style>
 
 <div id="kt_header" class="kt-header kt-grid__item  kt-header--fixed ">
@@ -132,17 +178,27 @@
         // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
-        <div class="language-selector mt-2">
+        <div class="language-selector">
             <form action="{{ route('change.language') }}" method="POST">
                 @csrf
-                <select name="language" id="language" class="custom-language-select mr-2" onchange="this.form.submit()">
-                    @foreach($languages as $language)
-                        <option value="{{ $language->code }}"
-                            {{ $locale === $language->code ? 'selected' : '' }}>
-                            {{ $language->name }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="language-selector-wrapper">
+                    <div class="language-selector-inner">
+                        <div class="language-icon">
+                            <i class="fa fa-globe"></i>
+                        </div>
+                        <select name="language" id="language" class="custom-language-select" onchange="this.form.submit()">
+                            @foreach($languages as $language)
+                                <option value="{{ $language->code }}"
+                                    {{ $locale === $language->code ? 'selected' : '' }}>
+                                    {{ $language->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="select-arrow">
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
 
