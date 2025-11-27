@@ -1,3 +1,17 @@
+@php
+    if (! function_exists('translateMenuLabel')) {
+        function translateMenuLabel($label) {
+            $label = trim($label ?? '');
+            if ($label === '') {
+                return '';
+            }
+            $normalized = strtolower(preg_replace('/[^A-Za-z0-9]+/', '_', $label));
+            $key = 'message.' . $normalized;
+            $translated = __($key);
+            return $translated !== $key ? $translated : $label;
+        }
+    }
+@endphp
 <div class="kt-aside  kt-aside--fixed  kt-grid__item kt-grid kt-grid--desktop kt-grid--hor-desktop" id="kt_aside">
 {{--{{dd($recentPosts->toArray())}}--}}
     <!-- begin:: Aside -->
@@ -86,7 +100,7 @@
                             <span class="kt-menu__link-icon c-menu-icon">
                                 <i class="{{$menu->menu_icon}}"></i>
                             </span>
-                            <span class="kt-menu__link-text">{{$menu->menu_name}}</span>
+                            <span class="kt-menu__link-text">{{ translateMenuLabel($menu->menu_name) }}</span>
                             <i class="kt-menu__ver-arrow la la-angle-right"></i>
                         </a>
                         <div class="kt-menu__submenu ">
@@ -102,7 +116,7 @@
                                         <li class="kt-menu__item  kt-menu__item--submenu" aria-haspopup="true" data-ktmenu-submenu-toggle="hover">
                                             <a href="javascript:;" class="kt-menu__link kt-menu__toggle">
                                                 <i class="kt-menu__link-bullet kt-menu__link-bullet--line"><span></span></i>
-                                                <span class="kt-menu__link-text">{{$submenu->menu_dtl_name}}</span>
+                                                <span class="kt-menu__link-text">{{ translateMenuLabel($submenu->menu_dtl_name) }}</span>
                                                 <i class="kt-menu__ver-arrow la la-angle-right"></i>
                                             </a>
                                             <div class="kt-menu__submenu ">
@@ -117,7 +131,7 @@
                                                         <li class="kt-menu__item getSubMenu" aria-haspopup="true">
                                                             <a href="{{$subsubmenu->menu_dtl_link}}" class="kt-menu__link">
                                                                 <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
-                                                                <span class="kt-menu__link-text">{{$subsubmenu->menu_dtl_name}}</span>
+                                                                <span class="kt-menu__link-text">{{ translateMenuLabel($subsubmenu->menu_dtl_name) }}</span>
                                                             </a>
                                                         </li>
                                                         @endpermission
@@ -131,7 +145,7 @@
                                             <li class="kt-menu__item getSubMenu" aria-haspopup="true">
                                                 <a href="{{$submenu->menu_dtl_link}}" class="kt-menu__link">
                                                     <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
-                                                    <span class="kt-menu__link-text">{{$submenu->menu_dtl_name}}</span>
+                                                    <span class="kt-menu__link-text">{{ translateMenuLabel($submenu->menu_dtl_name) }}</span>
                                                 </a>
                                             </li>
                                         @endif

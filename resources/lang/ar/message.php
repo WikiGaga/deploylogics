@@ -90,4 +90,12 @@ return array (
   'print' => 'طباعة',
   'create_new' => 'إنشاء جديد',
   'upload_documents' => 'رفع المستندات',
+  'goods_received_note' => 'سند استلام البضاعة',
+  // Navigation buttons
+  'first' => 'الأول',
+  'previous' => 'السابق',
+  'next' => 'التالي',
+  'last' => 'الأخير',
+  'history' => 'السجل',
+  'send_via_whatsapp' => 'انقر هنا للإرسال عبر واتساب!',
 );

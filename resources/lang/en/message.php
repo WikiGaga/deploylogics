@@ -90,4 +90,12 @@ return array (
   'print' => 'Print',
   'create_new' => 'Create New',
   'upload_documents' => 'Upload Documents',
+  'goods_received_note' => 'Goods Received Note',
+  // Navigation buttons
+  'first' => 'First',
+  'previous' => 'Previous',
+  'next' => 'Next',
+  'last' => 'Last',
+  'history' => 'History',
+  'send_via_whatsapp' => 'Click Here to Send via Whatsapp!',
 );

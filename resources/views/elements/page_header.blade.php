@@ -43,7 +43,7 @@
                             </a>
         @endif
         {{-- @if($data['form_type'] == 'pos-sales-invoice') --}}
-            <font class="tTip" color="" title="Click Here to Send via Whatsapp!">
+            <font class="tTip" color="" title="{{ __('message.send_via_whatsapp') }}">
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-success padding-3 margin-0 dropdown-toggle btn-sm" id="whatsappmessagebtn" data-toggle="dropdown" aria-expanded="false">
                     {{-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="15" fill="currentColor" viewBox="0 0 32 32">
@@ -80,13 +80,13 @@
                 <a href="javascript:;" id="upload_documents" class="btn btn-sm btn-switch-entry" style="background-color:orange;color:#FFFF;" title="{{ __('message.upload_documents') }}" style="border-right: 3px solid #f0f8ff;"><i class="fa fa-upload"></i></a>
             @endif
             @if(isset($case) && $case == 'edit' && isset($page_data['log_print']) && ($page_data['log_print'] == true))
-            <a href="javascript:;" id="log_print" class="btn btn-sm btn-switch-entry" style="border-right: 3px solid #f0f8ff;"><i class="fa fa-history"></i></a>
+            <a href="javascript:;" id="log_print" class="btn btn-sm btn-switch-entry" title="{{ __('message.history') }}" style="border-right: 3px solid #f0f8ff;"><i class="fa fa-history"></i></a>
             @endif
             @if(isset($data['switch_entry']) && count($data['switch_entry']) != 0)
-            <a href="{{isset($data['switch_entry']['first'])?$data['switch_entry']['first']:"javascript:;"}}" class="btn btn-sm btn-switch-entry"><i class="fa fa-step-backward"></i></a>
-            <a href="{{isset($data['switch_entry']['prev'])?$data['switch_entry']['prev']:"javascript:;"}}" class="btn btn-sm btn-switch-entry"><i class="fa fa-arrow-circle-left"></i></a>
-            <a href="{{isset($data['switch_entry']['next'])?$data['switch_entry']['next']:"javascript:;"}}" class="btn btn-sm btn-switch-entry"><i class="fa fa-arrow-circle-right"></i></a>
-            <a href="{{isset($data['switch_entry']['last'])?$data['switch_entry']['last']:"javascript:;"}}" class="btn btn-sm btn-switch-entry"><i class="fa fa-step-forward"></i></a>
+            <a href="{{isset($data['switch_entry']['first'])?$data['switch_entry']['first']:"javascript:;"}}" class="btn btn-sm btn-switch-entry" title="{{ __('message.first') }}"><i class="fa fa-step-backward"></i></a>
+            <a href="{{isset($data['switch_entry']['prev'])?$data['switch_entry']['prev']:"javascript:;"}}" class="btn btn-sm btn-switch-entry" title="{{ __('message.previous') }}"><i class="fa fa-arrow-circle-left"></i></a>
+            <a href="{{isset($data['switch_entry']['next'])?$data['switch_entry']['next']:"javascript:;"}}" class="btn btn-sm btn-switch-entry" title="{{ __('message.next') }}"><i class="fa fa-arrow-circle-right"></i></a>
+            <a href="{{isset($data['switch_entry']['last'])?$data['switch_entry']['last']:"javascript:;"}}" class="btn btn-sm btn-switch-entry" title="{{ __('message.last') }}"><i class="fa fa-step-forward"></i></a>
             @endif
             @if(isset($page_data['path_index']) && $page_data['path_index'] != "")
                 @php $classes = isset($page_data['back_btn_classes'])?$page_data['back_btn_classes']:"" @endphp
