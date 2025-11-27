@@ -144,140 +144,139 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row form-group-block">
-                        <div class="col-lg-4">
-                            <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">{{ __('message.payment_terms') }}:</label>
-                                <div class="col-lg-6">
-                                    <div class="input-group erp-select2-sm">
-                                        <select name="payment_terms" id="payment_terms"
-                                            class="moveIndex kt-select2 form-control erp-form-control-sm">
-                                            <option value="0">{{ __('message.select') }}</option>
-                                            @foreach ($data['payment_terms'] as $payment_term)
-                                                @php $payment_terms_id = isset($payment_terms)?$payment_terms:""; @endphp
-                                                <option value="{{ $payment_term->payment_term_id }}"
-                                                    {{ $payment_terms_id == $payment_term->payment_term_id ? 'selected' : '' }}>
-                                                    {{ $payment_term->payment_term_name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="input-group-append" style="width: 33%;">
-                                            <input type="text" value="{{ isset($credit_days) ? $credit_days : '' }}"
-                                                id="payment_mode" name="payment_mode"
-                                                class="moveIndex form-control erp-form-control-sm validNumber">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div class="row form-group-block">
-                                <label class="col-lg-6 erp-col-form-label">{{ __('message.currency') }}:</label>
-                                <div class="col-lg-6 quotation_currency">
-                                    <div class="erp-select2">
-                                        <select class="moveIndex form-control erp-form-control-sm kt-select2 currency"
-                                            id="po_currency" name="po_currency">
-                                            <option value="0">{{ __('message.select') }}</option>
-                                            @if ($case == 'edit')
-                                                @php $currency_id = isset($currency_id)?$currency_id:'';@endphp
-                                                @foreach ($data['currency'] as $currency)
-                                                    <option value="{{ $currency->currency_id }}"
-                                                        {{ $currency->currency_id == $currency_id ? 'selected' : '' }}>
-                                                        {{ $currency->currency_name }}</option>
+                        <div class="row form-group-block">
+                            <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.payment_terms') }}:</label>
+                                    <div class="col-lg-6">
+                                        <div class="input-group erp-select2-sm">
+                                            <select name="payment_terms" id="payment_terms"
+                                                class="moveIndex kt-select2 form-control erp-form-control-sm">
+                                                <option value="0">{{ __('message.select') }}</option>
+                                                @foreach ($data['payment_terms'] as $payment_term)
+                                                    @php $payment_terms_id = isset($payment_terms)?$payment_terms:""; @endphp
+                                                    <option value="{{ $payment_term->payment_term_id }}"
+                                                        {{ $payment_terms_id == $payment_term->payment_term_id ? 'selected' : '' }}>
+                                                        {{ $payment_term->payment_term_name }}</option>
                                                 @endforeach
-                                            @else
-                                                @foreach ($data['currency'] as $currency)
-                                                    @if ($currency->currency_default == '1')
-                                                        @php $exchange_rate = $currency->currency_rate; @endphp
-                                                    @endif
-                                                    <option value="{{ $currency->currency_id }}"
-                                                        {{ $currency->currency_default == '1' ? 'selected' : '' }}>
-                                                        {{ $currency->currency_name }}</option>
-                                                @endforeach
-                                            @endif
-                                        </select>
+                                            </select>
+                                            <div class="input-group-append" style="width: 33%;">
+                                                <input type="text" value="{{ isset($credit_days) ? $credit_days : '' }}"
+                                                    id="payment_mode" name="payment_mode"
+                                                    class="moveIndex form-control erp-form-control-sm validNumber">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.currency') }}:</label>
+                                    <div class="col-lg-6 quotation_currency">
+                                        <div class="erp-select2">
+                                            <select class="moveIndex form-control erp-form-control-sm kt-select2 currency"
+                                                id="po_currency" name="po_currency">
+                                                <option value="0">{{ __('message.select') }}</option>
+                                                @if ($case == 'edit')
+                                                    @php $currency_id = isset($currency_id)?$currency_id:'';@endphp
+                                                    @foreach ($data['currency'] as $currency)
+                                                        <option value="{{ $currency->currency_id }}"
+                                                            {{ $currency->currency_id == $currency_id ? 'selected' : '' }}>
+                                                            {{ $currency->currency_name }}</option>
+                                                    @endforeach
+                                                @else
+                                                    @foreach ($data['currency'] as $currency)
+                                                        @if ($currency->currency_default == '1')
+                                                            @php $exchange_rate = $currency->currency_rate; @endphp
+                                                        @endif
+                                                        <option value="{{ $currency->currency_id }}"
+                                                            {{ $currency->currency_default == '1' ? 'selected' : '' }}>
+                                                            {{ $currency->currency_name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.exchange_rate') }}:<span
+                                            class="required">*</span></label>
+                                    <div class="col-lg-6">
+                                        <input type="text" value="{{ isset($exchange_rate) ? $exchange_rate : '' }}"
+                                            id="exchange_rate" name="exchange_rate"
+                                            class="moveIndex validNumber form-control erp-form-control-sm">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
-                            <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">{{ __('message.exchange_rate') }}:<span
-                                        class="required">*</span></label>
-                                <div class="col-lg-6">
-                                    <input type="text" value="{{ isset($exchange_rate) ? $exchange_rate : '' }}"
-                                        id="exchange_rate" name="exchange_rate"
-                                        class="moveIndex validNumber form-control erp-form-control-sm">
+                        <div class="row form-group-block">
+                            <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label">{{ __('message.comparative_quotation') }}:</label>
+                                    <div class="col-lg-6">
+                                        <div class="erp_form___block">
+                                            <div class="input-group open-modal-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text btn-minus-selected-data">
+                                                        <i class="la la-minus-circle"></i>
+                                                    </span>
+                                                </div>
+                                                <input type="text"
+                                                    value="{{ isset($comparative_quotation_code) ? $comparative_quotation_code : '' }}"
+                                                    name="comparative_quotation_code" id="comparative_quotation_code"
+                                                    data-url="{{ action('Common\DataTableController@helpOpen', 'comparativeQuotationHelp') }}"
+                                                    class="form-control erp-form-control-sm open_modal moveIndex moveIndex2 OnlyEnterAllow"
+                                                    placeholder="{{ __('message.enter_here') }}">
+                                                <input type="hidden"
+                                                    value="{{ isset($comparative_quotation_id) ? $comparative_quotation_id : '' }}"
+                                                    name="comparative_quotation_id" id="comparative_quotation_id" readonly>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text btn-open-mob-help"
+                                                        id="mobOpenInlineSupplierHelp">
+                                                        <i class="la la-search"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row form-group-block">
-                        <div class="col-lg-4">
-                            <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">{{ __('message.comparative_quotation') }}:</label>
-                                <div class="col-lg-6">
-                                    <div class="erp_form___block">
-                                        <div class="input-group open-modal-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text btn-minus-selected-data">
-                                                    <i class="la la-minus-circle"></i>
-                                                </span>
-                                            </div>
-                                            <input type="text"
-                                                value="{{ isset($comparative_quotation_code) ? $comparative_quotation_code : '' }}"
-                                                name="comparative_quotation_code" id="comparative_quotation_code"
-                                                data-url="{{ action('Common\DataTableController@helpOpen', 'comparativeQuotationHelp') }}"
-                                                class="form-control erp-form-control-sm open_modal moveIndex moveIndex2 OnlyEnterAllow"
-                                                placeholder="{{ __('message.enter_here') }}">
-                                            <input type="hidden"
-                                                value="{{ isset($comparative_quotation_id) ? $comparative_quotation_id : '' }}"
-                                                name="comparative_quotation_id" id="comparative_quotation_id" readonly>
-                                            <div class="input-group-append">
-                                                <span class="input-group-text btn-open-mob-help"
-                                                    id="mobOpenInlineSupplierHelp">
-                                                    <i class="la la-search"></i>
-                                                </span>
+                            <div class="col-lg-2">
+                                <button type="button" class="btn btn-brand btn-sm" id="makePD" style="padding: 4px 6px;">
+                                    {{ __('message.select_multiple_products') }}
+                                </button>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="row">
+                                    <label class="col-lg-4 erp-col-form-label">{{ __('message.auto_demand_refrence') }}:</label>
+                                    <div class="col-lg-8">
+                                        <div class="erp_form___block">
+                                            <div class="input-group open-modal-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text btn-minus-selected-data">
+                                                        <i class="la la-minus-circle"></i>
+                                                    </span>
+                                                </div>
+                                                <input type="text" value="{{ isset($autoDemandCode) ? $autoDemandCode : '' }}"
+                                                    name="auto_demand_code" id="auto_demand_code"
+                                                    data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'autoDemandHelp') }}"
+                                                    class="open_inline__help form-control erp-form-control-sm open_modal moveIndex"
+                                                    placeholder="{{ __('message.auto_demand_refrence') }}">
+                                                <input type="hidden" value="{{ isset($auto_demand_id) ? $auo_demand_id : '' }}"
+                                                    name="auto_demand_id" id="auto_demand_id" readonly>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text group-input-btn get-ad-data" id="adGetData">
+                                                        {{ __('message.go') }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2">
-                            <button type="button" class="btn btn-brand btn-sm" id="makePD" style="padding: 4px 6px;">
-                                {{ __('message.select_multiple_products') }}
-                            </button>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="row">
-                                <label class="col-lg-4 erp-col-form-label">{{ __('message.auto_demand_refrence') }}:</label>
-                                <div class="col-lg-8">
-                                    <div class="erp_form___block">
-                                        <div class="input-group open-modal-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text btn-minus-selected-data">
-                                                    <i class="la la-minus-circle"></i>
-                                                </span>
-                                            </div>
-                                            <input type="text" value="{{ isset($autoDemandCode) ? $autoDemandCode : '' }}"
-                                                name="auto_demand_code" id="auto_demand_code"
-                                                data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'autoDemandHelp') }}"
-                                                class="open_inline__help form-control erp-form-control-sm open_modal moveIndex"
-                                                placeholder="{{ __('message.auto_demand_refrence') }}">
-                                            <input type="hidden" value="{{ isset($auto_demand_id) ? $auo_demand_id : '' }}"
-                                                name="auto_demand_id" id="auto_demand_id" readonly>
-                                            <div class="input-group-append">
-                                                <span class="input-group-text group-input-btn get-ad-data" id="adGetData">
-                                                    {{ __('message.go') }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
