@@ -1,70 +1,35 @@
 <style>
-    .language-selector {
+    .lang-switcher {
         display: flex;
         align-items: center;
+        margin-right: 10px;
     }
 
-    .language-selector-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 25px;
-        padding: 2px;
-        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .language-selector-wrapper:hover {
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
-        transform: translateY(-1px);
-    }
-
-    .language-selector-inner {
-        display: flex;
-        align-items: center;
+    .lang-switcher select {
+        border: 1px solid #e0e0e0;
         background: #fff;
-        border-radius: 23px;
-        padding: 6px 12px;
-        gap: 8px;
-    }
-
-    .language-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        color: #fff;
+        padding: 6px 24px 6px 10px;
         font-size: 12px;
-    }
-
-    .custom-language-select {
-        border: none;
-        background: transparent;
-        font-size: 13px;
         font-weight: 500;
-        color: #333;
+        color: #555;
+        border-radius: 4px;
         cursor: pointer;
-        padding: 0 5px;
         appearance: none;
         -webkit-appearance: none;
-        -moz-appearance: none;
-        min-width: 80px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23666' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        transition: all 0.2s ease;
     }
 
-    .custom-language-select:focus {
+    .lang-switcher select:hover {
+        border-color: #5d78ff;
+    }
+
+    .lang-switcher select:focus {
         outline: none;
-    }
-
-    .select-arrow {
-        display: flex;
-        align-items: center;
-        color: #667eea;
-        font-size: 10px;
-        margin-left: -5px;
+        border-color: #5d78ff;
+        box-shadow: 0 0 0 2px rgba(93, 120, 255, 0.15);
     }
 </style>
 
@@ -178,27 +143,16 @@
         // $selectedlanguage = \App\Models\Languages::where('code',$locale)->value('id');
 
         @endphp
-        <div class="language-selector">
+        <div class="lang-switcher">
             <form action="{{ route('change.language') }}" method="POST">
                 @csrf
-                <div class="language-selector-wrapper">
-                    <div class="language-selector-inner">
-                        <div class="language-icon">
-                            <i class="fa fa-globe"></i>
-                        </div>
-                        <select name="language" id="language" class="custom-language-select" onchange="this.form.submit()">
-                            @foreach($languages as $language)
-                                <option value="{{ $language->code }}"
-                                    {{ $locale === $language->code ? 'selected' : '' }}>
-                                    {{ $language->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="select-arrow">
-                            <i class="fa fa-chevron-down"></i>
-                        </div>
-                    </div>
-                </div>
+                <select name="language" onchange="this.form.submit()">
+                    @foreach($languages as $language)
+                        <option value="{{ $language->code }}" {{ $locale === $language->code ? 'selected' : '' }}>
+                            {{ $language->code === 'ar' ? 'عربي' : $language->name }}
+                        </option>
+                    @endforeach
+                </select>
             </form>
         </div>
 
