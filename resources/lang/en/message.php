@@ -98,4 +98,5 @@ return array (
   'last' => 'Last',
   'history' => 'History',
   'send_via_whatsapp' => 'Click Here to Send via Whatsapp!',
+  'toggle_rtl' => 'Toggle Right-to-Left Layout',
 );

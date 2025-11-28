@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,6 +18,29 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <!-- RTL CSS - loaded dynamically based on user preference -->
+    <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
+
+    <script>
+        (function() {
+            var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
+            if (rtlEnabled) {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.getElementById('rtlStylesheet').disabled = false;
+            }
+        })();
+
+        function toggleRTL(enabled) {
+            localStorage.setItem('rtl_enabled', enabled);
+            document.documentElement.setAttribute('dir', enabled ? 'rtl' : 'ltr');
+            document.getElementById('rtlStylesheet').disabled = !enabled;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var rtlToggle = document.getElementById('rtlToggle');
+            if (rtlToggle) rtlToggle.checked = localStorage.getItem('rtl_enabled') === 'true';
+        });
+    </script>
 </head>
 <body>
     <div id="app">

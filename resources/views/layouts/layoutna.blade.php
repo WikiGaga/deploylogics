@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
 
 <!-- begin::Head -->
 <head>
@@ -34,8 +34,31 @@
     <link href="/assets/css/skins/aside/dark.css" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
+    <!-- RTL CSS - loaded dynamically based on user preference -->
+    <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
 
     <!--end::Layout Skins -->
+
+    <script>
+        (function() {
+            var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
+            if (rtlEnabled) {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.getElementById('rtlStylesheet').disabled = false;
+            }
+        })();
+
+        function toggleRTL(enabled) {
+            localStorage.setItem('rtl_enabled', enabled);
+            document.documentElement.setAttribute('dir', enabled ? 'rtl' : 'ltr');
+            document.getElementById('rtlStylesheet').disabled = !enabled;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var rtlToggle = document.getElementById('rtlToggle');
+            if (rtlToggle) rtlToggle.checked = localStorage.getItem('rtl_enabled') === 'true';
+        });
+    </script>
     <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
     <script>
         function bodyFunc(){
@@ -45,7 +68,7 @@
             }
         }
     </script>
-    
+
     <script src="/js/pages/js/lang/en.js" type="text/javascript"></script>
 </head>
 

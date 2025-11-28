@@ -28,6 +28,62 @@
 
     .lang-switcher select:focus {
         outline: none;
+    }
+
+    /* RTL Toggle Switch Styles */
+    .rtl-switcher {
+        display: flex;
+        align-items: center;
+        margin-right: 12px;
+    }
+
+    .rtl-toggle {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        gap: 6px;
+    }
+
+    .rtl-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        letter-spacing: 0.5px;
+    }
+
+    .rtl-toggle input {
+        display: none;
+    }
+
+    .rtl-slider {
+        position: relative;
+        width: 36px;
+        height: 18px;
+        background: #ccc;
+        border-radius: 18px;
+        transition: all 0.3s ease;
+    }
+
+    .rtl-slider:before {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .rtl-toggle input:checked + .rtl-slider {
+        background: #5d78ff;
+    }
+
+    .rtl-toggle input:checked + .rtl-slider:before {
+        transform: translateX(18px);
         border-color: #5d78ff;
         box-shadow: 0 0 0 2px rgba(93, 120, 255, 0.15);
     }
@@ -154,6 +210,15 @@
                     @endforeach
                 </select>
             </form>
+        </div>
+
+        <!-- RTL Toggle Switch -->
+        <div class="rtl-switcher">
+            <label class="rtl-toggle" title="{{ __('message.toggle_rtl') }}">
+                <span class="rtl-label">RTL</span>
+                <input type="checkbox" id="rtlToggle" onchange="toggleRTL(this.checked)">
+                <span class="rtl-slider"></span>
+            </label>
         </div>
 
         <!--begin: Switcher -->

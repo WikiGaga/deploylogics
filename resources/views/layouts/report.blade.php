@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
 
 <!-- begin::Head -->
 <head>
@@ -18,6 +18,29 @@
 
     <!--end::Global Theme Styles -->
     <link href="{{ asset('css/report.css') }}" rel="stylesheet" type="text/css" />
+    <!-- RTL CSS - loaded dynamically based on user preference -->
+    <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
+
+    <script>
+        (function() {
+            var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
+            if (rtlEnabled) {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.getElementById('rtlStylesheet').disabled = false;
+            }
+        })();
+
+        function toggleRTL(enabled) {
+            localStorage.setItem('rtl_enabled', enabled);
+            document.documentElement.setAttribute('dir', enabled ? 'rtl' : 'ltr');
+            document.getElementById('rtlStylesheet').disabled = !enabled;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var rtlToggle = document.getElementById('rtlToggle');
+            if (rtlToggle) rtlToggle.checked = localStorage.getItem('rtl_enabled') === 'true';
+        });
+    </script>
     <script src="/js/pages/js/lang/en.js" type="text/javascript"></script>
     <style>
         /*
@@ -221,7 +244,7 @@
         var id = $(this).data('id');
         var type = $(this).data('type');
         var path = '';
-        
+
         // accounts
         var accountsTypeList = ['crv','cpv','brv','bpv','jv','obv','lv'];
         if(accountsTypeList.includes(type)) {
@@ -274,7 +297,7 @@
             filename: "report.xls",
         });
     });
-    
+
     $(document).on('click','.btnPdfExport',function() {
         const element = document.getElementById('content');
         var opt = {

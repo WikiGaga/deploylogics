@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
 <head>
     <meta charset="utf-8" />
     <title>@yield('title')</title>
@@ -7,6 +7,16 @@
     @yield('pageCSS')
     <link href="{{ asset('css/print.css') }}" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
+    <script>
+        (function() {
+            var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
+            if (rtlEnabled) {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.getElementById('rtlStylesheet').disabled = false;
+            }
+        })();
+    </script>
     <script src="/js/pages/js/lang/en.js" type="text/javascript"></script>
 </head>
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
 
 <!-- begin::Head -->
 <head>
@@ -36,138 +36,47 @@
     <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/chatbot.css') }}" rel="stylesheet" type="text/css" />
 
-    @if(app()->getLocale() === 'ar')
-    <style>
-        /* RTL Support for Arabic */
-        body[dir="rtl"], html[dir="rtl"] {
-            direction: rtl;
-            text-align: right;
-        }
-
-        [dir="rtl"] .kt-aside {
-            right: 0;
-            left: auto;
-        }
-
-        [dir="rtl"] .kt-wrapper {
-            padding-left: 0;
-            padding-right: 265px;
-        }
-
-        [dir="rtl"] .kt-aside--minimize .kt-wrapper {
-            padding-right: 70px;
-        }
-
-        [dir="rtl"] .kt-header {
-            left: 0;
-            right: 265px;
-        }
-
-        [dir="rtl"] .kt-aside--minimize .kt-header {
-            right: 70px;
-        }
-
-        [dir="rtl"] .kt-menu__nav {
-            padding-right: 0;
-            padding-left: 15px;
-        }
-
-        [dir="rtl"] .kt-menu__link-icon {
-            margin-right: 0;
-            margin-left: 10px;
-        }
-
-        [dir="rtl"] .kt-menu__ver-arrow {
-            margin-left: 0;
-            margin-right: auto;
-            transform: rotate(180deg);
-        }
-
-        [dir="rtl"] .kt-menu__submenu {
-            right: 100%;
-            left: auto;
-        }
-
-        [dir="rtl"] .kt-portlet__head-label {
-            flex-direction: row-reverse;
-        }
-
-        [dir="rtl"] .form-group-block .row {
-            flex-direction: row-reverse;
-        }
-
-        [dir="rtl"] .erp-col-form-label,
-        [dir="rtl"] .col-form-label {
-            text-align: left;
-        }
-
-        [dir="rtl"] .input-group {
-            flex-direction: row-reverse;
-        }
-
-        [dir="rtl"] .input-group-prepend {
-            margin-right: 0;
-            margin-left: -1px;
-        }
-
-        [dir="rtl"] .input-group-append {
-            margin-left: 0;
-            margin-right: -1px;
-        }
-
-        [dir="rtl"] .btn-group,
-        [dir="rtl"] .switch-entry {
-            flex-direction: row-reverse;
-        }
-
-        [dir="rtl"] .text-right {
-            text-align: left !important;
-        }
-
-        [dir="rtl"] .text-left {
-            text-align: right !important;
-        }
-
-        [dir="rtl"] .ml-auto {
-            margin-left: 0 !important;
-            margin-right: auto !important;
-        }
-
-        [dir="rtl"] .mr-auto {
-            margin-right: 0 !important;
-            margin-left: auto !important;
-        }
-
-        [dir="rtl"] .dropdown-menu {
-            text-align: right;
-        }
-
-        [dir="rtl"] .kt-header__topbar {
-            flex-direction: row-reverse;
-        }
-
-        [dir="rtl"] .lang-switcher {
-            margin-right: 0;
-            margin-left: 10px;
-        }
-
-        [dir="rtl"] .lang-switcher select {
-            background-position: left 8px center;
-            padding: 6px 10px 6px 24px;
-        }
-
-        [dir="rtl"] table th,
-        [dir="rtl"] table td {
-            text-align: right;
-        }
-
-        [dir="rtl"] .erp_form__grid_th_title {
-            text-align: right;
-        }
-    </style>
-    @endif
+<!-- RTL CSS - loaded dynamically based on user preference -->
+    <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
 
     <!--end::Layout Skins -->
+
+    <!-- RTL Toggle Script - runs before body to prevent flash -->
+    <script>
+        (function() {
+            var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
+            var htmlEl = document.documentElement;
+            var rtlCss = document.getElementById('rtlStylesheet');
+
+            if (rtlEnabled) {
+                htmlEl.setAttribute('dir', 'rtl');
+                if (rtlCss) rtlCss.disabled = false;
+            }
+        })();
+
+        function toggleRTL(enabled) {
+            var htmlEl = document.documentElement;
+            var rtlCss = document.getElementById('rtlStylesheet');
+
+            localStorage.setItem('rtl_enabled', enabled);
+
+            if (enabled) {
+                htmlEl.setAttribute('dir', 'rtl');
+                if (rtlCss) rtlCss.disabled = false;
+            } else {
+                htmlEl.setAttribute('dir', 'ltr');
+                if (rtlCss) rtlCss.disabled = true;
+            }
+        }
+
+        // Initialize RTL toggle checkbox on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            var rtlToggle = document.getElementById('rtlToggle');
+            if (rtlToggle) {
+                rtlToggle.checked = localStorage.getItem('rtl_enabled') === 'true';
+            }
+        });
+    </script>
     <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
     <script>
         function bodyFunc(){
