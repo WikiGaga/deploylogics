@@ -217,6 +217,57 @@
 
 
 @include('layouts.commonJSFunc')
+
+<script>
+// RTL Form Layout - Swap labels and inputs, reverse column order
+document.addEventListener('DOMContentLoaded', function() {
+    function applyRTLFormLayout() {
+        if (document.documentElement.getAttribute('dir') === 'rtl') {
+            
+            // 1. Reverse main form row columns (col-lg-4, col-lg-6, etc.)
+            const mainFormRows = document.querySelectorAll('.form-group-block.row, .kt-portlet__body > .form-group-block.row');
+            mainFormRows.forEach(function(row) {
+                const columns = Array.from(row.querySelectorAll(':scope > [class*="col-lg-"], :scope > [class*="col-md-"]'));
+                if (columns.length > 1) {
+                    // Reverse the order of columns
+                    columns.reverse().forEach(function(col) {
+                        row.appendChild(col);
+                    });
+                }
+            });
+            
+            // 2. Swap label and input within each column's inner row
+            const innerRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
+            
+            innerRows.forEach(function(row) {
+                const children = Array.from(row.children);
+                if (children.length >= 2) {
+                    const label = row.querySelector('label[class*="col-"]');
+                    const inputDiv = row.querySelector('div[class*="col-"]');
+                    
+                    if (label && inputDiv && label.nextElementSibling === inputDiv) {
+                        // Swap: put inputDiv before label
+                        row.insertBefore(inputDiv, label);
+                    }
+                }
+            });
+        }
+    }
+    
+    // Apply on page load
+    applyRTLFormLayout();
+    
+    // Re-apply when RTL toggle changes
+    const rtlToggle = document.getElementById('rtlToggle');
+    if (rtlToggle) {
+        rtlToggle.addEventListener('change', function() {
+            setTimeout(function() {
+                location.reload(); // Reload to apply changes properly
+            }, 100);
+        });
+    }
+});
+</script>
 </body>
 
 <!-- end::Body -->

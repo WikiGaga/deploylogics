@@ -52,12 +52,7 @@ body[dir="rtl"], html[dir="rtl"] {
     flex-direction: row-reverse;
 }
 
-/* ============================================
-   FORM LAYOUT - SWAP LABELS AND FIELDS FOR RTL
-   (JavaScript handles DOM swapping, CSS handles styling)
-   ============================================ */
 
-/* Labels should align text to left (appearing on right side in RTL) */
 html[dir="rtl"] .form-group-block label.erp-col-form-label,
 html[dir="rtl"] .form-group-block label.col-form-label,
 html[dir="rtl"] .form-group-block label[class*="col-lg-"],
@@ -67,7 +62,6 @@ html[dir="rtl"] .kt-portlet__body label[class*="col-lg-"] {
     text-align: left !important;
 }
 
-/* Input fields align right */
 html[dir="rtl"] .form-group-block .form-control,
 html[dir="rtl"] .form-group-block select,
 html[dir="rtl"] .form-group-block textarea,
@@ -76,24 +70,20 @@ html[dir="rtl"] .kt-portlet__body .form-control {
     direction: rtl;
 }
 
-/* All columns in RTL */
 html[dir="rtl"] [class*="col-lg-"],
 html[dir="rtl"] [class*="col-md-"],
 html[dir="rtl"] [class*="col-sm-"] {
     text-align: right;
 }
 
-/* Portlet body direction */
 html[dir="rtl"] .kt-portlet__body {
     direction: rtl;
 }
 
-/* Form group block direction */
 html[dir="rtl"] .form-group-block {
     direction: rtl;
 }
 
-/* Form inputs */
 [dir="rtl"] input[type="text"],
 [dir="rtl"] input[type="number"],
 [dir="rtl"] input[type="email"],
@@ -105,7 +95,6 @@ html[dir="rtl"] .form-group-block {
     direction: rtl;
 }
 
-/* Select dropdowns */
 [dir="rtl"] select.form-control {
     text-align: right;
     direction: rtl;
@@ -113,7 +102,6 @@ html[dir="rtl"] .form-group-block {
     padding-left: 30px;
 }
 
-/* Input groups */
 [dir="rtl"] .input-group {
     flex-direction: row-reverse;
 }
@@ -151,23 +139,19 @@ html[dir="rtl"] .form-group-block {
     border-radius: 4px 0 0 4px;
 }
 
-/* Open modal group (search inputs) */
 [dir="rtl"] .open-modal-group {
     flex-direction: row-reverse;
 }
 
-/* ERP specific form blocks */
 [dir="rtl"] .erp_form___block .input-group {
     flex-direction: row-reverse;
 }
 
-/* Table grid form inputs */
 [dir="rtl"] .erp_form__grid input,
 [dir="rtl"] .erp_form__grid select {
     text-align: right;
 }
 
-/* Grid header titles */
 [dir="rtl"] .erp_form__grid_th_title {
     text-align: right;
 }
@@ -176,13 +160,11 @@ html[dir="rtl"] .form-group-block {
     text-align: right;
 }
 
-/* Required asterisk positioning */
 [dir="rtl"] .required {
     margin-right: 0;
     margin-left: 2px;
 }
 
-/* Checkboxes and switches */
 [dir="rtl"] .kt-checkbox,
 [dir="rtl"] .kt-radio {
     padding-left: 0;
@@ -199,7 +181,6 @@ html[dir="rtl"] .form-group-block {
     direction: ltr;
 }
 
-/* Select2 RTL */
 [dir="rtl"] .select2-container {
     direction: rtl;
 }
@@ -354,7 +335,6 @@ html[dir="rtl"] .form-group-block {
     flex-direction: row-reverse;
 }
 
-/* Page title and headers */
 [dir="rtl"] .erp-page--title {
     text-align: right;
 }
@@ -363,7 +343,6 @@ html[dir="rtl"] .form-group-block {
     flex-direction: row-reverse;
 }
 
-/* Page header buttons */
 [dir="rtl"] .kt-portlet__head-actions {
     flex-direction: row-reverse;
 }
@@ -377,7 +356,6 @@ html[dir="rtl"] .form-group-block {
     margin-right: 0;
 }
 
-/* Totals table */
 [dir="rtl"] .tableTotal {
     float: left;
 }
@@ -390,13 +368,11 @@ html[dir="rtl"] .form-group-block {
     text-align: right;
 }
 
-/* Voucher totals */
 [dir="rtl"] .voucher-total-title,
 [dir="rtl"] .voucher-total-amt {
     text-align: right;
 }
 
-/* Data entry header */
 [dir="rtl"] .data_entry_header {
     text-align: left;
 }
@@ -405,7 +381,6 @@ html[dir="rtl"] .form-group-block {
     direction: rtl;
 }
 
-/* ERP nav tabs */
 [dir="rtl"] .nav-tabs {
     flex-direction: row-reverse;
 }
@@ -414,13 +389,11 @@ html[dir="rtl"] .form-group-block {
     text-align: right;
 }
 
-/* Dropdown menus */
 [dir="rtl"] .dropdown-menu-right {
     right: auto !important;
     left: 0 !important;
 }
 
-/* Offset columns */
 [dir="rtl"] .offset-md-9 {
     margin-right: 75%;
     margin-left: 0;
@@ -431,62 +404,51 @@ html[dir="rtl"] .form-group-block {
     margin-left: 0;
 }
 
-/* Notes/Remarks textarea */
 [dir="rtl"] textarea.form-control {
     text-align: right;
 }
 
-/* Avatar and image blocks */
 [dir="rtl"] .kt-avatar {
     float: right;
 }
 
-/* Action buttons in grid */
 [dir="rtl"] .erp_form__grid_th_btn {
     text-align: center;
 }
 
-/* Repeater controls */
 [dir="rtl"] [data-repeater-delete],
 [dir="rtl"] [data-repeater-create] {
     float: right;
 }
 
-/* Form validation feedback */
 [dir="rtl"] .invalid-feedback,
 [dir="rtl"] .valid-feedback {
     text-align: right;
 }
 
-/* Help text */
 [dir="rtl"] .form-text {
     text-align: right;
 }
 
-/* Card and portlet body */
 [dir="rtl"] .kt-portlet__body {
     text-align: right;
 }
 
-/* Handle icons for sortable rows */
 [dir="rtl"] .handle {
     float: right;
     margin-left: 5px;
     margin-right: 0;
 }
 
-/* Expense table */
 [dir="rtl"] .expense_acc_table th,
 [dir="rtl"] .expense_acc_table td {
     text-align: right;
 }
 
-/* Bill list */
 [dir="rtl"] .bill_list_block {
     direction: rtl;
 }
 
-/* kt-radio inline */
 [dir="rtl"] .kt-radio-inline {
     flex-direction: row-reverse;
     justify-content: flex-end;
@@ -497,11 +459,7 @@ html[dir="rtl"] .form-group-block {
     margin-right: 0;
 }
 
-/* ============================================
-   FINAL OVERRIDE - FORCE RTL FORM LAYOUT
-   ============================================ */
 
-/* Most specific selectors with highest priority */
 html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .form-group-block.row,
 html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .form-group-block .row,
 html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .row,
@@ -519,7 +477,6 @@ html[dir="rtl"] .container-fluid .row {
     flex-wrap: wrap !important;
 }
 
-/* Force inner rows to reverse (label-input pairs) */
 html[dir="rtl"] .form-group-block .col-lg-4 .row,
 html[dir="rtl"] .form-group-block .col-lg-6 .row,
 html[dir="rtl"] .form-group-block .col-md-4 .row,
@@ -538,7 +495,6 @@ html[dir="rtl"] .kt-portlet__body div[class*="col-"] > .row {
     flex-wrap: wrap !important;
 }
 
-/* Ensure labels show on right side of their container */
 html[dir="rtl"] label.erp-col-form-label,
 html[dir="rtl"] label.col-form-label,
 html[dir="rtl"] label[class*="col-lg-"],
@@ -548,19 +504,16 @@ html[dir="rtl"] label[class*="col-md-"] {
     padding-right: 0 !important;
 }
 
-/* Input containers align content to right */
 html[dir="rtl"] .form-group-block .row > div[class*="col-"]:not(label) {
     text-align: right !important;
 }
 
-/* Exclude data tables from row reversal */
 html[dir="rtl"] .erp_form__grid .row,
 html[dir="rtl"] table .row,
 html[dir="rtl"] .dataTables_wrapper .row {
     flex-direction: row !important;
 }
 
-/* Exclude specific utility rows that shouldn't reverse */
 html[dir="rtl"] .erp_form__grid_body .row,
 html[dir="rtl"] .erp_form__grid_header .row {
     flex-direction: row !important;

@@ -206,6 +206,35 @@
 @include('layouts.commonJSFunc')
 
 @yield('customJS_date_filter') {{--filepath partial_script/date_filter_listing--}}
+
+<script>
+// RTL Form Layout - Swap labels and inputs, reverse column order
+document.addEventListener('DOMContentLoaded', function() {
+    function applyRTLFormLayout() {
+        if (document.documentElement.getAttribute('dir') === 'rtl') {
+            const mainFormRows = document.querySelectorAll('.form-group-block.row, .kt-portlet__body > .form-group-block.row');
+            mainFormRows.forEach(function(row) {
+                const columns = Array.from(row.querySelectorAll(':scope > [class*="col-lg-"], :scope > [class*="col-md-"]'));
+                if (columns.length > 1) {
+                    columns.reverse().forEach(function(col) {
+                        row.appendChild(col);
+                    });
+                }
+            });
+            
+            const innerRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
+            innerRows.forEach(function(row) {
+                const label = row.querySelector('label[class*="col-"]');
+                const inputDiv = row.querySelector('div[class*="col-"]');
+                if (label && inputDiv && label.nextElementSibling === inputDiv) {
+                    row.insertBefore(inputDiv, label);
+                }
+            });
+        }
+    }
+    applyRTLFormLayout();
+});
+</script>
 <!--end::Page Scripts -->
 </body>
 
