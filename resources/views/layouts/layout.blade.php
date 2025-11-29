@@ -308,14 +308,27 @@
 @yield('customJSEnd')
 
 <script>
-// RTL Form Layout - Swap labels and inputs
+// RTL Form Layout - Swap labels and inputs, reverse column order
 document.addEventListener('DOMContentLoaded', function() {
     function applyRTLFormLayout() {
         if (document.documentElement.getAttribute('dir') === 'rtl') {
-            // Find all inner rows within form-group-block columns
-            const formRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
 
-            formRows.forEach(function(row) {
+            // 1. Reverse main form row columns (col-lg-4, col-lg-6, etc.)
+            const mainFormRows = document.querySelectorAll('.form-group-block.row, .kt-portlet__body > .form-group-block.row');
+            mainFormRows.forEach(function(row) {
+                const columns = Array.from(row.querySelectorAll(':scope > [class*="col-lg-"], :scope > [class*="col-md-"]'));
+                if (columns.length > 1) {
+                    // Reverse the order of columns
+                    columns.reverse().forEach(function(col) {
+                        row.appendChild(col);
+                    });
+                }
+            });
+
+            // 2. Swap label and input within each column's inner row
+            const innerRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
+
+            innerRows.forEach(function(row) {
                 const children = Array.from(row.children);
                 if (children.length >= 2) {
                     const label = row.querySelector('label[class*="col-"]');
