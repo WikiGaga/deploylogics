@@ -64,11 +64,11 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Product Group: <span class="required">* </span></label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.product_group') }}: <span class="required">* </span></label>
             <div class="col-lg-6" id="product_control_group_block">
                 <div class="erp-select2 form-group-block">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_control_group" name="product_control_group">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['group_item'] as $group_item)
                             <option value="{{$group_item->group_item_id}}" data-refno="{{ $group_item->group_item_ref_no }}"  {{$product_group==$group_item->group_item_id?"selected":""}}>{{$group_item->group_item_name_string}}</option>
                         @endforeach
@@ -79,11 +79,11 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Product Type: <span class="required">* </span></label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.product_type') }}: <span class="required">* </span></label>
             <div class="col-lg-6" id="product_item_type_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_item_type" name="product_item_type">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['item_type'] as $item_type)
                             <option value="{{$item_type->product_type_group_id}}"  {{$product_type_group_id==$item_type->product_type_group_id?"selected":""}}>{{$item_type->product_type_group_name}}</option>
                         @endforeach
@@ -96,11 +96,11 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Product Generic:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.product_generic') }}:</label>
             <div class="col-lg-6" id="product_type_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_type" name="product_type">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['product_type'] as $product_type)
                             <option value="{{$product_type->product_type_id}}" {{$product_type_id == $product_type->product_type_id?"selected":""}}>{{$product_type->product_type_name}}</option>
                         @endforeach
@@ -111,11 +111,11 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Supplier :</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.supplier') }}:</label>
             <div class="col-lg-6" id="product_country_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="supplier_id" name="supplier_id">
-                        <option value="">Select</option>
+                        <option value="">{{ __('message.select') }}</option>
                         @foreach($data['suppliers'] as $supplier)
                             <option value="{{$supplier->supplier_id}}" {{$supplier_id == $supplier->supplier_id?"selected":""}}>{{$supplier->supplier_name}}</option>
                         @endforeach
@@ -128,11 +128,11 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Manufacturer:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.manufacturer') }}:</label>
             <div class="col-lg-6" id="product_manufacturer_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_manufacturer" name="product_manufacturer">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['manufacturer'] as $manufacturer)
                             <option value="{{$manufacturer->manufacturer_id}}" {{$product_manufacturer_id==$manufacturer->manufacturer_id?"selected":""}}>{{$manufacturer->manufacturer_name}}</option>
                         @endforeach
@@ -143,11 +143,11 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Country :</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.country') }}:</label>
             <div class="col-lg-6" id="product_country_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_country" name="product_country">
-                        <option value="">Select</option>
+                        <option value="">{{ __('message.select') }}</option>
                         @foreach($data['country'] as $country)
                             <option value="{{$country->country_id}}" {{$country_id==$country->country_id?"selected":""}}>{{$country->country_name}}</option>
                         @endforeach
@@ -160,11 +160,11 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Brand Name:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.brand_name') }}:</label>
             <div class="col-lg-6" id="product_brand_name_block">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_brand_name" name="product_brand_name">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['brand'] as $brand)
                             <option value="{{$brand->brand_id}}" {{$product_brand_id==$brand->brand_id?"selected":""}}>{{$brand->brand_name}}</option>
                         @endforeach
@@ -175,11 +175,11 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Flavour:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.flavour') }}:</label>
             <div class="col-lg-6">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="flavour" name="flavour_id">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['flavour'] as $flavour)
                             <option value="{{$flavour->flavour_id}}" {{ ($flavour->flavour_id == $flavour_id) ? 'selected' : '' }}>{{$flavour->flavour_name}}</option>
                         @endforeach
@@ -192,7 +192,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Item Tags:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.item_tags') }}:</label>
             <div class="col-lg-6">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="product_item_tags" multiple name="product_item_tags[]">
@@ -206,11 +206,11 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Season:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.season') }}:</label>
             <div class="col-lg-6">
                 <div class="erp-select2">
                     <select class="form-control kt-select2 erp-form-control-sm" id="season_id" name="season_id">
-                        <option value="0">Select</option>
+                        <option value="0">{{ __('message.select') }}</option>
                         @foreach($data['season'] as $season)
                             <option value="{{$season->season_id}}" {{ ($season->season_id == $season_id) ? 'selected' : '' }}>{{$season->season_name}}</option>
                         @endforeach
@@ -223,7 +223,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Central Rate:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.central_rate') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -236,12 +236,12 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Warranty Period:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.warranty_period') }}:</label>
             <div class="col-lg-6">
                 <div class="input-group">
                     <div class="erp-select2" style="width: 66.66%;">
                         <select class="form-control erp-form-control-sm" id="product_warranty_period" name="product_warranty_period">
-                            <option value="0">Select</option>
+                            <option value="0">{{ __('message.select') }}</option>
                             @foreach($data['warranty_period'] as $wp)
                                 <option value="{{$wp->warrenty_period_id}}" {{$product_warranty_period_id==$wp->warrenty_period_id?"selected":""}}>{{$wp->warrenty_period_name}}</option>
                             @endforeach
@@ -258,7 +258,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Perishable:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.perishable') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -271,7 +271,7 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Tracing Days:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.tracing_days') }}:</label>
             <div class="col-lg-6">
                 <input class="form-control erp-form-control-sm mob_no validNumber text-left" placeholder="(Days Before Expiry)" value="{{$product_tracing_days}}" id="product_tracing_days" name="product_tracing_days">
             </div>
@@ -281,7 +281,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Batch No Required:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.batch_no_required') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -294,7 +294,7 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Expiry Return Allow:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.expiry_return_allow') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -309,7 +309,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Damage Return Allow:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.damage_return_allow') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -322,7 +322,7 @@
     </div>
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Expiry Required:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.expiry_required') }}:</label>
             <div class="col-lg-6">
                     <span class="kt-switch kt-switch--sm kt-switch--icon">
                         <label>
@@ -337,7 +337,7 @@
 <div class="row form-group-block">
     <div class="col-lg-6">
         <div class="row">
-            <label class="col-lg-6 erp-col-form-label">Demand Active Status:</label>
+            <label class="col-lg-6 erp-col-form-label">{{ __('message.demand_active_status') }}:</label>
             <div class="col-lg-6">
                 <span class="kt-switch kt-switch--sm kt-switch--icon">
                     <label>
@@ -374,7 +374,7 @@
     </div>
 </div>--}}{{-- end row--}}
 <div class="row form-group-block">
-    <label class="col-lg-3 erp-col-form-label">Notes:</label>
+    <label class="col-lg-3 erp-col-form-label">{{ __('message.notes') }}:</label>
     <div class="col-lg-9">
         <textarea type="text" class="form-control erp-form-control-sm large_text" rows="3" name="product_remarks">{{$product_remarks}}</textarea>
     </div>
@@ -387,7 +387,7 @@
 </div>--}}
 <div class="row form-group-block">
     <div class="col-lg-12">
-        <label><b>Product Supplier:</b></label>
+        <label><b>{{ __('message.product_supplier') }}:</b></label>
         @include('purchase.product.element.purchase_foc')
     </div>
 </div>

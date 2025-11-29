@@ -1,23 +1,23 @@
 <div class="row">
     <div class="col-lg-12 text-center">
-        <div class="product-barcode-innertabs--title">Stock Limits</div>
+        <div class="product-barcode-innertabs--title">{{ __('message.stock_limits') }}</div>
     </div>
 </div>{{-- end row--}}
 <table class="table table-striped- table-bordered table-hover table-checkable dataTable no-footer dtr-inline collapsed tblSL">
     <thead>
     <tr>
-        <th width="20%" rowspan="2" class="text-middle">Branch Name</th>
-        <th width="15%" rowspan="2" class="text-middle text-center">Negative Stock Allow</th>
-        <th width="15%" rowspan="2" class="text-middle text-center">Re Order Point</th>
-        <th width="15%" rowspan="2" class="text-middle text-center">Re Order Qty Level</th>
-        <th width="20%" colspan="3" class="text-center">Stock Limit</th>
-        <th width="15%" rowspan="2" class="text-middle text-center">Stock Limit Apply</th>
-        <th width="15%" rowspan="2" class="text-middle text-center">Active Status</th>
+        <th width="20%" rowspan="2" class="text-middle">{{ __('message.branch_name') }}</th>
+        <th width="15%" rowspan="2" class="text-middle text-center">{{ __('message.negative_stock_allow') }}</th>
+        <th width="15%" rowspan="2" class="text-middle text-center">{{ __('message.re_order_point') }}</th>
+        <th width="15%" rowspan="2" class="text-middle text-center">{{ __('message.re_order_qty_level') }}</th>
+        <th width="20%" colspan="3" class="text-center">{{ __('message.stock_limit') }}</th>
+        <th width="15%" rowspan="2" class="text-middle text-center">{{ __('message.stock_limit_apply') }}</th>
+        <th width="15%" rowspan="2" class="text-middle text-center">{{ __('message.active_status') }}</th>
     </tr>
     <tr class="height:25px;">
-        <th width="6.66%" class="text-center">Max</th>
-        <th width="6.66%" class="text-center">Min</th>
-        <th width="6.66%" class="text-center">Consumption Days</th>
+        <th width="6.66%" class="text-center">{{ __('message.max') }}</th>
+        <th width="6.66%" class="text-center">{{ __('message.min') }}</th>
+        <th width="6.66%" class="text-center">{{ __('message.consumption_days') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -95,7 +95,7 @@
 
 <div class="row">
     <div class="col-lg-12 text-center">
-        <div class="product-barcode-innertabs--title">Shelf Stock Limits</div>
+        <div class="product-barcode-innertabs--title">{{ __('message.shelf_stock_limits') }}</div>
     </div>
 </div>{{-- end row--}}
 @php
@@ -104,14 +104,14 @@
 <table class="table table-striped- table-bordered table-hover table-checkable dataTable no-footer dtr-inline collapsed tblSSL">
     <thead>
     <tr>
-        <th width="20%">Branch Name</th>
-        <th width="{{$ssl_width}}%">Stock Location</th>
-        <th width="{{$ssl_width}}%">Salesman</th>
-        <th width="{{$ssl_width}}%">Max Qty</th>
-        <th width="{{$ssl_width}}%">Min Qty</th>
-        <th width="{{$ssl_width}}%">Depth Qty</th>
-        <th width="{{$ssl_width}}%">Face Qty</th>
-        <th width="{{$ssl_width}}%">Reorder Point</th>
+        <th width="20%">{{ __('message.branch_name') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.stock_location') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.salesman') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.max_qty') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.min_qty') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.depth_qty') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.face_qty') }}</th>
+        <th width="{{$ssl_width}}%">{{ __('message.reorder_point') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -145,7 +145,7 @@
             <td>
                 <div class="erp-select2 form-group">
                     <select class="form-control kt-select2 erp-form-control-sm shelf_stock_location" name="shelf_stock_location_{{$sr}}">
-                        <option value="">Select</option>
+                        <option value="">{{ __('message.select') }}</option>
                         @php $location = isset($product_barcode_shelf_stock_location)?$product_barcode_shelf_stock_location:'' @endphp
                         @foreach($data['display_location'] as $display_location)
                             <option value="{{$display_location->display_location_id}}" {{ $location == $display_location->display_location_id?'selected':'' }} >{{$display_location->display_location_name_string}}</option>
@@ -156,7 +156,7 @@
             <td>
                 <div class="erp-select2">
                     <select class="form-control erp-form-control-sm kt-select2 shelf_stock_salesman" name="shelf_stock_salesman_{{$sr}}">
-                        <option value="">Select</option>
+                        <option value="">{{ __('message.select') }}</option>
                         @foreach($data['users'] as $user)
                             @if($user->branch_id == $branch->branch_id)
                                 <option value="{{$user->id}}" {{$user_id == $user->id?"selected":"" }}>{{$user->name}}</option>

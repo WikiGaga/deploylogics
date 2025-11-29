@@ -1,6 +1,6 @@
 
 <div class="row">
-    <label class="col-lg-3 erp-col-form-label">Barcode Print:</label>
+    <label class="col-lg-3 erp-col-form-label">{{ __('message.barcode_print') }}:</label>
     <div class="col-lg-9">
         <div class="form-group-block  input-group-sm">
             <div class="input-group input-group-sm">
@@ -18,8 +18,8 @@
                             <i class="la la-barcode"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <div class="dropdown-item create_print_barcode" data-id="1">Barcode Label</div>
-                            <div class="dropdown-item create_print_barcode" data-id="2">Shelf Label</div>
+                            <div class="dropdown-item create_print_barcode" data-id="1">{{ __('message.barcode_label') }}</div>
+                            <div class="dropdown-item create_print_barcode" data-id="2">{{ __('message.shelf_label') }}</div>
                         </div>
                     </div>
                 </div>

@@ -5,7 +5,7 @@
                 <thead class="erp_form__grid_header">
                 <tr>
                     <th scope="col" width="5%">
-                        <div class="erp_form__grid_th_title">Sr.</div>
+                        <div class="erp_form__grid_th_title">{{ __('message.sr') }}</div>
                         <div class="erp_form__grid_th_input">
                             <input id="sr_no" readonly type="text" class="sr_no form-control erp-form-control-sm text-center">
                             <input id="supplier_id" readonly type="hidden" class="supplier_id form-control erp-form-control-sm" data-require="true" data-msg="Supplier is required ">
@@ -14,11 +14,11 @@
                     </th>
                     <th scope="col" width="30%">
                         <div class="erp_form__grid_th_title">
-                            Branch
+                            {{ __('message.branch') }}
                         </div>
                         <div class="erp_form__grid_th_input">
                             <select name="supplier_branch_name" id="supplier_branch_name" class="supplier_branch_name form-control erp-form-control-sm">
-                                <option value="">Select</option>
+                                <option value="">{{ __('message.select') }}</option>
                                 @foreach($data['branch'] as $supplier_branch)
                                     <option value="{{$supplier_branch->branch_id}}">{{$supplier_branch->branch_name}}</option>
                                 @endforeach
@@ -27,7 +27,7 @@
                     </th>
                     <th scope="col" width="30%">
                         <div class="erp_form__grid_th_title">
-                            Supplier
+                            {{ __('message.supplier') }}
                             <button type="button" id="mobOpenInlineHelp" class="btn btn-primary btn-sm">
                                 <i class="la la-building"></i>
                             </button>
@@ -37,7 +37,7 @@
                         </div>
                     </th>
                     <th scope="col" width="5%">
-                        <div class="erp_form__grid_th_title">Action</div>
+                        <div class="erp_form__grid_th_title">{{ __('message.action') }}</div>
                         <div class="erp_form__grid_th_btn">
                             <button type="button" class="add_data tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
                                 <i class="la la-plus"></i>
@@ -57,7 +57,7 @@
                                 </td>
                                 <td>
                                     <select name="supplier_branch_name" id="supplier_branch_name" class="supplier_branch_name form-control erp-form-control-sm">
-                                        <option value="">Select</option>
+                                        <option value="">{{ __('message.select') }}</option>
                                         @foreach($data['branch'] as $supplier_branch)
                                             <option value="{{$supplier_branch->branch_id}}" {{ $product_foc['branch_id']==$supplier_branch->branch_id ? "selected" : "" }} >{{$supplier_branch->branch_name}}</option>
                                         @endforeach

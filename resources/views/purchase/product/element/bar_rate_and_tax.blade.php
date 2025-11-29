@@ -2,34 +2,34 @@
 <table class="table table-striped- table-bordered table-hover table-checkable dataTable no-footer dtr-inline collapsed tblR">
     <thead>
         <tr>
-            <th width="9%">Branch Name</th>
-            <th width="9%">Net TP</th>
-            <th width="9%">Sale Rate</th>
-            <th width="9%">Whole Sale Rate</th>
+            <th width="9%">{{ __('message.branch_name') }}</th>
+            <th width="9%">{{ __('message.net_tp') }}</th>
+            <th width="9%">{{ __('message.sale_rate') }}</th>
+            <th width="9%">{{ __('message.whole_sale_rate') }}</th>
             <th width="9%">
-                Tax Group
+                {{ __('message.tax_group') }}
                 <select class="form-control erp-form-control-sm tax_group_block">
-                    <option data-id="0" value="0">Select</option>
+                    <option data-id="0" value="0">{{ __('message.select') }}</option>
                     @foreach($data['tax_group'] as $tax_group )
                         <option data-id="{{$tax_group->tax_group_value}}" value="{{$tax_group->tax_group_id}}" >{{$tax_group->tax_group_name}}</option>
                     @endforeach
                 </select>
             </th>
-            <th width="9%">Tax Rate</th>
+            <th width="9%">{{ __('message.tax_rate') }}</th>
             <th width="9%">
-                GST Calculation
+                {{ __('message.gst_calculation') }}
                 <select class="form-control erp-form-control-sm gst_calculation_block">
-                    <option value="0">Select</option>
+                    <option value="0">{{ __('message.select') }}</option>
                     @foreach($data['gst_clac'] as $gst_clac )
                         <option value="{{$gst_clac->gst_calculation_id}}">{{$gst_clac->gst_calculation_name}}</option>
                     @endforeach
                 </select>
             </th>
-            <th width="9%">Inc. Tax Price</th>
-            <th width="9%">GP %</th>
-            <th width="9%">GP Amount</th>
+            <th width="9%">{{ __('message.inc_tax_price') }}</th>
+            <th width="9%">{{ __('message.gp_percent') }}</th>
+            <th width="9%">{{ __('message.gp_amount') }}</th>
             <th width="9%">
-                HS Code
+                {{ __('message.hs_code') }}
                 <input type="text" class="form-control erp-form-control-sm hs_code_block">
             </th>
         </tr>
@@ -82,7 +82,7 @@
             </td>
             <td>
                 <select class="form-control erp-form-control-sm tax_group" name="tax_group_id_{{$sr}}">
-                    <option data-id="0" value="0">Select</option>
+                    <option data-id="0" value="0">{{ __('message.select') }}</option>
                     @foreach($data['tax_group'] as $tax_group )
                         <option data-id="{{$tax_group->tax_group_value}}" value="{{$tax_group->tax_group_id}}" {{$tax_group->tax_group_id==$tax_group_id?'selected':''}}>{{$tax_group->tax_group_name}}</option>
                     @endforeach
@@ -93,7 +93,7 @@
             </td>
             <td>
                 <select class="form-control erp-form-control-sm gst_calculation_id" name="gst_calculation_id_{{$sr}}">
-                    <option data-id="0" value="0">Select</option>
+                    <option data-id="0" value="0">{{ __('message.select') }}</option>
                     @foreach($data['gst_clac'] as $gst_clac )
                         <option value="{{$gst_clac->gst_calculation_id}}" {{$gst_clac->gst_calculation_id==$gst_calculation_id?'selected':''}}>{{$gst_clac->gst_calculation_name}}</option>
                     @endforeach

@@ -52,17 +52,59 @@ body[dir="rtl"], html[dir="rtl"] {
     flex-direction: row-reverse;
 }
 
-[dir="rtl"] .form-group-block .row {
+/* Form Layout - Swap labels and fields */
+[dir="rtl"] .form-group-block .row,
+[dir="rtl"] .form-group.row,
+[dir="rtl"] .form-group-block.row {
     flex-direction: row-reverse;
 }
 
-[dir="rtl"] .erp-col-form-label,
-[dir="rtl"] .col-form-label {
-    text-align: left;
+[dir="rtl"] .row {
+    flex-direction: row-reverse;
 }
 
+/* Labels alignment */
+[dir="rtl"] .erp-col-form-label,
+[dir="rtl"] .col-form-label,
+[dir="rtl"] label {
+    text-align: right;
+}
+
+/* Swap column order for label-input pairs */
+[dir="rtl"] [class*="col-lg-"],
+[dir="rtl"] [class*="col-md-"],
+[dir="rtl"] [class*="col-sm-"] {
+    text-align: right;
+}
+
+/* Form inputs */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] textarea,
+[dir="rtl"] .form-control {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Select dropdowns */
+[dir="rtl"] select.form-control {
+    text-align: right;
+    direction: rtl;
+    padding-right: 12px;
+    padding-left: 30px;
+}
+
+/* Input groups */
 [dir="rtl"] .input-group {
     flex-direction: row-reverse;
+}
+
+[dir="rtl"] .input-group > .form-control,
+[dir="rtl"] .input-group > .custom-select {
+    text-align: right;
 }
 
 [dir="rtl"] .input-group-prepend {
@@ -73,6 +115,81 @@ body[dir="rtl"], html[dir="rtl"] {
 [dir="rtl"] .input-group-append {
     margin-left: 0;
     margin-right: -1px;
+}
+
+[dir="rtl"] .input-group > .input-group-prepend > .input-group-text,
+[dir="rtl"] .input-group > .input-group-prepend > .btn {
+    border-radius: 0 4px 4px 0;
+}
+
+[dir="rtl"] .input-group > .input-group-append > .input-group-text,
+[dir="rtl"] .input-group > .input-group-append > .btn {
+    border-radius: 4px 0 0 4px;
+}
+
+[dir="rtl"] .input-group > .form-control:first-child {
+    border-radius: 0 4px 4px 0;
+}
+
+[dir="rtl"] .input-group > .form-control:last-child {
+    border-radius: 4px 0 0 4px;
+}
+
+/* Open modal group (search inputs) */
+[dir="rtl"] .open-modal-group {
+    flex-direction: row-reverse;
+}
+
+/* ERP specific form blocks */
+[dir="rtl"] .erp_form___block .input-group {
+    flex-direction: row-reverse;
+}
+
+/* Table grid form inputs */
+[dir="rtl"] .erp_form__grid input,
+[dir="rtl"] .erp_form__grid select {
+    text-align: right;
+}
+
+/* Grid header titles */
+[dir="rtl"] .erp_form__grid_th_title {
+    text-align: right;
+}
+
+[dir="rtl"] .erp_form__grid_th_input {
+    text-align: right;
+}
+
+/* Required asterisk positioning */
+[dir="rtl"] .required {
+    margin-right: 0;
+    margin-left: 2px;
+}
+
+/* Checkboxes and switches */
+[dir="rtl"] .kt-checkbox,
+[dir="rtl"] .kt-radio {
+    padding-left: 0;
+    padding-right: 25px;
+}
+
+[dir="rtl"] .kt-checkbox > span,
+[dir="rtl"] .kt-radio > span {
+    left: auto;
+    right: 0;
+}
+
+[dir="rtl"] .kt-switch {
+    direction: ltr;
+}
+
+/* Select2 RTL */
+[dir="rtl"] .select2-container {
+    direction: rtl;
+}
+
+[dir="rtl"] .erp-select2 {
+    text-align: right;
 }
 
 [dir="rtl"] .btn-group,
@@ -219,5 +336,148 @@ body[dir="rtl"], html[dir="rtl"] {
 
 [dir="rtl"] .pagination {
     flex-direction: row-reverse;
+}
+
+/* Page title and headers */
+[dir="rtl"] .erp-page--title {
+    text-align: right;
+}
+
+[dir="rtl"] .kt-portlet__head-toolbar {
+    flex-direction: row-reverse;
+}
+
+/* Page header buttons */
+[dir="rtl"] .kt-portlet__head-actions {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .kt-portlet__head-actions .btn {
+    margin-left: 0;
+    margin-right: 5px;
+}
+
+[dir="rtl"] .kt-portlet__head-actions .btn:first-child {
+    margin-right: 0;
+}
+
+/* Totals table */
+[dir="rtl"] .tableTotal {
+    float: left;
+}
+
+[dir="rtl"] .tableTotal td {
+    text-align: right;
+}
+
+[dir="rtl"] .t_total_label {
+    text-align: right;
+}
+
+/* Voucher totals */
+[dir="rtl"] .voucher-total-title,
+[dir="rtl"] .voucher-total-amt {
+    text-align: right;
+}
+
+/* Data entry header */
+[dir="rtl"] .data_entry_header {
+    text-align: left;
+}
+
+[dir="rtl"] .hiddenFiledsCount {
+    direction: rtl;
+}
+
+/* ERP nav tabs */
+[dir="rtl"] .nav-tabs {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .tab-content {
+    text-align: right;
+}
+
+/* Dropdown menus */
+[dir="rtl"] .dropdown-menu-right {
+    right: auto !important;
+    left: 0 !important;
+}
+
+/* Offset columns */
+[dir="rtl"] .offset-md-9 {
+    margin-right: 75%;
+    margin-left: 0;
+}
+
+[dir="rtl"] .offset-lg-6 {
+    margin-right: 50%;
+    margin-left: 0;
+}
+
+/* Notes/Remarks textarea */
+[dir="rtl"] textarea.form-control {
+    text-align: right;
+}
+
+/* Avatar and image blocks */
+[dir="rtl"] .kt-avatar {
+    float: right;
+}
+
+/* Action buttons in grid */
+[dir="rtl"] .erp_form__grid_th_btn {
+    text-align: center;
+}
+
+/* Repeater controls */
+[dir="rtl"] [data-repeater-delete],
+[dir="rtl"] [data-repeater-create] {
+    float: right;
+}
+
+/* Form validation feedback */
+[dir="rtl"] .invalid-feedback,
+[dir="rtl"] .valid-feedback {
+    text-align: right;
+}
+
+/* Help text */
+[dir="rtl"] .form-text {
+    text-align: right;
+}
+
+/* Card and portlet body */
+[dir="rtl"] .kt-portlet__body {
+    text-align: right;
+}
+
+/* Handle icons for sortable rows */
+[dir="rtl"] .handle {
+    float: right;
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+/* Expense table */
+[dir="rtl"] .expense_acc_table th,
+[dir="rtl"] .expense_acc_table td {
+    text-align: right;
+}
+
+/* Bill list */
+[dir="rtl"] .bill_list_block {
+    direction: rtl;
+}
+
+/* kt-radio inline */
+[dir="rtl"] .kt-radio-inline {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+[dir="rtl"] .kt-radio-inline .kt-radio {
+    margin-left: 15px;
+    margin-right: 0;
 }
 

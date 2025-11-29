@@ -32,12 +32,12 @@
 <table class="table table-striped- table-bordered table-hover table-checkable dataTable no-footer dtr-inline collapsed tblPack">
     <thead>
     <tr>
-        <th width="{{$width}}%">UOM <span class="required">* </span></th>
-        <th width="{{$width}}%">Packing <span class="required">* </span></th>
-        <th width="{{$width}}%">Color</th>
-        <th width="{{$width}}%">Conv. Qty</th>
-        <th width="{{$width}}%">Variant</th>
-        <th width="{{$width}}%">Weight</th>
+        <th width="{{$width}}%">{{ __('message.uom') }} <span class="required">* </span></th>
+        <th width="{{$width}}%">{{ __('message.packing') }} <span class="required">* </span></th>
+        <th width="{{$width}}%">{{ __('message.color') }}</th>
+        <th width="{{$width}}%">{{ __('message.conv_qty') }}</th>
+        <th width="{{$width}}%">{{ __('message.variant') }}</th>
+        <th width="{{$width}}%">{{ __('message.weight') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -45,7 +45,7 @@
         <td>
             <div class="erp-select2 form-group-block">
                 <select class="form-control erp-form-control-sm kt-select2 uom_packing_uom" name="uom_packing_uom" id="uom_packing_uom">
-                    <option value="0">Select</option>
+                    <option value="0">{{ __('message.select') }}</option>
                     @foreach($data['uom'] as $uom )
                         <option value="{{$uom->uom_id}}" {{$uom->uom_id==$uom_id?'selected':''}}>{{$uom->uom_name}}</option>
                     @endforeach
@@ -60,7 +60,7 @@
         <td class="tag_select2_block">
             <div class="erp-select2">
                 <select class="form-control kt-select2 erp-form-control-sm uom_packing_color_tag" name="uom_packing_color_tag">
-                    <option value="0">Select</option>
+                    <option value="0">{{ __('message.select') }}</option>
                     @foreach($data['color'] as $color)
                         <option value="{{$color->color_id}}" {{ $color->color_id == $color_id ? 'selected' : '' }}>{{$color->color_name}}</option>
                     @endforeach
@@ -75,7 +75,7 @@
         <td class="tag_select2_block">
             <div class="erp-select2">
                 <select class="form-control kt-select2 erp-form-control-sm uom_packing_other_tag" name="uom_packing_other_tag">
-                    <option value="0">Select</option>
+                    <option value="0">{{ __('message.select') }}</option>
                     @foreach($data['variant'] as $variant)
                         <option value="{{$variant->variant_id}}" {{ $variant->variant_id == $variant_id ? 'selected' : '' }}>{{$variant->variant_name}}</option>
                     @endforeach
@@ -85,7 +85,7 @@
         <td class="tag_select2_block">
             <div class="erp-select2">
                 <select class="form-control kt-select2 erp-form-control-sm weight_id" name="weight_id">
-                    <option value="0">Select</option>
+                    <option value="0">{{ __('message.select') }}</option>
                     @foreach($data['weight'] as $weight)
                         <option value="{{$weight->weight_id}}" {{ $weight->weight_id == $weight_id ? 'selected' : '' }}>{{$weight->weight_name}}</option>
                     @endforeach
