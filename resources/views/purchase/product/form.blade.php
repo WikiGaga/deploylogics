@@ -1,5 +1,5 @@
 @extends('layouts.template')
-@section('title', 'Product')
+@section('title', __('message.product'))
 
 @section('pageCSS')
     <style>
@@ -85,19 +85,19 @@
                         <div class="col-lg-8 text-right">
                             @if($case == $view)
                                 @permission($data['permission'])
-                                <a href="/product/form/{{isset($id)?$id:""}}" class="btn btn-sm btn-success">Edit</a>
+                                <a href="/product/form/{{isset($id)?$id:""}}" class="btn btn-sm btn-success">{{ __('message.edit') }}</a>
                                 @endpermission
                             @endif
                             @if($case == $edit || $case == $view)
-                            <a href="javascript:;" class="btn btn-sm btn-primary product_card_detail" data-id="{{isset($id)?$id:""}}" data-val="{{isset($product_name)?$product_name:""}}">Product Detail</a>
-                            <a class="product_card_activity_report btn btn-sm btn-primary " href="javascript:;" data-toggle="modal" data-id="{{isset($id)?$id:""}}" data-val="{{isset($product_name)?$product_name:""}}" data-barcode="">Product Activity</a>
+                            <a href="javascript:;" class="btn btn-sm btn-primary product_card_detail" data-id="{{isset($id)?$id:""}}" data-val="{{isset($product_name)?$product_name:""}}">{{ __('message.product_detail') }}</a>
+                            <a class="product_card_activity_report btn btn-sm btn-primary " href="javascript:;" data-toggle="modal" data-id="{{isset($id)?$id:""}}" data-val="{{isset($product_name)?$product_name:""}}" data-barcode="">{{ __('message.product_activity') }}</a>
                             @endif
                         </div>
                     </div>
                     <div class="row form-group-block">
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Product Name:<span class="required">* </span></label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.product_name') }}:<span class="required">* </span></label>
                                 <div class="col-lg-6">
                                     <input type="text" name="product_name" id="product_name" class="form-control erp-form-control-sm medium_text" value="{{isset($product_name)?$product_name:""}}">
                                 </div>
@@ -105,7 +105,7 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Product Short Name:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.product_short_name') }}:</label>
                                 <div class="col-lg-6">
                                     <input type="text" name="product_short_name" value="{{isset($product_short_name)?$product_short_name:""}}" class="form-control erp-form-control-sm medium_text">
                                 </div>
@@ -115,7 +115,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Local Name:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.local_name') }}:</label>
                                 <div class="col-lg-6">
                                     <input type="text" dir="auto" name="product_arabic_name" id="product_arabic_name" class="form-control erp-form-control-sm medium_text" value="{{isset($product_arabic_name)?$product_arabic_name:""}}">
                                 </div>
@@ -123,7 +123,7 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Local Short Name:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.local_short_name') }}:</label>
                                 <div class="col-lg-6">
                                     <input type="text" dir="auto" name="product_arabic_short_name" class="form-control erp-form-control-sm medium_text" value="{{isset($product_arabic_short_name)?$product_arabic_short_name:""}}">
                                 </div>
@@ -133,7 +133,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Status:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.status') }}:</label>
                                 <div class="col-lg-6">
                                         <span class="kt-switch kt-switch--sm kt-switch--icon">
                                             <label>
@@ -146,7 +146,7 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Can Sale:</label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.can_sale') }}:</label>
                                 <div class="col-lg-6">
                                         <span class="kt-switch kt-switch--sm kt-switch--icon">
                                             <label>
@@ -160,10 +160,10 @@
                     </div>{{-- end row--}}
                     <ul class="nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x nav-tabs-line-success" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" data-toggle="tab" href="#barcodes" role="tab">Barcodes</a>
+                            <a class="nav-link active" data-toggle="tab" href="#barcodes" role="tab">{{ __('message.barcodes') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#general_information" role="tab">General Information</a>
+                            <a class="nav-link" data-toggle="tab" href="#general_information" role="tab">{{ __('message.general_information') }}</a>
                         </li>
                     </ul>
                     <div class="tab-content">

@@ -36,12 +36,10 @@
     <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/chatbot.css') }}" rel="stylesheet" type="text/css" />
 
-<!-- RTL CSS - loaded dynamically based on user preference -->
     <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
 
     <!--end::Layout Skins -->
 
-    <!-- RTL Toggle Script - runs before body to prevent flash -->
     <script>
         (function() {
             var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
@@ -69,7 +67,6 @@
             }
         }
 
-        // Initialize RTL toggle checkbox on page load
         document.addEventListener('DOMContentLoaded', function() {
             var rtlToggle = document.getElementById('rtlToggle');
             if (rtlToggle) {

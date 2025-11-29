@@ -1,5 +1,5 @@
 @extends('layouts.template')
-@section('title', 'Product Group')
+@section('title', __('message.product_group'))
 
 @section('pageCSS')
 @endsection
@@ -39,18 +39,18 @@
                 </div>
                 <div class="kt-portlet__body">
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Code:</label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.code') }}:</label>
                         <div class="col-lg-6">
                             <input type="text" id="group_item_code" name="group_item_code" value="{{isset($code)?$code:''}}" class="form-control erp-form-control-sm readonly" readonly>
                         </div>
                     </div>
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Parent Group:</label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.parent_group') }}:</label>
                         <div class="col-lg-6">
                             <div class="kt-input-icon kt-input-icon--right">
                                 <div class="erp-select2">
                                     <select class="form-control kt-select2 erp-form-control-sm" id="parent_group_id" name="parent_group_id">
-                                        <option value="0">Select</option>
+                                        <option value="0">{{ __('message.select') }}</option>
                                         @foreach($data['parent'] as $parent)
                                             <option value="{{$parent->group_item_id}}" {{ $parent->group_item_id == $parentGroup?'selected':'' }}>{{$parent->group_item_name_string}}</option>
                                         @endforeach
@@ -60,29 +60,29 @@
                         </div>
                     </div>
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Name:<span class="required">* </span></label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.name') }}:<span class="required">* </span></label>
                         <div class="col-lg-6">
                             <input type="text" name="group_item_name" value="{{isset($name)?$name:''}}"  maxlength="100" class="form-control erp-form-control-sm checkHasValue">
                         </div>
                     </div>
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Local Name:</label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.local_name') }}:</label>
                         <div class="col-lg-6">
                             <input type="text" dir="auto" maxlength="100" id="group_item_mother_language_name" name="group_item_mother_language_name" value="{{isset($mlname)?$mlname:''}}" class="form-control erp-form-control-sm checkHasValue">
                         </div>
                     </div>
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Reference No:</label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.reference_no') }}:</label>
                         <div class="col-lg-6">
                             <input type="text" name="group_item_ref_no" value="{{isset($refName)?$refName:''}}"  maxlength="100" class="form-control erp-form-control-sm validNo">
                         </div>
                     </div>
                     <div class="form-group-block row">
-                        <label class="col-lg-3 erp-col-form-label">Product Type:<span class="required">* </span></label>
+                        <label class="col-lg-3 erp-col-form-label">{{ __('message.product_type') }}:<span class="required">* </span></label>
                         <div class="col-lg-6">
                             <div class="erp-select2">
                                 <select class="form-control kt-select2 erp-form-control-sm" id="kt_select2_1" name="product_type_group_id">
-                                    <option value="0">Select</option>
+                                    <option value="0">{{ __('message.select') }}</option>
                                     @if($case == 'edit')
                                         @foreach($data['producttypegroup'] as $typegroup)
                                             @php $productType = isset($productType)?$productType:""; @endphp

@@ -1,5 +1,5 @@
 @extends('layouts.layout')
-@section('title', 'Bank Voucher')
+@section('title', __('message.bank_voucher'))
 
 @section('pageCSS')
 @endsection
@@ -66,7 +66,7 @@
                     <div class="form-group-block row">
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-5 erp-col-form-label">Voucher Date:</label>
+                                <label class="col-lg-5 erp-col-form-label">{{ __('message.voucher_date') }}:</label>
                                 <div class="col-lg-7">
                                     <div class="input-group date">
                                         <input type="text" name="voucher_date" class="moveIndex form-control erp-form-control-sm moveIndex c-date-p" readonly value="{{isset($date)?$date:""}}"  id="kt_datepicker_3" autofocus/>
@@ -81,11 +81,11 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-4 erp-col-form-label">Currency:<span class="required">*</span></label>
+                                <label class="col-lg-4 erp-col-form-label">{{ __('message.currency') }}:<span class="required">*</span></label>
                                 <div class="col-lg-8">
                                     <div class="erp-select2">
                                         <select class="form-control erp-form-control-sm moveIndex kt-select2 currency" id="currency_id" name="currency_id">
-                                            <option value="">Select</option>
+                                            <option value="">{{ __('message.select') }}</option>
                                             @if($case == 'edit')
                                                 @php $currency_id = isset($currency_id)?$currency_id:''@endphp
                                                 @foreach($data['currency'] as $currency)
@@ -106,7 +106,7 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Exchange Rate:<span class="required">*</span></label>
+                                <label class="col-lg-6 erp-col-form-label">{{ __('message.exchange_rate') }}:<span class="required">*</span></label>
                                 <div class="col-lg-6">
                                     <input type="text" id="exchange_rate" name="exchange_rate" value="{{isset($exchange_rate)?$exchange_rate:''}}" class="moveIndex form-control erp-form-control-sm validNumber">
                                 </div>
@@ -117,14 +117,14 @@
                         <div class="col-lg-4">
                             <div class="row">
                                 @if($type == 'brv')
-                                    <label class="col-lg-5 erp-col-form-label">Receive in :<span class="required">*</span></label>
+                                    <label class="col-lg-5 erp-col-form-label">{{ __('message.receive_in') }}:<span class="required">*</span></label>
                                 @else
-                                    <label class="col-lg-5 erp-col-form-label">Payment Through:<span class="required">*</span></label>
+                                    <label class="col-lg-5 erp-col-form-label">{{ __('message.payment_through') }}:<span class="required">*</span></label>
                                 @endif
                                 <div class="col-lg-7">
                                     <div class="erp-select2">
                                         <select class="form-control erp-form-control-sm moveIndex kt-select2" id="kt_select2_1" name="cash_type">
-                                            <option value="">Select</option>
+                                            <option value="">{{ __('message.select') }}</option>
                                             @php $cash_type = isset($cash_type)?$cash_type:''@endphp
                                             @foreach($data['acc_code'] as $acc_code)
                                                 <option value="{{$acc_code->chart_code}}" {{$acc_code->chart_code==$cash_type?'selected':''}}>{{$acc_code->chart_name}}</option>
@@ -144,11 +144,11 @@
                         </div>--}}
                         <div class="col-lg-4">
                             <div class="row">
-                                <label class="col-lg-4 erp-col-form-label">Salesman:</label>
+                                <label class="col-lg-4 erp-col-form-label">{{ __('message.salesman') }}:</label>
                                 <div class="col-lg-8">
                                     <div class="erp-select2">
                                         <select name="saleman_id" id="salesman" class="form-control erp-form-control-sm moveIndex moveIndex2 kt-select2">
-                                            <option value="">Select</option>
+                                            <option value="">{{ __('message.select') }}</option>
                                             @if($case == 'edit')
                                                 @php $$saleman = isset($$saleman)?$$saleman:""; @endphp
                                                 @foreach($data['users'] as $user)
@@ -168,7 +168,7 @@
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
-                                <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> fields hide</div>
+                                <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> {{ __('message.fields_hide') }}</div>
                                 <div class="dropdown dropdown-inline">
                                     <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 15px; border: 0;">
                                         <i class="flaticon-more" style="color: #666666;"></i>
@@ -198,7 +198,7 @@
                                     <thead class="erp_form__grid_header">
                                     <tr>
                                         <th scope="col" width="35px">
-                                            <div class="erp_form__grid_th_title">Sr.</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.sr') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="sr_no" readonly type="text" class="sr_no form-control erp-form-control-sm">
                                                 <input readonly id="account_id" type="hidden" class="account_id form-control erp-form-control-sm">
@@ -210,7 +210,7 @@
                                         </th>
                                         <th scope="col">
                                             <div class="erp_form__grid_th_title">
-                                                Account Code
+                                                {{ __('message.account_code') }}
                                                 <button type="button" id="mobOpenInlineHelp" class="btn btn-primary btn-sm">
                                                     <i class="la la-barcode"></i>
                                                 </button>
@@ -221,42 +221,42 @@
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Account Name</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.account_name') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="account_name" readonly type="text" class="acc_name form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Narration</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.narration') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input  id="voucher_descrip" type="text" class="tb_moveIndex form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Budget</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.budget') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="budget" type="text" class="budget_dscrp tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Payment Mode</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.payment_mode') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <select class="form-control erp-form-control-sm tb_moveIndex" id="payment_mode">
-                                                    <option value="">Select</option>
-                                                    <option value="atm">ATM Transfer</option>
-                                                    <option value="cheque" selected>Cheque</option>
-                                                    <option value="online">Online Payment</option>
+                                                    <option value="">{{ __('message.select') }}</option>
+                                                    <option value="atm">{{ __('message.atm_transfer') }}</option>
+                                                    <option value="cheque" selected>{{ __('message.cheque') }}</option>
+                                                    <option value="online">{{ __('message.online_payment') }}</option>
                                                 </select>
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Mode No</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.mode_no') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input  id="mode_no" type="text" data-url="{{action('Common\DataTableController@inlineHelpOpen','chequebookHelp')}}" class="tb_moveIndex open_inline__help form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Mode Date</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.mode_date') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="mode_date" readonly value="{{date('d-m-Y')}}" title="{{date('d-m-Y')}}" type="text" class="c-date-p kt_datepicker_3 form-control erp-form-control-sm">
                                             </div>
@@ -273,7 +273,7 @@
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Amount</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.amount') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="voucher_credit" type="text" class="credit validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm">
                                             </div>
@@ -285,25 +285,25 @@
                                             </div>
                                         </th> --}}
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">VAT %</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.vat_percent') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="vat_perc" type="text" class="vatperc validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm" oninput="calculateAmounts()">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">VAT</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.vat') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="vat_amt" type="text" class="vatamt validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm" oninput="calculateVAT()">
                                             </div>
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Net Amount</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.net_amount') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="net_amt" type="text" class="netamt validNumber validOnlyFloatNumber tb_moveIndex validNumber form-control erp-form-control-sm">
                                             </div>
                                         </th>
                                         <th scope="col" width="48">
-                                            <div class="erp_form__grid_th_title">Action</div>
+                                            <div class="erp_form__grid_th_title">{{ __('message.action') }}</div>
                                             <div class="erp_form__grid_th_btn">
                                                 <button type="button" id="addData" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
                                                     <i class="la la-plus"></i>
@@ -337,10 +337,10 @@
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][budget]" data-id="budget" value="{{isset($bgt_dsc)?$bgt_dsc:''}}" title="{{isset($bgt_dsc)?$bgt_dsc:''}}"   data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}" class="budget_dscrp open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
                                                 <td>
                                                     <select class="form-control erp-form-control-sm tb_moveIndex" data-id="payment_mode" name="pd[{{ $loop->iteration }}][payment_mode]" title="{{$data->voucher_payment_mode}}">
-                                                        <option value="0">Select</option>
-                                                        <option value="atm" {{$data->voucher_payment_mode == 'atm'?'selected':''}}>ATM Transfer</option>
-                                                        <option value="cheque" {{$data->voucher_payment_mode == 'cheque'?'selected':''}}>Cheque</option>
-                                                        <option value="online" {{$data->voucher_payment_mode == 'online'?'selected':''}}>Online Payment</option>
+                                                        <option value="0">{{ __('message.select') }}</option>
+                                                        <option value="atm" {{$data->voucher_payment_mode == 'atm'?'selected':''}}>{{ __('message.atm_transfer') }}</option>
+                                                        <option value="cheque" {{$data->voucher_payment_mode == 'cheque'?'selected':''}}>{{ __('message.cheque') }}</option>
+                                                        <option value="online" {{$data->voucher_payment_mode == 'online'?'selected':''}}>{{ __('message.online_payment') }}</option>
                                                     </select>
                                                 </td>
                                                 <td><input type="text" data-id="mode_no" name="pd[{{ $loop->iteration }}][mode_no]" value="{{$data->voucher_mode_no}}" title="{{$data->voucher_mode_no}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','chequebookHelp')}}" class="open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
@@ -368,7 +368,7 @@
                                     </tbody>
                                     <tbody>
                                     <tr height="30">
-                                        <td class="voucher-total-title align-middle">Total:</td>
+                                        <td class="voucher-total-title align-middle">{{ __('message.total') }}:</td>
                                         <td class="voucher-total-title align-middle"></td>
                                         <td class="voucher-total-title align-middle"></td>
                                         <td class="voucher-total-title align-middle"></td>
@@ -531,7 +531,7 @@
                         </div>
                     </div>--}}
                     <div class="form-group-block row">
-                        <label class="col-lg-2 erp-col-form-label">Notes:</label>
+                        <label class="col-lg-2 erp-col-form-label">{{ __('message.notes') }}:</label>
                         <div class="col-lg-10">
                             <textarea type="text" rows="2" id="voucher_notes" name="voucher_notes" class="form-control erp-form-control-sm">{{isset($notes)?$notes:''}}</textarea>
                         </div>
