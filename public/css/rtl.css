@@ -52,28 +52,79 @@ body[dir="rtl"], html[dir="rtl"] {
     flex-direction: row-reverse;
 }
 
-/* Form Layout - Swap labels and fields */
-[dir="rtl"] .form-group-block .row,
-[dir="rtl"] .form-group.row,
-[dir="rtl"] .form-group-block.row {
-    flex-direction: row-reverse;
-}
+/* ============================================
+   FORM LAYOUT - SWAP LABELS AND FIELDS FOR RTL
+   ============================================ */
 
+/* CRITICAL: Force reverse on ALL rows including nested ones */
+html[dir="rtl"] .row,
+body[dir="rtl"] .row,
 [dir="rtl"] .row {
-    flex-direction: row-reverse;
+    -webkit-flex-direction: row-reverse !important;
+    -ms-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
 }
 
-/* Labels alignment */
-[dir="rtl"] .erp-col-form-label,
-[dir="rtl"] .col-form-label,
-[dir="rtl"] label {
+/* Target the specific form structure: form-group-block row > col > row */
+html[dir="rtl"] .form-group-block.row,
+html[dir="rtl"] .form-group-block .row,
+html[dir="rtl"] .form-group-block > .row,
+html[dir="rtl"] .kt-portlet__body .row,
+html[dir="rtl"] .kt-portlet__body .form-group-block .row {
+    -webkit-flex-direction: row-reverse !important;
+    -ms-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
+}
+
+/* Inner rows inside columns - THIS IS KEY for label-input swap */
+html[dir="rtl"] .col-lg-4 > .row,
+html[dir="rtl"] .col-lg-6 > .row,
+html[dir="rtl"] .col-lg-8 > .row,
+html[dir="rtl"] .col-lg-12 > .row,
+html[dir="rtl"] .col-md-4 > .row,
+html[dir="rtl"] .col-md-6 > .row,
+html[dir="rtl"] .col-md-8 > .row,
+html[dir="rtl"] .col-md-12 > .row,
+html[dir="rtl"] div[class*="col-"] > .row {
+    -webkit-flex-direction: row-reverse !important;
+    -ms-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
+}
+
+/* Labels - align text to left (appears on right in RTL) */
+html[dir="rtl"] .erp-col-form-label,
+html[dir="rtl"] .col-form-label,
+html[dir="rtl"] label.col-form-label,
+html[dir="rtl"] label.col-lg-6,
+html[dir="rtl"] label.col-lg-4,
+html[dir="rtl"] label.col-lg-3,
+html[dir="rtl"] label.col-lg-2,
+html[dir="rtl"] label[class*="col-"] {
+    text-align: left !important;
+}
+
+/* All columns text align right */
+html[dir="rtl"] [class*="col-lg-"],
+html[dir="rtl"] [class*="col-md-"],
+html[dir="rtl"] [class*="col-sm-"],
+html[dir="rtl"] [class*="col-xs-"] {
     text-align: right;
 }
 
-/* Swap column order for label-input pairs */
-[dir="rtl"] [class*="col-lg-"],
-[dir="rtl"] [class*="col-md-"],
-[dir="rtl"] [class*="col-sm-"] {
+/* Override Bootstrap's default flex behavior */
+html[dir="rtl"] .d-flex {
+    -webkit-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
+}
+
+/* Ensure flex containers respect RTL */
+html[dir="rtl"] .form-group-block,
+html[dir="rtl"] .kt-portlet__body {
+    direction: rtl;
+}
+
+/* Fix for input containers within reversed rows */
+html[dir="rtl"] .form-group-block .row > div[class*="col-"] {
     text-align: right;
 }
 
@@ -479,5 +530,74 @@ body[dir="rtl"], html[dir="rtl"] {
 [dir="rtl"] .kt-radio-inline .kt-radio {
     margin-left: 15px;
     margin-right: 0;
+}
+
+/* ============================================
+   FINAL OVERRIDE - FORCE RTL FORM LAYOUT
+   ============================================ */
+
+/* Most specific selectors with highest priority */
+html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .form-group-block.row,
+html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .form-group-block .row,
+html[dir="rtl"] .kt-container .kt-portlet .kt-portlet__body .row,
+html[dir="rtl"] .kt-container .row,
+html[dir="rtl"] .container .row,
+html[dir="rtl"] .container-fluid .row {
+    display: -webkit-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -webkit-flex-direction: row-reverse !important;
+    -ms-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
+    -webkit-flex-wrap: wrap !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+}
+
+/* Force inner rows to reverse (label-input pairs) */
+html[dir="rtl"] .form-group-block .col-lg-4 .row,
+html[dir="rtl"] .form-group-block .col-lg-6 .row,
+html[dir="rtl"] .form-group-block .col-md-4 .row,
+html[dir="rtl"] .form-group-block .col-md-6 .row,
+html[dir="rtl"] .form-group-block div[class*="col-"] .row,
+html[dir="rtl"] .kt-portlet__body div[class*="col-"] .row,
+html[dir="rtl"] .kt-portlet__body div[class*="col-"] > .row {
+    display: -webkit-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -webkit-flex-direction: row-reverse !important;
+    -ms-flex-direction: row-reverse !important;
+    flex-direction: row-reverse !important;
+    -webkit-flex-wrap: wrap !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+}
+
+/* Ensure labels show on right side of their container */
+html[dir="rtl"] label.erp-col-form-label,
+html[dir="rtl"] label.col-form-label,
+html[dir="rtl"] label[class*="col-lg-"],
+html[dir="rtl"] label[class*="col-md-"] {
+    text-align: left !important;
+    padding-left: 15px !important;
+    padding-right: 0 !important;
+}
+
+/* Input containers align content to right */
+html[dir="rtl"] .form-group-block .row > div[class*="col-"]:not(label) {
+    text-align: right !important;
+}
+
+/* Exclude data tables from row reversal */
+html[dir="rtl"] .erp_form__grid .row,
+html[dir="rtl"] table .row,
+html[dir="rtl"] .dataTables_wrapper .row {
+    flex-direction: row !important;
+}
+
+/* Exclude specific utility rows that shouldn't reverse */
+html[dir="rtl"] .erp_form__grid_body .row,
+html[dir="rtl"] .erp_form__grid_header .row {
+    flex-direction: row !important;
 }
 
