@@ -307,6 +307,44 @@
 
 @yield('customJSEnd')
 
+<script>
+// RTL Form Layout - Swap labels and inputs
+document.addEventListener('DOMContentLoaded', function() {
+    function applyRTLFormLayout() {
+        if (document.documentElement.getAttribute('dir') === 'rtl') {
+            // Find all inner rows within form-group-block columns
+            const formRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
+
+            formRows.forEach(function(row) {
+                const children = Array.from(row.children);
+                if (children.length >= 2) {
+                    const label = row.querySelector('label[class*="col-"]');
+                    const inputDiv = row.querySelector('div[class*="col-"]');
+
+                    if (label && inputDiv && label.nextElementSibling === inputDiv) {
+                        // Swap: put inputDiv before label
+                        row.insertBefore(inputDiv, label);
+                    }
+                }
+            });
+        }
+    }
+
+    // Apply on page load
+    applyRTLFormLayout();
+
+    // Re-apply when RTL toggle changes
+    const rtlToggle = document.getElementById('rtlToggle');
+    if (rtlToggle) {
+        rtlToggle.addEventListener('change', function() {
+            setTimeout(function() {
+                location.reload(); // Reload to apply changes properly
+            }, 100);
+        });
+    }
+});
+</script>
+
 </body>
 
 <!-- end::Body -->
