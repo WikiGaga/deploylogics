@@ -419,26 +419,19 @@
                 var thix = $(this.element);
                 var document_items = thix.parents('.document_items');
                 var fileIndex = document_items.index();
+                var filesProcessed = {}; // Track processed files to avoid duplicates
                // cd("index: "+index);
                 myDropzone.on("successmultiple" , function(files , response){
-                    console.log('successmultiple fired', files, response);
+                    // console.log('successmultiple fired', files, response);
                     if(response && response.length > 0){
                         response.forEach(function(data, index){
                             var uuid = (files[index] && files[index].upload) ? files[index].upload.uuid : Date.now() + '_' + index;
-                            document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ uuid +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
-                        });
-                    }
-                });
-                myDropzone.on("success" , function(file , response){
-                    console.log('success fired', file, response);
-
-                    if(response && !Array.isArray(file)){
-                        if(Array.isArray(response)){
-                            response.forEach(function(data, index){
-                                var uuid = file.upload ? file.upload.uuid + '_' + index : Date.now() + '_' + index;
+                            // Check if this file was already processed
+                            if(!filesProcessed[uuid]){
+                                filesProcessed[uuid] = true;
                                 document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ uuid +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
-                            });
-                        }
+                            }
+                        });
                     }
                 });
                 myDropzone.on("removedfile", function(file) {
