@@ -182,7 +182,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                             if (raw.downloadMessage) {
                                 toastr.success(raw.downloadMessage);
                                 window.location.href = '/export-csv';
-                            }  
+                            }
 
                             // sample data mapping
                             var dataSet = raw;
@@ -306,8 +306,10 @@ var KTDatatableRemoteAjaxDemo = function() {
     var eventsCapture = function() {
         $('.kt-datatable').on('kt-datatable--on-init', function() {
            // console.log("f");
+           $('body').removeClass('pointerEventsNone');
         }).on('kt-datatable--on-layout-updated', function() {
             //console.log("f1");
+            $('body').removeClass('pointerEventsNone');
             $(document).find('.kt_datepicker_inline').datepicker('disable');
             /* for 2nd tr th
             $('.inline_filter').remove();
