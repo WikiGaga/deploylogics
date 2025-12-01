@@ -40,6 +40,8 @@
         <form id="grn_form" class="kt-form" method="post" action="{{ action('Purchase\GRNController@store', $id) }}">
             @csrf
             <input type="hidden" value='{{ $form_type }}' id="form_type">
+            <input type="hidden" value='{{ $id }}' id="form_id">
+            <input type="hidden" value='{{ $data["menu_dtl_id"] ?? "" }}' id="menu_id">
             <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
                 <div class="kt-portlet kt-portlet--mobile">
                     <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
