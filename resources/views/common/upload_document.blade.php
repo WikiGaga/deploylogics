@@ -383,7 +383,6 @@
         var url_remove = "/remove-document-files";
         var form_id_val = $('#form_id').val();
         var form_type_val = $('#form_type').val();
-        var countFiles = 0;
         return {
             url: url, // Set the url for your upload script location
             paramName: "file", // The name that will be used to transfer the file
@@ -403,7 +402,6 @@
                 var myDropzone = this;
                 var thix = $(this.element);
                 var document_items = thix.parents('.document_items');
-                countFiles = countFiles + 1;
                // cd(document_items);
                 /*var index = document_items.index();
                 cd("cindex: "+index);
@@ -423,14 +421,10 @@
                 var fileIndex = document_items.index();
                // cd("index: "+index);
                 myDropzone.on("success" , function(file , response){
-                    if(countFiles > 0){
+                    if(response && response.length > 0){
                         response.forEach(function(data,index){
-                            if(fileIndex != 0){
-                                fileIndex = fileIndex + 1
-                            }
-                            document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ file.upload.uuid +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
+                            document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ file.upload.uuid + '_' + index +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
                         });
-                        countFiles = 0;
                     }
                 });
                 myDropzone.on("removedfile", function(file) {

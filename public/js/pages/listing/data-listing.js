@@ -306,10 +306,8 @@ var KTDatatableRemoteAjaxDemo = function() {
     var eventsCapture = function() {
         $('.kt-datatable').on('kt-datatable--on-init', function() {
            // console.log("f");
-           $('body').removeClass('pointerEventsNone');
         }).on('kt-datatable--on-layout-updated', function() {
             //console.log("f1");
-            $('body').removeClass('pointerEventsNone');
             $(document).find('.kt_datepicker_inline').datepicker('disable');
             /* for 2nd tr th
             $('.inline_filter').remove();
