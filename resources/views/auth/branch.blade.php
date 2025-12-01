@@ -9,7 +9,7 @@
         @csrf
         <!--begin::Title-->
             <div class="pb-13 pt-lg-0 pt-5">
-                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg">Welcome to Royal ERP</h3>
+                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg">Welcome to Malek al Pizza ERP</h3>
             </div>
             <!--begin::Title-->
 
@@ -18,7 +18,7 @@
                 <label class="font-size-h6 font-weight-bolder text-dark">Branches</label>
                 <select name="branches" id="branches" class="form-control">
                     @foreach($data as $branch)
-                        <option value="{{$branch->branch_id}}">{{$branch->branch_name}}</option>
+                        <option value="{{$branch->branch_id}}" {{ (isset($defaultBranchId) && $defaultBranchId == $branch->branch_id) ? 'selected' : '' }}>{{$branch->branch_name}}</option>
                     @endforeach
                 </select>
             </div>

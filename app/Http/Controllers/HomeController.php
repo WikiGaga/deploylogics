@@ -250,8 +250,11 @@ class HomeController extends Controller
     {
         $data = Utilities::getAllBranches();
 
+        $defaultBranch = Utilities::getDefaultBranches();
+        $defaultBranchId = $defaultBranch ? $defaultBranch->branch_id : null;
+
         if(!session()->has('user_branch')){
-            return view('auth.branch',compact('data'));
+            return view('auth.branch',compact('data', 'defaultBranchId'));
         }else{
             return redirect()->action('HomeController@index');
         }
@@ -308,7 +311,7 @@ class HomeController extends Controller
     public function branchChangePopup($id)
     {
         dd($id);
-        
+
 
     }
     public function dbTable(Request $request)
