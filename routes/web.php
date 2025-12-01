@@ -1467,6 +1467,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('form-upload-document-bank', 'Common\DocumentsUploadController@uploadBankDistrDoc');
         Route::post('form-upload-document-attach', 'Common\DocumentsUploadController@uploadDocumentAttachment');
         Route::post('remove-document-files/{id}', 'Common\DocumentsUploadController@destroy');
+        Route::post('remove-document-by-filename', 'Common\DocumentsUploadController@destroyByFilename');
 
     });
 

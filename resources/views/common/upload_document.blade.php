@@ -437,28 +437,49 @@
                 myDropzone.on("removedfile", function(file) {
                     if(file.current){
                         if(file.id !== undefined){
-                            $('input[id="'+file.id+'"]').remove();
-                            // $.ajax({
-                            //     headers: {
-                            //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                            //     },
-                            //     type: "POST",
-                            //     url: url_remove+'/'+file.id,
-                            //     success: function(response,data) {
-                            //         cd(response);
-                            //         if(response.status == 'success'){
-                            //             $('input[id="'+file.id+'"]').remove();
-                            //             toastr.success(response.message);
-                            //         }else{
-                            //             toastr.error(response.message);
-                            //         }
-                            //         // hideModaldropZone()
-                            //     },
-                            //     error: function(response,status) {}
-                            // });
+                            $.ajax({
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                type: "POST",
+                                url: url_remove + '/' + file.id,
+                                success: function(response, data) {
+                                    if(response.status == 'success'){
+                                        $('input[id="'+file.id+'"]').remove();
+                                        toastr.success(response.message);
+                                    }else{
+                                        toastr.error(response.message);
+                                    }
+                                },
+                                error: function(response, status) {
+                                    toastr.error('Error deleting file.');
+                                }
+                            });
                         }
                     }else{
-                        $('#' + file.upload.uuid).remove();
+                        var uuid = file.upload ? file.upload.uuid : null;
+                        var filename = $('input[id="'+uuid+'"]').val() || $('input[id^="'+uuid+'_"]').val();
+
+                        $('input[id="'+uuid+'"]').remove();
+                        $('input[id^="'+uuid+'_"]').remove();
+
+                        if(filename){
+                            $.ajax({
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                type: "POST",
+                                url: '/remove-document-by-filename',
+                                data: { filename: filename },
+                                success: function(response, data) {
+                                    if(response.status == 'success'){
+                                    }
+                                },
+                                error: function(response, status) {
+                                    console.log('Error deleting file from server.');
+                                }
+                            });
+                        }
                     }
                 });
                // cd(db_dropzone_imgs);

@@ -180,7 +180,15 @@ class DocumentsUploadController extends Controller
         DB::beginTransaction();
         try{
 
-            TblDefiDocumentUploadFiles::where('document_upload_files_id',$id)->delete();
+            $fileRecord = TblDefiDocumentUploadFiles::where('document_upload_files_id', $id)->first();
+
+            if($fileRecord){
+                $filePath = public_path('/user_documents/' . $fileRecord->document_upload_files_name);
+                if(File::exists($filePath)){
+                    File::delete($filePath);
+                }
+                $fileRecord->delete();
+            }
 
         }catch (QueryException $e) {
             DB::rollback();
@@ -197,6 +205,24 @@ class DocumentsUploadController extends Controller
         }
         DB::commit();
         return $this->jsonSuccessResponse($data, 'File deleted successfully.', 200);
+    }
+
+    public function destroyByFilename(Request $request)
+    {
+        $data = [];
+        try{
+            $filename = $request->filename;
+            if($filename){
+                $filePath = public_path('/user_documents/' . $filename);
+                if(File::exists($filePath)){
+                    File::delete($filePath);
+                    return $this->jsonSuccessResponse($data, 'File deleted successfully.', 200);
+                }
+            }
+            return $this->jsonErrorResponse($data, 'File not found.', 200);
+        }catch (Exception $e) {
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
     }
 
     public function uploadDocumentAttachment(Request $request){
