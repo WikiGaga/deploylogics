@@ -303,6 +303,7 @@
                                             <td>{{$loop->iteration}}</td>
                                         @endif
                                         @foreach($fieldsKeys as $key=>$fieldsKey)
+                                       
                                                 @if($column_types[$key] == 'varchar2')
                                                     <td>{!! $dt->$fieldsKey !!}</td>
                                                 @elseif($column_types[$key] == 'number')
