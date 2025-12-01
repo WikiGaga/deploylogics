@@ -209,8 +209,9 @@ class DocumentsUploadController extends Controller
             return FaceResponse::make($validator->errors()->first(), 400);
         }else{
             $folder = '/user_documents/';
-            if (! File::exists($folder)) {
-                File::makeDirectory($folder, 0775, true,true);
+            $publicFolder = public_path($folder);
+            if (! File::exists($publicFolder)) {
+                File::makeDirectory($publicFolder, 0775, true, true);
             }
             $all_files_list = [];
             foreach ($request->file('file') as $file){
