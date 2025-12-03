@@ -1823,12 +1823,17 @@
             html += '<div class="list-group">';
 
             favorites.forEach(function(favorite) {
-                html += '<a href="javascript:void(0)" class="list-group-item list-group-item-action favorite-item" data-id="' + favorite.favorite_id + '">';
+                html += '<div class="list-group-item d-flex justify-content-between align-items-start p-2" style="border-bottom: 1px solid #e0e0e0;">';
+                html += '<a href="javascript:void(0)" class="favorite-item flex-grow-1" data-id="' + favorite.favorite_id + '" style="text-decoration: none; color: inherit; padding: 8px 0;">';
                 html += '<h6 class="mb-1">' + favorite.favorite_name + '</h6>';
                 if (favorite.favorite_description) {
-                    html += '<p class="mb-1 text-muted small">' + favorite.favorite_description + '</p>';
+                    html += '<p class="mb-0 text-muted small">' + favorite.favorite_description + '</p>';
                 }
                 html += '</a>';
+                html += '<button type="button" class="btn btn-sm btn-icon btn-danger delete-favorite-btn" data-id="' + favorite.favorite_id + '" title="Delete" style="width: 30px; height: 30px; padding: 0;">';
+                html += '<i class="la la-trash"></i>';
+                html += '</button>';
+                html += '</div>';
             });
 
             html += '</div>';
@@ -1840,14 +1845,64 @@
             $('body').append(html);
             $('#favoritesModal').modal('show');
 
-            $(document).off('click', '.favorite-item').on('click', '.favorite-item', function() {
+            $(document).off('click', '.favorite-item').on('click', '.favorite-item', function(e) {
+                e.stopPropagation();
                 var favoriteId = $(this).data('id');
                 $('#favoritesModal').modal('hide');
                 loadFavorite(favoriteId);
             });
 
+            $(document).off('click', '.delete-favorite-btn').on('click', '.delete-favorite-btn', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                var favoriteId = $(this).data('id');
+                var favoriteName = $(this).closest('.list-group-item').find('h6').text();
+                deleteFavorite(favoriteId, favoriteName);
+            });
+
             $('#favoritesModal').on('hidden.bs.modal', function() {
                 $(this).remove();
+            });
+        }
+
+        function deleteFavorite(favoriteId, favoriteName) {
+            swal.fire({
+                title: 'Delete Favorite?',
+                text: "Are you sure you want to delete '" + favoriteName + "'? This action cannot be undone.",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.value) {
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+
+                    $.ajax({
+                        type: 'DELETE',
+                        url: '/common/favorites/' + favoriteId,
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                toastr.success('Favorite deleted successfully');
+                                $('#favoritesModal').modal('hide');
+                            } else {
+                                toastr.error(response.message || 'Error deleting favorite');
+                            }
+                        },
+                        error: function(xhr) {
+                            var errorMsg = 'Error deleting favorite';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            toastr.error(errorMsg);
+                        }
+                    });
+                }
             });
         }
 
