@@ -152,9 +152,9 @@ class FavoriteController extends Controller
             return $this->jsonErrorResponse($data, 'Favorite not found or access denied', 404);
         }
 
-        $favorite->is_active = 0;
-        $favorite->updated_by = auth()->user()->name ?? 'System';
-        $favorite->save();
+        TblPurchaseFavoriteItem::where('favorite_id', $favorite_id)->delete();
+
+        $favorite->delete();
 
         return $this->jsonSuccessResponse($data, 'Favorite deleted successfully');
     }
