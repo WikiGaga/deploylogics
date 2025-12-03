@@ -407,21 +407,21 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                 }
                 if (response['barcode_type'] == 'grn_verify') {
                     if (response['current_product'] !== "") {
-                        if (formData.from_favorite) {
+                        // if (formData.from_favorite) {
                             barcodeCommonData(tr, response, formData);
-                        } else {
-                            swal.fire({
-                                title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
-                                text: 'Are you sure add this?',
-                                type: 'warning',
-                                showCancelButton: true,
-                                showConfirmButton: true
-                            }).then(function(result) {
-                                if (result.value) {
-                                    barcodeCommonData(tr, response, formData);
-                                }
-                            });
-                        }
+                        // } else {
+                        //     swal.fire({
+                        //         title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
+                        //         text: 'Are you sure add this?',
+                        //         type: 'warning',
+                        //         showCancelButton: true,
+                        //         showConfirmButton: true
+                        //     }).then(function(result) {
+                        //         if (result.value) {
+                        //             barcodeCommonData(tr, response, formData);
+                        //         }
+                        //     });
+                        // }
                     }
                 }
                 // sales_contract =  Sales Contract
