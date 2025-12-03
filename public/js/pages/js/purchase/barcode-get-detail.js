@@ -296,21 +296,21 @@ $(document).on('change', '.pd_uom', function(e) {
                         });
                     }
                 }
-                if (response['barcode_type'] == 'grn_verify') {
-                    swal.fire({
-                        title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
-                        text: 'Are you sure add this?',
-                        type: 'warning',
-                        showCancelButton: true,
-                        showConfirmButton: true
-                    }).then(function(result) {
-                        if (result.value) {
-                            barcodeCommonData(tr, response, formData);
-                        }
-                    });
-                } else {
+                // if (response['barcode_type'] == 'grn_verify') {
+                //     swal.fire({
+                //         title: $('#pd_barcode').val() + "<br> Barcode is not perishable <br>and not exit in selected PO",
+                //         text: 'Are you sure add this?',
+                //         type: 'warning',
+                //         showCancelButton: true,
+                //         showConfirmButton: true
+                //     }).then(function(result) {
+                //         if (result.value) {
+                //             barcodeCommonData(tr, response, formData);
+                //         }
+                //     });
+                // } else {
                     barcodeCommonData(tr, response, formData);
-                }
+                // }
                 fcRate(tr);
                 amountCalc(tr);
                 discount(tr);
