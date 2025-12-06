@@ -118,6 +118,11 @@ var KTFormWidgets = function () {
                 },
                 success: function(response,status) {
                     if(response.status == 'success'){
+                        // Clear auto-saved data on successful submission
+                        if (window.GRNFormAutoSave) {
+                            window.GRNFormAutoSave.clearSavedData();
+                        }
+                        
                         toastr.success(response.message);
                         setTimeout(function () {
                             $("form").find(":submit").prop('disabled', false);

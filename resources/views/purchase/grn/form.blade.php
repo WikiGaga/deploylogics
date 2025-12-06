@@ -62,6 +62,13 @@
                                     </div>
                                 </div>
                             </div>
+                            @if (!isset($data['id']))
+                            <div class="col-lg-8 text-right">
+                                <button type="button" id="clearAutoSaveBtn" class="btn btn-sm btn-outline-secondary" style="display: none;" title="Clear auto-saved data">
+                                    <i class="la la-trash"></i> Clear Auto-saved Data
+                                </button>
+                            </div>
+                            @endif
                         </div>
                         <div class="row form-group-block">
                             <div class="col-lg-4">
@@ -1093,6 +1100,7 @@
 @section('customJS')
     <script src="{{ asset('js/pages/js/grn.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/grn-autosave.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         var formcase = '{{ $case }}';
