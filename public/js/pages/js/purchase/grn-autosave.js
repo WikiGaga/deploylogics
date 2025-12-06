@@ -364,24 +364,31 @@ const GRNFormAutoSave = {
     clearForm: function() {
         const self = this;
 
-        Swal.fire({
-            title: 'Clear Form?',
-            text: 'This will clear all form data and refresh the page.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Clear Form',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                confirmButton: 'btn btn-danger',
-                cancelButton: 'btn btn-secondary'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                title: 'Clear Form?',
+                text: 'This will clear all form data and refresh the page.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Clear Form',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    self.clearSavedData();
+                    window.location.reload();
+                }
+            });
+        } else {
+            if (confirm('Clear Form?\n\nThis will clear all form data and refresh the page.')) {
                 self.clearSavedData();
                 window.location.reload();
             }
-        });
+        }
     },
 
     clearFormFields: function() {
