@@ -1,9 +1,11 @@
 const GRNFormAutoSave = {
     formId: 'grn_form',
     storageKey: 'grn_form_autosave_data',
+    clearFlagKey: 'grn_form_cleared_flag',
     debounceTimer: null,
     debounceDelay: 1000,
     isRestoring: false,
+    autoSaveEnabled: false,
 
     init: function() {
         const self = this;
@@ -12,8 +14,22 @@ const GRNFormAutoSave = {
             const formId = $('#form_id').val();
 
             if (!formId) {
+                const wasCleared = sessionStorage.getItem(self.clearFlagKey);
+
+                if (wasCleared === 'true') {
+                    sessionStorage.removeItem(self.clearFlagKey);
+                    console.log('Form was cleared. Skipping auto-save for 3 seconds...');
+                    setTimeout(function() {
+                        self.autoSaveEnabled = true;
+                        self.attachEventListeners();
+                        console.log('Auto-save enabled after clear delay');
+                    }, 3000);
+                } else {
+                    self.autoSaveEnabled = true;
+                    self.attachEventListeners();
+                }
+
                 self.checkAndRestoreData();
-                self.attachEventListeners();
                 self.setupClearButton();
             } else {
                 self.clearSavedData();
@@ -50,7 +66,7 @@ const GRNFormAutoSave = {
     },
 
     saveFormData: function() {
-        if (this.isRestoring) {
+        if (this.isRestoring || !this.autoSaveEnabled) {
             return;
         }
 
@@ -384,7 +400,10 @@ const GRNFormAutoSave = {
         const storageKey = this.storageKey;
 
         function performClear() {
+            self.autoSaveEnabled = false;
+
             localStorage.removeItem(storageKey);
+            sessionStorage.setItem(self.clearFlagKey, 'true');
 
             const verify = localStorage.getItem(storageKey);
             if (verify !== null) {
@@ -398,15 +417,17 @@ const GRNFormAutoSave = {
 
             const finalCheck = localStorage.getItem(storageKey);
             if (finalCheck === null) {
-                console.log('GRN auto-save data successfully cleared');
+                console.log('GRN auto-save data successfully cleared. Flag set for next page load.');
                 window.location.reload();
             } else {
                 console.error('GRN auto-save data still exists. Clearing all localStorage...');
                 try {
                     localStorage.clear();
+                    sessionStorage.setItem(self.clearFlagKey, 'true');
                     window.location.reload();
                 } catch (e) {
                     console.error('Error clearing all localStorage:', e);
+                    sessionStorage.setItem(self.clearFlagKey, 'true');
                     window.location.reload();
                 }
             }
