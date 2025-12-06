@@ -3,7 +3,6 @@ const GRNFormAutoSave = {
     storageKey: 'grn_form_autosave_data',
     debounceTimer: null,
     debounceDelay: 1000,
-    saveIndicatorTimer: null,
     isRestoring: false,
 
     init: function() {
@@ -15,7 +14,6 @@ const GRNFormAutoSave = {
             if (!formId) {
                 self.checkAndRestoreData();
                 self.attachEventListeners();
-                self.addSaveIndicator();
                 self.setupClearButton();
             } else {
                 self.clearSavedData();
@@ -41,43 +39,14 @@ const GRNFormAutoSave = {
                 return;
             }
 
-            this.showRestorePrompt(formData, savedTime);
+            const self = this;
+            setTimeout(function() {
+                self.restoreFormData(formData);
+            }, 800);
         } catch (e) {
             console.error('Error parsing saved form data:', e);
             this.clearSavedData();
         }
-    },
-
-    showRestorePrompt: function(formData, savedTime) {
-        const self = this;
-        const timeStr = savedTime.toLocaleString();
-
-        Swal.fire({
-            title: 'Restore Unsaved Data?',
-            html: `
-                <div style="text-align: left;">
-                    <p>You have unsaved GRN data from:</p>
-                    <p><strong>${timeStr}</strong></p>
-                    <p>Would you like to restore it?</p>
-                </div>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '<i class="la la-check"></i> Yes, Restore',
-            cancelButtonText: '<i class="la la-times"></i> No, Start Fresh',
-            customClass: {
-                confirmButton: 'btn btn-primary',
-                cancelButton: 'btn btn-secondary'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                self.restoreFormData(formData);
-            } else {
-                self.clearSavedData();
-                toastr.info('Starting with a fresh form');
-            }
-        });
     },
 
     saveFormData: function() {
@@ -149,7 +118,6 @@ const GRNFormAutoSave = {
             });
 
             localStorage.setItem(this.storageKey, JSON.stringify(formData));
-            this.showSaveIndicator();
             this.updateClearButtonVisibility();
             console.log('GRN form data auto-saved', formData);
         } catch (e) {
@@ -184,8 +152,6 @@ const GRNFormAutoSave = {
             if (formData.gridRows && formData.gridRows.length > 0) {
                 self.restoreGridRows(formData.gridRows);
             }
-
-            toastr.success('Form data restored successfully');
         } catch (e) {
             console.error('Error restoring form data:', e);
             toastr.error('Error restoring form data');
@@ -202,7 +168,9 @@ const GRNFormAutoSave = {
         $field.val(value);
 
         if ($field.hasClass('kt-select2') || $field.hasClass('select2-hidden-accessible')) {
-            $field.trigger('change.select2');
+            setTimeout(function() {
+                $field.trigger('change.select2');
+            }, 100);
         }
 
         $field.trigger('change');
@@ -287,49 +255,61 @@ const GRNFormAutoSave = {
         });
     },
 
-    addSaveIndicator: function() {
-        if ($('#grn-autosave-indicator').length) {
-            return;
-        }
-
-        const indicator = `
-            <div id="grn-autosave-indicator" style="
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #1e1e2d;
-                color: #fff;
-                padding: 10px 15px;
-                border-radius: 4px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                z-index: 9999;
-                display: none;
-                font-size: 12px;
-            ">
-                <i class="la la-check-circle" style="color: #1bc5bd;"></i>
-                <span>Auto-saved</span>
-            </div>
-        `;
-
-        $('body').append(indicator);
-    },
-
-    showSaveIndicator: function() {
-        const $indicator = $('#grn-autosave-indicator');
-
-        if ($indicator.length) {
-            clearTimeout(this.saveIndicatorTimer);
-            $indicator.fadeIn(200);
-            this.saveIndicatorTimer = setTimeout(function() {
-                $indicator.fadeOut(200);
-            }, 2000);
-        }
-    },
-
     clearSavedData: function() {
         localStorage.removeItem(this.storageKey);
         this.updateClearButtonVisibility();
         console.log('GRN auto-save data cleared');
+    },
+
+    clearForm: function() {
+        const self = this;
+
+        Swal.fire({
+            title: 'Clear Form?',
+            text: 'This will clear all form fields and remove auto-saved data.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Clear Form',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-secondary'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                self.clearFormFields();
+                self.clearSavedData();
+                toastr.success('Form cleared successfully');
+            }
+        });
+    },
+
+    clearFormFields: function() {
+        $('#' + this.formId + ' input[type="text"], #' + this.formId + ' input[type="number"], #' + this.formId + ' textarea').each(function() {
+            const $field = $(this);
+            if (!$field.closest('.erp_form__grid_body').length &&
+                $field.attr('type') !== 'file' &&
+                $field.attr('type') !== 'hidden' &&
+                $field.attr('id') !== 'form_id' &&
+                $field.attr('id') !== 'form_type' &&
+                $field.attr('id') !== 'menu_id') {
+                $field.val('');
+            }
+        });
+
+        $('#' + this.formId + ' select').each(function() {
+            const $field = $(this);
+            if (!$field.closest('.erp_form__grid_body').length) {
+                if ($field.hasClass('kt-select2') || $field.hasClass('select2-hidden-accessible')) {
+                    $field.val(null).trigger('change.select2');
+                } else {
+                    $field.prop('selectedIndex', 0);
+                }
+            }
+        });
+
+        $('.erp_form__grid_body tr').remove();
     },
 
     manualSave: function() {
@@ -359,37 +339,19 @@ const GRNFormAutoSave = {
 
     setupClearButton: function() {
         const self = this;
-        const $btn = $('#clearAutoSaveBtn');
+        const $btn = $('#clearFormBtn');
 
         if (localStorage.getItem(this.storageKey)) {
             $btn.show();
         }
 
         $btn.on('click', function() {
-            Swal.fire({
-                title: 'Clear Auto-saved Data?',
-                text: 'This will permanently delete your auto-saved form data.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Clear It',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'btn btn-danger',
-                    cancelButton: 'btn btn-secondary'
-                },
-                buttonsStyling: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    self.clearSavedData();
-                    $btn.hide();
-                    toastr.success('Auto-saved data cleared');
-                }
-            });
+            self.clearForm();
         });
     },
 
     updateClearButtonVisibility: function() {
-        const $btn = $('#clearAutoSaveBtn');
+        const $btn = $('#clearFormBtn');
         if (localStorage.getItem(this.storageKey)) {
             $btn.show();
         } else {

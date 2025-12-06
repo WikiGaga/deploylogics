@@ -64,8 +64,8 @@
                             </div>
                             @if (!isset($data['id']))
                             <div class="col-lg-8 text-right">
-                                <button type="button" id="clearAutoSaveBtn" class="btn btn-sm btn-outline-secondary" style="display: none;" title="Clear auto-saved data">
-                                    <i class="la la-trash"></i> Clear Auto-saved Data
+                                <button type="button" id="clearFormBtn" class="btn btn-sm btn-danger" style="display: none;" title="Clear form and auto-saved data">
+                                    <i class="la la-times"></i> Clear Form
                                 </button>
                             </div>
                             @endif
