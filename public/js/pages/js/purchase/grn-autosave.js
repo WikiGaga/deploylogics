@@ -88,34 +88,75 @@ const GRNFormAutoSave = {
                 }
             });
 
-            $('.erp_form__grid_body tr').each(function(index) {
-                const $row = $(this);
-                const rowData = {
-                    rowIndex: index,
-                    fields: {}
-                };
+            const $gridRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
+            const totalRows = $gridRows.length;
 
-                $row.find('input, select, textarea').each(function() {
-                    const $input = $(this);
-                    const name = $input.attr('name');
-                    const id = $input.attr('id');
-                    const classList = $input.attr('class');
-                    const identifier = name || id || classList;
+            if (totalRows > 0) {
+                $gridRows.each(function(index) {
+                    const $row = $(this);
 
-                    if (identifier && $input.attr('type') !== 'file') {
-                        rowData.fields[identifier] = {
-                            value: $input.val(),
-                            type: $input.prop('tagName').toLowerCase(),
-                            inputType: $input.attr('type') || 'text',
-                            classes: classList
-                        };
+                    if ($row.closest('.erp_form__grid_body_total').length) {
+                        return;
+                    }
+
+                    if ($row.find('> th').length > 0 && $row.find('> td').length === 0) {
+                        return;
+                    }
+
+                    const rowData = {
+                        rowIndex: index,
+                        fields: {}
+                    };
+
+                    $row.find('input, select, textarea').each(function() {
+                        const $input = $(this);
+
+                        if ($input.attr('type') === 'file' ||
+                            $input.attr('type') === 'button' ||
+                            $input.attr('type') === 'submit' ||
+                            $input.closest('th').length > 0) {
+                            return;
+                        }
+
+                        const name = $input.attr('name');
+                        const id = $input.attr('id');
+                        const dataId = $input.attr('data-id');
+                        const classList = $input.attr('class');
+
+                        let identifier = name || dataId || id;
+
+                        if (!identifier && classList) {
+                            const mainClass = classList.split(' ').find(cls =>
+                                cls && cls !== 'form-control' && cls !== 'erp-form-control-sm' && cls !== 'handle'
+                            );
+                            if (mainClass) {
+                                identifier = mainClass;
+                            }
+                        }
+
+                        if (identifier) {
+                            const value = $input.val();
+                            if (value !== undefined && value !== null) {
+                                rowData.fields[identifier] = {
+                                    value: value,
+                                    type: $input.prop('tagName').toLowerCase(),
+                                    inputType: $input.attr('type') || 'text',
+                                    classes: classList || '',
+                                    name: name || '',
+                                    id: id || '',
+                                    dataId: dataId || ''
+                                };
+                            }
+                        }
+                    });
+
+                    if (Object.keys(rowData.fields).length > 0) {
+                        formData.gridRows.push(rowData);
                     }
                 });
+            }
 
-                if (Object.keys(rowData.fields).length > 0) {
-                    formData.gridRows.push(rowData);
-                }
-            });
+            console.log('Grid rows found:', totalRows, 'Grid rows saved:', formData.gridRows.length);
 
             localStorage.setItem(this.storageKey, JSON.stringify(formData));
             this.updateClearButtonVisibility();
@@ -181,20 +222,40 @@ const GRNFormAutoSave = {
 
         setTimeout(function() {
             gridRows.forEach(function(rowData, index) {
-                let $row = $('.erp_form__grid_body tr').eq(index);
+                let $row = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr').eq(index);
 
                 if ($row.length) {
                     for (const identifier in rowData.fields) {
                         const fieldData = rowData.fields[identifier];
-                        let $field = $row.find('[name="' + identifier + '"]').first();
+                        let $field = $();
 
-                        if ($field.length === 0) {
-                            $field = $row.find('#' + identifier).first();
+                        if (fieldData.name) {
+                            $field = $row.find('[name="' + fieldData.name + '"]').first();
                         }
 
-                        if ($field.length === 0 && fieldData.classes) {
-                            const mainClass = fieldData.classes.split(' ')[0];
-                            $field = $row.find('.' + mainClass).first();
+                        if (!$field.length && fieldData.dataId) {
+                            $field = $row.find('[data-id="' + fieldData.dataId + '"]').first();
+                        }
+
+                        if (!$field.length && fieldData.id) {
+                            $field = $row.find('#' + fieldData.id).first();
+                        }
+
+                        if (!$field.length && fieldData.classes) {
+                            const mainClass = fieldData.classes.split(' ').find(cls =>
+                                cls && cls !== 'form-control' && cls !== 'erp-form-control-sm'
+                            );
+                            if (mainClass) {
+                                $field = $row.find('.' + mainClass).first();
+                            }
+                        }
+
+                        if (!$field.length) {
+                            $field = $row.find('[name="' + identifier + '"]').first();
+                        }
+
+                        if (!$field.length) {
+                            $field = $row.find('#' + identifier).first();
                         }
 
                         if ($field.length) {
@@ -203,7 +264,7 @@ const GRNFormAutoSave = {
                     }
                 }
             });
-        }, 500);
+        }, 1000);
     },
 
     attachEventListeners: function() {
