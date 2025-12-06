@@ -219,12 +219,42 @@ const GRNFormAutoSave = {
 
     restoreGridRows: function(gridRows) {
         const self = this;
+        let attempts = 0;
+        const maxAttempts = 10;
 
-        setTimeout(function() {
+        function attemptRestore() {
+            attempts++;
+            const $existingRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
+            const existingRowCount = $existingRows.length;
+            const savedRowCount = gridRows.length;
+
+            console.log('Grid restoration attempt', attempts, '- Existing rows:', existingRowCount, 'Saved rows:', savedRowCount);
+
+            if (existingRowCount === 0 && savedRowCount > 0 && attempts < maxAttempts) {
+                setTimeout(attemptRestore, 300);
+                return;
+            }
+
+            if (existingRowCount === 0 && savedRowCount > 0) {
+                console.warn('Grid rows not found in DOM. Grid may be empty. Cannot restore grid data.');
+                return;
+            }
+
+            if (existingRowCount < savedRowCount) {
+                console.warn('Fewer rows in DOM than saved. Restoring to available rows.');
+            }
+
+            let totalFieldsRestored = 0;
             gridRows.forEach(function(rowData, index) {
-                let $row = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr').eq(index);
+                if (index >= existingRowCount) {
+                    console.log('Row', index, 'skipped - no corresponding DOM row');
+                    return;
+                }
+
+                let $row = $existingRows.eq(index);
 
                 if ($row.length) {
+                    let fieldsRestored = 0;
                     for (const identifier in rowData.fields) {
                         const fieldData = rowData.fields[identifier];
                         let $field = $();
@@ -243,7 +273,7 @@ const GRNFormAutoSave = {
 
                         if (!$field.length && fieldData.classes) {
                             const mainClass = fieldData.classes.split(' ').find(cls =>
-                                cls && cls !== 'form-control' && cls !== 'erp-form-control-sm'
+                                cls && cls !== 'form-control' && cls !== 'erp-form-control-sm' && cls !== 'handle'
                             );
                             if (mainClass) {
                                 $field = $row.find('.' + mainClass).first();
@@ -260,11 +290,20 @@ const GRNFormAutoSave = {
 
                         if ($field.length) {
                             self.setFieldValue($field, fieldData.value);
+                            fieldsRestored++;
+                            totalFieldsRestored++;
                         }
                     }
+                    console.log('Row', index, '- Fields restored:', fieldsRestored);
+                } else {
+                    console.log('Row', index, 'not found in DOM');
                 }
             });
-        }, 1000);
+
+            console.log('Grid restoration complete. Total fields restored:', totalFieldsRestored);
+        }
+
+        setTimeout(attemptRestore, 1500);
     },
 
     attachEventListeners: function() {
@@ -327,7 +366,7 @@ const GRNFormAutoSave = {
 
         Swal.fire({
             title: 'Clear Form?',
-            text: 'This will clear all form fields and remove auto-saved data.',
+            text: 'This will clear all form data and refresh the page.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, Clear Form',
@@ -339,9 +378,8 @@ const GRNFormAutoSave = {
             buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-                self.clearFormFields();
                 self.clearSavedData();
-                toastr.success('Form cleared successfully');
+                window.location.reload();
             }
         });
     },
