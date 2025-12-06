@@ -356,13 +356,61 @@ const GRNFormAutoSave = {
     },
 
     clearSavedData: function() {
-        localStorage.removeItem(this.storageKey);
+        const key = this.storageKey;
+        localStorage.removeItem(key);
+
+        const verify = localStorage.getItem(key);
+        if (verify !== null) {
+            console.error('Failed to clear localStorage. Key still exists:', key);
+            try {
+                delete localStorage[key];
+            } catch (e) {
+                console.error('Error deleting from localStorage:', e);
+            }
+        }
+
+        const finalCheck = localStorage.getItem(key);
+        if (finalCheck === null) {
+            console.log('GRN auto-save data successfully cleared');
+        } else {
+            console.error('GRN auto-save data still exists after clear attempt');
+        }
+
         this.updateClearButtonVisibility();
-        console.log('GRN auto-save data cleared');
     },
 
     clearForm: function() {
         const self = this;
+        const storageKey = this.storageKey;
+
+        function performClear() {
+            localStorage.removeItem(storageKey);
+
+            const verify = localStorage.getItem(storageKey);
+            if (verify !== null) {
+                console.error('Failed to clear localStorage. Attempting alternative method...');
+                try {
+                    delete localStorage[storageKey];
+                } catch (e) {
+                    console.error('Error with alternative clear method:', e);
+                }
+            }
+
+            const finalCheck = localStorage.getItem(storageKey);
+            if (finalCheck === null) {
+                console.log('GRN auto-save data successfully cleared');
+                window.location.reload();
+            } else {
+                console.error('GRN auto-save data still exists. Clearing all localStorage...');
+                try {
+                    localStorage.clear();
+                    window.location.reload();
+                } catch (e) {
+                    console.error('Error clearing all localStorage:', e);
+                    window.location.reload();
+                }
+            }
+        }
 
         if (typeof Swal !== 'undefined' && Swal.fire) {
             Swal.fire({
@@ -379,14 +427,12 @@ const GRNFormAutoSave = {
                 buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    self.clearSavedData();
-                    window.location.reload();
+                    performClear();
                 }
             });
         } else {
             if (confirm('Clear Form?\n\nThis will clear all form data and refresh the page.')) {
-                self.clearSavedData();
-                window.location.reload();
+                performClear();
             }
         }
     },
