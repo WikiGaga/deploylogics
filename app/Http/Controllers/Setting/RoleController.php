@@ -52,7 +52,7 @@ class RoleController extends Controller
         foreach ($get_permission as $role_permission){
             $user->detachPermission($role_permission);
         }
-        $user->syncPermissions($get_permission); 
+        $user->syncPermissions($get_permission);
         //dd($get_permission);
       //  $user->syncPermissions($get_permission);
       //  dd($user->allPermissions()->toArray());*/
@@ -145,9 +145,10 @@ class RoleController extends Controller
                 foreach ($get_permission as $role_permission){
                     $role->detachPermission($role_permission->permission_id);
                 }
-                $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
-                $role->syncPermissions($permissions);
             }
+            // Sync permissions (works for both create and edit)
+            $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
+            $role->syncPermissions($permissions);
 
         }catch (QueryException $e) {
             DB::rollback();

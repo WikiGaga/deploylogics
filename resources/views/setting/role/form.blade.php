@@ -9,7 +9,7 @@
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
         if($case == 'new'){
             $description = "";
-            $disabled = true;
+            $disabled = false;
         }
         if($case == 'edit'){
             $id = $data['role']->id;
