@@ -95,18 +95,17 @@
                                 @php
                                     if(isset($id)){
                                         $checked =  ($custom_modules['checked'] == true) ?"checked":"";
-                                        $disabled = '';
                                     }else{
                                         $checked = '';
-                                        $disabled = 'disabled';
                                     }
+                                    $disabled_attr = ($disabled == true) ? 'disabled' : '';
                                 @endphp
                                 <div class="col-lg-4">
                                     <div class="row">
                                         <label class="col-lg-9 erp-col-form-label">{{$custom_modules['title']}}:</label>
                                         <div class="col-lg-3">
                                             <label class="kt-checkbox kt-checkbox--bold kt-checkbox--success">
-                                                <input type="checkbox" value="{{$custom_modules['id']}}" name="permissions[]" {{ $checked.' '.$disabled}}>
+                                                <input type="checkbox" value="{{$custom_modules['id']}}" name="permissions[]" {{ $checked.' '.$disabled_attr}}>
                                                 <span></span>
                                             </label>
                                         </div>
