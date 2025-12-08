@@ -209,10 +209,14 @@ const GRNFormAutoSave = {
             if (formData.gridRows && formData.gridRows.length > 0) {
                 self.restoreGridRows(formData.gridRows);
             }
+
+            setTimeout(function() {
+                self.isRestoring = false;
+                console.log('Restoration complete. Auto-save re-enabled.');
+            }, 3000);
         } catch (e) {
             console.error('Error restoring form data:', e);
             toastr.error('Error restoring form data');
-        } finally {
             self.isRestoring = false;
         }
     },
@@ -236,38 +240,45 @@ const GRNFormAutoSave = {
     restoreGridRows: function(gridRows) {
         const self = this;
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 15;
 
         function attemptRestore() {
             attempts++;
             const $existingRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
-            const existingRowCount = $existingRows.length;
+            let existingRowCount = $existingRows.length;
             const savedRowCount = gridRows.length;
 
             console.log('Grid restoration attempt', attempts, '- Existing rows:', existingRowCount, 'Saved rows:', savedRowCount);
 
-            if (existingRowCount === 0 && savedRowCount > 0 && attempts < maxAttempts) {
-                setTimeout(attemptRestore, 300);
-                return;
-            }
-
             if (existingRowCount === 0 && savedRowCount > 0) {
-                console.warn('Grid rows not found in DOM. Grid may be empty. Cannot restore grid data.');
+                if (attempts < maxAttempts) {
+                    setTimeout(attemptRestore, 300);
+                    return;
+                }
+
+                console.log('No rows exist. Creating rows from saved data...');
+                self.createRowsFromSavedData(gridRows);
                 return;
             }
 
             if (existingRowCount < savedRowCount) {
-                console.warn('Fewer rows in DOM than saved. Restoring to available rows.');
+                console.log('Creating missing rows...');
+                for (let i = existingRowCount; i < savedRowCount; i++) {
+                    self.createEmptyRow(i + 1);
+                }
+                existingRowCount = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr').length;
             }
 
             let totalFieldsRestored = 0;
+            const $allRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
+
             gridRows.forEach(function(rowData, index) {
                 if (index >= existingRowCount) {
-                    console.log('Row', index, 'skipped - no corresponding DOM row');
+                    console.log('Row', index, 'skipped - index out of range');
                     return;
                 }
 
-                let $row = $existingRows.eq(index);
+                let $row = $allRows.eq(index);
 
                 if ($row.length) {
                     let fieldsRestored = 0;
@@ -317,9 +328,148 @@ const GRNFormAutoSave = {
             });
 
             console.log('Grid restoration complete. Total fields restored:', totalFieldsRestored);
+
+            if (typeof allGridTotal === 'function') {
+                setTimeout(function() {
+                    allGridTotal();
+                }, 500);
+            }
         }
 
         setTimeout(attemptRestore, 1500);
+    },
+
+    createRowsFromSavedData: function(gridRows) {
+        const self = this;
+
+        gridRows.forEach(function(rowData, index) {
+            const rowNum = index + 1;
+            let barcodeValue = '';
+            let productId = '';
+            let productBarcodeId = '';
+
+            for (const identifier in rowData.fields) {
+                const fieldData = rowData.fields[identifier];
+                if (identifier.includes('pd_barcode') || fieldData.name && fieldData.name.includes('pd_barcode')) {
+                    barcodeValue = fieldData.value || '';
+                }
+                if (identifier.includes('product_id') || fieldData.name && fieldData.name.includes('product_id')) {
+                    productId = fieldData.value || '';
+                }
+                if (identifier.includes('product_barcode_id') || fieldData.name && fieldData.name.includes('product_barcode_id')) {
+                    productBarcodeId = fieldData.value || '';
+                }
+            }
+
+            if (barcodeValue) {
+                self.createRowAndPopulate(rowNum, rowData.fields, barcodeValue);
+            } else {
+                self.createEmptyRow(rowNum);
+                setTimeout(function() {
+                    self.populateRowData(index, rowData.fields);
+                }, 200);
+            }
+        });
+    },
+
+    createEmptyRow: function(rowNum) {
+        const $gridBody = $('.erp_form__grid_body');
+        if (!$gridBody.length) return;
+
+        const rowHtml = `
+            <tr>
+                <th scope="row" style="padding:0">
+                    <div class="erp_form__grid_th_input">
+                        <input type="text" readonly name="pd[${rowNum}][sr_no]" value="${rowNum}" class="sr_no form-control erp-form-control-sm">
+                        <input type="hidden" name="pd[${rowNum}][product_id]" value="" class="product_id form-control erp-form-control-sm">
+                        <input type="hidden" name="pd[${rowNum}][product_barcode_id]" value="" class="product_barcode_id form-control erp-form-control-sm">
+                        <input type="hidden" name="pd[${rowNum}][uom_id]" value="" class="uom_id form-control erp-form-control-sm">
+                        <input type="hidden" name="pd[${rowNum}][grn_supplier_id]" value="" class="grn_supplier_id form-control erp-form-control-sm">
+                        <input type="hidden" name="pd[${rowNum}][grn_dtl_po_rate]" value="" class="grn_dtl_po_rate form-control erp-form-control-sm">
+                    </div>
+                </th>
+                <td><input type="text" name="pd[${rowNum}][pd_barcode]" value="" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"></td>
+                <td><input type="text" readonly name="pd[${rowNum}][product_name]" value="" class="product_name form-control erp-form-control-sm"></td>
+                <td><select name="pd[${rowNum}][pd_uom]" class="pd_uom tb_moveIndex form-control erp-form-control-sm"><option value="">Select</option></select></td>
+                <td><input type="text" readonly name="pd[${rowNum}][pd_packing]" value="" class="pd_packing form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][sup_barcode]" value="" class="sup_barcode tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][quantity]" data-id="quantity" value="" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][foc_qty]" data-id="foc_qty" value="" class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][sale_rate]" value="" class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][fc_rate]" value="" class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][rate]" data-id="rate" value="" class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][amount]" data-id="amount" value="" class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][dis_perc]" value="" class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][dis_amount]" value="" class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][vat_perc]" value="" class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][vat_amount]" value="" class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][batch_no]" value="" class="tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][production_date]" value="" class="date_inputmask tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][expiry_date]" value="" class="date_inputmask tb_moveIndex form-control erp-form-control-sm"></td>
+                <td><input type="text" name="pd[${rowNum}][gross_amount]" data-id="gross_amount" value="" readonly class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm"></td>
+                <td>
+                    <div class="erp_form__grid_th_btn">
+                        <button type="button" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-danger btn-sm del_row">
+                            <i class="la la-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        $gridBody.append(rowHtml);
+    },
+
+    createRowAndPopulate: function(rowNum, fields, barcodeValue) {
+        const self = this;
+        self.createEmptyRow(rowNum);
+
+        setTimeout(function() {
+            const $row = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr').eq(rowNum - 1);
+            if ($row.length) {
+                self.populateRowData(rowNum - 1, fields);
+            }
+        }, 300);
+    },
+
+    populateRowData: function(rowIndex, fields) {
+        const self = this;
+        const $row = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr').eq(rowIndex);
+
+        if (!$row.length) {
+            console.log('Row', rowIndex, 'not found for population');
+            return;
+        }
+
+        for (const identifier in fields) {
+            const fieldData = fields[identifier];
+            let $field = $();
+
+            if (fieldData.name) {
+                $field = $row.find('[name="' + fieldData.name + '"]').first();
+            }
+
+            if (!$field.length && fieldData.dataId) {
+                $field = $row.find('[data-id="' + fieldData.dataId + '"]').first();
+            }
+
+            if (!$field.length && fieldData.classes) {
+                const mainClass = fieldData.classes.split(' ').find(cls =>
+                    cls && cls !== 'form-control' && cls !== 'erp-form-control-sm' && cls !== 'handle'
+                );
+                if (mainClass) {
+                    $field = $row.find('.' + mainClass).first();
+                }
+            }
+
+            if (!$field.length) {
+                $field = $row.find('[name="' + identifier + '"]').first();
+            }
+
+            if ($field.length && fieldData.value !== undefined && fieldData.value !== null && fieldData.value !== '') {
+                self.setFieldValue($field, fieldData.value);
+            }
+        }
     },
 
     attachEventListeners: function() {
