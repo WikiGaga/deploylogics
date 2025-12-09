@@ -493,12 +493,16 @@ class DataTableController extends Controller
                 $str = strtoupper($str);
                 $replaced_str = str_replace(' ', '%', trim($str));
                 $listQry .= " WHERE upper(B.product_barcode_barcode) Like '%" . $replaced_str . "%' OR
-                        upper(P.product_name) like '%" . $replaced_str . "%'
+                        upper(P.product_name) like '%" . $replaced_str . "%' OR
+                        upper(P.product_arabic_name) like '%" . $replaced_str . "%'
                         order by
                         Case
                             WHEN upper(P.product_name) Like '" . $str . "' THEN 1
+                            WHEN upper(P.product_arabic_name) Like '" . $str . "' THEN 1
                             WHEN upper(P.product_name) Like '" . $str . "%' THEN 2
+                            WHEN upper(P.product_arabic_name) Like '" . $str . "%' THEN 2
                             WHEN upper(P.product_name) Like '%" . $str . "' THEN 4
+                            WHEN upper(P.product_arabic_name) Like '%" . $str . "' THEN 4
                             Else 3
                         END,P.product_name ";
             }
@@ -1139,6 +1143,7 @@ FROM VW_PURC_PRODUCT_BARCODE_RATE
 WHERE
     UPPER(PRODUCT_BARCODE_BARCODE) LIKE '%{$replaced_str}%'
     OR UPPER(PRODUCT_NAME) LIKE '%{$replaced_str}%'
+    OR UPPER(PRODUCT_ARABIC_NAME) LIKE '%{$replaced_str}%'
 GROUP BY
     PRODUCT_ID,
     PRODUCT_NAME,
@@ -1154,7 +1159,9 @@ ORDER BY
     CASE
         WHEN UPPER(PRODUCT_BARCODE_BARCODE) = '{$replaced_str}' THEN 1
         WHEN UPPER(PRODUCT_NAME) LIKE '{$replaced_str}%' THEN 2
+        WHEN UPPER(PRODUCT_ARABIC_NAME) LIKE '{$replaced_str}%' THEN 2
         WHEN UPPER(PRODUCT_NAME) LIKE '%{$replaced_str}' THEN 4
+        WHEN UPPER(PRODUCT_ARABIC_NAME) LIKE '%{$replaced_str}' THEN 4
         ELSE 3
     END,
     PRODUCT_NAME,

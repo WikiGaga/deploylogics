@@ -614,12 +614,16 @@ class GetAllData extends Controller
                 $str = strtoupper($filters['generalSearch']);
                 $replaced_str = str_replace(' ', '%', trim($str));
                 $where .= " and (upper(product_barcode_barcode) Like '%".$replaced_str."%'
-                            OR upper(PROD.product_name) like '%".$replaced_str."%')
+                            OR upper(PROD.product_name) like '%".$replaced_str."%'
+                            OR upper(PROD.product_arabic_name) like '%".$replaced_str."%')
                         order by
                         Case
                             WHEN upper(PROD.product_name) Like '".$str."' THEN 1
+                            WHEN upper(PROD.product_arabic_name) Like '".$str."' THEN 1
                             WHEN upper(PROD.product_name) Like '".$str."%' THEN 2
+                            WHEN upper(PROD.product_arabic_name) Like '".$str."%' THEN 2
                             WHEN upper(PROD.product_name) Like '%".$str."' THEN 4
+                            WHEN upper(PROD.product_arabic_name) Like '%".$str."' THEN 4
                             Else 3
                         END,PROD.product_name";
             }
