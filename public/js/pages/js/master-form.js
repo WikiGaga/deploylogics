@@ -123,6 +123,8 @@ var KTFormWidgets = function() {
                             setTimeout(function () {
                                 $("form").find(":submit").prop('disabled', false);
                             }, 2000);
+
+                            console.log('bbbbb',response.data.form, response.data.redirect, response);
                             if(response.data.form == 'new'){
                                 window.location.href = response.data.redirect;
                             }else{

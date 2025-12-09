@@ -63,6 +63,7 @@ class ListingAdvanceController extends Controller
         $table_name = $listing->listing_studio_table_name;
         $table_name_alias = $listing_studio_query->table_name;
         $modelName = Utilities::getModelFromTable($table_name);
+        // dd($modelName,$table_name);
         $data['table_id'] = $modelName::primaryKeyName();
 
         $data['table_columns'] =  self::getTableColumns($table_name,$listing);

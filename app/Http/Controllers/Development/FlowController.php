@@ -65,6 +65,7 @@ class FlowController extends Controller
      */
     public function store(Request $request, $id = null)
     {
+        // dd($request->all(), $id);
         $data = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:100'
@@ -102,12 +103,15 @@ class FlowController extends Controller
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
         DB::commit();
+        // dd('fs');
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
             $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
+            // dd( $data,'fs');
+            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
             return $this->jsonSuccessResponse($data, trans('message.create'), 200);
         }
     }

@@ -60,6 +60,9 @@ class FlowCriteriaController extends Controller
     public function store(Request $request)
     {
 
+        echo "no back end code";
+        // dd($request->all());
+
     }
 
     /**

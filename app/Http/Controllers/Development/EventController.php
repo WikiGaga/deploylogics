@@ -65,6 +65,7 @@ class EventController extends Controller
      */
     public function store(Request $request, $id = null)
     {
+          // dd($event->menu_event_id,$request->name,auth()->user()->id,auth()->user()->branch_id,auth()->user()->company_id,auth()->user()->business_id);
         $data = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:100'

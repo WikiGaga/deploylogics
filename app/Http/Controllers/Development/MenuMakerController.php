@@ -79,7 +79,7 @@ class MenuMakerController extends Controller
      */
     public function store(Request $request, $id = null)
     {
-        //dd($request->toArray());
+        // dd($request->toArray(), $id );
         $data = [];
         $validator = Validator::make($request->all(), [
             'menu_dtl_name' => 'required|max:100'
@@ -126,30 +126,34 @@ class MenuMakerController extends Controller
                     }
                 }
             }
-            foreach ($request->views_action as $views_action){
-                if(isset($id)){
-                    $has = in_array($views_action, $menu_permissions_arr);
-                    if($has == true){
-                        $menu_permissions = Permission::where('menu_dtl_id', $id)->get();
-                        foreach ($menu_permissions as $permissions){
-                            if($permissions->display_name == $views_action){
-                                $permission = Permission::where('id', $permissions->id)->first();
+
+            // dd($request->views_action);
+            if(isset($request->views_action)){
+                foreach ($request->views_action as $views_action){
+                    if(isset($id)){
+                        $has = in_array($views_action, $menu_permissions_arr);
+                        if($has == true){
+                            $menu_permissions = Permission::where('menu_dtl_id', $id)->get();
+                            foreach ($menu_permissions as $permissions){
+                                if($permissions->display_name == $views_action){
+                                    $permission = Permission::where('id', $permissions->id)->first();
+                                }
                             }
+                        }else{
+                            $permission = new Permission();
+                            $permission->id = Utilities::uuid();
                         }
                     }else{
                         $permission = new Permission();
                         $permission->id = Utilities::uuid();
                     }
-                }else{
-                    $permission = new Permission();
-                    $permission->id = Utilities::uuid();
+                    $permission->menu_id = $menu->menu_id;
+                    $permission->menu_dtl_id = $menu->menu_dtl_id;
+                    $permission->name = $menu->menu_dtl_id.'-'.$views_action;
+                    $permission->display_name = $views_action;
+                    $permission->description = ucwords($menu->menu_dtl_name).' '.ucwords($views_action);
+                    $permission->save();
                 }
-                $permission->menu_id = $menu->menu_id;
-                $permission->menu_dtl_id = $menu->menu_dtl_id;
-                $permission->name = $menu->menu_dtl_id.'-'.$views_action;
-                $permission->display_name = $views_action;
-                $permission->description = ucwords($menu->menu_dtl_name).' '.ucwords($views_action);
-                $permission->save();
             }
 
             //clear menu from cache

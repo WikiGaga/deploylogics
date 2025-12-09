@@ -299,8 +299,11 @@ class Utilities
     public static function getModelFromTable($table)
     {
         $classes = (new static)->getClassesList(app_path('Models'));
+        
         foreach ($classes as $class){
             $model = new $class->classname;
+
+            // dd($table,$class, $model,$model->getTable(),$classes);
             if ($model->getTable() === $table){
                 return $class->classname;
             }
@@ -311,6 +314,7 @@ class Utilities
     public static function getClassesList($dir)
     {
         $classes = \File::allFiles($dir);
+        // dd($dir,$classes);
         foreach ($classes as $class) {
             $class->classname = str_replace(
                 [app_path(), '/', '.php'],
