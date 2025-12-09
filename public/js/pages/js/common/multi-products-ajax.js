@@ -309,7 +309,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                                     '      <span style="width: 200px;">\n' +
                                     '         <div>\n' +
                                     '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">Name:</span> '+notNull(item['product_name'])+'</div>\n' +
-                                    (item['product_arabic_name'] ? '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">Arabic:</span> '+notNull(item['product_arabic_name'])+'</div>\n' : '') +
+                                    '<div><span style=" width: 40px; display: inline-block; font-weight: 500; ">Arabic:</span> '+notNull(item['product_arabic_name'])+'</div>\n' +
                                     '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">UOM:</span> '+notNull(item['uom_name'])+' <span style=" width: 40px; display: inline-block; font-weight: 500; "> PACK:</span> '+notNull(item['product_barcode_packing'])+'</div>\n' +
                                     '         </div>\n' +
                                     '      </span>\n' +
