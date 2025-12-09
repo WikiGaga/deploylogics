@@ -1951,14 +1951,37 @@
                 favoriteProcessing = false;
                 $('body').removeClass('pointerEventsNone');
 
+                // Wait longer to ensure all addData operations and their calculations are complete
+                // Use multiple delays to ensure all async operations (AJAX, DOM updates, select2 init, etc.) are done
                 setTimeout(function() {
+                    // First calculation after initial delay
                     if (typeof allGridTotal !== 'undefined') {
                         allGridTotal();
                     }
                     if (typeof funcGetOverallNetAmount !== 'undefined') {
                         funcGetOverallNetAmount();
                     }
-                }, 100);
+
+                    // Use requestAnimationFrame to ensure DOM updates are complete
+                    requestAnimationFrame(function() {
+                        if (typeof allGridTotal !== 'undefined') {
+                            allGridTotal();
+                        }
+                        if (typeof funcGetOverallNetAmount !== 'undefined') {
+                            funcGetOverallNetAmount();
+                        }
+
+                        // Final calculation after all operations should be complete
+                        setTimeout(function() {
+                            if (typeof allGridTotal !== 'undefined') {
+                                allGridTotal();
+                            }
+                            if (typeof funcGetOverallNetAmount !== 'undefined') {
+                                funcGetOverallNetAmount();
+                            }
+                        }, 200);
+                    });
+                }, 600);
 
                 toastr.success('Favorite loaded successfully');
                 return;
@@ -2007,7 +2030,10 @@
                                 clearTimeout(timeoutId);
                                 setTimeout(function() {
                                     $('#addData').trigger('click');
-                                    resolve();
+                                    // Wait for addData operation to complete before resolving
+                                    setTimeout(function() {
+                                        resolve();
+                                    }, 200);
                                 }, 50);
                             };
 
