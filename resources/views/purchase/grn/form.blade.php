@@ -1950,6 +1950,16 @@
             if (!favoriteItemsQueue.length) {
                 favoriteProcessing = false;
                 $('body').removeClass('pointerEventsNone');
+
+                setTimeout(function() {
+                    if (typeof allGridTotal !== 'undefined') {
+                        allGridTotal();
+                    }
+                    if (typeof funcGetOverallNetAmount !== 'undefined') {
+                        funcGetOverallNetAmount();
+                    }
+                }, 100);
+
                 toastr.success('Favorite loaded successfully');
                 return;
             }
