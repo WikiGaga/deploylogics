@@ -142,4 +142,4 @@
 
     var FORM_TYPE = '{{ $data["form_type"] }}';
 </script>
-<script src="{{ asset('js/pages/js/common/multi-products-ajax.js?v='.time()) }}" type="text/javascript"></script>
+<script src="{{ asset('js/pages/js/common/multi-products-ajax.js') }}" type="text/javascript"></script>
