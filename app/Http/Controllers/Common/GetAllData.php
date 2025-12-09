@@ -634,6 +634,7 @@ $dataQry = "SELECT
                     PROD.PRODUCT_ID ,
                     PRODUCT_CODE   ,
                     PRODUCT_NAME ,
+                    PRODUCT_ARABIC_NAME ,
                     PROD.PRODUCT_BARCODE_ID ,
                     PRODUCT_BARCODE_BARCODE,
                     PROD.GROUP_ITEM_ID ,

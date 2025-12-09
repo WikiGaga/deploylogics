@@ -97,11 +97,15 @@ var KTDatatableRemoteAjaxDemo = function() {
                     width:200,
                     template: function(row) {
                         var product_name = row.product_name;
+                        var product_arabic_name = row.product_arabic_name || '';
                         var product_type_name = row.group_item_name_string;
                         var uom_name = row.uom_name;
                         var product_barcode_packing = row.product_barcode_packing;
                         var col = "<div>";
                         col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>Name:</span> "+product_name+"</div>";
+                        if(product_arabic_name) {
+                            col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>Arabic:</span> "+product_arabic_name+"</div>";
+                        }
                         col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>UOM:</span> "+uom_name +" <span style=' width: 40px; display: inline-block; font-weight: 500; '> PACK:</span> "+product_barcode_packing+"</div>";
                        // col += "<div><span style=' width: 60px; display: inline-block; font-weight: 500; '>Category:</span> "+product_type_name+"</div>";
                         col += "</div>";
@@ -305,6 +309,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                                     '      <span style="width: 200px;">\n' +
                                     '         <div>\n' +
                                     '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">Name:</span> '+notNull(item['product_name'])+'</div>\n' +
+                                    (item['product_arabic_name'] ? '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">Arabic:</span> '+notNull(item['product_arabic_name'])+'</div>\n' : '') +
                                     '            <div><span style=" width: 40px; display: inline-block; font-weight: 500; ">UOM:</span> '+notNull(item['uom_name'])+' <span style=" width: 40px; display: inline-block; font-weight: 500; "> PACK:</span> '+notNull(item['product_barcode_packing'])+'</div>\n' +
                                     '         </div>\n' +
                                     '      </span>\n' +
