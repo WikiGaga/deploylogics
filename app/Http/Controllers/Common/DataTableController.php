@@ -1093,7 +1093,7 @@ class DataTableController extends Controller
         if (in_array($helpType, $listHelpProducts)) {
             $data['show_name'] = 'product_barcode_barcode';
             $data['hideKeys'] = ['product_id', 'product_barcode_id', 'uom_id'];
-            $data['keys'] = ['product_barcode_barcode', 'product_name', 'uom_name', 'product_barcode_packing'];
+            $data['keys'] = ['product_barcode_barcode', 'product_name', 'product_arabic_name', 'uom_name', 'product_barcode_packing'];
             $merge = array_merge($data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
 
@@ -1164,7 +1164,7 @@ FETCH FIRST 50 ROWS ONLY";
 
                 $data['list'] = DB::select($qry);
             }
-            $data['head'] = ['Barcode', 'Name', 'UOM', 'Packing'];
+            $data['head'] = ['Barcode', 'Name', 'Arabic Name', 'UOM', 'Packing'];
         }
         if ($helpType == 'productHelpSI') {
             $data['show_name'] = 'product_barcode_barcode';
