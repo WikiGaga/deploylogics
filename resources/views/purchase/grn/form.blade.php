@@ -1951,23 +1951,16 @@
                 favoriteProcessing = false;
                 $('body').removeClass('pointerEventsNone');
 
-                // Wait longer to ensure all addData operations and their calculations are complete
-                // Use multiple delays to ensure all async operations (AJAX, DOM updates, select2 init, etc.) are done
                 setTimeout(function() {
-                    // CRITICAL: First calculate all row values (amount, gross_amount, etc.) before calculating totals
-                    // This is what happens when addData is clicked - calcAllRows() calculates each row first
                     if (typeof calcAllRows !== 'undefined') {
                         calcAllRows();
                     }
 
-                    // Use requestAnimationFrame to ensure DOM updates are complete
                     requestAnimationFrame(function() {
-                        // Recalculate rows again to ensure all values are set
                         if (typeof calcAllRows !== 'undefined') {
                             calcAllRows();
                         }
 
-                        // Now calculate totals after all row calculations are done
                         if (typeof allGridTotal !== 'undefined') {
                             allGridTotal();
                         }
@@ -1975,13 +1968,10 @@
                             funcGetOverallNetAmount();
                         }
 
-                        // Final calculation after all operations should be complete
                         setTimeout(function() {
-                            // Recalculate rows one more time
                             if (typeof calcAllRows !== 'undefined') {
                                 calcAllRows();
                             }
-                            // Then calculate totals
                             if (typeof allGridTotal !== 'undefined') {
                                 allGridTotal();
                             }
@@ -2039,7 +2029,6 @@
                                 clearTimeout(timeoutId);
                                 setTimeout(function() {
                                     $('#addData').trigger('click');
-                                    // Wait for addData operation to complete before resolving
                                     setTimeout(function() {
                                         resolve();
                                     }, 200);
