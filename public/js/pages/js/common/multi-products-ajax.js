@@ -103,9 +103,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                         var product_barcode_packing = row.product_barcode_packing;
                         var col = "<div>";
                         col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>Name:</span> "+product_name+"</div>";
-                        if(product_arabic_name) {
                             col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>Arabic:</span> "+product_arabic_name+"</div>";
-                        }
                         col += "<div><span style=' width: 40px; display: inline-block; font-weight: 500; '>UOM:</span> "+uom_name +" <span style=' width: 40px; display: inline-block; font-weight: 500; '> PACK:</span> "+product_barcode_packing+"</div>";
                        // col += "<div><span style=' width: 60px; display: inline-block; font-weight: 500; '>Category:</span> "+product_type_name+"</div>";
                         col += "</div>";
