@@ -730,7 +730,7 @@ class UserReportsController extends Controller
             // change variable in query
             $report_tb_data = \App\Models\TblSoftReports::with('report_styling')->where('report_id',$data['report_id'])->first();
             $qry = str_replace(array("\n","\r\n","\r"), ' ', $report_tb_data['report_query']);
-            $qry = strtolower(strtoupper($qry));
+            // $qry = strtolower(strtoupper($qry));
             $qry = str_replace('$branch_multiple$'," in (".implode(",",$data['branch_ids']).") ",$qry);
 
             if($data['date'] != ""){
@@ -2427,7 +2427,7 @@ class UserReportsController extends Controller
         } catch (ValidationException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        } catch (Exception $e) {
+        } catch (Exception $e) { 
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
