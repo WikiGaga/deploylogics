@@ -38,6 +38,7 @@ class DocumentsUploadController extends Controller
      */
     public function create(Request $request)
     {
+        // dd($request->toArray());
         $data = [];
         $data['document_types'] = [];
         $data['current'] = [];
@@ -51,7 +52,7 @@ class DocumentsUploadController extends Controller
             $data['form_id'] = $request->form_id;
             $data['form_type'] = $request->form_type;
             $data['menu_id'] = isset($request->menu_id)?$request->menu_id:"";
-           // dd($data['current']->toArray());
+        //    dd($data['current']->toArray());
         }
         return view('common.upload_document',compact('data'));
     }

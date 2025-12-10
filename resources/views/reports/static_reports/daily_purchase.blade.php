@@ -10,6 +10,19 @@
             tfoot>tr>td {padding:0 !important;}
             body {margin: 0;}
         }
+
+       .clickable-cell {
+    cursor: pointer;
+    /* Force the default blue color */
+    color: #17a2b8 !important; 
+    text-decoration: none; 
+}
+
+.clickable-cell:hover {
+    /* Force the slightly darker blue on hover */
+    text-decoration: underline; 
+    color: #117a8b !important; 
+}
     </style>
 @endsection
 @section('content')
@@ -115,6 +128,9 @@
                         from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                         $where ORDER BY grn_date, grn_code";
 
+                        $grn_id_code=DB::table('TBL_PURC_GRN')->pluck('grn_id','grn_code')->all();
+
+
                         $getdata = \Illuminate\Support\Facades\DB::select($qq);
                         $pi = [];
                         $pr = [];
@@ -196,7 +212,7 @@
                                     <td>{{$ki}}</td>
                                     <td>{{isset($product->grn_date)? date('d-m-Y', strtotime(trim(str_replace('/','-',$product->grn_date)))):''}}</td>
                                     <td>{{$product->branch_short_name}}</td>
-                                    <td>{{$product->grn_code}}</td>
+                                    <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $grn_id_code[$product->grn_code] ?? null }}" date-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
                                     <td>{{$product->product_name}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_quantity)}}</td>
                                     <td class="text-center">{{$product->uom_name}}</td>
@@ -374,7 +390,37 @@
 @endsection
 
 @section('customJS')
+ <script>
+  $(document).on('click','.open_model',function(){
 
+
+        var grn_code = $(this).data('grn_code');
+        var grn_id = $(this).data('grn_id');
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+  
+            var formData = {
+
+                form_id :   grn_id,
+                form_code :  grn_code,
+                form_type :"grn",
+                menu_id : 23,
+
+                //    form_id :   66114225181204,
+                // form_code :  "GRN-0000002",
+                // form_type :"grn",
+                // menu_id : 23,
+            }
+            console.log('ddddd', formData)
+            var data_url = '/upload-document';
+            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,formData);
+        })
+</script>
 @endsection
 @section('exportXls')
     @if($data['form_file_type'] == 'xls')
