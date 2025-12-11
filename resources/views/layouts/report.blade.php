@@ -74,6 +74,20 @@
         -webkit-box-shadow: 0px -2px 20px 0px rgba(0, 0, 0, 0.35);
         -moz-box-shadow: 0px -2px 20px 0px rgba(0, 0, 0, 0.35);
     }
+
+    
+       .clickable-cell {
+            cursor: pointer;
+            /* Force the default blue color */
+            color: #17a2b8 !important; 
+            text-decoration: none; 
+        }
+
+        .clickable-cell:hover {
+            /* Force the slightly darker blue on hover */
+            text-decoration: underline; 
+            color: #117a8b !important; 
+        }
     </style>
 
     <script src="{{ asset('/js/generate_pdf.js') }}"></script>

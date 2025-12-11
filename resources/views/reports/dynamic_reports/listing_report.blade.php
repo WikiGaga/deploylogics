@@ -3,6 +3,7 @@
 
 // dd('$limit');
     // try{
+    $grn_id_code=DB::table('TBL_PURC_GRN')->pluck('grn_id','grn_code')->all();
         $data = Session::get('data');
         $headings = [];
         $column_types = [];
@@ -303,9 +304,23 @@
                                             <td>{{$loop->iteration}}</td>
                                         @endif
                                         @foreach($fieldsKeys as $key=>$fieldsKey)
+
+                                        @php
+                                            if($fieldsKey == 'grn_code'){
+                                                $class = "open_model clickable-cell TEXT-INFO";
+
+                                                $grn_code=$dt->$fieldsKey;
+                                                $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
+                                            }else{
+                                                $class = "";
+                                                $grn_code="";
+                                                $grn_id="";
+                                            }
+
+                                        @endphp
                                        
                                                 @if($column_types[$key] == 'varchar2')
-                                                    <td>{!! $dt->$fieldsKey !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" >{!! $dt->$fieldsKey !!}</td>
                                                 @elseif($column_types[$key] == 'number')
                                                     @php
                                                         $numVal = (int)$dt->$fieldsKey;
@@ -317,7 +332,7 @@
                                                             $arr[$key] = $a_[$key];
                                                         }
                                                     @endphp
-                                                    <td>{!! $numVal !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
                                                 @elseif($column_types[$key] == 'float')
                                                     @php
                                                         $floatVal = (float)$dt->$fieldsKey;
@@ -328,9 +343,9 @@
                                                             $arr[$key] = $a_[$key];
                                                         }
                                                     @endphp
-                                                    <td>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                 @elseif($column_types[$key] == 'date')
-                                                    <td>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
                                                 @endif
                                         @endforeach
                                     </tr>
@@ -395,7 +410,40 @@
 
 @endsection
 @section('customJS')
+
     <script>
+         $(document).on('click','.open_model',function(){
+
+
+        var grn_code = $(this).data('grn_code');
+        var grn_id = $(this).data('grn_id');
+
+         console.log('cccccc',grn_id, grn_code)
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+  
+            var formData = {
+
+                form_id :   grn_id,
+                form_code :  grn_code,
+                form_type :"grn",
+                menu_id : 23,
+
+                //    form_id :   66114225181204,
+                // form_code :  "GRN-0000002",
+                // form_type :"grn",
+                // menu_id : 23,
+            }
+            console.log('ddddd', formData)
+            var data_url = '/upload-document';
+            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,formData);
+        })
+
      function changeLimit(limit) {
             const url = new URL(window.location.href);
             url.searchParams.set('limit', limit);
