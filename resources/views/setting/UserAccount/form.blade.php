@@ -133,7 +133,7 @@
                                                         <option value="">Select Role</option>
                                                         @php $employee_role_id = isset($employee_role_id)?$employee_role_id:''@endphp
                                                         @foreach($data['employee_roles'] as $role)
-                                                            <option value="{{$role->id}}" {{$role->id == $employee_role_id ? 'selected' : ''}}>{{$role->name}}</option>
+                                                            <option value="{{$role->id}}" {{$role->id == $employee_role_id ? 'selected' : ''}}>{{$role->display_name}}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>

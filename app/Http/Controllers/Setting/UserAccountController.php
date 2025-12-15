@@ -22,7 +22,8 @@ use App\Models\TblSaleDay;
 use App\Models\TblAccoVoucher;
 use App\Models\TblPurcDemand;
 use App\Models\TblPurcProductBarcodeDtl;
-use App\Models\EmployeeRole;
+use App\Models\Role;
+use App\Models\PermissionRole;
 
 // db and Validator
 use Illuminate\Validation\Rule;
@@ -84,9 +85,7 @@ class UserAccountController extends Controller
         $data['ip_location'] = TblSoftIpLocation::orderby('ip_location_name')->get();
         $data['user_types'] = TblDefiConstants::where('constants_type','user_logged_type')->where('constants_status',1)->get();
 
-        // Get employee roles filtered by logged in user's restaurant_id
-        $loggedInUser = auth()->user();
-        $data['employee_roles'] = EmployeeRole::where('restaurant_id', $loggedInUser->restaurant_id)->get();
+        $data['employee_roles'] = Role::where(Utilities::currentBC())->orderBy('display_name')->get();
 
 
         return view('setting.UserAccount.form',compact('data'));
@@ -176,12 +175,28 @@ class UserAccountController extends Controller
             $user->branch_id = $request->user_branch;
             $user->restaurant_id = $request->user_branch;
             $user->vendor_id = 5;
+
+            $old_role_id = isset($id) ? $user->employee_role_id : null;
+            $role_changed = isset($id) && $old_role_id != $request->employee_role_id;
+
             $user->employee_role_id = $request->employee_role_id;
             $user->user_type = $request->user_type;
             $branch = TblSoftBranch::where('branch_id', $request->user_branch)->first();
             $user->business_id = $branch->business_id;
             $user->company_id = $branch->company_id;
             $user->save();
+
+            if(!empty($request->employee_role_id)){
+                $role_permissions = PermissionRole::where('role_id', $request->employee_role_id)->pluck('permission_id')->toArray();
+
+                if($role_changed){
+                    $user->syncPermissions($role_permissions);
+                } else {
+                    $existing_permissions = $user->permissions()->pluck('permissions.id')->toArray();
+                    $merged_permissions = array_unique(array_merge($role_permissions, $existing_permissions));
+                    $user->syncPermissions($merged_permissions);
+                }
+            }
             UsersTypeAcco::where('user_id',$user->id)->delete();
             if($request->user_type == 'customer'){
                 UsersTypeAcco::create([
