@@ -133,7 +133,7 @@ class RoleController extends Controller
 
         $data['vendor_modules_selected'] = [];
         if(isset($id)){
-            $employeeRole = EmployeeRole::where('name', $data['role']->display_name)
+            $employeeRole = EmployeeRole::where('id', $id)
                 ->whereNull('restaurant_id')
                 ->first();
             if($employeeRole && !empty($employeeRole->modules)){
@@ -197,20 +197,18 @@ class RoleController extends Controller
                 ];
                 $vendorModules = array_intersect($vendorModules, $allowedModules);
 
-                $employeeRole = EmployeeRole::where('name', $role->display_name)
+                $employeeRole = EmployeeRole::where('id', $role->id)
                     ->whereNull('restaurant_id')
                     ->first();
 
                 if($employeeRole){
+                    $employeeRole->name = $role->display_name;
                     $employeeRole->modules = json_encode($vendorModules);
                     $employeeRole->status = 1;
                     $employeeRole->save();
                 } else {
-                    $maxId = EmployeeRole::max('id');
-                    $nextId = $maxId ? $maxId + 1 : 1;
-
                     $employeeRole = new EmployeeRole();
-                    $employeeRole->id = $nextId;
+                    $employeeRole->id = $role->id;
                     $employeeRole->name = $role->display_name;
                     $employeeRole->modules = json_encode($vendorModules);
                     $employeeRole->status = 1;
@@ -218,13 +216,22 @@ class RoleController extends Controller
                     $employeeRole->save();
                 }
             } else {
-                $employeeRole = EmployeeRole::where('name', $role->display_name)
+                $employeeRole = EmployeeRole::where('id', $role->id)
                     ->whereNull('restaurant_id')
                     ->first();
 
                 if($employeeRole){
+                    $employeeRole->name = $role->display_name;
                     $employeeRole->modules = json_encode([]);
                     $employeeRole->status = 1;
+                    $employeeRole->save();
+                } else {
+                    $employeeRole = new EmployeeRole();
+                    $employeeRole->id = $role->id;
+                    $employeeRole->name = $role->display_name;
+                    $employeeRole->modules = json_encode([]);
+                    $employeeRole->status = 1;
+                    $employeeRole->restaurant_id = null;
                     $employeeRole->save();
                 }
             }
