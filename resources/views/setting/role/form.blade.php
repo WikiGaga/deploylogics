@@ -55,6 +55,45 @@
                             </div>
                         </div>
 
+                        <hr>
+                        <div class="form-group-block row">
+                            <div class="col-lg-12">
+                                <div class="d-flex align-items-center mb-3">
+                                    <h5 class="m-0 text-capitalize erp-col-form-label">
+                                        Vendor Module Permissions:
+                                    </h5>
+                                    <div class="ml-3">
+                                        <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                            <label>
+                                                <input type="checkbox" class="form-check-input" id="allVendorModules">
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                        <label class="ml-2 mb-0">Select All</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @foreach($data['vendor_modules'] as $module)
+                                        @php
+                                            $checked = in_array($module, $data['vendor_modules_selected']) ? 'checked' : '';
+                                        @endphp
+                                        <div class="col-lg-3 mb-2">
+                                            <label class="kt-checkbox kt-checkbox--bold kt-checkbox--success">
+                                                <input type="checkbox"
+                                                       name="vendor_modules[]"
+                                                       value="{{$module}}"
+                                                       class="form-check-input vendor-module-checkbox"
+                                                       id="vendor_{{$module}}"
+                                                       {{$checked}}>
+                                                <span></span>
+                                                {{$data['vendor_module_labels'][$module]}}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
 
                         <div class="row">
                             <label class="col-lg-2 erp-col-form-label">
@@ -283,6 +322,23 @@
             },
             change: function() {
                 this.value = this.value.replace(/\s/g, "");
+            }
+        });
+
+        $('#allVendorModules').on('change', function() {
+            var isChecked = $(this).is(':checked');
+            $('.vendor-module-checkbox').prop('checked', isChecked);
+        });
+
+        $('.vendor-module-checkbox').on('change', function() {
+            if (!$(this).is(':checked')) {
+                $('#allVendorModules').prop('checked', false);
+            } else {
+                var totalCheckboxes = $('.vendor-module-checkbox').length;
+                var checkedCheckboxes = $('.vendor-module-checkbox:checked').length;
+                if (totalCheckboxes === checkedCheckboxes) {
+                    $('#allVendorModules').prop('checked', true);
+                }
             }
         });
 
