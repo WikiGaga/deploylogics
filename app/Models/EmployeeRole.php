@@ -12,6 +12,8 @@ class EmployeeRole extends Model
     protected $fillable = [
         'id',
         'name',
+        'modules',
+        'status',
         'restaurant_id'
     ];
 

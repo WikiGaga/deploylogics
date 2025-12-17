@@ -11,6 +11,7 @@ use App\Models\PermissionUser;
 use App\Models\Role;
 use App\Models\TblSoftMenu;
 use App\Models\User;
+use App\Models\EmployeeRole;
 use Illuminate\Http\Request;
 
 // db and Validator
@@ -102,7 +103,44 @@ class RoleController extends Controller
                 ],
             ];
         }
-        //dd($data);
+
+        $data['vendor_modules'] = [
+            'food', 'order', 'kitchen_orders', 'restaurant_setup', 'addon', 'wallet', 'employee',
+            'my_shop', 'chat', 'campaign', 'reviews', 'pos', 'subscription', 'coupon', 'report',
+            'custom_role', 'options_list', 'shift_session', 'printer_settings'
+        ];
+        $data['vendor_module_labels'] = [
+            'food' => 'Food',
+            'order' => 'Order',
+            'kitchen_orders' => 'Kitchen Orders',
+            'restaurant_setup' => 'Restaurant Setup',
+            'addon' => 'Addon',
+            'wallet' => 'Wallet',
+            'employee' => 'Employee',
+            'my_shop' => 'My Shop',
+            'chat' => 'Chat',
+            'campaign' => 'Campaign',
+            'reviews' => 'Reviews',
+            'pos' => 'POS',
+            'subscription' => 'Subscription',
+            'coupon' => 'Coupon',
+            'report' => 'Report',
+            'custom_role' => 'Custom Role',
+            'options_list' => 'Options List',
+            'shift_session' => 'Shift Session',
+            'printer_settings' => 'Printer Settings',
+        ];
+
+        $data['vendor_modules_selected'] = [];
+        if(isset($id)){
+            $employeeRole = EmployeeRole::where('id', $id)
+                ->whereNull('restaurant_id')
+                ->first();
+            if($employeeRole && !empty($employeeRole->modules)){
+                $data['vendor_modules_selected'] = json_decode($employeeRole->modules, true) ?: [];
+            }
+        }
+
         return view('setting.role.form',compact('data'));
     }
 
@@ -149,6 +187,54 @@ class RoleController extends Controller
             // Sync permissions (works for both create and edit)
             $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
             $role->syncPermissions($permissions);
+
+            if($request->has('vendor_modules') && $request->filled('vendor_modules')){
+                $vendorModules = $request->vendor_modules;
+                $allowedModules = [
+                    'food', 'order', 'kitchen_orders', 'restaurant_setup', 'addon', 'wallet', 'employee',
+                    'my_shop', 'chat', 'campaign', 'reviews', 'pos', 'subscription', 'coupon', 'report',
+                    'custom_role', 'options_list', 'shift_session', 'printer_settings'
+                ];
+                $vendorModules = array_intersect($vendorModules, $allowedModules);
+
+                $employeeRole = EmployeeRole::where('id', $role->id)
+                    ->whereNull('restaurant_id')
+                    ->first();
+
+                if($employeeRole){
+                    $employeeRole->name = $role->display_name;
+                    $employeeRole->modules = json_encode($vendorModules);
+                    $employeeRole->status = 1;
+                    $employeeRole->save();
+                } else {
+                    $employeeRole = new EmployeeRole();
+                    $employeeRole->id = $role->id;
+                    $employeeRole->name = $role->display_name;
+                    $employeeRole->modules = json_encode($vendorModules);
+                    $employeeRole->status = 1;
+                    $employeeRole->restaurant_id = null;
+                    $employeeRole->save();
+                }
+            } else {
+                $employeeRole = EmployeeRole::where('id', $role->id)
+                    ->whereNull('restaurant_id')
+                    ->first();
+
+                if($employeeRole){
+                    $employeeRole->name = $role->display_name;
+                    $employeeRole->modules = json_encode([]);
+                    $employeeRole->status = 1;
+                    $employeeRole->save();
+                } else {
+                    $employeeRole = new EmployeeRole();
+                    $employeeRole->id = $role->id;
+                    $employeeRole->name = $role->display_name;
+                    $employeeRole->modules = json_encode([]);
+                    $employeeRole->status = 1;
+                    $employeeRole->restaurant_id = null;
+                    $employeeRole->save();
+                }
+            }
 
         }catch (QueryException $e) {
             DB::rollback();
