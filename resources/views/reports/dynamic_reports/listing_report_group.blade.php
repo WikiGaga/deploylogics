@@ -69,6 +69,7 @@
                 }
             }
         }
+        
         if(count($elements) != 0){
             foreach ($elements as $eKey=>$element){
                 if($element['column_toggle'] == 1){
@@ -85,15 +86,15 @@
         // variables default value foe calulations
         $arr = [];
         foreach ($calc as $var){
-           $a_{$var} = 0;
+           $a_[$var] = 0;
         }
         $arr_grp = [];
         foreach ($calc as $var){
-           $ag_{$var} = 0;
+           $ag_[$var] = 0;
         }
         $arr_item = [];
         foreach ($calc as $var){
-           $ai_{$var} = 0;
+           $ai_[$var] = 0;
         }
         $report_status = true;
     }catch (Exception $e){
@@ -264,8 +265,8 @@
                                                         @php
                                                             $numVal = (int)$item->$fieldsKey;
                                                             if(in_array($key,$calc)){
-                                                                $ai_{$key} += $numVal;
-                                                                $arr_item[$key] = $ai_{$key};
+                                                                $ai_[$key] += $numVal;
+                                                                $arr_item[$key] = $ai_[$key];
                                                             }
                                                         @endphp
                                                         {{$numVal}}
@@ -273,8 +274,8 @@
                                                         @php
                                                             $floatVal = (float)$item->$fieldsKey;
                                                             if(in_array($key,$calc)){
-                                                                $ai_{$key} += $floatVal;
-                                                                $arr_item[$key] = $ai_{$key};
+                                                                $ai_[$key] += $floatVal;
+                                                                $arr_item[$key] = $ai_[$key];
                                                             }
                                                         @endphp
                                                         {{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}
@@ -295,8 +296,8 @@
                                                     @endif
                                                     @php
                                                         if(in_array($i,$calc)){
-                                                            $a_{$i} += $arr_item[$i];
-                                                            $arr[$i] = $a_{$i};
+                                                            $a_[$i] += $arr_item[$i];
+                                                            $arr[$i] = $a_[$i];
                                                         }
                                                     @endphp
                                                 </td>
@@ -305,7 +306,7 @@
                                         @php
                                             $arr_item = [];
                                             foreach ($calc as $var){
-                                               $ai_{$var} = 0;
+                                               $ai_[$var] = 0;
                                             }
                                         @endphp
                                     @endif
@@ -339,8 +340,8 @@
                                                                 @php
                                                                     $numVal = (int)$item->$fieldsKey;
                                                                     if(in_array($key,$calc)){
-                                                                        $ai_{$key} += $numVal;
-                                                                        $arr_item[$key] = $ai_{$key};
+                                                                        $ai_[$key] += $numVal;
+                                                                        $arr_item[$key] = $ai_[$key];
                                                                     }
                                                                 @endphp
                                                                 {{$numVal}}
@@ -348,8 +349,8 @@
                                                                 @php
                                                                     $floatVal = (float)$item->$fieldsKey;
                                                                     if(in_array($key,$calc)){
-                                                                        $ai_{$key} += $floatVal;
-                                                                        $arr_item[$key] = $ai_{$key};
+                                                                        $ai_[$key] += $floatVal;
+                                                                        $arr_item[$key] = $ai_[$key];
                                                                     }
                                                                 @endphp
                                                                 {{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}
@@ -369,8 +370,8 @@
                                                                 {{number_format($arr_item[$i],3)}}
                                                                 @php
                                                                     if(in_array($i,$calc)){
-                                                                        $ag_{$i} += $arr_item[$i];
-                                                                        $arr_grp[$i] = $ag_{$i};
+                                                                        $ag_[$i] += $arr_item[$i];
+                                                                        $arr_grp[$i] = $ag_[$i];
                                                                     }
                                                                 @endphp
                                                             @endif
@@ -380,7 +381,7 @@
                                                 @php
                                                     $arr_item = [];
                                                     foreach ($calc as $var){
-                                                       $ai_{$var} = 0;
+                                                       $ai_[$var] = 0;
                                                     }
                                                 @endphp
                                             @endif
@@ -395,8 +396,8 @@
                                                         @endif
                                                         @php
                                                             if(in_array($i,$calc)){
-                                                                $a_{$i} += $arr_grp[$i];
-                                                                $arr[$i] = $a_{$i};
+                                                                $a_[$i] += $arr_grp[$i];
+                                                                $arr[$i] = $a_[$i];
                                                             }
                                                         @endphp
                                                     </td>
@@ -405,7 +406,7 @@
                                             @php
                                                 $arr_grp = [];
                                                 foreach ($calc as $var){
-                                                   $ag_{$var} = 0;
+                                                   $ag_[$var] = 0;
                                                 }
                                             @endphp
                                         @endif
