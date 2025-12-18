@@ -11,19 +11,17 @@
 @section('content')
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
-            if($case == 'new'){
-                $id = "";
-                $voucher_no = $data['voucher_no'];
-                $date =  date('d-m-Y');
-            }
-            if($case == 'new' && $data['copy_entry']){
+            if($case == 'new' && isset($data['copy_entry']) && $data['copy_entry']){
                 $id = "";
                 $voucher_no = $data['voucher_no'];
                 $payment_modes = $data['payment_mode'];
                 $date =  date('d-m-Y');
                 $dtls = isset($data['dtl'])? $data['dtl'] :[];
-            }
-            if($case == 'edit'){
+            }elseif($case == 'new'){
+                $id = "";
+                $voucher_no = $data['voucher_no'];
+                $date =  date('d-m-Y');
+            }elseif($case == 'edit'){
                 $id = $data['current']->voucher_id;
                 $voucher_no= $data['current']->voucher_no;
                 $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->voucher_date))));
@@ -42,7 +40,7 @@
     @if(session('msg'))
         <script>
             alert('This voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}'; 
+            document.location='/listing/accounts/{{ $type }}';
         </script>
     @endif
         <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">

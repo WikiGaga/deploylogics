@@ -12,22 +12,19 @@
 @section('content')
         @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
-            if($case == 'new'){
-                $voucher_no = $data['voucher_no'];
-                $id = "";
-                $payment_modes = $data['payment_mode'];
-                $date =  date('d-m-Y');
-                $is_deduction = 0;
-            }
-            if($case == 'new' && $data['copy_entry']){
+            if($case == 'new' && isset($data['copy_entry']) && $data['copy_entry']){
                 $voucher_no = $data['voucher_no'];
                 $id = "";
                 $payment_modes = $data['payment_mode'];
                 $date =  date('d-m-Y');
                 $dtls = isset($data['dtl'])? $data['dtl'] :[];
-            }
-
-            if($case == 'edit'){
+            }elseif($case == 'new'){
+                $voucher_no = $data['voucher_no'];
+                $id = "";
+                $payment_modes = $data['payment_mode'];
+                $date =  date('d-m-Y');
+                $is_deduction = 0;
+            }elseif($case == 'edit'){
                 $id = $data['current']->voucher_id;
                 $voucher_no= $data['current']->voucher_no;
                 $payment_modes = $data['payment_mode'];
@@ -48,11 +45,11 @@
     <!--begin::Form-->
     <form id="voucher_form" class="kt-form" method="post" action="{{ action('Accounts\VoucherController@pveStore', [$type,isset($id)?$id:'']) }}">
     @csrf
-    
+
     @if(session('msg'))
         <script>
             alert('This voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}'; 
+            document.location='/listing/accounts/{{ $type }}';
         </script>
     @endif
     <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
