@@ -93,15 +93,19 @@ function restMonthSaleBranchChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(350, (window.innerHeight * 0.4)) || 400;
 
     var options = {
         series: series,
         chart: {
             type: 'line',
-            height: 350,
+            height: containerHeight,
             width: containerWidth || '100%',
             toolbar: {
                 show: true
+            },
+            zoom: {
+                enabled: true
             }
         },
         dataLabels: {
@@ -134,6 +138,15 @@ function restMonthSaleBranchChart(chartData){
 
     var chart = new ApexCharts(chartElement, options);
     chart.render();
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
 }
 
 function paymentMethodChartAjax(){
@@ -182,12 +195,13 @@ function paymentMethodChart(data){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
 
     var options = {
         series: [cashSales, cardSales, creditSales],
         chart: {
             type: 'donut',
-            height: 300,
+            height: containerHeight,
             width: containerWidth || '100%'
         },
         labels: ['Cash', 'Card', 'Credit'],
@@ -212,6 +226,15 @@ function paymentMethodChart(data){
 
     var chart = new ApexCharts(chartElement, options);
     chart.render();
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
 }
 
 function orderTypeChartAjax(){
@@ -260,12 +283,13 @@ function orderTypeChart(data){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
 
     var options = {
         series: [dineInSales, takeawaySales, deliverySales],
         chart: {
             type: 'pie',
-            height: 300,
+            height: containerHeight,
             width: containerWidth || '100%'
         },
         labels: ['Dine In', 'Takeaway', 'Delivery'],
@@ -290,6 +314,15 @@ function orderTypeChart(data){
 
     var chart = new ApexCharts(chartElement, options);
     chart.render();
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
 }
 
 function topFoodItemsAjax(){
@@ -338,6 +371,7 @@ function topFoodItemsChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
 
     var options = {
         series: [{
@@ -346,7 +380,7 @@ function topFoodItemsChart(chartData){
         }],
         chart: {
             type: 'bar',
-            height: 300,
+            height: containerHeight,
             width: containerWidth || '100%'
         },
         plotOptions: {
@@ -379,6 +413,15 @@ function topFoodItemsChart(chartData){
 
     var chart = new ApexCharts(chartElement, options);
     chart.render();
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
 }
 
 function branchPerformanceAjax(){
@@ -430,6 +473,7 @@ function branchPerformanceChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
 
     var options = {
         series: [{
@@ -442,11 +486,14 @@ function branchPerformanceChart(chartData){
             data: totalOrders
         }],
         chart: {
-            height: 300,
+            height: containerHeight,
             width: containerWidth || '100%',
             type: 'line',
             toolbar: {
                 show: true
+            },
+            zoom: {
+                enabled: true
             }
         },
         stroke: {
@@ -478,6 +525,15 @@ function branchPerformanceChart(chartData){
 
     var chart = new ApexCharts(chartElement, options);
     chart.render();
+
+    // Make chart responsive
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
 }
 
 
