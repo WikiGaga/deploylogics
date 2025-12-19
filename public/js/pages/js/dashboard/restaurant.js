@@ -28,33 +28,58 @@ function restMonthSaleBranchAjax(){
             if(response['status'] == "success"){
                 $('#rest_month_sale_branch').html("");
                 var chartData = response['data']['rest_month_sale_branch'];
-                restMonthSaleBranchChart(chartData);
+                if(chartData && chartData.length > 0){
+                    restMonthSaleBranchChart(chartData);
+                } else {
+                    $('#rest_month_sale_branch').html('<div class="text-center p-5">No data available</div>');
+                }
             }
+        },
+        error: function(xhr, status, error) {
+            $('#rest_month_sale_branch').html('<div class="text-center p-5">Error loading chart data</div>');
         }
     });
 }
 
 function restMonthSaleBranchChart(chartData){
+    if(!chartData || chartData.length === 0){
+        $('#rest_month_sale_branch').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+    
     var months = [];
     var branches = {};
     var series = [];
     
     chartData.forEach(function(item){
-        if(months.indexOf(item.month_name) === -1){
-            months.push(item.month_name);
+        var monthName = item.month_name || item.MONTH_NAME || '';
+        var branchName = item.branch_name || item.BRANCH_NAME || '';
+        
+        if(monthName && months.indexOf(monthName) === -1){
+            months.push(monthName);
         }
-        if(!branches[item.branch_name]){
-            branches[item.branch_name] = [];
+        if(branchName && !branches[branchName]){
+            branches[branchName] = [];
         }
     });
+    
+    if(months.length === 0){
+        $('#rest_month_sale_branch').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+    
+    months.sort();
     
     Object.keys(branches).forEach(function(branchName){
         var branchData = [];
         months.forEach(function(month){
             var found = chartData.find(function(item){
-                return item.month_name === month && item.branch_name === branchName;
+                var itemMonth = item.month_name || item.MONTH_NAME || '';
+                var itemBranch = item.branch_name || item.BRANCH_NAME || '';
+                return itemMonth === month && itemBranch === branchName;
             });
-            branchData.push(found ? parseFloat(found.amount) : 0);
+            var amount = found ? (found.amount || found.AMOUNT || 0) : 0;
+            branchData.push(parseFloat(amount));
         });
         series.push({
             name: branchName,
@@ -89,7 +114,14 @@ function restMonthSaleBranchChart(chartData){
         legend: {
             position: 'top'
         },
-        colors: [primary, success, info, warning, danger]
+        colors: [primary, success, info, warning, danger],
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
+            }
+        }
     };
     
     var chart = new ApexCharts(document.querySelector("#rest_month_sale_branch"), options);
@@ -112,19 +144,32 @@ function paymentMethodChartAjax(){
             if(response['status'] == "success"){
                 $('#payment_method_chart').html("");
                 var data = response['data']['payment_method_chart'];
-                paymentMethodChart(data);
+                if(data){
+                    paymentMethodChart(data);
+                } else {
+                    $('#payment_method_chart').html('<div class="text-center p-5">No data available</div>');
+                }
             }
+        },
+        error: function(xhr, status, error) {
+            $('#payment_method_chart').html('<div class="text-center p-5">Error loading chart data</div>');
         }
     });
 }
 
 function paymentMethodChart(data){
+    var cashSales = parseFloat(data.cash_sales || data.CASH_SALES || 0);
+    var cardSales = parseFloat(data.card_sales || data.CARD_SALES || 0);
+    var creditSales = parseFloat(data.credit_sales || data.CREDIT_SALES || 0);
+    var total = cashSales + cardSales + creditSales;
+    
+    if(total === 0){
+        $('#payment_method_chart').html('<div class="text-center p-5">No payment data available for today</div>');
+        return;
+    }
+    
     var options = {
-        series: [
-            parseFloat(data.cash_sales || 0),
-            parseFloat(data.card_sales || 0),
-            parseFloat(data.credit_sales || 0)
-        ],
+        series: [cashSales, cardSales, creditSales],
         chart: {
             type: 'donut',
             height: 300
@@ -138,6 +183,13 @@ function paymentMethodChart(data){
             enabled: true,
             formatter: function (val) {
                 return val.toFixed(1) + "%";
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
             }
         }
     };
@@ -162,19 +214,32 @@ function orderTypeChartAjax(){
             if(response['status'] == "success"){
                 $('#order_type_chart').html("");
                 var data = response['data']['order_type_chart'];
-                orderTypeChart(data);
+                if(data){
+                    orderTypeChart(data);
+                } else {
+                    $('#order_type_chart').html('<div class="text-center p-5">No data available</div>');
+                }
             }
+        },
+        error: function(xhr, status, error) {
+            $('#order_type_chart').html('<div class="text-center p-5">Error loading chart data</div>');
         }
     });
 }
 
 function orderTypeChart(data){
+    var dineInSales = parseFloat(data.dine_in_sales || data.DINE_IN_SALES || 0);
+    var takeawaySales = parseFloat(data.takeaway_sales || data.TAKEAWAY_SALES || 0);
+    var deliverySales = parseFloat(data.delivery_sales || data.DELIVERY_SALES || 0);
+    var total = dineInSales + takeawaySales + deliverySales;
+    
+    if(total === 0){
+        $('#order_type_chart').html('<div class="text-center p-5">No order type data available for today</div>');
+        return;
+    }
+    
     var options = {
-        series: [
-            parseFloat(data.dine_in_sales || 0),
-            parseFloat(data.takeaway_sales || 0),
-            parseFloat(data.delivery_sales || 0)
-        ],
+        series: [dineInSales, takeawaySales, deliverySales],
         chart: {
             type: 'pie',
             height: 300
@@ -188,6 +253,13 @@ function orderTypeChart(data){
             enabled: true,
             formatter: function (val) {
                 return val.toFixed(1) + "%";
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
             }
         }
     };
@@ -212,8 +284,15 @@ function topFoodItemsAjax(){
             if(response['status'] == "success"){
                 $('#top_food_items').html("");
                 var chartData = response['data']['top_food_items'];
-                topFoodItemsChart(chartData);
+                if(chartData && chartData.length > 0){
+                    topFoodItemsChart(chartData);
+                } else {
+                    $('#top_food_items').html('<div class="text-center p-5">No data available</div>');
+                }
             }
+        },
+        error: function(xhr, status, error) {
+            $('#top_food_items').html('<div class="text-center p-5">Error loading chart data</div>');
         }
     });
 }
@@ -223,8 +302,10 @@ function topFoodItemsChart(chartData){
     var amounts = [];
     
     chartData.forEach(function(item){
-        labels.push(item.food_name);
-        amounts.push(parseFloat(item.total_amount || 0));
+        var foodName = item.food_name || item.FOOD_NAME || '';
+        var totalAmount = item.total_amount || item.TOTAL_AMOUNT || 0;
+        labels.push(foodName);
+        amounts.push(parseFloat(totalAmount));
     });
     
     var options = {
@@ -284,8 +365,15 @@ function branchPerformanceAjax(){
             if(response['status'] == "success"){
                 $('#branch_performance').html("");
                 var chartData = response['data']['branch_performance'];
-                branchPerformanceChart(chartData);
+                if(chartData && chartData.length > 0){
+                    branchPerformanceChart(chartData);
+                } else {
+                    $('#branch_performance').html('<div class="text-center p-5">No data available</div>');
+                }
             }
+        },
+        error: function(xhr, status, error) {
+            $('#branch_performance').html('<div class="text-center p-5">Error loading chart data</div>');
         }
     });
 }
@@ -296,9 +384,12 @@ function branchPerformanceChart(chartData){
     var totalOrders = [];
     
     chartData.forEach(function(item){
-        labels.push(item.branch_name);
-        netSales.push(parseFloat(item.net_sales || 0));
-        totalOrders.push(parseFloat(item.total_orders || 0));
+        var branchName = item.branch_name || item.BRANCH_NAME || '';
+        var netSale = item.net_sales || item.NET_SALES || 0;
+        var totalOrder = item.total_orders || item.TOTAL_ORDERS || 0;
+        labels.push(branchName);
+        netSales.push(parseFloat(netSale));
+        totalOrders.push(parseFloat(totalOrder));
     });
     
     var options = {

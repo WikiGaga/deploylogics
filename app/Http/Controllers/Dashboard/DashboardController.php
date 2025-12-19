@@ -350,7 +350,8 @@ class DashboardController extends Controller
                              NVL(SUM(CARD_SALES), 0) AS card_sales,
                              NVL(SUM(CREDIT_SALES), 0) AS credit_sales
                              FROM VW_REST_SUMMARY_ORDER_WISE
-                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
                              AND ORDER_STATUS <> 'canceled'";
                     $data['payment_method_chart'] = DB::selectOne($query);
@@ -362,7 +363,8 @@ class DashboardController extends Controller
                              NVL(SUM(TAKEAWAY_SALES), 0) AS takeaway_sales,
                              NVL(SUM(DELIVERY_SALES), 0) AS delivery_sales
                              FROM VW_REST_SUMMARY_ORDER_WISE
-                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
                              AND ORDER_STATUS <> 'canceled'";
                     $data['order_type_chart'] = DB::selectOne($query);
@@ -374,7 +376,8 @@ class DashboardController extends Controller
                              SUM(ITEM_NET_AMOUNT) AS total_amount,
                              SUM(QUANTITY) AS total_quantity
                              FROM VW_REST_ORDER_DTL
-                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
                              AND ORDER_STATUS <> 'canceled'
                              AND IS_DELETED = 'N'
