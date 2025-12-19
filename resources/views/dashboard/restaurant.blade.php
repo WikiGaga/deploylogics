@@ -9,7 +9,6 @@
         height: 60px !important;
     }
     .chart_block{
-        min-height: 300px !important;
         height: auto !important;
     }
     .kt-portlet.chart_block {
@@ -18,16 +17,17 @@
     }
     .kt-portlet.chart_block .kt-portlet__body {
         overflow: visible !important;
-        padding: 1.5rem !important;
+        padding: 0.5rem !important;
         max-width: 100% !important;
         width: 100% !important;
-        min-height: 350px !important;
+        height: auto !important;
     }
     .kt-portlet__body--fit {
         overflow: visible !important;
         position: relative !important;
         max-width: 100% !important;
         width: 100% !important;
+        padding: 0 !important;
     }
     .kt-portlet__body--fit > div {
         width: 100% !important;
@@ -35,7 +35,16 @@
         overflow: visible !important;
         box-sizing: border-box !important;
         position: relative !important;
-        min-height: 320px !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .kt-portlet.chart_block {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .kt-portlet.chart_block .kt-portlet__body {
+        flex: 0 0 auto !important;
     }
     #rest_month_sale_branch,
     #payment_method_chart,
@@ -47,6 +56,8 @@
         overflow: hidden !important;
         box-sizing: border-box !important;
         position: relative !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     #rest_month_sale_branch > *,
     #payment_method_chart > *,
@@ -59,21 +70,28 @@
     .apexcharts-canvas {
         max-width: 100% !important;
         width: 100% !important;
+        margin: 0 !important;
     }
     .apexcharts-svg {
         max-width: 100% !important;
         width: 100% !important;
         height: auto !important;
     }
+    .kt-portlet.chart_block .kt-portlet__head {
+        margin-bottom: 0.5rem !important;
+    }
+    .row {
+        margin-bottom: 1rem !important;
+    }
     @media (max-width: 768px) {
         .chart_block {
-            min-height: 300px !important;
+            height: auto !important;
         }
         .kt-portlet.chart_block .kt-portlet__body {
-            min-height: 320px !important;
+            height: auto !important;
         }
         .kt-portlet__body--fit > div {
-            min-height: 300px !important;
+            height: auto !important;
         }
     }
     .col-lg-6,
