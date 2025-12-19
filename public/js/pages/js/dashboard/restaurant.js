@@ -68,7 +68,34 @@ function restMonthSaleBranchChart(chartData){
         return;
     }
 
-    months.sort();
+    // Sort months chronologically instead of alphabetically
+    months.sort(function(a, b) {
+        // Parse month-year format (e.g., "Nov-2025", "Oct-2025")
+        var monthNames = {
+            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+        };
+
+        var parseMonth = function(monthStr) {
+            var parts = monthStr.split('-');
+            if (parts.length === 2) {
+                var monthAbbr = parts[0].trim();
+                var year = parseInt(parts[1].trim());
+                var monthNum = monthNames[monthAbbr] || 0;
+                return { year: year, month: monthNum, original: monthStr };
+            }
+            return { year: 0, month: 0, original: monthStr };
+        };
+
+        var aDate = parseMonth(a);
+        var bDate = parseMonth(b);
+
+        // Sort by year first, then by month
+        if (aDate.year !== bDate.year) {
+            return aDate.year - bDate.year;
+        }
+        return aDate.month - bDate.month;
+    });
 
     Object.keys(branches).forEach(function(branchName){
         var branchData = [];
@@ -93,7 +120,7 @@ function restMonthSaleBranchChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(350, (window.innerHeight * 0.4)) || 400;
+    var containerHeight = 350;
 
     var options = {
         series: series,
@@ -139,7 +166,6 @@ function restMonthSaleBranchChart(chartData){
     var chart = new ApexCharts(chartElement, options);
     chart.render();
 
-    // Make chart responsive
     window.addEventListener('resize', function() {
         chart.updateOptions({
             chart: {
@@ -195,7 +221,7 @@ function paymentMethodChart(data){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
+    var containerHeight = 320;
 
     var options = {
         series: [cashSales, cardSales, creditSales],
@@ -283,7 +309,7 @@ function orderTypeChart(data){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
+    var containerHeight = 320;
 
     var options = {
         series: [dineInSales, takeawaySales, deliverySales],
@@ -371,7 +397,7 @@ function topFoodItemsChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
+    var containerHeight = 320;
 
     var options = {
         series: [{
@@ -473,7 +499,7 @@ function branchPerformanceChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(300, (window.innerHeight * 0.35)) || 350;
+    var containerHeight = 320;
 
     var options = {
         series: [{
@@ -526,7 +552,6 @@ function branchPerformanceChart(chartData){
     var chart = new ApexCharts(chartElement, options);
     chart.render();
 
-    // Make chart responsive
     window.addEventListener('resize', function() {
         chart.updateOptions({
             chart: {

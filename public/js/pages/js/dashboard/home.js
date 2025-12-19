@@ -44,8 +44,3 @@ $('#restaurants_dashboard').click(function(){
     });
 });
 
-$(document).ready(function(){
-    $('#erp_dashboard').trigger('click');
-});
-
-

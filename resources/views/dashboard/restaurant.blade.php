@@ -9,7 +9,7 @@
         height: 60px !important;
     }
     .chart_block{
-        min-height: 450px !important;
+        min-height: 380px !important;
         height: auto !important;
     }
     .kt-portlet.chart_block {
@@ -21,7 +21,7 @@
         padding: 1.5rem !important;
         max-width: 100% !important;
         width: 100% !important;
-        min-height: 400px !important;
+        min-height: 350px !important;
     }
     .kt-portlet__body--fit {
         overflow: visible !important;
@@ -35,7 +35,7 @@
         overflow: visible !important;
         box-sizing: border-box !important;
         position: relative !important;
-        min-height: 380px !important;
+        min-height: 320px !important;
     }
     #rest_month_sale_branch,
     #payment_method_chart,
@@ -67,13 +67,13 @@
     }
     @media (max-width: 768px) {
         .chart_block {
-            min-height: 400px !important;
-        }
-        .kt-portlet.chart_block .kt-portlet__body {
             min-height: 350px !important;
         }
+        .kt-portlet.chart_block .kt-portlet__body {
+            min-height: 320px !important;
+        }
         .kt-portlet__body--fit > div {
-            min-height: 330px !important;
+            min-height: 300px !important;
         }
     }
     .col-lg-6,
