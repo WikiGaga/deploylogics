@@ -115,11 +115,13 @@ Route::group(['middleware' => ['auth']], function () {
         Route::prefix('dashboard')->group(function(){
             Route::get('/dummy/{str}', 'Dashboard\DashboardController@dummy');
             Route::post('/get-sale-dashboard-detail', 'Dashboard\DashboardController@saleDashboard');
+            Route::post('/get-restaurant-dashboard-detail', 'Dashboard\DashboardController@restaurantDashboard');
             Route::post('/get-account-dashboard-detail', 'Dashboard\DashboardController@accountDashboard');
             Route::post('/get-chart-data', 'Dashboard\DashboardController@getChartData');
             Route::post('/get-chart-data2', 'Dashboard\DashboardController@getChartData2');
             Route::post('/get-chart-data3', 'Dashboard\DashboardController@getChartData3');
             Route::post('/get-chart-data4', 'Dashboard\DashboardController@getChartData4');
+            Route::post('/get-restaurant-chart-data', 'Dashboard\DashboardController@getRestaurantChartData');
         });
         Route::prefix('staging')->group(function(){
             Route::get('/list', 'StagingActivityController@index');

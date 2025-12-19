@@ -36,17 +36,11 @@
             font-family: inherit;
             padding: 3px 6px;
         }
-        #sale_dashboard{
+        #erp_dashboard{
             background-color: #2196f3;
         }
-        #purchase_dashboard{
+        #restaurants_dashboard{
             background-color: #f39521;
-        }
-        #inventory_dashboard{
-            background-color: #9921f3;
-        }
-        #accounts_dashboard{
-            background-color: #f32121d1;
         }
         #dashboard_data{
             margin-top: 25px;
@@ -60,51 +54,27 @@
         <!--Begin::Section-->
         <div id="dashboard_tabs">
             <div class="row">
-                <div class="col-lg-3">
-                    <div class="erp-widget" id="sale_dashboard">
+                <div class="col-lg-6">
+                    <div class="erp-widget" id="erp_dashboard">
                         <div class="erp-widget--img">
                         <span class="kt-menu__link-icon">
                             <i class="la la-signal fz-32"></i>
                         </span>
                         </div>
                         <div class="erp-widget--title">
-                            Sale Dashboard
+                            ERP Dashboard
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3">
-                    <div class="erp-widget" id="purchase_dashboard">
+                <div class="col-lg-6">
+                    <div class="erp-widget" id="restaurants_dashboard">
                         <div class="erp-widget--img">
                         <span class="kt-menu__link-icon">
-                            <i class="la la-shopping-cart fz-32"></i>
+                            <i class="la la-cutlery fz-32"></i>
                         </span>
                         </div>
                         <div class="erp-widget--title">
-                            Purchase Dashboard
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="erp-widget" id="inventory_dashboard">
-                        <div class="erp-widget--img">
-                        <span class="kt-menu__link-icon">
-                            <i class="la la-cube fz-32"></i>
-                        </span>
-                        </div>
-                        <div class="erp-widget--title">
-                            Inventory Dashboard
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="erp-widget" id="accounts_dashboard">
-                        <div class="erp-widget--img">
-                        <span class="kt-menu__link-icon">
-                            <i class="la la-cloud-upload fz-32"></i>
-                        </span>
-                        </div>
-                        <div class="erp-widget--title">
-                            Syncing Dashboard
+                            Restaurants Dashboard
                         </div>
                     </div>
                 </div>
@@ -125,8 +95,6 @@
 
 @section('customJS')
     <script src="/assets/chart_apex/apexcharts.js" type="text/javascript"></script>
-    <script src="/js/pages/js/dashboard/sale.js" type="text/javascript"></script>
-    <script src="/js/pages/js/dashboard/purchase.js" type="text/javascript"></script>
-    <script src="/js/pages/js/dashboard/inventory.js" type="text/javascript"></script>
-    <script src="/js/pages/js/dashboard/accounts.js" type="text/javascript"></script>
+    <script src="/js/pages/js/dashboard/home.js" type="text/javascript"></script>
+    <script src="/js/pages/js/dashboard/restaurant.js" type="text/javascript"></script>
 @endsection

@@ -63,33 +63,120 @@ class DashboardController extends Controller
         return $this->jsonSuccessResponse($view, '', 200);
     }
 
+    public function restaurantDashboard(Request $request)
+    {
+        $data = [];
+        $now = new \DateTime("now");
+        $today_format = $now->format("d-m-Y");
+        $today = date('Y-m-d', strtotime($today_format));
+        $data['today'] = $today_format;
 
+        $week_from = clone $now;
+        $week_from->modify('-7 days');
+        $week_from_date = $week_from->format("d-m-Y");
+        $week_from_db = date('Y-m-d', strtotime($week_from_date));
+
+        $month_from = clone $now;
+        $month_from->modify('-1 months');
+        $month_from_date = $month_from->format("d-m-Y");
+        $month_from_db = date('Y-m-d', strtotime($month_from_date));
+
+        $year_from = date('Y').'-01-01';
+
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS today_net_sale
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['today_net_sales'] = $result->today_net_sale ?? 0;
+
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS week_net_sale
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['week_net_sales'] = $result->week_net_sale ?? 0;
+
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS month_net_sale
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE ORDER_DATE >= TO_DATE('".$month_from_db."', 'YYYY-MM-DD')
+              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['month_net_sales'] = $result->month_net_sale ?? 0;
+
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS year_net_sale
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE ORDER_DATE >= TO_DATE('".$year_from."', 'YYYY-MM-DD')
+              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['year_net_sales'] = $result->year_net_sale ?? 0;
+
+        $q = "SELECT COUNT(DISTINCT ORDER_ID) AS today_orders
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['today_orders'] = $result->today_orders ?? 0;
+
+        $q = "SELECT NVL(AVG(AVERAGE_BILL), 0) AS avg_bill
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'
+              AND ORDER_STATUS <> 'canceled'";
+        $result = DB::selectOne($q);
+        $data['avg_bill'] = $result->avg_bill ?? 0;
+
+        $q = "SELECT NVL(SUM(UNPAID_BILLS), 0) AS unpaid_bills
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')";
+        $result = DB::selectOne($q);
+        $data['unpaid_bills'] = $result->unpaid_bills ?? 0;
+
+        $q = "SELECT NVL(SUM(TOTAL_DISCOUNTS), 0) AS total_discounts
+              FROM VW_REST_SUMMARY_ORDER_WISE
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND PAYMENT_STATUS = 'paid'";
+        $result = DB::selectOne($q);
+        $data['total_discounts'] = $result->total_discounts ?? 0;
+
+        $view['view'] = view('dashboard.restaurant',compact('data'))->render();
+
+        return $this->jsonSuccessResponse($view, '', 200);
+    }
 
     public function accountDashboard(Request $request)
     {
         $data = [];
-        
-        $q = "select 
-                SYN.branch_id , 
-                BRA.BRANCH_NAME , 
-                SYN.description , 
+
+        $q = "select
+                SYN.branch_id ,
+                BRA.BRANCH_NAME ,
+                SYN.description ,
                 max(SYN.ENTRY_DATE_TIME)  ENTRY_DATE_TIME  ,
                 CURRENT_TIMESTAMP as time,
                 max(SYN.ENTRY_DATE_TIME) - CURRENT_TIMESTAMP AS difference
-            from 
-                TBL_SOFT_SYNCING_UPDATES SYN , TBL_SOFT_BRANCH BRA   
-            where BRA.BRANCH_ID  = SYN.branch_id 
-                AND SYN.DESCRIPTION is not null   
+            from
+                TBL_SOFT_SYNCING_UPDATES SYN , TBL_SOFT_BRANCH BRA
+            where BRA.BRANCH_ID  = SYN.branch_id
+                AND SYN.DESCRIPTION is not null
                 -- AND SYN.branch_id = ".auth()->user()->branch_id."
-            group by  SYN.branch_id , 
-                SYN.description  ,  
-                BRA.BRANCH_NAME 
+            group by  SYN.branch_id ,
+                SYN.description  ,
+                BRA.BRANCH_NAME
             ORDER BY BRANCH_NAME ,  DESCRIPTION";
 
         $data['sync_data'] = DB::select($q);
-        
+
         //dd($data['sync_data']);
-        
+
         $view['view'] = view('dashboard.account',compact('data'))->render();
 
         return $this->jsonSuccessResponse($view, '', 200);
@@ -226,6 +313,95 @@ class DashboardController extends Controller
     public function dummy($str)
     {
         return view("dashboard.dummy.$str")->render();
+    }
+
+    public function getRestaurantChartData(Request $request)
+    {
+        $data = [];
+        $now = new \DateTime("now");
+        $today_format = $now->format("d-m-Y");
+        $today = date('Y-m-d', strtotime($today_format));
+
+        $from = clone $now;
+        $from->modify('-11 months');
+        $from_date = $from->format("d-m-Y");
+        $from_db = date('Y-m-d', strtotime($from_date));
+
+        if(isset($request->chart_name)){
+            switch($request->chart_name){
+                case 'rest_month_sale_branch':
+                    $query = "SELECT TO_CHAR(ORDER_DATE, 'Mon-YYYY') AS month_name,
+                             TO_NUMBER(TO_CHAR(ORDER_DATE, 'MM')) AS month_num,
+                             BRANCH_NAME,
+                             NVL(SUM(NET_SALES), 0) AS amount
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND ORDER_STATUS <> 'canceled'
+                             GROUP BY TO_CHAR(ORDER_DATE, 'Mon-YYYY'), TO_NUMBER(TO_CHAR(ORDER_DATE, 'MM')), BRANCH_NAME
+                             ORDER BY month_num, BRANCH_NAME";
+                    $data['rest_month_sale_branch'] = DB::select($query);
+                    break;
+
+                case 'payment_method_chart':
+                    $query = "SELECT
+                             NVL(SUM(CASH_SALES), 0) AS cash_sales,
+                             NVL(SUM(CARD_SALES), 0) AS card_sales,
+                             NVL(SUM(CREDIT_SALES), 0) AS credit_sales
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND ORDER_STATUS <> 'canceled'";
+                    $data['payment_method_chart'] = DB::selectOne($query);
+                    break;
+
+                case 'order_type_chart':
+                    $query = "SELECT
+                             NVL(SUM(DINE_IN_SALES), 0) AS dine_in_sales,
+                             NVL(SUM(TAKEAWAY_SALES), 0) AS takeaway_sales,
+                             NVL(SUM(DELIVERY_SALES), 0) AS delivery_sales
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND ORDER_STATUS <> 'canceled'";
+                    $data['order_type_chart'] = DB::selectOne($query);
+                    break;
+
+                case 'top_food_items':
+                    $query = "SELECT * FROM (
+                             SELECT FOOD_NAME,
+                             SUM(ITEM_NET_AMOUNT) AS total_amount,
+                             SUM(QUANTITY) AS total_quantity
+                             FROM VW_REST_ORDER_DTL
+                             WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND ORDER_STATUS <> 'canceled'
+                             AND IS_DELETED = 'N'
+                             GROUP BY FOOD_NAME
+                             ORDER BY total_amount DESC
+                             ) WHERE ROWNUM <= 5";
+                    $data['top_food_items'] = DB::select($query);
+                    break;
+
+                case 'branch_performance':
+                    $query = "SELECT BRANCH_NAME,
+                             NVL(SUM(NET_SALES), 0) AS net_sales,
+                             COUNT(DISTINCT ORDER_ID) AS total_orders,
+                             NVL(AVG(AVERAGE_BILL), 0) AS avg_bill
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND ORDER_STATUS <> 'canceled'
+                             GROUP BY BRANCH_NAME
+                             ORDER BY net_sales DESC";
+                    $data['branch_performance'] = DB::select($query);
+                    break;
+            }
+        }
+
+        return $this->jsonSuccessResponse($data, '', 200);
     }
 
 
