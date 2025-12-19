@@ -11,15 +11,28 @@
     .chart_block{
         height: 275px !important;
     }
+    .kt-portlet.chart_block {
+        overflow: hidden !important;
+        max-width: 100% !important;
+    }
+    .kt-portlet.chart_block .kt-portlet__body {
+        overflow: hidden !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
     .kt-portlet__body--fit {
         overflow: hidden !important;
         position: relative !important;
+        max-width: 100% !important;
+        width: 100% !important;
     }
     .kt-portlet__body--fit > div {
         width: 100% !important;
         max-width: 100% !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
+        position: relative !important;
     }
     #rest_month_sale_branch,
     #payment_method_chart,
@@ -30,18 +43,28 @@
         max-width: 100% !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
+        position: relative !important;
     }
-    .kt-portlet.chart_block {
-        overflow: hidden !important;
-    }
-    .kt-portlet.chart_block .kt-portlet__body {
-        overflow: hidden !important;
-        padding: 0 !important;
+    #rest_month_sale_branch > *,
+    #payment_method_chart > *,
+    #order_type_chart > *,
+    #top_food_items > *,
+    #branch_performance > * {
+        max-width: 100% !important;
+        width: 100% !important;
     }
     .apexcharts-canvas {
         max-width: 100% !important;
+        width: 100% !important;
     }
     .apexcharts-svg {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    .col-lg-6,
+    .col-lg-12 {
+        overflow: hidden !important;
         max-width: 100% !important;
     }
 </style>

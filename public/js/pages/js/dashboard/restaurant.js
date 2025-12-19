@@ -46,15 +46,15 @@ function restMonthSaleBranchChart(chartData){
         $('#rest_month_sale_branch').html('<div class="text-center p-5">No data available</div>');
         return;
     }
-    
+
     var months = [];
     var branches = {};
     var series = [];
-    
+
     chartData.forEach(function(item){
         var monthName = item.month_name || item.MONTH_NAME || '';
         var branchName = item.branch_name || item.BRANCH_NAME || '';
-        
+
         if(monthName && months.indexOf(monthName) === -1){
             months.push(monthName);
         }
@@ -62,14 +62,14 @@ function restMonthSaleBranchChart(chartData){
             branches[branchName] = [];
         }
     });
-    
+
     if(months.length === 0){
         $('#rest_month_sale_branch').html('<div class="text-center p-5">No data available</div>');
         return;
     }
-    
+
     months.sort();
-    
+
     Object.keys(branches).forEach(function(branchName){
         var branchData = [];
         months.forEach(function(month){
@@ -86,13 +86,20 @@ function restMonthSaleBranchChart(chartData){
             data: branchData
         });
     });
-    
+
+    var chartElement = document.querySelector("#rest_month_sale_branch");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+
     var options = {
         series: series,
         chart: {
             type: 'line',
             height: 350,
-            width: '100%',
+            width: containerWidth || '100%',
             toolbar: {
                 show: true
             }
@@ -124,8 +131,8 @@ function restMonthSaleBranchChart(chartData){
             }
         }
     };
-    
-    var chart = new ApexCharts(document.querySelector("#rest_month_sale_branch"), options);
+
+    var chart = new ApexCharts(chartElement, options);
     chart.render();
 }
 
@@ -163,18 +170,25 @@ function paymentMethodChart(data){
     var cardSales = parseFloat(data.card_sales || data.CARD_SALES || 0);
     var creditSales = parseFloat(data.credit_sales || data.CREDIT_SALES || 0);
     var total = cashSales + cardSales + creditSales;
-    
+
     if(total === 0){
         $('#payment_method_chart').html('<div class="text-center p-5">No payment data available for today</div>');
         return;
     }
-    
+
+    var chartElement = document.querySelector("#payment_method_chart");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+
     var options = {
         series: [cashSales, cardSales, creditSales],
         chart: {
             type: 'donut',
             height: 300,
-            width: '100%'
+            width: containerWidth || '100%'
         },
         labels: ['Cash', 'Card', 'Credit'],
         colors: [primary, success, info],
@@ -195,8 +209,8 @@ function paymentMethodChart(data){
             }
         }
     };
-    
-    var chart = new ApexCharts(document.querySelector("#payment_method_chart"), options);
+
+    var chart = new ApexCharts(chartElement, options);
     chart.render();
 }
 
@@ -234,18 +248,25 @@ function orderTypeChart(data){
     var takeawaySales = parseFloat(data.takeaway_sales || data.TAKEAWAY_SALES || 0);
     var deliverySales = parseFloat(data.delivery_sales || data.DELIVERY_SALES || 0);
     var total = dineInSales + takeawaySales + deliverySales;
-    
+
     if(total === 0){
         $('#order_type_chart').html('<div class="text-center p-5">No order type data available for today</div>');
         return;
     }
-    
+
+    var chartElement = document.querySelector("#order_type_chart");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+
     var options = {
         series: [dineInSales, takeawaySales, deliverySales],
         chart: {
             type: 'pie',
             height: 300,
-            width: '100%'
+            width: containerWidth || '100%'
         },
         labels: ['Dine In', 'Takeaway', 'Delivery'],
         colors: [primary, success, warning],
@@ -266,8 +287,8 @@ function orderTypeChart(data){
             }
         }
     };
-    
-    var chart = new ApexCharts(document.querySelector("#order_type_chart"), options);
+
+    var chart = new ApexCharts(chartElement, options);
     chart.render();
 }
 
@@ -303,14 +324,21 @@ function topFoodItemsAjax(){
 function topFoodItemsChart(chartData){
     var labels = [];
     var amounts = [];
-    
+
     chartData.forEach(function(item){
         var foodName = item.food_name || item.FOOD_NAME || '';
         var totalAmount = item.total_amount || item.TOTAL_AMOUNT || 0;
         labels.push(foodName);
         amounts.push(parseFloat(totalAmount));
     });
-    
+
+    var chartElement = document.querySelector("#top_food_items");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+
     var options = {
         series: [{
             name: 'Sales Amount',
@@ -319,7 +347,7 @@ function topFoodItemsChart(chartData){
         chart: {
             type: 'bar',
             height: 300,
-            width: '100%'
+            width: containerWidth || '100%'
         },
         plotOptions: {
             bar: {
@@ -348,8 +376,8 @@ function topFoodItemsChart(chartData){
         },
         colors: [primary]
     };
-    
-    var chart = new ApexCharts(document.querySelector("#top_food_items"), options);
+
+    var chart = new ApexCharts(chartElement, options);
     chart.render();
 }
 
@@ -386,7 +414,7 @@ function branchPerformanceChart(chartData){
     var labels = [];
     var netSales = [];
     var totalOrders = [];
-    
+
     chartData.forEach(function(item){
         var branchName = item.branch_name || item.BRANCH_NAME || '';
         var netSale = item.net_sales || item.NET_SALES || 0;
@@ -395,7 +423,14 @@ function branchPerformanceChart(chartData){
         netSales.push(parseFloat(netSale));
         totalOrders.push(parseFloat(totalOrder));
     });
-    
+
+    var chartElement = document.querySelector("#branch_performance");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+
     var options = {
         series: [{
             name: 'Net Sales',
@@ -408,7 +443,7 @@ function branchPerformanceChart(chartData){
         }],
         chart: {
             height: 300,
-            width: '100%',
+            width: containerWidth || '100%',
             type: 'line',
             toolbar: {
                 show: true
@@ -440,8 +475,8 @@ function branchPerformanceChart(chartData){
             position: 'top'
         }
     };
-    
-    var chart = new ApexCharts(document.querySelector("#branch_performance"), options);
+
+    var chart = new ApexCharts(chartElement, options);
     chart.render();
 }
 
