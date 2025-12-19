@@ -92,6 +92,7 @@ function restMonthSaleBranchChart(chartData){
         chart: {
             type: 'line',
             height: 350,
+            width: '100%',
             toolbar: {
                 show: true
             }
@@ -172,7 +173,8 @@ function paymentMethodChart(data){
         series: [cashSales, cardSales, creditSales],
         chart: {
             type: 'donut',
-            height: 300
+            height: 300,
+            width: '100%'
         },
         labels: ['Cash', 'Card', 'Credit'],
         colors: [primary, success, info],
@@ -242,7 +244,8 @@ function orderTypeChart(data){
         series: [dineInSales, takeawaySales, deliverySales],
         chart: {
             type: 'pie',
-            height: 300
+            height: 300,
+            width: '100%'
         },
         labels: ['Dine In', 'Takeaway', 'Delivery'],
         colors: [primary, success, warning],
@@ -315,7 +318,8 @@ function topFoodItemsChart(chartData){
         }],
         chart: {
             type: 'bar',
-            height: 300
+            height: 300,
+            width: '100%'
         },
         plotOptions: {
             bar: {
@@ -404,6 +408,7 @@ function branchPerformanceChart(chartData){
         }],
         chart: {
             height: 300,
+            width: '100%',
             type: 'line',
             toolbar: {
                 show: true

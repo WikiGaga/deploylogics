@@ -11,6 +11,39 @@
     .chart_block{
         height: 275px !important;
     }
+    .kt-portlet__body--fit {
+        overflow: hidden !important;
+        position: relative !important;
+    }
+    .kt-portlet__body--fit > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    #rest_month_sale_branch,
+    #payment_method_chart,
+    #order_type_chart,
+    #top_food_items,
+    #branch_performance {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    .kt-portlet.chart_block {
+        overflow: hidden !important;
+    }
+    .kt-portlet.chart_block .kt-portlet__body {
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+    .apexcharts-canvas {
+        max-width: 100% !important;
+    }
+    .apexcharts-svg {
+        max-width: 100% !important;
+    }
 </style>
 <div class="row kt-margin-b-15">
     <div class="col-lg-3">
