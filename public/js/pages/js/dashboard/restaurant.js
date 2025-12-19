@@ -120,7 +120,7 @@ function restMonthSaleBranchChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = 350;
+    var containerHeight = 300;
 
     var options = {
         series: series,
@@ -221,7 +221,7 @@ function paymentMethodChart(data){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = 320;
+    var containerHeight = 280;
 
     var options = {
         series: [cashSales, cardSales, creditSales],

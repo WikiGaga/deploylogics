@@ -9,7 +9,7 @@
         height: 60px !important;
     }
     .chart_block{
-        min-height: 380px !important;
+        min-height: 300px !important;
         height: auto !important;
     }
     .kt-portlet.chart_block {
@@ -67,7 +67,7 @@
     }
     @media (max-width: 768px) {
         .chart_block {
-            min-height: 350px !important;
+            min-height: 300px !important;
         }
         .kt-portlet.chart_block .kt-portlet__body {
             min-height: 320px !important;
