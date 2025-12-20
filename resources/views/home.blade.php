@@ -59,6 +59,48 @@
             margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .shimmer-small-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+        .shimmer-small-card::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        .shimmer-small-title {
+            height: 14px;
+            width: 60%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-top: 55px;
+            margin-left: 15px;
+        }
+        .shimmer-small-value {
+            height: 24px;
+            width: 50%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-left: 15px;
+        }
         .shimmer-header {
             height: 24px;
             width: 60%;
@@ -70,14 +112,6 @@
         }
         .shimmer-chart {
             height: 300px;
-            width: 100%;
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-        }
-        .shimmer-small-card {
-            height: 120px;
             width: 100%;
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
@@ -129,28 +163,63 @@
         </div>
         <!--End::Section-->
         <div id="dashboard_data" >
-            {{--@include('dashboard.dummy.sale')--}}
         </div>
         <!-- Shimmer Loading Placeholder -->
         <div id="shimmer_loading" class="shimmer-container">
-            <!-- First Row - Full Width Chart -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="shimmer-card">
-                        <div class="shimmer-header"></div>
-                        <div class="shimmer-chart"></div>
+            <div class="row kt-margin-b-15">
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
                     </div>
                 </div>
             </div>
-            <!-- Second Row - Two Half Width Charts -->
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="shimmer-card">
-                        <div class="shimmer-header"></div>
-                        <div class="shimmer-chart"></div>
+            <div class="row kt-margin-b-15">
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="shimmer-small-card">
+                        <div class="shimmer-small-title"></div>
+                        <div class="shimmer-small-value"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
                     <div class="shimmer-card">
                         <div class="shimmer-header"></div>
                         <div class="shimmer-chart"></div>
