@@ -40,7 +40,7 @@
     @if(session('msg'))
         <script>
             alert('This voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}';
+            document.location='/listing/accounts/{{ $type }}'; 
         </script>
     @endif
         <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">

@@ -45,11 +45,11 @@
     <!--begin::Form-->
     <form id="voucher_form" class="kt-form" method="post" action="{{ action('Accounts\VoucherController@pveStore', [$type,isset($id)?$id:'']) }}">
     @csrf
-
+    
     @if(session('msg'))
         <script>
             alert('This voucher enter in BRS!');
-            document.location='/listing/accounts/{{ $type }}';
+            document.location='/listing/accounts/{{ $type }}'; 
         </script>
     @endif
     <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">

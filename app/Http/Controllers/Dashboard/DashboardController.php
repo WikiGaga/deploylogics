@@ -83,38 +83,38 @@ class DashboardController extends Controller
 
         $year_from = date('Y').'-01-01';
 
-        $q = "SELECT NVL(SUM(NET_SALES), 0) AS today_net_sale
+        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS today_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['today_net_sales'] = $result->today_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(NET_SALES), 0) AS week_net_sale
+        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS week_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['week_net_sales'] = $result->week_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(NET_SALES), 0) AS month_net_sale
+        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS month_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$month_from_db."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['month_net_sales'] = $result->month_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(NET_SALES), 0) AS year_net_sale
+        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS year_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$year_from."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['year_net_sales'] = $result->year_net_sale ?? 0;
 
@@ -122,28 +122,36 @@ class DashboardController extends Controller
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['today_orders'] = $result->today_orders ?? 0;
 
-        $q = "SELECT NVL(AVG(AVERAGE_BILL), 0) AS avg_bill
+        $q = "SELECT
+                CASE
+                    WHEN COUNT(DISTINCT ORDER_ID) > 0
+                    THEN NVL(SUM(ORDER_AMOUNT) / COUNT(DISTINCT ORDER_ID), 0)
+                    ELSE 0
+                END AS avg_bill
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
-              AND ORDER_STATUS <> 'canceled'";
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['avg_bill'] = $result->avg_bill ?? 0;
 
-        $q = "SELECT NVL(SUM(UNPAID_BILLS), 0) AS unpaid_bills
+        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS unpaid_bills
               FROM VW_REST_SUMMARY_ORDER_WISE
-              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')";
+              WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
+              AND (PAYMENT_STATUS IS NULL OR UPPER(PAYMENT_STATUS) <> 'PAID')
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['unpaid_bills'] = $result->unpaid_bills ?? 0;
 
         $q = "SELECT NVL(SUM(TOTAL_DISCOUNTS), 0) AS total_discounts
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
-              AND PAYMENT_STATUS = 'paid'";
+              AND PAYMENT_STATUS = 'paid'
+              AND UPPER(ORDER_STATUS) <> 'CANCELED'";
         $result = DB::selectOne($q);
         $data['total_discounts'] = $result->total_discounts ?? 0;
 
@@ -333,12 +341,12 @@ class DashboardController extends Controller
                     $query = "SELECT TO_CHAR(ORDER_DATE, 'Mon-YYYY') AS month_name,
                              TO_NUMBER(TO_CHAR(ORDER_DATE, 'MM')) AS month_num,
                              BRANCH_NAME,
-                             NVL(SUM(NET_SALES), 0) AS amount
+                             NVL(SUM(ORDER_AMOUNT), 0) AS amount
                              FROM VW_REST_SUMMARY_ORDER_WISE
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
-                             AND ORDER_STATUS <> 'canceled'
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'
                              GROUP BY TO_CHAR(ORDER_DATE, 'Mon-YYYY'), TO_NUMBER(TO_CHAR(ORDER_DATE, 'MM')), BRANCH_NAME
                              ORDER BY month_num, BRANCH_NAME";
                     $data['rest_month_sale_branch'] = DB::select($query);
@@ -353,7 +361,7 @@ class DashboardController extends Controller
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
-                             AND ORDER_STATUS <> 'canceled'";
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['payment_method_chart'] = DB::selectOne($query);
                     break;
 
@@ -366,7 +374,7 @@ class DashboardController extends Controller
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
-                             AND ORDER_STATUS <> 'canceled'";
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['order_type_chart'] = DB::selectOne($query);
                     break;
 
@@ -379,8 +387,8 @@ class DashboardController extends Controller
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
-                             AND ORDER_STATUS <> 'canceled'
-                             AND IS_DELETED = 'N'
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                             AND (IS_DELETED IS NULL OR UPPER(IS_DELETED) <> 'Y')
                              GROUP BY FOOD_NAME
                              ORDER BY total_amount DESC
                              ) WHERE ROWNUM <= 5";
@@ -389,14 +397,18 @@ class DashboardController extends Controller
 
                 case 'branch_performance':
                     $query = "SELECT BRANCH_NAME,
-                             NVL(SUM(NET_SALES), 0) AS net_sales,
+                             NVL(SUM(ORDER_AMOUNT), 0) AS net_sales,
                              COUNT(DISTINCT ORDER_ID) AS total_orders,
-                             NVL(AVG(AVERAGE_BILL), 0) AS avg_bill
+                             CASE
+                                 WHEN COUNT(DISTINCT ORDER_ID) > 0
+                                 THEN NVL(SUM(ORDER_AMOUNT) / COUNT(DISTINCT ORDER_ID), 0)
+                                 ELSE 0
+                             END AS avg_bill
                              FROM VW_REST_SUMMARY_ORDER_WISE
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
-                             AND ORDER_STATUS <> 'canceled'
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'
                              GROUP BY BRANCH_NAME
                              ORDER BY net_sales DESC";
                     $data['branch_performance'] = DB::select($query);
