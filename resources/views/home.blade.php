@@ -45,6 +45,53 @@
         #dashboard_data{
             margin-top: 25px;
         }
+        /* Shimmer Loading Styles */
+        .shimmer-container {
+            display: none;
+        }
+        .shimmer-container.loading {
+            display: block;
+        }
+        .shimmer-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .shimmer-header {
+            height: 24px;
+            width: 60%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .shimmer-chart {
+            height: 300px;
+            width: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        .shimmer-small-card {
+            height: 120px;
+            width: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
     </style>
 @endsection
 @permission(['dash-view'])
@@ -83,6 +130,33 @@
         <!--End::Section-->
         <div id="dashboard_data" >
             {{--@include('dashboard.dummy.sale')--}}
+        </div>
+        <!-- Shimmer Loading Placeholder -->
+        <div id="shimmer_loading" class="shimmer-container">
+            <!-- First Row - Full Width Chart -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="shimmer-card">
+                        <div class="shimmer-header"></div>
+                        <div class="shimmer-chart"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Second Row - Two Half Width Charts -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="shimmer-card">
+                        <div class="shimmer-header"></div>
+                        <div class="shimmer-chart"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="shimmer-card">
+                        <div class="shimmer-header"></div>
+                        <div class="shimmer-chart"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- end:: Content -->
