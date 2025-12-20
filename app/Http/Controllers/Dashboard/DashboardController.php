@@ -83,7 +83,7 @@ class DashboardController extends Controller
 
         $year_from = date('Y').'-01-01';
 
-        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS today_net_sale
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS today_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
@@ -91,7 +91,7 @@ class DashboardController extends Controller
         $result = DB::selectOne($q);
         $data['today_net_sales'] = $result->today_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS week_net_sale
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS week_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
@@ -100,7 +100,7 @@ class DashboardController extends Controller
         $result = DB::selectOne($q);
         $data['week_net_sales'] = $result->week_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS month_net_sale
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS month_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$month_from_db."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
@@ -109,7 +109,7 @@ class DashboardController extends Controller
         $result = DB::selectOne($q);
         $data['month_net_sales'] = $result->month_net_sale ?? 0;
 
-        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS year_net_sale
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS year_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE ORDER_DATE >= TO_DATE('".$year_from."', 'YYYY-MM-DD')
               AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
@@ -129,7 +129,7 @@ class DashboardController extends Controller
         $q = "SELECT
                 CASE
                     WHEN COUNT(DISTINCT ORDER_ID) > 0
-                    THEN NVL(SUM(ORDER_AMOUNT) / COUNT(DISTINCT ORDER_ID), 0)
+                    THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ORDER_ID), 0)
                     ELSE 0
                 END AS avg_bill
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -139,7 +139,7 @@ class DashboardController extends Controller
         $result = DB::selectOne($q);
         $data['avg_bill'] = $result->avg_bill ?? 0;
 
-        $q = "SELECT NVL(SUM(ORDER_AMOUNT), 0) AS unpaid_bills
+        $q = "SELECT NVL(SUM(NET_SALES), 0) AS unpaid_bills
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND (PAYMENT_STATUS IS NULL OR UPPER(PAYMENT_STATUS) <> 'PAID')
@@ -341,7 +341,7 @@ class DashboardController extends Controller
                     $query = "SELECT TO_CHAR(ORDER_DATE, 'Mon-YYYY') AS month_name,
                              TO_NUMBER(TO_CHAR(ORDER_DATE, 'MM')) AS month_num,
                              BRANCH_NAME,
-                             NVL(SUM(ORDER_AMOUNT), 0) AS amount
+                             NVL(SUM(NET_SALES), 0) AS amount
                              FROM VW_REST_SUMMARY_ORDER_WISE
                              WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
@@ -397,11 +397,11 @@ class DashboardController extends Controller
 
                 case 'branch_performance':
                     $query = "SELECT BRANCH_NAME,
-                             NVL(SUM(ORDER_AMOUNT), 0) AS net_sales,
+                             NVL(SUM(NET_SALES), 0) AS net_sales,
                              COUNT(DISTINCT ORDER_ID) AS total_orders,
                              CASE
                                  WHEN COUNT(DISTINCT ORDER_ID) > 0
-                                 THEN NVL(SUM(ORDER_AMOUNT) / COUNT(DISTINCT ORDER_ID), 0)
+                                 THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ORDER_ID), 0)
                                  ELSE 0
                              END AS avg_bill
                              FROM VW_REST_SUMMARY_ORDER_WISE
