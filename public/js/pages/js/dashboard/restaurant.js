@@ -6,6 +6,7 @@ const danger = '#F64E60';
 
 function loadRestaurantCharts(){
     restMonthSaleBranchAjax();
+    salesByDayAjax();
     paymentMethodChartAjax();
     orderTypeChartAjax();
     topFoodItemsAjax();
@@ -68,9 +69,8 @@ function restMonthSaleBranchChart(chartData){
         return;
     }
 
-    // Sort months chronologically instead of alphabetically
+
     months.sort(function(a, b) {
-        // Parse month-year format (e.g., "Nov-2025", "Oct-2025")
         var monthNames = {
             'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
             'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
@@ -90,7 +90,6 @@ function restMonthSaleBranchChart(chartData){
         var aDate = parseMonth(a);
         var bDate = parseMonth(b);
 
-        // Sort by year first, then by month
         if (aDate.year !== bDate.year) {
             return aDate.year - bDate.year;
         }
@@ -159,6 +158,199 @@ function restMonthSaleBranchChart(chartData){
                 formatter: function (val) {
                     return val.toFixed(2);
                 }
+            }
+        }
+    };
+
+    var chart = new ApexCharts(chartElement, options);
+    chart.render();
+
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
+}
+
+function salesByDayAjax(){
+    var formData = {
+        chart_name : 'sales_by_day'
+    };
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: 'POST',
+        url: '/dashboard/get-restaurant-chart-data',
+        dataType: 'json',
+        data: formData,
+        success: function (response) {
+            if(response['status'] == "success"){
+                $('#sales_by_day_chart').html("");
+                var chartData = response['data']['sales_by_day'];
+                var summary = response['data']['sales_by_day_summary'];
+                var breakdown = response['data']['sales_by_day_breakdown'];
+
+                if(chartData && chartData.length > 0){
+                    salesByDayChart(chartData, summary, breakdown);
+                } else {
+                    $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#sales_by_day_chart').html('<div class="text-center p-5">Error loading chart data</div>');
+        }
+    });
+}
+
+function salesByDayChart(chartData, summary, breakdown){
+    if(!chartData || chartData.length === 0){
+        $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+
+    var days = [];
+    var salesAmounts = [];
+    var orderCounts = [];
+
+    chartData.forEach(function(item){
+        days.push(item.day_label || item.DAY_LABEL || '');
+        salesAmounts.push(parseFloat(item.sales_amount || item.SALES_AMOUNT || 0));
+        orderCounts.push(parseInt(item.order_count || item.ORDER_COUNT || 0));
+    });
+
+    if(summary){
+        var totalOrders = summary.total_orders || summary.TOTAL_ORDERS || 0;
+        var totalSales = parseFloat(summary.total_sales || summary.TOTAL_SALES || 0);
+        var salesLabel = (typeof translations !== 'undefined' && translations.sales) ? translations.sales : 'Sales';
+        $('#sales_by_day_summary').text(salesLabel + ' (' + totalOrders + ') - ' + totalSales.toFixed(3));
+    }
+
+    if(breakdown){
+        var onlineSales = parseFloat(breakdown.online_sales || breakdown.ONLINE_SALES || 0);
+        var cashSales = parseFloat(breakdown.cash_sales || breakdown.CASH_SALES || 0);
+        var deliverySales = parseFloat(breakdown.delivery_sales || breakdown.DELIVERY_SALES || 0);
+        var pickupSales = parseFloat(breakdown.pickup_sales || breakdown.PICKUP_SALES || 0);
+        var totalBreakdown = onlineSales + cashSales + deliverySales + pickupSales;
+
+        $('#online_sales_amount').text(onlineSales.toFixed(3));
+        $('#cash_sales_amount').text(cashSales.toFixed(3));
+        $('#delivery_sales_amount').text(deliverySales.toFixed(3));
+        $('#pickup_sales_amount').text(pickupSales.toFixed(3));
+
+        if(totalBreakdown > 0){
+            $('#online_sales_bar').css('width', (onlineSales / totalBreakdown * 100) + '%');
+            $('#cash_sales_bar').css('width', (cashSales / totalBreakdown * 100) + '%');
+            $('#delivery_sales_bar').css('width', (deliverySales / totalBreakdown * 100) + '%');
+            $('#pickup_sales_bar').css('width', (pickupSales / totalBreakdown * 100) + '%');
+        }
+    }
+
+    var chartElement = document.querySelector("#sales_by_day_chart");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = 300;
+
+    var options = {
+        series: [{
+            name: 'Sales Amount',
+            data: salesAmounts
+        }],
+        chart: {
+            type: 'column',
+            height: containerHeight,
+            width: containerWidth || '100%',
+            toolbar: {
+                show: true
+            }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: '60%',
+                horizontal: false,
+                dataLabels: {
+                    position: 'top'
+                }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return val.toFixed(0);
+            },
+            offsetY: -20,
+            style: {
+                fontSize: '12px',
+                colors: ["#304758"]
+            }
+        },
+        xaxis: {
+            categories: days,
+            position: 'bottom',
+            axisBorder: {
+                show: false
+            },
+            axisTicks: {
+                show: false
+            },
+            crosshairs: {
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        colorFrom: '#D8E3F0',
+                        colorTo: '#BED1E6',
+                        stops: [0, 100],
+                        opacityFrom: 0.4,
+                        opacityTo: 0.5
+                    }
+                }
+            },
+            tooltip: {
+                enabled: true
+            }
+        },
+        yaxis: {
+            axisBorder: {
+                show: false
+            },
+            axisTicks: {
+                show: false
+            },
+            labels: {
+                show: true,
+                formatter: function (val) {
+                    return val.toFixed(0);
+                }
+            },
+            title: {
+                text: 'Amount'
+            }
+        },
+        colors: [warning],
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: function (val, opts) {
+                    var index = opts.dataPointIndex;
+                    var orderCount = orderCounts[index] || 0;
+                    var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
+                    return val.toFixed(3) + ' ' + dayName + '<br/>' + orderCount + ' Orders';
+                }
+            }
+        },
+        grid: {
+            borderColor: '#e7e7e7',
+            row: {
+                colors: ['#f3f3f3', 'transparent'],
+                opacity: 0.5
             }
         }
     };
@@ -253,7 +445,6 @@ function paymentMethodChart(data){
     var chart = new ApexCharts(chartElement, options);
     chart.render();
 
-    // Make chart responsive
     window.addEventListener('resize', function() {
         chart.updateOptions({
             chart: {
@@ -341,7 +532,6 @@ function orderTypeChart(data){
     var chart = new ApexCharts(chartElement, options);
     chart.render();
 
-    // Make chart responsive
     window.addEventListener('resize', function() {
         chart.updateOptions({
             chart: {
@@ -440,7 +630,6 @@ function topFoodItemsChart(chartData){
     var chart = new ApexCharts(chartElement, options);
     chart.render();
 
-    // Make chart responsive
     window.addEventListener('resize', function() {
         chart.updateOptions({
             chart: {

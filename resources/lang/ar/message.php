@@ -216,7 +216,6 @@ return array (
   'bank_payment_voucher' => 'سند صرف بنكي',
   'journal_voucher' => 'قيد يومية',
   'purchase_request' => 'طلب شراء',
-  'comparative_quotation' => 'عرض أسعار مقارن',
   'opening_stock' => 'رصيد افتتاحي',
   'stock_transfer' => 'تحويل مخزون',
   'stock_adjustment' => 'تسوية مخزون',
@@ -241,4 +240,9 @@ return array (
   'order_type_breakdown' => 'تفصيل نوع الطلب',
   'top_5_food_items' => 'أفضل 5 أصناف طعام',
   'branch_performance' => 'أداء الفرع',
+  'sales_by_day' => 'المبيعات حسب اليوم',
+  'end_of_day_report' => 'تقرير نهاية اليوم',
+  'online' => 'عبر الإنترنت',
+  'delivery' => 'توصيل',
+  'pickup' => 'استلام',
 );

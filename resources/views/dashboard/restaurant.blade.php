@@ -50,7 +50,8 @@
     #payment_method_chart,
     #order_type_chart,
     #top_food_items,
-    #branch_performance {
+    #branch_performance,
+    #sales_by_day_chart {
         width: 100% !important;
         max-width: 100% !important;
         overflow: hidden !important;
@@ -327,6 +328,75 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-12">
+        <div class="kt-portlet kt-portlet--height-fluid kt-portlet--mobile chart_block">
+            <div class="kt-portlet__head kt-portlet__head--lg kt-portlet__head--noborder kt-portlet__head--break-sm">
+                <div class="kt-portlet__head-label">
+                    <h3 class="kt-portlet__head-title">
+                        {{ __('message.sales_by_day') }}
+                        <i class="la la-info-circle kt-font-info" style="font-size: 16px; margin-left: 5px;"></i>
+                    </h3>
+                    <div style="margin-top: 5px;">
+                        <span class="kt-font-sm kt-font-muted" id="sales_by_day_summary">{{ __('message.sales') }} (0) - 0.000</span>
+                    </div>
+                </div>
+                <div class="kt-portlet__head-toolbar">
+                    <button type="button" class="btn btn-sm btn-secondary" id="end_of_day_report_btn">
+                        {{ __('message.end_of_day_report') }}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-icon btn-secondary" style="margin-left: 5px;">
+                        <i class="la la-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="kt-portlet__body kt-portlet__body--fit">
+                <div id="sales_by_day_chart">
+                    <div class="chart-spinner kt-spinner kt-spinner--sm kt-spinner--brand"></div>
+                </div>
+                <div class="row" style="margin-top: 20px; padding: 0 15px;">
+                    <div class="col-lg-3 col-md-6" id="sales_breakdown_online">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.online') }}</span>
+                            <span class="kt-font-sm kt-font-bold" id="online_sales_amount">0.000</span>
+                        </div>
+                        <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">
+                            <div style="height: 100%; background: #FFA800; width: 0%; border-radius: 2px;" id="online_sales_bar"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6" id="sales_breakdown_cash">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.cash') }}</span>
+                            <span class="kt-font-sm kt-font-bold" id="cash_sales_amount">0.000</span>
+                        </div>
+                        <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">
+                            <div style="height: 100%; background: #FFA800; width: 0%; border-radius: 2px;" id="cash_sales_bar"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6" id="sales_breakdown_delivery">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.delivery') }}</span>
+                            <span class="kt-font-sm kt-font-bold" id="delivery_sales_amount">0.000</span>
+                        </div>
+                        <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">
+                            <div style="height: 100%; background: #FFA800; width: 0%; border-radius: 2px;" id="delivery_sales_bar"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6" id="sales_breakdown_pickup">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.pickup') }}</span>
+                            <span class="kt-font-sm kt-font-bold" id="pickup_sales_amount">0.000</span>
+                        </div>
+                        <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">
+                            <div style="height: 100%; background: #FFA800; width: 0%; border-radius: 2px;" id="pickup_sales_bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-lg-6">
         <div class="kt-portlet kt-portlet--height-fluid kt-portlet--mobile chart_block">
             <div class="kt-portlet__head kt-portlet__head--lg kt-portlet__head--noborder kt-portlet__head--break-sm">
@@ -400,4 +470,9 @@
     </div>
 </div>
 
+<script>
+    var translations = {
+        sales: '{{ __('message.sales') }}'
+    };
+</script>
 

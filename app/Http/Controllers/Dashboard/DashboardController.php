@@ -196,13 +196,12 @@ class DashboardController extends Controller
     {
         $data = [];
         $now = new \DateTime("now");
-        $today_format = $now->format("d-m-Y"); //for blade template
-        $today = date('Y-m-d', strtotime($today_format)); //for oracle db like 2020-04-16
+        $today_format = $now->format("d-m-Y");
+        $today = date('Y-m-d', strtotime($today_format));
         $data['today'] = $today_format;
-        // previous 1 month date from today
         $from = $now->modify('-1 months');
-        $from_date = $from->format("d-m-Y"); //for blade template
-        $from = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
+        $from_date = $from->format("d-m-Y");
+        $from = date('Y-m-d', strtotime($from_date));
         $data['branch_name'] = auth()->user()->branch->branch_name;
         if(isset($request->chart_name) && $request->chart_name == 'top_item_sales'){
             $query = "select * from (
@@ -219,13 +218,12 @@ class DashboardController extends Controller
     public function getChartData2(Request $request){
         $data = [];
         $now = new \DateTime("now");
-        $today_format = $now->format("d-m-Y"); //for blade template
-        $today = date('Y-m-d', strtotime($today_format)); //for oracle db like 2020-04-16
+        $today_format = $now->format("d-m-Y");
+        $today = date('Y-m-d', strtotime($today_format));
         $data['today'] = $today_format;
-        // previous 1 month date from today
         $from = $now->modify('-1 months');
-        $from_date = $from->format("d-m-Y"); //for blade template
-        $from = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
+        $from_date = $from->format("d-m-Y");
+        $from = date('Y-m-d', strtotime($from_date));
         $data['from'] = $from_date;
 
         if(isset($request->chart_name) && $request->chart_name == 'hours_branch_wise'){
@@ -412,6 +410,49 @@ class DashboardController extends Controller
                              GROUP BY BRANCH_NAME
                              ORDER BY net_sales DESC";
                     $data['branch_performance'] = DB::select($query);
+                    break;
+
+                case 'sales_by_day':
+                    $week_from = clone $now;
+                    $week_from->modify('-6 days');
+                    $week_from_db = date('Y-m-d', strtotime($week_from->format("d-m-Y")));
+
+                    $query = "SELECT
+                             TO_CHAR(ORDER_DATE, 'MM/DD') AS day_label,
+                             TO_CHAR(ORDER_DATE, 'DD Mon') AS day_name,
+                             TRUNC(ORDER_DATE) AS order_date,
+                             NVL(SUM(NET_SALES), 0) AS sales_amount,
+                             COUNT(DISTINCT ORDER_ID) AS order_count
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                             GROUP BY TRUNC(ORDER_DATE), TO_CHAR(ORDER_DATE, 'MM/DD'), TO_CHAR(ORDER_DATE, 'DD Mon')
+                             ORDER BY TRUNC(ORDER_DATE)";
+                    $data['sales_by_day'] = DB::select($query);
+
+                    $summary_query = "SELECT
+                                     COUNT(DISTINCT ORDER_ID) AS total_orders,
+                                     NVL(SUM(NET_SALES), 0) AS total_sales
+                                     FROM VW_REST_SUMMARY_ORDER_WISE
+                                     WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                     AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                     AND PAYMENT_STATUS = 'paid'
+                                     AND UPPER(ORDER_STATUS) <> 'CANCELED'";
+                    $data['sales_by_day_summary'] = DB::selectOne($summary_query);
+
+                    $breakdown_query = "SELECT
+                                       NVL(SUM(CASE WHEN PAYMENT_METHOD = 'Online' OR PAYMENT_METHOD LIKE '%Online%' THEN NET_SALES ELSE 0 END), 0) AS online_sales,
+                                       NVL(SUM(CASE WHEN PAYMENT_METHOD = 'Cash' OR PAYMENT_METHOD LIKE '%Cash%' THEN NET_SALES ELSE 0 END), 0) AS cash_sales,
+                                       NVL(SUM(CASE WHEN ORDER_TYPE = 'Delivery' OR ORDER_TYPE LIKE '%Delivery%' THEN NET_SALES ELSE 0 END), 0) AS delivery_sales,
+                                       NVL(SUM(CASE WHEN ORDER_TYPE = 'Pickup' OR ORDER_TYPE LIKE '%Pickup%' OR ORDER_TYPE = 'Takeaway' OR ORDER_TYPE LIKE '%Takeaway%' THEN NET_SALES ELSE 0 END), 0) AS pickup_sales
+                                       FROM VW_REST_SUMMARY_ORDER_WISE
+                                       WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                       AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                       AND PAYMENT_STATUS = 'paid'
+                                       AND UPPER(ORDER_STATUS) <> 'CANCELED'";
+                    $data['sales_by_day_breakdown'] = DB::selectOne($breakdown_query);
                     break;
             }
         }

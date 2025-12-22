@@ -224,7 +224,6 @@ return array (
   'bank_payment_voucher' => 'Bank Payment Voucher',
   'journal_voucher' => 'Journal Voucher',
   'purchase_request' => 'Purchase Request',
-  'comparative_quotation' => 'Comparative Quotation',
   'opening_stock' => 'Opening Stock',
   'stock_transfer' => 'Stock Transfer',
   'stock_adjustment' => 'Stock Adjustment',
@@ -249,4 +248,9 @@ return array (
   'order_type_breakdown' => 'Order Type Breakdown',
   'top_5_food_items' => 'Top 5 Food Items',
   'branch_performance' => 'Branch Performance',
+  'sales_by_day' => 'Sales by Day',
+  'end_of_day_report' => 'End of day report',
+  'online' => 'Online',
+  'delivery' => 'Delivery',
+  'pickup' => 'Pickup',
 );
