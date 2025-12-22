@@ -341,9 +341,9 @@
                     </div>
                 </div>
                 <div class="kt-portlet__head-toolbar">
-                    <button type="button" class="btn btn-sm btn-secondary" id="end_of_day_report_btn">
+                    {{-- <button type="button" class="btn btn-sm btn-secondary" id="end_of_day_report_btn">
                         {{ __('message.end_of_day_report') }}
-                    </button>
+                    </button> --}}
                     <button type="button" class="btn btn-sm btn-icon btn-secondary" style="margin-left: 5px;">
                         <i class="la la-download"></i>
                     </button>

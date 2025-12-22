@@ -418,17 +418,17 @@ class DashboardController extends Controller
                     $week_from_db = date('Y-m-d', strtotime($week_from->format("d-m-Y")));
 
                     $query = "SELECT
-                             TO_CHAR(ORDER_DATE, 'MM/DD') AS day_label,
-                             TO_CHAR(ORDER_DATE, 'DD Mon') AS day_name,
+                             TO_CHAR(TRUNC(ORDER_DATE), 'MM/DD') AS day_label,
+                             TO_CHAR(TRUNC(ORDER_DATE), 'DD Mon') AS day_name,
                              TRUNC(ORDER_DATE) AS order_date,
                              NVL(SUM(NET_SALES), 0) AS sales_amount,
                              COUNT(DISTINCT ORDER_ID) AS order_count
                              FROM VW_REST_SUMMARY_ORDER_WISE
-                             WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                             AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
                              AND UPPER(ORDER_STATUS) <> 'CANCELED'
-                             GROUP BY TRUNC(ORDER_DATE), TO_CHAR(ORDER_DATE, 'MM/DD'), TO_CHAR(ORDER_DATE, 'DD Mon')
+                             GROUP BY TRUNC(ORDER_DATE), TO_CHAR(TRUNC(ORDER_DATE), 'MM/DD'), TO_CHAR(TRUNC(ORDER_DATE), 'DD Mon')
                              ORDER BY TRUNC(ORDER_DATE)";
                     $data['sales_by_day'] = DB::select($query);
 
@@ -436,20 +436,20 @@ class DashboardController extends Controller
                                      COUNT(DISTINCT ORDER_ID) AS total_orders,
                                      NVL(SUM(NET_SALES), 0) AS total_sales
                                      FROM VW_REST_SUMMARY_ORDER_WISE
-                                     WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                                     AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                     WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                     AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
                                      AND PAYMENT_STATUS = 'paid'
                                      AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['sales_by_day_summary'] = DB::selectOne($summary_query);
 
                     $breakdown_query = "SELECT
-                                       NVL(SUM(CASE WHEN PAYMENT_METHOD = 'Online' OR PAYMENT_METHOD LIKE '%Online%' THEN NET_SALES ELSE 0 END), 0) AS online_sales,
-                                       NVL(SUM(CASE WHEN PAYMENT_METHOD = 'Cash' OR PAYMENT_METHOD LIKE '%Cash%' THEN NET_SALES ELSE 0 END), 0) AS cash_sales,
-                                       NVL(SUM(CASE WHEN ORDER_TYPE = 'Delivery' OR ORDER_TYPE LIKE '%Delivery%' THEN NET_SALES ELSE 0 END), 0) AS delivery_sales,
-                                       NVL(SUM(CASE WHEN ORDER_TYPE = 'Pickup' OR ORDER_TYPE LIKE '%Pickup%' OR ORDER_TYPE = 'Takeaway' OR ORDER_TYPE LIKE '%Takeaway%' THEN NET_SALES ELSE 0 END), 0) AS pickup_sales
+                                       NVL(SUM(CARD_SALES), 0) AS online_sales,
+                                       NVL(SUM(CASH_SALES), 0) AS cash_sales,
+                                       NVL(SUM(DELIVERY_SALES), 0) AS delivery_sales,
+                                       NVL(SUM(TAKEAWAY_SALES), 0) AS pickup_sales
                                        FROM VW_REST_SUMMARY_ORDER_WISE
-                                       WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                                       AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                       WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                       AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
                                        AND PAYMENT_STATUS = 'paid'
                                        AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['sales_by_day_breakdown'] = DB::selectOne($breakdown_query);
