@@ -414,7 +414,7 @@ class DashboardController extends Controller
 
                 case 'sales_by_day':
                     $week_from = clone $now;
-                    $week_from->modify('-6 days');
+                    $week_from->modify('-7 days');
                     $week_from_db = date('Y-m-d', strtotime($week_from->format("d-m-Y")));
 
                     $query = "SELECT
@@ -424,8 +424,8 @@ class DashboardController extends Controller
                              NVL(SUM(NET_SALES), 0) AS sales_amount,
                              COUNT(DISTINCT ORDER_ID) AS order_count
                              FROM VW_REST_SUMMARY_ORDER_WISE
-                             WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                             AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                              AND PAYMENT_STATUS = 'paid'
                              AND UPPER(ORDER_STATUS) <> 'CANCELED'
                              GROUP BY TRUNC(ORDER_DATE), TO_CHAR(TRUNC(ORDER_DATE), 'MM/DD'), TO_CHAR(TRUNC(ORDER_DATE), 'DD Mon')
@@ -436,8 +436,8 @@ class DashboardController extends Controller
                                      COUNT(DISTINCT ORDER_ID) AS total_orders,
                                      NVL(SUM(NET_SALES), 0) AS total_sales
                                      FROM VW_REST_SUMMARY_ORDER_WISE
-                                     WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                                     AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                     WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                     AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                                      AND PAYMENT_STATUS = 'paid'
                                      AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['sales_by_day_summary'] = DB::selectOne($summary_query);
@@ -448,8 +448,8 @@ class DashboardController extends Controller
                                        NVL(SUM(DELIVERY_SALES), 0) AS delivery_sales,
                                        NVL(SUM(TAKEAWAY_SALES), 0) AS pickup_sales
                                        FROM VW_REST_SUMMARY_ORDER_WISE
-                                       WHERE TRUNC(ORDER_DATE) >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
-                                       AND TRUNC(ORDER_DATE) <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                                       WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                                       AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
                                        AND PAYMENT_STATUS = 'paid'
                                        AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['sales_by_day_breakdown'] = DB::selectOne($breakdown_query);

@@ -206,9 +206,15 @@ function salesByDayAjax(){
     });
 }
 
+var salesByDayChartInstance = null;
+
 function salesByDayChart(chartData, summary, breakdown){
     if(!chartData || chartData.length === 0){
         $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
+        if(salesByDayChartInstance){
+            salesByDayChartInstance.destroy();
+            salesByDayChartInstance = null;
+        }
         return;
     }
 
@@ -355,15 +361,22 @@ function salesByDayChart(chartData, summary, breakdown){
         }
     };
 
-    var chart = new ApexCharts(chartElement, options);
-    chart.render();
+    // Destroy existing chart if any
+    if(salesByDayChartInstance){
+        salesByDayChartInstance.destroy();
+    }
+
+    salesByDayChartInstance = new ApexCharts(chartElement, options);
+    salesByDayChartInstance.render();
 
     window.addEventListener('resize', function() {
-        chart.updateOptions({
-            chart: {
-                width: chartElement.offsetWidth || '100%'
-            }
-        });
+        if(salesByDayChartInstance){
+            salesByDayChartInstance.updateOptions({
+                chart: {
+                    width: chartElement.offsetWidth || '100%'
+                }
+            });
+        }
     });
 }
 
