@@ -193,9 +193,7 @@ function salesByDayAjax(){
                 var breakdown = response['data']['sales_by_day_breakdown'];
 
                 if(chartData && chartData.length > 0){
-                    // Clear container and add placeholder to maintain dimensions
                     $('#sales_by_day_chart').html('<div style="min-height: 300px;"></div>');
-                    // Small delay to ensure container is ready
                     setTimeout(function(){
                         salesByDayChart(chartData, summary, breakdown);
                     }, 100);
@@ -226,7 +224,6 @@ function salesByDayChart(chartData, summary, breakdown){
         }
     });
 
-    // Validate we have data
     if(days.length === 0 || salesAmounts.length === 0){
         $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
         return;
@@ -264,10 +261,8 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
-    // Clear any placeholder
     $(chartElement).html('');
 
-    // Ensure container has dimensions - use jQuery to get width if offsetWidth is 0
     var containerWidth = chartElement.offsetWidth;
     if(!containerWidth || containerWidth === 0){
         containerWidth = $(chartElement).width();
