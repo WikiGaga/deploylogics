@@ -223,9 +223,15 @@ function salesByDayChart(chartData, summary, breakdown){
     var orderCounts = [];
 
     chartData.forEach(function(item){
-        days.push(item.day_label || item.DAY_LABEL || '');
-        salesAmounts.push(parseFloat(item.sales_amount || item.SALES_AMOUNT || 0));
-        orderCounts.push(parseInt(item.order_count || item.ORDER_COUNT || 0));
+        var dayLabel = item.day_label || item.DAY_LABEL || '';
+        var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
+        var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
+
+        if(dayLabel && !isNaN(salesAmount) && !isNaN(orderCount)){
+            days.push(dayLabel);
+            salesAmounts.push(salesAmount);
+            orderCounts.push(orderCount);
+        }
     });
 
     if(summary){
@@ -260,47 +266,46 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
+    // Validate data
+    if(days.length === 0 || salesAmounts.length === 0){
+        $(chartElement).html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+
     // Clear the container first
     $(chartElement).html('');
 
-    // Ensure container has dimensions - wait a bit if needed
-    setTimeout(function() {
-        var containerWidth = chartElement.offsetWidth || $(chartElement).width() || $(chartElement).parent().width() || '100%';
-        var containerHeight = 300;
+    var containerWidth = chartElement.offsetWidth || $(chartElement).width() || $(chartElement).parent().width();
+    var containerHeight = 300;
 
-        // If container has no width, use parent or default
-        if(containerWidth === 0 || !containerWidth){
-            containerWidth = $(chartElement).parent().width() || '100%';
-        }
+    // Ensure we have valid dimensions
+    if(!containerWidth || containerWidth === 0){
+        containerWidth = $(chartElement).parent().width() || 800;
+    }
 
-        // Ensure minimum dimensions
-        if(typeof containerWidth === 'number' && containerWidth < 100){
-            containerWidth = '100%';
-        }
-
-        var options = {
-            series: [{
-                name: 'Sales Amount',
-                data: salesAmounts
-            }],
-            chart: {
-                type: 'column',
-                height: containerHeight,
-                width: containerWidth,
-                toolbar: {
-                    show: true
+    var options = {
+        series: [{
+            name: 'Sales Amount',
+            data: salesAmounts
+        }],
+        chart: {
+            type: 'column',
+            height: containerHeight,
+            width: containerWidth,
+            toolbar: {
+                show: true
+            }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: '60%',
+                horizontal: false,
+                dataLabels: {
+                    position: 'top'
                 }
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    columnWidth: '60%',
-                    horizontal: false,
-                    dataLabels: {
-                        position: 'top'
-                    }
-                }
-            },
+            }
+        },
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
@@ -374,46 +379,35 @@ function salesByDayChart(chartData, summary, breakdown){
                     opacity: 0.5
                 }
             }
-        };
+    };
 
-        // Destroy existing chart if any
+    // Destroy existing chart if any
+    if(salesByDayChartInstance){
+        try {
+            salesByDayChartInstance.destroy();
+        } catch(e) {
+            // Ignore errors
+        }
+        salesByDayChartInstance = null;
+    }
+
+    salesByDayChartInstance = new ApexCharts(chartElement, options);
+    salesByDayChartInstance.render();
+
+    window.addEventListener('resize', function() {
         if(salesByDayChartInstance){
             try {
-                salesByDayChartInstance.destroy();
+                var newWidth = chartElement.offsetWidth || $(chartElement).width() || '100%';
+                salesByDayChartInstance.updateOptions({
+                    chart: {
+                        width: newWidth
+                    }
+                });
             } catch(e) {
-                console.log('Error destroying chart:', e);
+                // Ignore errors
             }
-            salesByDayChartInstance = null;
         }
-
-        try {
-            salesByDayChartInstance = new ApexCharts(chartElement, options);
-            salesByDayChartInstance.render().then(function() {
-                // Chart rendered successfully
-            }).catch(function(error) {
-                console.error('Error rendering chart:', error);
-            });
-        } catch(e) {
-            console.error('Error creating chart:', e);
-        }
-
-        // Remove existing resize listeners and add new one
-        $(window).off('resize.salesByDay');
-        $(window).on('resize.salesByDay', function() {
-            if(salesByDayChartInstance){
-                try {
-                    var newWidth = chartElement.offsetWidth || $(chartElement).width() || '100%';
-                    salesByDayChartInstance.updateOptions({
-                        chart: {
-                            width: newWidth
-                        }
-                    });
-                } catch(e) {
-                    console.log('Error updating chart on resize:', e);
-                }
-            }
-        });
-    }, 100);
+    });
 }
 
 function paymentMethodChartAjax(){
