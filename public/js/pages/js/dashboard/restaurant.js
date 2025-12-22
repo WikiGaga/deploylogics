@@ -206,32 +206,18 @@ function salesByDayAjax(){
     });
 }
 
-var salesByDayChartInstance = null;
-
 function salesByDayChart(chartData, summary, breakdown){
-    if(!chartData || chartData.length === 0){
-        $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
-        if(salesByDayChartInstance){
-            salesByDayChartInstance.destroy();
-            salesByDayChartInstance = null;
-        }
-        return;
-    }
-
     var days = [];
     var salesAmounts = [];
     var orderCounts = [];
 
     chartData.forEach(function(item){
         var dayLabel = item.day_label || item.DAY_LABEL || '';
-        var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
-        var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
-
-        if(dayLabel && !isNaN(salesAmount) && !isNaN(orderCount)){
-            days.push(dayLabel);
-            salesAmounts.push(salesAmount);
-            orderCounts.push(orderCount);
-        }
+        var salesAmount = item.sales_amount || item.SALES_AMOUNT || 0;
+        var orderCount = item.order_count || item.ORDER_COUNT || 0;
+        days.push(dayLabel);
+        salesAmounts.push(parseFloat(salesAmount));
+        orderCounts.push(parseInt(orderCount));
     });
 
     if(summary){
@@ -266,22 +252,8 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
-    // Validate data
-    if(days.length === 0 || salesAmounts.length === 0){
-        $(chartElement).html('<div class="text-center p-5">No data available</div>');
-        return;
-    }
-
-    // Clear the container first
-    $(chartElement).html('');
-
-    var containerWidth = chartElement.offsetWidth || $(chartElement).width() || $(chartElement).parent().width();
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
     var containerHeight = 300;
-
-    // Ensure we have valid dimensions
-    if(!containerWidth || containerWidth === 0){
-        containerWidth = $(chartElement).parent().width() || 800;
-    }
 
     var options = {
         series: [{
@@ -306,107 +278,47 @@ function salesByDayChart(chartData, summary, breakdown){
                 }
             }
         },
-            dataLabels: {
-                enabled: true,
-                formatter: function (val) {
-                    return val.toFixed(0);
-                },
-                offsetY: -20,
-                style: {
-                    fontSize: '12px',
-                    colors: ["#304758"]
-                }
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return val.toFixed(0);
             },
-            xaxis: {
-                categories: days,
-                position: 'bottom',
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                crosshairs: {
-                    fill: {
-                        type: 'gradient',
-                        gradient: {
-                            colorFrom: '#D8E3F0',
-                            colorTo: '#BED1E6',
-                            stops: [0, 100],
-                            opacityFrom: 0.4,
-                            opacityTo: 0.5
-                        }
-                    }
-                },
-                tooltip: {
-                    enabled: true
-                }
-            },
-            yaxis: {
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                labels: {
-                    show: true,
-                    formatter: function (val) {
-                        return val.toFixed(0);
-                    }
-                },
-                title: {
-                    text: 'Amount'
-                }
-            },
-            colors: [warning],
-            tooltip: {
-                shared: true,
-                intersect: false,
-                y: {
-                    formatter: function (val, opts) {
-                        var index = opts.dataPointIndex;
-                        var orderCount = orderCounts[index] || 0;
-                        var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
-                        return val.toFixed(3) + ' ' + dayName + '<br/>' + orderCount + ' Orders';
-                    }
-                }
-            },
-            grid: {
-                borderColor: '#e7e7e7',
-                row: {
-                    colors: ['#f3f3f3', 'transparent'],
-                    opacity: 0.5
+            offsetY: -20,
+            style: {
+                fontSize: '12px',
+                colors: ["#304758"]
+            }
+        },
+        xaxis: {
+            categories: days
+        },
+        yaxis: {
+            title: {
+                text: 'Amount'
+            }
+        },
+        colors: [warning],
+        tooltip: {
+            y: {
+                formatter: function (val, opts) {
+                    var index = opts.dataPointIndex;
+                    var orderCount = orderCounts[index] || 0;
+                    var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
+                    return val.toFixed(3) + ' ' + dayName + '<br/>' + orderCount + ' Orders';
                 }
             }
+        }
     };
 
-    // Destroy existing chart if any
-    if(salesByDayChartInstance){
-        try {
-            salesByDayChartInstance.destroy();
-        } catch(e) {
-            // Ignore errors
-        }
-        salesByDayChartInstance = null;
-    }
-
-    salesByDayChartInstance = new ApexCharts(chartElement, options);
-    salesByDayChartInstance.render();
+    var chart = new ApexCharts(chartElement, options);
+    chart.render();
 
     window.addEventListener('resize', function() {
-        if(salesByDayChartInstance){
-            try {
-                var newWidth = chartElement.offsetWidth || $(chartElement).width() || '100%';
-                salesByDayChartInstance.updateOptions({
-                    chart: {
-                        width: newWidth
-                    }
-                });
-            } catch(e) {
-                // Ignore errors
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
             }
-        }
+        });
     });
 }
 
