@@ -59,6 +59,7 @@
         position: relative !important;
         margin: 0 !important;
         padding: 0 !important;
+        min-height: 300px !important;
     }
     #rest_month_sale_branch > *,
     #payment_method_chart > *,

@@ -260,124 +260,160 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
-    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = 300;
+    // Clear the container first
+    $(chartElement).html('');
 
-    var options = {
-        series: [{
-            name: 'Sales Amount',
-            data: salesAmounts
-        }],
-        chart: {
-            type: 'column',
-            height: containerHeight,
-            width: containerWidth || '100%',
-            toolbar: {
-                show: true
-            }
-        },
-        plotOptions: {
-            bar: {
-                borderRadius: 4,
-                columnWidth: '60%',
-                horizontal: false,
-                dataLabels: {
-                    position: 'top'
+    // Ensure container has dimensions - wait a bit if needed
+    setTimeout(function() {
+        var containerWidth = chartElement.offsetWidth || $(chartElement).width() || $(chartElement).parent().width() || '100%';
+        var containerHeight = 300;
+
+        // If container has no width, use parent or default
+        if(containerWidth === 0 || !containerWidth){
+            containerWidth = $(chartElement).parent().width() || '100%';
+        }
+
+        // Ensure minimum dimensions
+        if(typeof containerWidth === 'number' && containerWidth < 100){
+            containerWidth = '100%';
+        }
+
+        var options = {
+            series: [{
+                name: 'Sales Amount',
+                data: salesAmounts
+            }],
+            chart: {
+                type: 'column',
+                height: containerHeight,
+                width: containerWidth,
+                toolbar: {
+                    show: true
                 }
-            }
-        },
-        dataLabels: {
-            enabled: true,
-            formatter: function (val) {
-                return val.toFixed(0);
             },
-            offsetY: -20,
-            style: {
-                fontSize: '12px',
-                colors: ["#304758"]
-            }
-        },
-        xaxis: {
-            categories: days,
-            position: 'bottom',
-            axisBorder: {
-                show: false
-            },
-            axisTicks: {
-                show: false
-            },
-            crosshairs: {
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        colorFrom: '#D8E3F0',
-                        colorTo: '#BED1E6',
-                        stops: [0, 100],
-                        opacityFrom: 0.4,
-                        opacityTo: 0.5
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '60%',
+                    horizontal: false,
+                    dataLabels: {
+                        position: 'top'
                     }
                 }
             },
-            tooltip: {
-                enabled: true
-            }
-        },
-        yaxis: {
-            axisBorder: {
-                show: false
-            },
-            axisTicks: {
-                show: false
-            },
-            labels: {
-                show: true,
+            dataLabels: {
+                enabled: true,
                 formatter: function (val) {
                     return val.toFixed(0);
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    colors: ["#304758"]
                 }
             },
-            title: {
-                text: 'Amount'
-            }
-        },
-        colors: [warning],
-        tooltip: {
-            shared: true,
-            intersect: false,
-            y: {
-                formatter: function (val, opts) {
-                    var index = opts.dataPointIndex;
-                    var orderCount = orderCounts[index] || 0;
-                    var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
-                    return val.toFixed(3) + ' ' + dayName + '<br/>' + orderCount + ' Orders';
+            xaxis: {
+                categories: days,
+                position: 'bottom',
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                crosshairs: {
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            colorFrom: '#D8E3F0',
+                            colorTo: '#BED1E6',
+                            stops: [0, 100],
+                            opacityFrom: 0.4,
+                            opacityTo: 0.5
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            yaxis: {
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                labels: {
+                    show: true,
+                    formatter: function (val) {
+                        return val.toFixed(0);
+                    }
+                },
+                title: {
+                    text: 'Amount'
+                }
+            },
+            colors: [warning],
+            tooltip: {
+                shared: true,
+                intersect: false,
+                y: {
+                    formatter: function (val, opts) {
+                        var index = opts.dataPointIndex;
+                        var orderCount = orderCounts[index] || 0;
+                        var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
+                        return val.toFixed(3) + ' ' + dayName + '<br/>' + orderCount + ' Orders';
+                    }
+                }
+            },
+            grid: {
+                borderColor: '#e7e7e7',
+                row: {
+                    colors: ['#f3f3f3', 'transparent'],
+                    opacity: 0.5
                 }
             }
-        },
-        grid: {
-            borderColor: '#e7e7e7',
-            row: {
-                colors: ['#f3f3f3', 'transparent'],
-                opacity: 0.5
-            }
-        }
-    };
+        };
 
-    // Destroy existing chart if any
-    if(salesByDayChartInstance){
-        salesByDayChartInstance.destroy();
-    }
-
-    salesByDayChartInstance = new ApexCharts(chartElement, options);
-    salesByDayChartInstance.render();
-
-    window.addEventListener('resize', function() {
+        // Destroy existing chart if any
         if(salesByDayChartInstance){
-            salesByDayChartInstance.updateOptions({
-                chart: {
-                    width: chartElement.offsetWidth || '100%'
-                }
-            });
+            try {
+                salesByDayChartInstance.destroy();
+            } catch(e) {
+                console.log('Error destroying chart:', e);
+            }
+            salesByDayChartInstance = null;
         }
-    });
+
+        try {
+            salesByDayChartInstance = new ApexCharts(chartElement, options);
+            salesByDayChartInstance.render().then(function() {
+                // Chart rendered successfully
+            }).catch(function(error) {
+                console.error('Error rendering chart:', error);
+            });
+        } catch(e) {
+            console.error('Error creating chart:', e);
+        }
+
+        // Remove existing resize listeners and add new one
+        $(window).off('resize.salesByDay');
+        $(window).on('resize.salesByDay', function() {
+            if(salesByDayChartInstance){
+                try {
+                    var newWidth = chartElement.offsetWidth || $(chartElement).width() || '100%';
+                    salesByDayChartInstance.updateOptions({
+                        chart: {
+                            width: newWidth
+                        }
+                    });
+                } catch(e) {
+                    console.log('Error updating chart on resize:', e);
+                }
+            }
+        });
+    }, 100);
 }
 
 function paymentMethodChartAjax(){
