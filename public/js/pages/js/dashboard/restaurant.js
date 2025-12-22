@@ -188,13 +188,17 @@ function salesByDayAjax(){
         data: formData,
         success: function (response) {
             if(response['status'] == "success"){
-                $('#sales_by_day_chart').html("");
                 var chartData = response['data']['sales_by_day'];
                 var summary = response['data']['sales_by_day_summary'];
                 var breakdown = response['data']['sales_by_day_breakdown'];
 
                 if(chartData && chartData.length > 0){
-                    salesByDayChart(chartData, summary, breakdown);
+                    // Clear container and add placeholder to maintain dimensions
+                    $('#sales_by_day_chart').html('<div style="min-height: 300px;"></div>');
+                    // Small delay to ensure container is ready
+                    setTimeout(function(){
+                        salesByDayChart(chartData, summary, breakdown);
+                    }, 100);
                 } else {
                     $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
                 }
@@ -213,12 +217,20 @@ function salesByDayChart(chartData, summary, breakdown){
 
     chartData.forEach(function(item){
         var dayLabel = item.day_label || item.DAY_LABEL || '';
-        var salesAmount = item.sales_amount || item.SALES_AMOUNT || 0;
-        var orderCount = item.order_count || item.ORDER_COUNT || 0;
-        days.push(dayLabel);
-        salesAmounts.push(parseFloat(salesAmount));
-        orderCounts.push(parseInt(orderCount));
+        var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
+        var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
+        if(dayLabel && !isNaN(salesAmount) && !isNaN(orderCount)){
+            days.push(dayLabel);
+            salesAmounts.push(salesAmount);
+            orderCounts.push(orderCount);
+        }
     });
+
+    // Validate we have data
+    if(days.length === 0 || salesAmounts.length === 0){
+        $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
 
     if(summary){
         var totalOrders = summary.total_orders || summary.TOTAL_ORDERS || 0;
@@ -252,7 +264,21 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
-    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    // Clear any placeholder
+    $(chartElement).html('');
+
+    // Ensure container has dimensions - use jQuery to get width if offsetWidth is 0
+    var containerWidth = chartElement.offsetWidth;
+    if(!containerWidth || containerWidth === 0){
+        containerWidth = $(chartElement).width();
+    }
+    if(!containerWidth || containerWidth === 0){
+        containerWidth = $(chartElement).parent().width();
+    }
+    if(!containerWidth || containerWidth === 0){
+        containerWidth = '100%';
+    }
+
     var containerHeight = 300;
 
     var options = {
