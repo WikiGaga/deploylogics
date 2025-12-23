@@ -188,15 +188,13 @@ function salesByDayAjax(){
         data: formData,
         success: function (response) {
             if(response['status'] == "success"){
+                $('#sales_by_day_chart').html("");
                 var chartData = response['data']['sales_by_day'];
                 var summary = response['data']['sales_by_day_summary'];
                 var breakdown = response['data']['sales_by_day_breakdown'];
 
                 if(chartData && chartData.length > 0){
-                    $('#sales_by_day_chart').html('<div style="min-height: 300px;"></div>');
-                    setTimeout(function(){
-                        salesByDayChart(chartData, summary, breakdown);
-                    }, 100);
+                    salesByDayChart(chartData, summary, breakdown);
                 } else {
                     $('#sales_by_day_chart').html('<div class="text-center p-5">No data available</div>');
                 }
@@ -261,19 +259,7 @@ function salesByDayChart(chartData, summary, breakdown){
         return;
     }
 
-    $(chartElement).html('');
-
-    var containerWidth = chartElement.offsetWidth;
-    if(!containerWidth || containerWidth === 0){
-        containerWidth = $(chartElement).width();
-    }
-    if(!containerWidth || containerWidth === 0){
-        containerWidth = $(chartElement).parent().width();
-    }
-    if(!containerWidth || containerWidth === 0){
-        containerWidth = '100%';
-    }
-
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
     var containerHeight = 300;
 
     var options = {
@@ -282,22 +268,30 @@ function salesByDayChart(chartData, summary, breakdown){
             data: salesAmounts
         }],
         chart: {
-            type: 'column',
+            type: 'bar',
             height: containerHeight,
-            width: containerWidth,
+            width: containerWidth || '100%',
             toolbar: {
                 show: true
             }
         },
         plotOptions: {
             bar: {
-                borderRadius: 4,
-                columnWidth: '60%',
                 horizontal: false,
+                columnWidth: '60%',
+                borderRadius: 4,
                 dataLabels: {
                     position: 'top'
                 }
             }
+        },
+        stroke: {
+            show: true,
+            width: 2,
+            colors: ['transparent']
+        },
+        fill: {
+            opacity: 1
         },
         dataLabels: {
             enabled: true,
