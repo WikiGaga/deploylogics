@@ -377,34 +377,57 @@ function salesByHourChart(chartData){
     var daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     var dayOrder = { 'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4, 'SAT': 5, 'SUN': 6 };
     var allDays = new Set();
-    var allHours = new Set();
 
+    // Initialize all 24 hours (0-23) with empty data
+    for(var h = 0; h < 24; h++){
+        var hourLabel = (h < 10 ? '0' : '') + h + ':00';
+        hourDataMap[h] = {
+            hour: h,
+            hourLabel: hourLabel,
+            data: {},
+            orderCounts: {}
+        };
+    }
+
+    // Process actual data from database
     chartData.forEach(function(item){
         var hour = parseInt(item.hour || item.HOUR || 0);
-        var hourLabel = (item.hour_label || item.HOUR_LABEL || hour + ':00').substring(0, 5);
+        var hourLabel = (item.hour_label || item.HOUR_LABEL || ((hour < 10 ? '0' : '') + hour + ':00')).substring(0, 5);
         var dayName = (item.day_name || item.DAY_NAME || '').toUpperCase().substring(0, 3);
         var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
         var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
 
-        if(!hourDataMap[hour]){
-            hourDataMap[hour] = {
-                hour: hour,
-                hourLabel: hourLabel,
-                data: {},
-                orderCounts: {}
-            };
+        if(hour >= 0 && hour < 24){
+            if(!hourDataMap[hour]){
+                hourDataMap[hour] = {
+                    hour: hour,
+                    hourLabel: hourLabel,
+                    data: {},
+                    orderCounts: {}
+                };
+            }
+            hourDataMap[hour].data[dayName] = salesAmount;
+            hourDataMap[hour].orderCounts[dayName] = orderCount;
+            allDays.add(dayName);
         }
-        hourDataMap[hour].data[dayName] = salesAmount;
-        hourDataMap[hour].orderCounts[dayName] = orderCount;
-        allDays.add(dayName);
-        allHours.add(hour);
     });
 
+    // Ensure all 7 days are included, even if no data
+    var allDaysArray = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    allDaysArray.forEach(function(day){
+        allDays.add(day);
+    });
+
+    // Sort days in order
     var sortedDays = Array.from(allDays).sort(function(a, b){
         return (dayOrder[a] || 99) - (dayOrder[b] || 99);
     });
 
-    var sortedHours = Array.from(allHours).sort(function(a, b){ return a - b; });
+    // Use all 24 hours (0-23) sorted
+    var sortedHours = [];
+    for(var h = 0; h < 24; h++){
+        sortedHours.push(h);
+    }
 
     var series = [];
     var maxValue = 0;
