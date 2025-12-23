@@ -118,7 +118,7 @@ class DashboardController extends Controller
         $result = DB::selectOne($q);
         $data['year_net_sales'] = $result->year_net_sale ?? 0;
 
-        $q = "SELECT COUNT(DISTINCT ORDER_ID) AS today_orders
+        $q = "SELECT COUNT(DISTINCT ID) AS today_orders
               FROM VW_REST_SUMMARY_ORDER_WISE
               WHERE TRUNC(ORDER_DATE) = TO_DATE('".$today."', 'YYYY-MM-DD')
               AND PAYMENT_STATUS = 'paid'
@@ -128,8 +128,8 @@ class DashboardController extends Controller
 
         $q = "SELECT
                 CASE
-                    WHEN COUNT(DISTINCT ORDER_ID) > 0
-                    THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ORDER_ID), 0)
+                    WHEN COUNT(DISTINCT ID) > 0
+                    THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ID), 0)
                     ELSE 0
                 END AS avg_bill
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -396,10 +396,10 @@ class DashboardController extends Controller
                 case 'branch_performance':
                     $query = "SELECT BRANCH_NAME,
                              NVL(SUM(NET_SALES), 0) AS net_sales,
-                             COUNT(DISTINCT ORDER_ID) AS total_orders,
+                             COUNT(DISTINCT ID) AS total_orders,
                              CASE
-                                 WHEN COUNT(DISTINCT ORDER_ID) > 0
-                                 THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ORDER_ID), 0)
+                                 WHEN COUNT(DISTINCT ID) > 0
+                                 THEN NVL(SUM(NET_SALES) / COUNT(DISTINCT ID), 0)
                                  ELSE 0
                              END AS avg_bill
                              FROM VW_REST_SUMMARY_ORDER_WISE
@@ -422,7 +422,7 @@ class DashboardController extends Controller
                              TO_CHAR(TRUNC(ORDER_DATE), 'DD Mon') AS day_name,
                              TRUNC(ORDER_DATE) AS order_date,
                              NVL(SUM(NET_SALES), 0) AS sales_amount,
-                             COUNT(DISTINCT ORDER_ID) AS order_count
+                             COUNT(DISTINCT ID) AS order_count
                              FROM VW_REST_SUMMARY_ORDER_WISE
                              WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
                              AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
@@ -433,7 +433,7 @@ class DashboardController extends Controller
                     $data['sales_by_day'] = DB::select($query);
 
                     $summary_query = "SELECT
-                                     COUNT(DISTINCT ORDER_ID) AS total_orders,
+                                     COUNT(DISTINCT ID) AS total_orders,
                                      NVL(SUM(NET_SALES), 0) AS total_sales
                                      FROM VW_REST_SUMMARY_ORDER_WISE
                                      WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
@@ -467,7 +467,7 @@ class DashboardController extends Controller
                              TO_CHAR(TRUNC(CREATED_AT), 'Day') AS day_full_name,
                              TRUNC(CREATED_AT) AS order_date,
                              NVL(SUM(NET_SALES), 0) AS sales_amount,
-                             COUNT(DISTINCT ORDER_ID) AS order_count
+                             COUNT(DISTINCT ID) AS order_count
                              FROM VW_REST_SUMMARY_ORDER_WISE
                              WHERE CREATED_AT >= TO_DATE('".$week_from_db." 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
                              AND CREATED_AT < TO_DATE('".$today." 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
