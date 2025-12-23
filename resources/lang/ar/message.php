@@ -242,7 +242,7 @@ return array (
   'branch_performance' => 'أداء الفرع',
   'sales_by_day' => 'المبيعات حسب اليوم',
   'end_of_day_report' => 'تقرير نهاية اليوم',
-  'online' => 'عبر الإنترنت',
+  'card' => 'بطاقة',
   'delivery' => 'توصيل',
-  'pickup' => 'استلام',
+  'takeaway' => 'استلام',
 );

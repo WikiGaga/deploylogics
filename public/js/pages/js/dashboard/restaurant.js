@@ -319,7 +319,7 @@ function salesByDayChart(chartData, summary, breakdown){
                     var index = opts.dataPointIndex;
                     var orderCount = orderCounts[index] || 0;
                     var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
-                    return  'OMR: ' + val.toFixed(3) + '<br/>' + orderCount + ' Orders'  + '<br/>' + dayName ;
+                    return  'OMR ' + val.toFixed(3) + '<br/>' + orderCount + ' Orders';
                 }
             }
         }

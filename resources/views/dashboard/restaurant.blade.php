@@ -357,7 +357,7 @@
                 <div class="row" style="margin-top: 20px; padding: 0 15px;">
                     <div class="col-lg-3 col-md-6" id="sales_breakdown_online">
                         <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.online') }}</span>
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.card') }}</span>
                             <span class="kt-font-sm kt-font-bold" id="online_sales_amount">0.000</span>
                         </div>
                         <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">
@@ -384,7 +384,7 @@
                     </div>
                     <div class="col-lg-3 col-md-6" id="sales_breakdown_pickup">
                         <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.pickup') }}</span>
+                            <span class="kt-font-sm" style="margin-right: 10px;">{{ __('message.takeaway') }}</span>
                             <span class="kt-font-sm kt-font-bold" id="pickup_sales_amount">0.000</span>
                         </div>
                         <div style="height: 3px; background: #f0f0f0; border-radius: 2px;">

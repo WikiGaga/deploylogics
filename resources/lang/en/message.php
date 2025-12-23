@@ -250,7 +250,7 @@ return array (
   'branch_performance' => 'Branch Performance',
   'sales_by_day' => 'Sales by Day',
   'end_of_day_report' => 'End of day report',
-  'online' => 'Online',
+  'card' => 'Card',
   'delivery' => 'Delivery',
-  'pickup' => 'Pickup',
+  'takeaway' => 'Takeaway',
 );
