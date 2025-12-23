@@ -454,6 +454,33 @@ class DashboardController extends Controller
                                        AND UPPER(ORDER_STATUS) <> 'CANCELED'";
                     $data['sales_by_day_breakdown'] = DB::selectOne($breakdown_query);
                     break;
+
+                case 'sales_by_hour':
+                    $week_from = clone $now;
+                    $week_from->modify('-7 days');
+                    $week_from_db = date('Y-m-d', strtotime($week_from->format("d-m-Y")));
+
+                    $query = "SELECT
+                             TO_NUMBER(TO_CHAR(ORDER_DATE, 'HH24')) AS hour,
+                             LPAD(TO_CHAR(ORDER_DATE, 'HH24'), 2, '0') || ':00' AS hour_label,
+                             TO_CHAR(TRUNC(ORDER_DATE), 'DY') AS day_name,
+                             TO_CHAR(TRUNC(ORDER_DATE), 'Day') AS day_full_name,
+                             TRUNC(ORDER_DATE) AS order_date,
+                             NVL(SUM(NET_SALES), 0) AS sales_amount,
+                             COUNT(DISTINCT ORDER_ID) AS order_count
+                             FROM VW_REST_SUMMARY_ORDER_WISE
+                             WHERE ORDER_DATE >= TO_DATE('".$week_from_db."', 'YYYY-MM-DD')
+                             AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                             AND PAYMENT_STATUS = 'paid'
+                             AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                             GROUP BY TO_NUMBER(TO_CHAR(ORDER_DATE, 'HH24')),
+                                      LPAD(TO_CHAR(ORDER_DATE, 'HH24'), 2, '0') || ':00',
+                                      TO_CHAR(TRUNC(ORDER_DATE), 'DY'),
+                                      TO_CHAR(TRUNC(ORDER_DATE), 'Day'),
+                                      TRUNC(ORDER_DATE)
+                             ORDER BY TRUNC(ORDER_DATE), TO_NUMBER(TO_CHAR(ORDER_DATE, 'HH24'))";
+                    $data['sales_by_hour'] = DB::select($query);
+                    break;
             }
         }
 

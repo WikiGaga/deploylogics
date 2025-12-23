@@ -7,6 +7,7 @@ const danger = '#F64E60';
 function loadRestaurantCharts(){
     restMonthSaleBranchAjax();
     salesByDayAjax();
+    salesByHourAjax();
     paymentMethodChartAjax();
     orderTypeChartAjax();
     topFoodItemsAjax();
@@ -319,10 +320,235 @@ function salesByDayChart(chartData, summary, breakdown){
                     var index = opts.dataPointIndex;
                     var orderCount = orderCounts[index] || 0;
                     var dayName = chartData[index] ? (chartData[index].day_name || chartData[index].DAY_NAME || days[index]) : days[index];
-                    return  'OMR ' + val.toFixed(3) + '<br/>' + orderCount + ' Orders';
+                    return  'OMR ' + val.toFixed(3) + ' Orders ' + orderCount;
                 }
             }
         }
+    };
+
+    var chart = new ApexCharts(chartElement, options);
+    chart.render();
+
+    window.addEventListener('resize', function() {
+        chart.updateOptions({
+            chart: {
+                width: chartElement.offsetWidth || '100%'
+            }
+        });
+    });
+}
+
+function salesByHourAjax(){
+    var formData = {
+        chart_name : 'sales_by_hour'
+    };
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: 'POST',
+        url: '/dashboard/get-restaurant-chart-data',
+        dataType: 'json',
+        data: formData,
+        success: function (response) {
+            if(response['status'] == "success"){
+                $('#sales_by_hour_chart').html("");
+                var chartData = response['data']['sales_by_hour'];
+                if(chartData && chartData.length > 0){
+                    salesByHourChart(chartData);
+                } else {
+                    $('#sales_by_hour_chart').html('<div class="text-center p-5">No data available</div>');
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#sales_by_hour_chart').html('<div class="text-center p-5">Error loading chart data</div>');
+        }
+    });
+}
+
+function salesByHourChart(chartData){
+    if(!chartData || chartData.length === 0){
+        $('#sales_by_hour_chart').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+
+    var hourDataMap = {};
+    var daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    var dayOrder = { 'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4, 'SAT': 5, 'SUN': 6 };
+    var allDays = new Set();
+    var allHours = new Set();
+
+    chartData.forEach(function(item){
+        var hour = parseInt(item.hour || item.HOUR || 0);
+        var hourLabel = (item.hour_label || item.HOUR_LABEL || hour + ':00').substring(0, 5);
+        var dayName = (item.day_name || item.DAY_NAME || '').toUpperCase().substring(0, 3);
+        var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
+        var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
+
+        if(!hourDataMap[hour]){
+            hourDataMap[hour] = {
+                hour: hour,
+                hourLabel: hourLabel,
+                data: {},
+                orderCounts: {}
+            };
+        }
+        hourDataMap[hour].data[dayName] = salesAmount;
+        hourDataMap[hour].orderCounts[dayName] = orderCount;
+        allDays.add(dayName);
+        allHours.add(hour);
+    });
+
+    var sortedDays = Array.from(allDays).sort(function(a, b){
+        return (dayOrder[a] || 99) - (dayOrder[b] || 99);
+    });
+
+    var sortedHours = Array.from(allHours).sort(function(a, b){ return a - b; });
+
+    var series = [];
+    var maxValue = 0;
+    var minValue = Infinity;
+    var orderCountMap = {};
+
+    sortedHours.forEach(function(hour){
+        var hourInfo = hourDataMap[hour];
+        if(!hourInfo) return;
+
+        var dataPoints = [];
+        sortedDays.forEach(function(day, dayIndex){
+            var value = hourInfo.data[day] || 0;
+            var orderCount = hourInfo.orderCounts[day] || 0;
+            dataPoints.push({
+                x: day,
+                y: value
+            });
+            var key = hour + '_' + day;
+            orderCountMap[key] = orderCount;
+            if(value > maxValue) maxValue = value;
+            if(value < minValue && value > 0) minValue = value;
+        });
+
+        series.push({
+            name: hourInfo.hourLabel,
+            data: dataPoints
+        });
+    });
+
+    if(series.length === 0){
+        $('#sales_by_hour_chart').html('<div class="text-center p-5">No data available</div>');
+        return;
+    }
+
+    var chartElement = document.querySelector("#sales_by_hour_chart");
+    if(!chartElement){
+        return;
+    }
+
+    var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
+    var containerHeight = Math.max(400, sortedHours.length * 30);
+
+    if(minValue === Infinity) minValue = 0;
+    var rangeSize = maxValue > minValue ? (maxValue - minValue) / 4 : maxValue / 4;
+    if(rangeSize === 0 && maxValue > 0) rangeSize = maxValue / 4;
+
+    var ranges = [];
+    if(maxValue > 0){
+        ranges = [
+            {
+                from: 0,
+                to: minValue + rangeSize,
+                name: 'low',
+                color: '#FFE5CC'
+            },
+            {
+                from: minValue + rangeSize,
+                to: minValue + (rangeSize * 2),
+                name: 'medium',
+                color: '#FFCC99'
+            },
+            {
+                from: minValue + (rangeSize * 2),
+                to: minValue + (rangeSize * 3),
+                name: 'high',
+                color: '#FFA800'
+            },
+            {
+                from: minValue + (rangeSize * 3),
+                to: maxValue,
+                name: 'extreme',
+                color: '#FF8C00'
+            }
+        ];
+    } else {
+        ranges = [{
+            from: 0,
+            to: 0,
+            name: 'no data',
+            color: '#F0F0F0'
+        }];
+    }
+
+    var options = {
+        series: series,
+        chart: {
+            type: 'heatmap',
+            height: containerHeight,
+            width: containerWidth || '100%',
+            toolbar: {
+                show: true
+            }
+        },
+        plotOptions: {
+            heatmap: {
+                shadeIntensity: 0.5,
+                colorScale: {
+                    ranges: ranges
+                }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val, opts) {
+                return 'OMR ' + parseFloat(val).toFixed(2);
+            },
+            style: {
+                fontSize: '11px',
+                colors: ["#304758"]
+            }
+        },
+        xaxis: {
+            categories: sortedDays.map(function(day){
+                var dayNames = { 'MON': 'Monday', 'TUE': 'Tuesday', 'WED': 'Wednesday',
+                                'THU': 'Thursday', 'FRI': 'Friday', 'SAT': 'Saturday', 'SUN': 'Sunday' };
+                return dayNames[day] || day;
+            })
+        },
+        tooltip: {
+            custom: function({series, seriesIndex, dataPointIndex, w}) {
+                var hour = w.globals.seriesNames[seriesIndex];
+                var day = w.globals.categoryLabels[dataPointIndex];
+                var value = series[seriesIndex][dataPointIndex];
+                var hourNum = parseInt(hour.split(':')[0]);
+                var nextHour = (hourNum + 1) % 24;
+                var nextHourStr = (nextHour < 10 ? '0' : '') + nextHour + ':00';
+                var orderCount = 0;
+
+                if(seriesIndex < sortedHours.length && dataPointIndex < sortedDays.length){
+                    var hourKey = sortedHours[seriesIndex];
+                    var dayKey = sortedDays[dataPointIndex];
+                    var mapKey = hourKey + '_' + dayKey;
+                    orderCount = orderCountMap[mapKey] || 0;
+                }
+
+                return '<div style="padding: 10px; background: #000; color: #fff; border-radius: 4px;">' +
+                       '<div><strong>' + hour + ' - ' + nextHourStr + '</strong></div>' +
+                       '<div><strong>' + orderCount + ' Orders</strong></div>' +
+                       '<div>OMR ' + parseFloat(value).toFixed(3) + '</div>' +
+                       '</div>';
+            }
+        },
+        colors: [warning]
     };
 
     var chart = new ApexCharts(chartElement, options);

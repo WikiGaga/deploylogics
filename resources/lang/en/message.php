@@ -249,6 +249,7 @@ return array (
   'top_5_food_items' => 'Top 5 Food Items',
   'branch_performance' => 'Branch Performance',
   'sales_by_day' => 'Sales by Day',
+  'sales_by_hour' => 'Sales by Hour',
   'end_of_day_report' => 'End of day report',
   'card' => 'Card',
   'delivery' => 'Delivery',

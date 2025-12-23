@@ -51,7 +51,8 @@
     #order_type_chart,
     #top_food_items,
     #branch_performance,
-    #sales_by_day_chart {
+    #sales_by_day_chart,
+    #sales_by_hour_chart {
         width: 100% !important;
         max-width: 100% !important;
         overflow: hidden !important;
@@ -391,6 +392,31 @@
                             <div style="height: 100%; background: #FFA800; width: 0%; border-radius: 2px;" id="pickup_sales_bar"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="kt-portlet kt-portlet--height-fluid kt-portlet--mobile chart_block">
+            <div class="kt-portlet__head kt-portlet__head--lg kt-portlet__head--noborder kt-portlet__head--break-sm">
+                <div class="kt-portlet__head-label">
+                    <h3 class="kt-portlet__head-title">
+                        {{ __('message.sales_by_hour') }}
+                        <i class="la la-info-circle kt-font-info" style="font-size: 16px; margin-left: 5px;"></i>
+                    </h3>
+                </div>
+                <div class="kt-portlet__head-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-secondary" style="margin-left: 5px;">
+                        <i class="la la-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="kt-portlet__body kt-portlet__body--fit">
+                <div id="sales_by_hour_chart">
+                    <div class="chart-spinner kt-spinner kt-spinner--sm kt-spinner--brand"></div>
                 </div>
             </div>
         </div>

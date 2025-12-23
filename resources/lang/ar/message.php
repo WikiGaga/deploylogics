@@ -241,6 +241,7 @@ return array (
   'top_5_food_items' => 'أفضل 5 أصناف طعام',
   'branch_performance' => 'أداء الفرع',
   'sales_by_day' => 'المبيعات حسب اليوم',
+  'sales_by_hour' => 'المبيعات حسب الساعة',
   'end_of_day_report' => 'تقرير نهاية اليوم',
   'card' => 'بطاقة',
   'delivery' => 'توصيل',
