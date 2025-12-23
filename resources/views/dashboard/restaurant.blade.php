@@ -415,8 +415,10 @@
                 </div>
             </div>
             <div class="kt-portlet__body kt-portlet__body--fit">
-                <div id="sales_by_hour_chart">
-                    <div class="chart-spinner kt-spinner kt-spinner--sm kt-spinner--brand"></div>
+                <div style="max-height: 550px; overflow-y: auto; overflow-x: auto;">
+                    <div id="sales_by_hour_chart">
+                        <div class="chart-spinner kt-spinner kt-spinner--sm kt-spinner--brand"></div>
+                    </div>
                 </div>
             </div>
         </div>

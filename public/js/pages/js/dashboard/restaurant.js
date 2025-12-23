@@ -390,12 +390,19 @@ function salesByHourChart(chartData){
     }
 
     // Process actual data from database
+    console.log('Sales by Hour - Raw data:', chartData); // Debug: Check what data we're getting
+
     chartData.forEach(function(item){
         var hour = parseInt(item.hour || item.HOUR || 0);
         var hourLabel = (item.hour_label || item.HOUR_LABEL || ((hour < 10 ? '0' : '') + hour + ':00')).substring(0, 5);
         var dayName = (item.day_name || item.DAY_NAME || '').toUpperCase().substring(0, 3);
         var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
         var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
+
+        // Debug: Log if we see non-zero hours
+        if(hour !== 0 && salesAmount > 0){
+            console.log('Non-zero hour found:', hour, 'Day:', dayName, 'Amount:', salesAmount);
+        }
 
         if(hour >= 0 && hour < 24){
             if(!hourDataMap[hour]){
@@ -406,8 +413,14 @@ function salesByHourChart(chartData){
                     orderCounts: {}
                 };
             }
-            hourDataMap[hour].data[dayName] = salesAmount;
-            hourDataMap[hour].orderCounts[dayName] = orderCount;
+            // If there's already data for this hour-day, sum it (in case of duplicates)
+            if(hourDataMap[hour].data[dayName]){
+                hourDataMap[hour].data[dayName] += salesAmount;
+                hourDataMap[hour].orderCounts[dayName] += orderCount;
+            } else {
+                hourDataMap[hour].data[dayName] = salesAmount;
+                hourDataMap[hour].orderCounts[dayName] = orderCount;
+            }
             allDays.add(dayName);
         }
     });
@@ -469,7 +482,8 @@ function salesByHourChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    var containerHeight = Math.max(400, sortedHours.length * 30);
+    // Set fixed height for scrollable chart - show about 8-10 hours at a time
+    var containerHeight = 500;
 
     if(minValue === Infinity) minValue = 0;
     var rangeSize = maxValue > minValue ? (maxValue - minValue) / 4 : maxValue / 4;
