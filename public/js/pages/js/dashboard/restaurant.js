@@ -378,7 +378,6 @@ function salesByHourChart(chartData){
     var dayOrder = { 'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4, 'SAT': 5, 'SUN': 6 };
     var allDays = new Set();
 
-    // Initialize all 24 hours (0-23) with empty data
     for(var h = 0; h < 24; h++){
         var hourLabel = (h < 10 ? '0' : '') + h + ':00';
         hourDataMap[h] = {
@@ -389,20 +388,12 @@ function salesByHourChart(chartData){
         };
     }
 
-    // Process actual data from database
-    console.log('Sales by Hour - Raw data:', chartData); // Debug: Check what data we're getting
-
     chartData.forEach(function(item){
         var hour = parseInt(item.hour || item.HOUR || 0);
         var hourLabel = (item.hour_label || item.HOUR_LABEL || ((hour < 10 ? '0' : '') + hour + ':00')).substring(0, 5);
         var dayName = (item.day_name || item.DAY_NAME || '').toUpperCase().substring(0, 3);
         var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
         var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
-
-        // Debug: Log if we see non-zero hours
-        if(hour !== 0 && salesAmount > 0){
-            console.log('Non-zero hour found:', hour, 'Day:', dayName, 'Amount:', salesAmount);
-        }
 
         if(hour >= 0 && hour < 24){
             if(!hourDataMap[hour]){
@@ -413,7 +404,6 @@ function salesByHourChart(chartData){
                     orderCounts: {}
                 };
             }
-            // If there's already data for this hour-day, sum it (in case of duplicates)
             if(hourDataMap[hour].data[dayName]){
                 hourDataMap[hour].data[dayName] += salesAmount;
                 hourDataMap[hour].orderCounts[dayName] += orderCount;
@@ -425,18 +415,15 @@ function salesByHourChart(chartData){
         }
     });
 
-    // Ensure all 7 days are included, even if no data
     var allDaysArray = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     allDaysArray.forEach(function(day){
         allDays.add(day);
     });
 
-    // Sort days in order
     var sortedDays = Array.from(allDays).sort(function(a, b){
         return (dayOrder[a] || 99) - (dayOrder[b] || 99);
     });
 
-    // Use all 24 hours (0-23) sorted
     var sortedHours = [];
     for(var h = 0; h < 24; h++){
         sortedHours.push(h);
@@ -482,7 +469,6 @@ function salesByHourChart(chartData){
     }
 
     var containerWidth = chartElement.offsetWidth || chartElement.parentElement.offsetWidth;
-    // Set fixed height for scrollable chart - show about 8-10 hours at a time
     var containerHeight = 500;
 
     if(minValue === Infinity) minValue = 0;
