@@ -484,8 +484,8 @@ class DashboardController extends Controller
                     break;
 
                 case 'sales_by_menu_item':
-                    $page = $request->input('page', 1);
-                    $perPage = $request->input('per_page', 5);
+                    $page = (int)$request->input('page', 1);
+                    $perPage = (int)$request->input('per_page', 5);
                     $offset = ($page - 1) * $perPage;
 
                     $from = clone $now;
@@ -528,8 +528,8 @@ class DashboardController extends Controller
                     break;
 
                 case 'sales_by_location':
-                    $page = $request->input('page', 1);
-                    $perPage = $request->input('per_page', 5);
+                    $page = (int)$request->input('page', 1);
+                    $perPage = (int)$request->input('per_page', 5);
                     $offset = ($page - 1) * $perPage;
 
                     $from = clone $now;

@@ -974,7 +974,7 @@ function branchPerformanceChart(chartData){
 function salesByMenuItemAjax(page){
     var formData = {
         chart_name : 'sales_by_menu_item',
-        page: page || 1,
+        page: parseInt(page) || 1,
         per_page: 5
     };
     $.ajax({
@@ -988,9 +988,9 @@ function salesByMenuItemAjax(page){
         success: function (response) {
             if(response['status'] == "success"){
                 var data = response['data']['sales_by_menu_item'] || [];
-                var total = response['data']['sales_by_menu_item_total'] || 0;
-                var currentPage = response['data']['sales_by_menu_item_page'] || 1;
-                var perPage = response['data']['sales_by_menu_item_per_page'] || 5;
+                var total = parseInt(response['data']['sales_by_menu_item_total'] || 0);
+                var currentPage = parseInt(response['data']['sales_by_menu_item_page'] || 1);
+                var perPage = parseInt(response['data']['sales_by_menu_item_per_page'] || 5);
 
                 renderMenuItemTable(data, total, currentPage, perPage);
             } else {
@@ -1056,7 +1056,7 @@ function renderMenuItemTable(data, total, currentPage, perPage){
 function salesByLocationAjax(page){
     var formData = {
         chart_name : 'sales_by_location',
-        page: page || 1,
+        page: parseInt(page) || 1,
         per_page: 5
     };
     $.ajax({
@@ -1070,9 +1070,9 @@ function salesByLocationAjax(page){
         success: function (response) {
             if(response['status'] == "success"){
                 var data = response['data']['sales_by_location'] || [];
-                var total = response['data']['sales_by_location_total'] || 0;
-                var currentPage = response['data']['sales_by_location_page'] || 1;
-                var perPage = response['data']['sales_by_location_per_page'] || 5;
+                var total = parseInt(response['data']['sales_by_location_total'] || 0);
+                var currentPage = parseInt(response['data']['sales_by_location_page'] || 1);
+                var perPage = parseInt(response['data']['sales_by_location_per_page'] || 5);
 
                 renderLocationTable(data, total, currentPage, perPage);
             } else {
