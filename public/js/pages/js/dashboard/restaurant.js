@@ -979,7 +979,7 @@ function showMenuItemShimmer(){
     html += '<th class="text-right">Sales</th>';
     html += '</tr></thead>';
     html += '<tbody>';
-    for(var i = 0; i < 5; i++){
+    for(var i = 0; i < 4; i++){
         html += '<tr>';
         html += '<td><div class="shimmer shimmer-cell" style="width: 70%;"></div></td>';
         html += '<td class="text-right"><div class="shimmer shimmer-cell" style="width: 50%; margin-left: auto;"></div></td>';
