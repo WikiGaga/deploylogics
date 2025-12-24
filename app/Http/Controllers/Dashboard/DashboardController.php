@@ -482,6 +482,90 @@ class DashboardController extends Controller
 
                     $data['sales_by_hour'] = DB::select($query);
                     break;
+
+                case 'sales_by_menu_item':
+                    $page = $request->input('page', 1);
+                    $perPage = $request->input('per_page', 5);
+                    $offset = ($page - 1) * $perPage;
+
+                    $from = clone $now;
+                    $from->modify('-11 months');
+                    $from_db = date('Y-m-d', strtotime($from->format("d-m-Y")));
+
+                    $countQuery = "SELECT COUNT(*) as total FROM (
+                        SELECT FOOD_NAME
+                        FROM VW_REST_ORDER_DTL
+                        WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                        AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                        AND PAYMENT_STATUS = 'paid'
+                        AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                        AND (IS_DELETED IS NULL OR UPPER(IS_DELETED) <> 'Y')
+                        GROUP BY FOOD_NAME
+                    )";
+                    $totalResult = DB::selectOne($countQuery);
+                    $total = $totalResult->total ?? 0;
+
+                    $query = "SELECT * FROM (
+                        SELECT FOOD_NAME AS menu_item,
+                        NVL(SUM(ITEM_NET_AMOUNT), 0) AS sales_amount,
+                        SUM(QUANTITY) AS item_count
+                        FROM VW_REST_ORDER_DTL
+                        WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                        AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                        AND PAYMENT_STATUS = 'paid'
+                        AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                        AND (IS_DELETED IS NULL OR UPPER(IS_DELETED) <> 'Y')
+                        GROUP BY FOOD_NAME
+                        ORDER BY sales_amount DESC
+                    ) WHERE ROWNUM > ".$offset." AND ROWNUM <= ".($offset + $perPage);
+
+                    $data['sales_by_menu_item'] = DB::select($query);
+                    $data['sales_by_menu_item_total'] = $total;
+                    $data['sales_by_menu_item_page'] = $page;
+                    $data['sales_by_menu_item_per_page'] = $perPage;
+                    break;
+
+                case 'sales_by_location':
+                    $page = $request->input('page', 1);
+                    $perPage = $request->input('per_page', 5);
+                    $offset = ($page - 1) * $perPage;
+
+                    $from = clone $now;
+                    $from->modify('-11 months');
+                    $from_db = date('Y-m-d', strtotime($from->format("d-m-Y")));
+
+                    $countQuery = "SELECT COUNT(*) as total FROM (
+                        SELECT BRANCH_NAME
+                        FROM VW_REST_SUMMARY_ORDER_WISE
+                        WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                        AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                        AND PAYMENT_STATUS = 'paid'
+                        AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                        AND BRANCH_NAME IS NOT NULL
+                        GROUP BY BRANCH_NAME
+                    )";
+                    $totalResult = DB::selectOne($countQuery);
+                    $total = $totalResult->total ?? 0;
+
+                    $query = "SELECT * FROM (
+                        SELECT BRANCH_NAME AS location,
+                        NVL(SUM(NET_SALES), 0) AS sales_amount,
+                        COUNT(DISTINCT ORDER_ID) AS order_count
+                        FROM VW_REST_SUMMARY_ORDER_WISE
+                        WHERE ORDER_DATE >= TO_DATE('".$from_db."', 'YYYY-MM-DD')
+                        AND ORDER_DATE <= TO_DATE('".$today."', 'YYYY-MM-DD')
+                        AND PAYMENT_STATUS = 'paid'
+                        AND UPPER(ORDER_STATUS) <> 'CANCELED'
+                        AND BRANCH_NAME IS NOT NULL
+                        GROUP BY BRANCH_NAME
+                        ORDER BY sales_amount DESC
+                    ) WHERE ROWNUM > ".$offset." AND ROWNUM <= ".($offset + $perPage);
+
+                    $data['sales_by_location'] = DB::select($query);
+                    $data['sales_by_location_total'] = $total;
+                    $data['sales_by_location_page'] = $page;
+                    $data['sales_by_location_per_page'] = $perPage;
+                    break;
             }
         }
 

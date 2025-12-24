@@ -499,6 +499,55 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-lg-6">
+        <div class="kt-portlet kt-portlet--height-fluid kt-portlet--mobile">
+            <div class="kt-portlet__head kt-portlet__head--lg kt-portlet__head--noborder kt-portlet__head--break-sm">
+                <div class="kt-portlet__head-label">
+                    <h3 class="kt-portlet__head-title">
+                        {{ __('message.sales_by_menu_item') }}
+                    </h3>
+                </div>
+                <div class="kt-portlet__head-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-secondary" id="menu_item_download_btn">
+                        <i class="la la-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="kt-portlet__body">
+                <div id="sales_by_menu_item_table">
+                    <div class="text-center p-5">
+                        <div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="kt-portlet kt-portlet--height-fluid kt-portlet--mobile">
+            <div class="kt-portlet__head kt-portlet__head--lg kt-portlet__head--noborder kt-portlet__head--break-sm">
+                <div class="kt-portlet__head-label">
+                    <h3 class="kt-portlet__head-title">
+                        {{ __('message.sales_by_location') }}
+                    </h3>
+                </div>
+                <div class="kt-portlet__head-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-secondary" id="location_download_btn">
+                        <i class="la la-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="kt-portlet__body">
+                <div id="sales_by_location_table">
+                    <div class="text-center p-5">
+                        <div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     var translations = {
         sales: '{{ __('message.sales') }}'

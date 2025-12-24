@@ -12,6 +12,8 @@ function loadRestaurantCharts(){
     orderTypeChartAjax();
     topFoodItemsAjax();
     branchPerformanceAjax();
+    salesByMenuItemAjax(1);
+    salesByLocationAjax(1);
 }
 
 function restMonthSaleBranchAjax(){
@@ -969,4 +971,161 @@ function branchPerformanceChart(chartData){
     });
 }
 
+function salesByMenuItemAjax(page){
+    var formData = {
+        chart_name : 'sales_by_menu_item',
+        page: page || 1,
+        per_page: 5
+    };
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: 'POST',
+        url: '/dashboard/get-restaurant-chart-data',
+        dataType: 'json',
+        data: formData,
+        success: function (response) {
+            if(response['status'] == "success"){
+                var data = response['data']['sales_by_menu_item'] || [];
+                var total = response['data']['sales_by_menu_item_total'] || 0;
+                var currentPage = response['data']['sales_by_menu_item_page'] || 1;
+                var perPage = response['data']['sales_by_menu_item_per_page'] || 5;
+
+                renderMenuItemTable(data, total, currentPage, perPage);
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#sales_by_menu_item_table').html('<div class="text-center p-5">Error loading data</div>');
+        }
+    });
+}
+
+function renderMenuItemTable(data, total, currentPage, perPage){
+    var html = '<div class="table-responsive">';
+    html += '<table class="table table-striped table-hover">';
+    html += '<thead><tr>';
+    html += '<th>Menu item</th>';
+    html += '<th class="text-right">Sales</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    if(data && data.length > 0){
+        data.forEach(function(item){
+            var menuItem = item.menu_item || item.MENU_ITEM || '';
+            var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
+            var itemCount = parseInt(item.item_count || item.ITEM_COUNT || 0);
+
+            html += '<tr>';
+            html += '<td>' + menuItem + '</td>';
+            html += '<td class="text-right">OMR ' + salesAmount.toFixed(3) + ' <span class="kt-font-sm kt-font-muted">(' + itemCount + ' items)</span></td>';
+            html += '</tr>';
+        });
+    } else {
+        html += '<tr><td colspan="2" class="text-center">No data available</td></tr>';
+    }
+
+    html += '</tbody></table>';
+    html += '</div>';
+
+    // Pagination
+    var totalPages = Math.ceil(total / perPage);
+    if(totalPages > 1){
+        html += '<div class="d-flex justify-content-between align-items-center mt-3">';
+        html += '<div class="kt-font-sm kt-font-muted">Rows per page ' + perPage + '</div>';
+        html += '<div class="kt-font-sm kt-font-muted">' + ((currentPage - 1) * perPage + 1) + '-' + Math.min(currentPage * perPage, total) + ' / ' + total + '</div>';
+        html += '<div>';
+
+        if(currentPage > 1){
+            html += '<button type="button" class="btn btn-sm btn-secondary" onclick="salesByMenuItemAjax(' + (currentPage - 1) + ')">Previous</button> ';
+        }
+        if(currentPage < totalPages){
+            html += '<button type="button" class="btn btn-sm btn-secondary" onclick="salesByMenuItemAjax(' + (currentPage + 1) + ')">Next</button>';
+        }
+
+        html += '</div>';
+        html += '</div>';
+    }
+
+    $('#sales_by_menu_item_table').html(html);
+}
+
+function salesByLocationAjax(page){
+    var formData = {
+        chart_name : 'sales_by_location',
+        page: page || 1,
+        per_page: 5
+    };
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: 'POST',
+        url: '/dashboard/get-restaurant-chart-data',
+        dataType: 'json',
+        data: formData,
+        success: function (response) {
+            if(response['status'] == "success"){
+                var data = response['data']['sales_by_location'] || [];
+                var total = response['data']['sales_by_location_total'] || 0;
+                var currentPage = response['data']['sales_by_location_page'] || 1;
+                var perPage = response['data']['sales_by_location_per_page'] || 5;
+
+                renderLocationTable(data, total, currentPage, perPage);
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#sales_by_location_table').html('<div class="text-center p-5">Error loading data</div>');
+        }
+    });
+}
+
+function renderLocationTable(data, total, currentPage, perPage){
+    var html = '<div class="table-responsive">';
+    html += '<table class="table table-striped table-hover">';
+    html += '<thead><tr>';
+    html += '<th>Branch</th>';
+    html += '<th class="text-right">Sales</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    if(data && data.length > 0){
+        data.forEach(function(item){
+            var branch = item.location || item.LOCATION || item.branch_name || item.BRANCH_NAME || '';
+            var salesAmount = parseFloat(item.sales_amount || item.SALES_AMOUNT || 0);
+            var orderCount = parseInt(item.order_count || item.ORDER_COUNT || 0);
+
+            html += '<tr>';
+            html += '<td>' + branch + '</td>';
+            html += '<td class="text-right">OMR ' + salesAmount.toFixed(3) + ' <span class="kt-font-sm kt-font-muted">(' + orderCount + ' orders)</span></td>';
+            html += '</tr>';
+        });
+    } else {
+        html += '<tr><td colspan="2" class="text-center">No data available</td></tr>';
+    }
+
+    html += '</tbody></table>';
+    html += '</div>';
+
+    // Pagination
+    var totalPages = Math.ceil(total / perPage);
+    if(totalPages > 1){
+        html += '<div class="d-flex justify-content-between align-items-center mt-3">';
+        html += '<div class="kt-font-sm kt-font-muted">Rows per page ' + perPage + '</div>';
+        html += '<div class="kt-font-sm kt-font-muted">' + ((currentPage - 1) * perPage + 1) + '-' + Math.min(currentPage * perPage, total) + ' / ' + total + '</div>';
+        html += '<div>';
+
+        if(currentPage > 1){
+            html += '<button type="button" class="btn btn-sm btn-secondary" onclick="salesByLocationAjax(' + (currentPage - 1) + ')">Previous</button> ';
+        }
+        if(currentPage < totalPages){
+            html += '<button type="button" class="btn btn-sm btn-secondary" onclick="salesByLocationAjax(' + (currentPage + 1) + ')">Next</button>';
+        }
+
+        html += '</div>';
+        html += '</div>';
+    }
+
+    $('#sales_by_location_table').html(html);
+}
 
