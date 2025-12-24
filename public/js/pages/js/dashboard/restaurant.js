@@ -977,6 +977,10 @@ function salesByMenuItemAjax(page){
         page: parseInt(page) || 1,
         per_page: 5
     };
+
+    // Show loading indicator
+    $('#sales_by_menu_item_table').html('<div class="text-center p-5"><div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div></div>');
+
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1059,6 +1063,10 @@ function salesByLocationAjax(page){
         page: parseInt(page) || 1,
         per_page: 5
     };
+
+    // Show loading indicator
+    $('#sales_by_location_table').html('<div class="text-center p-5"><div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div></div>');
+
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
