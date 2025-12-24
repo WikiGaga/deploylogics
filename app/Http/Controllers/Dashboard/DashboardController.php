@@ -553,7 +553,7 @@ class DashboardController extends Controller
                         SELECT a.*, ROWNUM rnum FROM (
                             SELECT BRANCH_NAME AS location,
                             NVL(SUM(NET_SALES), 0) AS sales_amount,
-                            COUNT(DISTINCT ORDER_ID) AS order_count
+                            COUNT(DISTINCT ID) AS order_count
                             FROM VW_REST_SUMMARY_ORDER_WISE
                             WHERE CREATED_AT >= TO_DATE('".$from_db." 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
                             AND CREATED_AT < TO_DATE('".$today." 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
