@@ -102,6 +102,29 @@
         overflow: hidden !important;
         max-width: 100% !important;
     }
+    .shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+        100% {
+            background-position: 200% 0;
+        }
+    }
+    .shimmer-row {
+        height: 50px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+    .shimmer-cell {
+        height: 20px;
+        border-radius: 4px;
+        margin: 15px 0;
+    }
 </style>
 <div class="row kt-margin-b-15">
     <div class="col-lg-3">

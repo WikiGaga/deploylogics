@@ -971,6 +971,44 @@ function branchPerformanceChart(chartData){
     });
 }
 
+function showMenuItemShimmer(){
+    var html = '<div class="table-responsive">';
+    html += '<table class="table table-striped table-hover">';
+    html += '<thead><tr>';
+    html += '<th>Menu item</th>';
+    html += '<th class="text-right">Sales</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+    for(var i = 0; i < 5; i++){
+        html += '<tr>';
+        html += '<td><div class="shimmer shimmer-cell" style="width: 70%;"></div></td>';
+        html += '<td class="text-right"><div class="shimmer shimmer-cell" style="width: 50%; margin-left: auto;"></div></td>';
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '</div>';
+    $('#sales_by_menu_item_table').html(html);
+}
+
+function showLocationShimmer(){
+    var html = '<div class="table-responsive">';
+    html += '<table class="table table-striped table-hover">';
+    html += '<thead><tr>';
+    html += '<th>Branch</th>';
+    html += '<th class="text-right">Sales</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+    for(var i = 0; i < 5; i++){
+        html += '<tr>';
+        html += '<td><div class="shimmer shimmer-cell" style="width: 70%;"></div></td>';
+        html += '<td class="text-right"><div class="shimmer shimmer-cell" style="width: 50%; margin-left: auto;"></div></td>';
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '</div>';
+    $('#sales_by_location_table').html(html);
+}
+
 function salesByMenuItemAjax(page){
     var formData = {
         chart_name : 'sales_by_menu_item',
@@ -978,8 +1016,7 @@ function salesByMenuItemAjax(page){
         per_page: 5
     };
 
-    // Show loading indicator
-    $('#sales_by_menu_item_table').html('<div class="text-center p-5"><div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div></div>');
+    showMenuItemShimmer();
 
     $.ajax({
         headers: {
@@ -1064,8 +1101,7 @@ function salesByLocationAjax(page){
         per_page: 5
     };
 
-    // Show loading indicator
-    $('#sales_by_location_table').html('<div class="text-center p-5"><div class="kt-spinner kt-spinner--sm kt-spinner--brand"></div></div>');
+    showLocationShimmer();
 
     $.ajax({
         headers: {
