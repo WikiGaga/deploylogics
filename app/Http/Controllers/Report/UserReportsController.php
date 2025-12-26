@@ -2562,7 +2562,6 @@ class UserReportsController extends Controller
 
     public function ViewReport(){
         $data = Session::get('data');
-dd($data);
         /***
          *  Dynamic Report
          ********/

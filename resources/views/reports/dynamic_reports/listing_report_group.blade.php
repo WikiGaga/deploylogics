@@ -69,7 +69,7 @@
                 }
             }
         }
-        
+
         if(count($elements) != 0){
             foreach ($elements as $eKey=>$element){
                 if($element['column_toggle'] == 1){
@@ -237,7 +237,7 @@
             </div>
             <div class="row row-block">
                 <div class="col-lg-12">
-                    <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
+                    <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered table2ExcelExport">
                         <tr class="header">
                             @foreach($headings as $heading)
                                 <th>{{$heading}}</th>
@@ -498,7 +498,79 @@
              }
              table.appendChild(grand_total[0])
          })));*/
+
+        setTimeout(function() {
+            $('.btnExcelExport').off('click');
+            $(document).off('click', '.btnExcelExport');
+
+            $(document).on('click', '.btnExcelExport', function(e) {
+                var table = document.getElementById('dynamic_report_table');
+                if (table) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
+                    if (rowCount === 0) {
+                        alert('No data to export');
+                        return false;
+                    }
+
+                    var hiddenColumns = [];
+                    $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
+                        var val = $(this).val();
+                        if (!$(this).is(':checked')) {
+                            hiddenColumns.push(val);
+                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.group_1').find('td:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.group_2').find('td:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.sub_total').find('td:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
+                        }
+                    });
+
+                    setTimeout(function() {
+                        try {
+                            $("#dynamic_report_table").table2excel({
+                                exclude: ".noExport",
+                                filename: "report.xls",
+                            });
+                        } catch(err) {
+                            console.error('Excel export error:', err);
+                            alert('Error exporting to Excel. Please try again.');
+                        }
+
+                        setTimeout(function() {
+                            hiddenColumns.forEach(function(val) {
+                                $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.group_1').find('td:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.group_2').find('td:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.sub_total').find('td:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
+                            });
+                        }, 200);
+                    }, 100);
+
+                    return false;
+                }
+            });
+        }, 100);
     </script>
+@endsection
+
+@section('exportXls')
+    @if($data['form_file_type'] == 'xls')
+        <script>
+            $(document).ready(function() {
+                $("#dynamic_report_table").table2excel({
+                    // exclude: ".noExport",
+                    filename: "report.xls",
+                });
+            });
+        </script>
+    @endif
 @endsection
 @else
 @section('content')
