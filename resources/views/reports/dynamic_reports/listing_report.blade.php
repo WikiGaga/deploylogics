@@ -31,8 +31,8 @@
             }
         }else{
             //dump($data['qry']);
-           
-           $baseQuery = $data['qry']; 
+
+           $baseQuery = $data['qry'];
             $page = request('page', 1);
 
             $requestedLimit = request('limit', 100); // "All" or number
@@ -72,7 +72,7 @@
                 ]
 
 
-                
+
             );
 
             // $list = \Illuminate\Support\Facades\DB::select($baseQuery);
@@ -288,107 +288,111 @@
                                 <option value="2000" {{ $limit == 2000 ? 'selected' : '' }}>2000</option>
                                 <option value="All"  {{ $limit == $total ? 'selected' : '' }}>All</option>
                             </select>
-                        <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered">
-                            <tr class="header">
-                                @if($sr == 1)
-                                    <th>Sr.</th>
-                                @endif
-                                @foreach($headings as $heading)
-                                    <th>{{$heading}}</th>
-                                @endforeach
-                            </tr>
-                            @if(count($list) != 0 && count($headings) == count($fieldsKeys))
-                                @foreach($list as $kd=>$dt)
-                                    <tr class="item_row">
-                                        @if($sr == 1)
-                                            <td>{{$loop->iteration}}</td>
-                                        @endif
-                                        @foreach($fieldsKeys as $key=>$fieldsKey)
-
-                                        @php
-                                            if($fieldsKey == 'grn_code'){
-                                                $class = "open_model clickable-cell TEXT-INFO";
-
-                                                $grn_code=$dt->$fieldsKey;
-                                                $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
-                                            }else{
-                                                $class = "";
-                                                $grn_code="";
-                                                $grn_id="";
-                                            }
-
-                                        @endphp
-                                       
-                                                @if($column_types[$key] == 'varchar2')
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" >{!! $dt->$fieldsKey !!}</td>
-                                                @elseif($column_types[$key] == 'number')
-                                                    @php
-                                                        $numVal = (int)$dt->$fieldsKey;
-                                                        
-                                                        if(in_array($key,$calc)){
-                                                            //$a_{$key} += $numVal;
-                                                            //$arr[$key] = $a_{$key};
-                                                            $a_[$key] += $numVal;
-                                                            $arr[$key] = $a_[$key];
-                                                        }
-                                                    @endphp
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
-                                                @elseif($column_types[$key] == 'float')
-                                                    @php
-                                                        $floatVal = (float)$dt->$fieldsKey;
-                                                        if(in_array($key,$calc)){
-                                                            //$a_{$key} += $floatVal;
-                                                            //$arr[$key] = $a_{$key};
-                                                            $a_[$key]+= $floatVal;
-                                                            $arr[$key] = $a_[$key];
-                                                        }
-                                                    @endphp
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
-                                                @elseif($column_types[$key] == 'date')
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
-                                                @endif
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
-                                        No Data Found......
-                                        @if(count($list) != 0 && count($headings) != count($fieldsKeys))
-                                            error...
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endif
-                            @if(count($calc) != 0)
-                                <tr class="grand_total">
+                        <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered table2ExcelExport">
+                            <thead>
+                                <tr class="header">
                                     @if($sr == 1)
-                                        <td class="rep-font-bold">Grand Total:</td>
-                                        <td class="rep-font-bold"></td>
-                                    @else
-                                        <td class="rep-font-bold">Grand Total:</td>
+                                        <th>Sr.</th>
                                     @endif
-                                    @for($i=1; $i < count($headings); $i++)
-                                        <td class="text-right rep-font-bold">
-                                            @if(isset($arr[$i]))
-                                                {{number_format($arr[$i],3)}}
+                                    @foreach($headings as $heading)
+                                        <th>{{$heading}}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(count($list) != 0 && count($headings) == count($fieldsKeys))
+                                    @foreach($list as $kd=>$dt)
+                                        <tr class="item_row">
+                                            @if($sr == 1)
+                                                <td>{{$loop->iteration}}</td>
+                                            @endif
+                                            @foreach($fieldsKeys as $key=>$fieldsKey)
+
+                                            @php
+                                                if($fieldsKey == 'grn_code'){
+                                                    $class = "open_model clickable-cell TEXT-INFO";
+
+                                                    $grn_code=$dt->$fieldsKey;
+                                                    $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
+                                                }else{
+                                                    $class = "";
+                                                    $grn_code="";
+                                                    $grn_id="";
+                                                }
+
+                                            @endphp
+
+                                                    @if($column_types[$key] == 'varchar2')
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" >{!! $dt->$fieldsKey !!}</td>
+                                                    @elseif($column_types[$key] == 'number')
+                                                        @php
+                                                            $numVal = (int)$dt->$fieldsKey;
+
+                                                            if(in_array($key,$calc)){
+                                                                //$a_{$key} += $numVal;
+                                                                //$arr[$key] = $a_{$key};
+                                                                $a_[$key] += $numVal;
+                                                                $arr[$key] = $a_[$key];
+                                                            }
+                                                        @endphp
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
+                                                    @elseif($column_types[$key] == 'float')
+                                                        @php
+                                                            $floatVal = (float)$dt->$fieldsKey;
+                                                            if(in_array($key,$calc)){
+                                                                //$a_{$key} += $floatVal;
+                                                                //$arr[$key] = $a_{$key};
+                                                                $a_[$key]+= $floatVal;
+                                                                $arr[$key] = $a_[$key];
+                                                            }
+                                                        @endphp
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                    @elseif($column_types[$key] == 'date')
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                    @endif
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="{{($sr == 1)?count($headings)+1:count($headings)}}">
+                                            No Data Found......
+                                            @if(count($list) != 0 && count($headings) != count($fieldsKeys))
+                                                error...
                                             @endif
                                         </td>
-                                    @endfor
-                                </tr>
-                                 <tr class="grand_total">
-                                    @if($sr == 1)
-                                        <td class="rep-font-bold">Count:</td>
-                                        <td class="rep-font-bold"></td>
-                                    @else
-                                        <td class="rep-font-bold">Count:</td>
-                                    @endif
-                                    
-                                    <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
-                                        {{$count_no}}
-                                    </td>
-                                </tr>
-                            @endif
+                                    </tr>
+                                @endif
+                                @if(count($calc) != 0)
+                                    <tr class="grand_total">
+                                        @if($sr == 1)
+                                            <td class="rep-font-bold">Grand Total:</td>
+                                            <td class="rep-font-bold"></td>
+                                        @else
+                                            <td class="rep-font-bold">Grand Total:</td>
+                                        @endif
+                                        @for($i=1; $i < count($headings); $i++)
+                                            <td class="text-right rep-font-bold">
+                                                @if(isset($arr[$i]))
+                                                    {{number_format($arr[$i],3)}}
+                                                @endif
+                                            </td>
+                                        @endfor
+                                    </tr>
+                                     <tr class="grand_total">
+                                        @if($sr == 1)
+                                            <td class="rep-font-bold">Count:</td>
+                                            <td class="rep-font-bold"></td>
+                                        @else
+                                            <td class="rep-font-bold">Count:</td>
+                                        @endif
+
+                                        <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
+                                            {{$count_no}}
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
                         </table>
                         @if (!$isAll)
                             {{ $list->appends(['limit' => request('limit')])->links() }}
@@ -426,7 +430,7 @@
                 }
             });
 
-  
+
             var formData = {
 
                 form_id :   grn_id,
