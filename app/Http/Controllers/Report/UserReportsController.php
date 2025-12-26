@@ -70,9 +70,9 @@ class UserReportsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    
+
     public function create($reportType,$caseType, $id = null)
-    { 
+    {
         // dd($reportType,$caseType, $id);
         // TblSoftReportingUserStudio
         $menu = TblSoftReports::select('parent_menu_id')->where('report_case',$caseType)->first();
@@ -133,7 +133,7 @@ class UserReportsController extends Controller
         }
     }
 
-    
+
     public function getStoreByName(Request $request){
         // dd($request->toArray());
         $data = [];
@@ -2427,7 +2427,7 @@ class UserReportsController extends Controller
         } catch (ValidationException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        } catch (Exception $e) { 
+        } catch (Exception $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
@@ -2562,7 +2562,7 @@ class UserReportsController extends Controller
 
     public function ViewReport(){
         $data = Session::get('data');
-
+dd($data);
         /***
          *  Dynamic Report
          ********/
@@ -2612,7 +2612,7 @@ class UserReportsController extends Controller
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
 
-               
+
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.static_reports.'.$data['key'], compact('data'))->render();

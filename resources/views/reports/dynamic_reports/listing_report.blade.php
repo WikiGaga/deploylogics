@@ -497,71 +497,58 @@
             table.appendChild(grand_total[0])
         })));
 
-        // Custom Excel Export Handler for listing_report - override the default handler
-        // Remove ALL existing handlers for this button first, then add our custom one
-        // This must run after the layout script loads, so we use a small delay
         setTimeout(function() {
-            // Remove all click handlers on .btnExcelExport (both direct and delegated)
             $('.btnExcelExport').off('click');
             $(document).off('click', '.btnExcelExport');
 
-            // Now add our custom handler
             $(document).on('click', '.btnExcelExport', function(e) {
-            var table = document.getElementById('dynamic_report_table');
-            if (table) {
-                // Stop all other event handlers from running (including the layout's default handler)
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
+                var table = document.getElementById('dynamic_report_table');
+                if (table) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
 
-                // Verify table has data
-                var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
-                if (rowCount === 0) {
-                    alert('No data to export');
+                    var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
+                    if (rowCount === 0) {
+                        alert('No data to export');
+                        return false;
+                    }
+
+                    var hiddenColumns = [];
+                    $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
+                        var val = $(this).val();
+                        if (!$(this).is(':checked')) {
+                            hiddenColumns.push(val);
+                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
+                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
+                        }
+                    });
+
+                    setTimeout(function() {
+                        try {
+                            $("#dynamic_report_table").table2excel({
+                                exclude: ".noExport",
+                                filename: "report.xls",
+                            });
+                        } catch(err) {
+                            console.error('Excel export error:', err);
+                            alert('Error exporting to Excel. Please try again.');
+                        }
+
+                        setTimeout(function() {
+                            hiddenColumns.forEach(function(val) {
+                                $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
+                                $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
+                            });
+                        }, 200);
+                    }, 100);
+
                     return false;
                 }
-
-                // Store and show all hidden columns temporarily for export
-                var hiddenColumns = [];
-                $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
-                    var val = $(this).val();
-                    if (!$(this).is(':checked')) {
-                        hiddenColumns.push(val);
-                        // Temporarily show all columns for export
-                        $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
-                        $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
-                        $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
-                    }
-                });
-
-                // Small delay to ensure DOM is updated
-                setTimeout(function() {
-                    try {
-                        // Export the table directly by ID
-                        $("#dynamic_report_table").table2excel({
-                            exclude: ".noExport",
-                            filename: "report.xls",
-                        });
-                    } catch(err) {
-                        console.error('Excel export error:', err);
-                        alert('Error exporting to Excel. Please try again.');
-                    }
-
-                    // Restore hidden columns after export completes
-                    setTimeout(function() {
-                        hiddenColumns.forEach(function(val) {
-                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
-                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
-                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
-                        });
-                    }, 200);
-                }, 100);
-
-                return false;
-            }
-            // If table not found, don't prevent default - let other handlers run
             });
-        }, 100); // Small delay to ensure layout script has loaded
+        }, 100);
     </script>
 @endsection
 
