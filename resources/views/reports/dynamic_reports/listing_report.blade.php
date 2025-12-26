@@ -498,17 +498,27 @@
         })));
 
         // Custom Excel Export Handler for listing_report - override the default handler
-        $(document).off('click', '.btnExcelExport').on('click', '.btnExcelExport', function(e) {
+        // Remove ALL existing handlers for this button first, then add our custom one
+        // This must run after the layout script loads, so we use a small delay
+        setTimeout(function() {
+            // Remove all click handlers on .btnExcelExport (both direct and delegated)
+            $('.btnExcelExport').off('click');
+            $(document).off('click', '.btnExcelExport');
+
+            // Now add our custom handler
+            $(document).on('click', '.btnExcelExport', function(e) {
             var table = document.getElementById('dynamic_report_table');
             if (table) {
+                // Stop all other event handlers from running (including the layout's default handler)
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
 
                 // Verify table has data
                 var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
                 if (rowCount === 0) {
                     alert('No data to export');
-                    return;
+                    return false;
                 }
 
                 // Store and show all hidden columns temporarily for export
@@ -546,14 +556,12 @@
                         });
                     }, 200);
                 }, 100);
-            } else {
-                // Fallback to default export if table not found
-                $(".table2ExcelExport").table2excel({
-                    exclude: ".noExport",
-                    filename: "report.xls",
-                });
+
+                return false;
             }
-        });
+            // If table not found, don't prevent default - let other handlers run
+            });
+        }, 100); // Small delay to ensure layout script has loaded
     </script>
 @endsection
 
