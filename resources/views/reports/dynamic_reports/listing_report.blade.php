@@ -457,17 +457,13 @@
 
         $('.listing_dropdown>li>label>input[type="checkbox"]').on('click', function(e) {
             var table = document.getElementById('dynamic_report_table');
-            var tr = table.querySelectorAll('tr');
-            var tbody = table.querySelectorAll('tbody');
-            tr.forEach(function(tr1) {
-                tbody[0].appendChild(tr1);
-            });
-            var val = $(this).val();
-            $('.table tr.header').find('th:eq('+val+')').toggle();
-            $('.table tr.item_row').find('td:eq('+val+')').toggle();
-            $('.table tr.grand_total').find('td:eq('+val+')').toggle();
-            hiddenFiledsCount();
-
+            if (table) {
+                var val = $(this).val();
+                $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').toggle();
+                $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').toggle();
+                $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').toggle();
+                hiddenFiledsCount();
+            }
         });
         function hiddenFiledsCount(){
             var count = 0;
@@ -500,6 +496,64 @@
             }
             table.appendChild(grand_total[0])
         })));
+
+        // Custom Excel Export Handler for listing_report - override the default handler
+        $(document).off('click', '.btnExcelExport').on('click', '.btnExcelExport', function(e) {
+            var table = document.getElementById('dynamic_report_table');
+            if (table) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Verify table has data
+                var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
+                if (rowCount === 0) {
+                    alert('No data to export');
+                    return;
+                }
+
+                // Store and show all hidden columns temporarily for export
+                var hiddenColumns = [];
+                $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
+                    var val = $(this).val();
+                    if (!$(this).is(':checked')) {
+                        hiddenColumns.push(val);
+                        // Temporarily show all columns for export
+                        $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
+                        $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
+                        $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
+                    }
+                });
+
+                // Small delay to ensure DOM is updated
+                setTimeout(function() {
+                    try {
+                        // Export the table directly by ID
+                        $("#dynamic_report_table").table2excel({
+                            exclude: ".noExport",
+                            filename: "report.xls",
+                        });
+                    } catch(err) {
+                        console.error('Excel export error:', err);
+                        alert('Error exporting to Excel. Please try again.');
+                    }
+
+                    // Restore hidden columns after export completes
+                    setTimeout(function() {
+                        hiddenColumns.forEach(function(val) {
+                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
+                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
+                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
+                        });
+                    }, 200);
+                }, 100);
+            } else {
+                // Fallback to default export if table not found
+                $(".table2ExcelExport").table2excel({
+                    exclude: ".noExport",
+                    filename: "report.xls",
+                });
+            }
+        });
     </script>
 @endsection
 
