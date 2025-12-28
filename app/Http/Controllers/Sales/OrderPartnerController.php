@@ -44,7 +44,7 @@ class OrderPartnerController extends Controller
 
     public static $page_title = 'Order Partners';
     public static $redirect_url = 'order-partners';
-    public static $menu_dtl_id = '41';
+    public static $menu_dtl_id = '344';
 
     public function __construct()
     {

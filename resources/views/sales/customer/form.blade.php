@@ -22,6 +22,7 @@
                 $type = $data['current']->customer_type;
                 $status = $data['current']->customer_entry_status;
                 $default_customer = $data['current']->customer_default_customer;
+                $allow_credit = $data['current']->customer_allow_credit;
                 $image = $data['current']->customer_image;
 
                 $referenced_by = $data['current']->referenced_by;
@@ -124,6 +125,7 @@
                             </div>
                         </div>
                         <div style="
+                                display: none;
                                 background: #f0f8ff;
                                 padding: 5px;
                                 margin-bottom: 10px;
@@ -189,34 +191,6 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="form-group-block row">
-                            <label class="col-lg-6 erp-col-form-label">Active:</label>
-                            <div class="col-lg-6">
-                                <span class="kt-switch kt-switch--sm kt-switch--icon">
-                                    <label>
-                                        @if($case == 'edit')
-                                            @php $entry_status = isset($status)?$status:0; @endphp
-                                            <input type="checkbox" name="customer_entry_status" {{ $entry_status == 1?"checked":""}}>
-                                        @else
-                                            <input type="checkbox" name="customer_entry_status" checked>
-                                        @endif
-                                        <span></span>
-                                    </label>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="form-group-block row">
-                            <label class="col-lg-6 erp-col-form-label">Default Customer:</label>
-                            <div class="col-lg-6">
-                                <span class="kt-switch kt-switch--sm kt-switch--icon">
-                                    <label>
-                                        @php $default_customer = isset($default_customer)?$default_customer:0; @endphp
-                                        <input type="checkbox" name="customer_default_customer" {{ $default_customer == 1?"checked":""}}>
-                                        <span></span>
-                                    </label>
-                                </span>
-                            </div>
-                        </div>
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label"></label>
                             <div class="col-lg-6">
@@ -238,6 +212,54 @@
                                         </span>
                                 </div>
                                 <span class="form-text text-muted">Allowed file types: png, jpg, jpeg.</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3">
+                                <div class="form-group-block row">
+                                    <label class="col-lg-6 erp-col-form-label">Active:</label>
+                                    <div class="col-lg-6">
+                                        <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                            <label>
+                                                @if($case == 'edit')
+                                                    @php $entry_status = isset($status)?$status:0; @endphp
+                                                    <input type="checkbox" name="customer_entry_status" {{ $entry_status == 1?"checked":""}}>
+                                                @else
+                                                    <input type="checkbox" name="customer_entry_status" checked>
+                                                @endif
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                            <div class="form-group-block row">
+                            <label class="col-lg-6 erp-col-form-label">Default Customer:</label>
+                            <div class="col-lg-6">
+                                <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                    <label>
+                                        @php $default_customer = isset($default_customer)?$default_customer:0; @endphp
+                                        <input type="checkbox" name="customer_default_customer" {{ $default_customer == 1?"checked":""}}>
+                                        <span></span>
+                                    </label>
+                                </span>
+                            </div>
+                        </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="form-group-block row">
+                            <label class="col-lg-6 erp-col-form-label">Allow Credit:</label>
+                            <div class="col-lg-6">
+                                <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                    <label>
+                                        @php $allow_credit = isset($allow_credit)?$allow_credit:0; @endphp
+                                        <input type="checkbox" name="customer_allow_credit" {{ $allow_credit == 1?"checked":""}}>
+                                        <span></span>
+                                    </label>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -289,7 +311,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label">Home Delivery: <span class="required"> * </span></label>
+                                    <label class="col-lg-6 erp-col-form-label">Home Delivery:</label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2 form-group">
                                             <select class="form-control erp-form-control-sm kt-select2" id="home_delivery" name="home_delivery">

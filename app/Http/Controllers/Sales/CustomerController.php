@@ -425,6 +425,7 @@ class CustomerController extends Controller
             $customer->customer_type = $request->customer_type;
             $customer->customer_entry_status = isset($request->customer_entry_status)?"1":"0";
             $customer->customer_default_customer = isset($request->customer_default_customer)?"1":"0";
+            $customer->customer_allow_credit = isset($request->customer_allow_credit)?"1":"0";
             if($request->hasFile('customer_image'))
             {
                 $image = $request->file('customer_image');
