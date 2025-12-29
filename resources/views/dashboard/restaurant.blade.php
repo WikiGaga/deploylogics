@@ -682,90 +682,118 @@
         restaurantFilters.branches = window.restaurantFilters.branches || [];
     }
 
-    $(document).ready(function() {
-        $('#restaurant_branches').select2({
-            placeholder: 'Select Branches',
-            allowClear: true
-        });
+    function initializeRestaurantFilters() {
+        if($('#restaurant_branches').length && !$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+            $('#restaurant_branches').select2({
+                placeholder: 'Select Branches',
+                allowClear: true
+            });
+        }
 
-        var dateRangePicker = $('#restaurant_date_range').daterangepicker({
-            autoUpdateInput: false,
-            locale: {
-                cancelLabel: 'Clear',
-                format: 'DD-MM-YYYY',
-                separator: ' to '
-            },
-            opens: 'left',
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-            }
-        });
-
-        $('#restaurant_date_range').on('show.daterangepicker', function(ev, picker) {
-            setTimeout(function() {
-                $('.daterangepicker').css('z-index', '10001');
-                var sidepane = $('#restaurant_filter_sidepane');
-                var pickerEl = $('.daterangepicker');
-                if(pickerEl.length && sidepane.length) {
-                    var sidepaneRight = sidepane.offset().left + sidepane.outerWidth();
-                    var pickerLeft = pickerEl.offset().left;
-                    var pickerWidth = pickerEl.outerWidth();
-                    if(pickerLeft + pickerWidth > sidepaneRight) {
-                        pickerEl.css({
-                            'left': 'auto',
-                            'right': '10px'
-                        });
-                    }
+        if($('#restaurant_date_range').length && !$('#restaurant_date_range').data('daterangepicker')) {
+            $('#restaurant_date_range').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'DD-MM-YYYY',
+                    separator: ' to '
+                },
+                opens: 'left',
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
                 }
-            }, 10);
-        });
+            });
 
-        $('#restaurant_date_range').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('DD-MM-YYYY') + ' to ' + picker.endDate.format('DD-MM-YYYY'));
-            $('#restaurant_date_from').val(picker.startDate.format('DD-MM-YYYY'));
-            $('#restaurant_date_to').val(picker.endDate.format('DD-MM-YYYY'));
-        });
+            $('#restaurant_date_range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD-MM-YYYY') + ' to ' + picker.endDate.format('DD-MM-YYYY'));
+                $('#restaurant_date_from').val(picker.startDate.format('DD-MM-YYYY'));
+                $('#restaurant_date_to').val(picker.endDate.format('DD-MM-YYYY'));
+            });
 
-        $('#restaurant_date_range').on('cancel.daterangepicker', function(ev, picker) {
-            $(this).val('');
-            $('#restaurant_date_from').val('');
-            $('#restaurant_date_to').val('');
-        });
+            $('#restaurant_date_range').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#restaurant_date_from').val('');
+                $('#restaurant_date_to').val('');
+            });
 
-        $('#restaurant_filter_btn').click(function() {
-            var currentFilters = restaurantFilters;
+            $('#restaurant_date_range').on('show.daterangepicker', function(ev, picker) {
+                setTimeout(function() {
+                    $('.daterangepicker').css('z-index', '10001');
+                    var sidepane = $('#restaurant_filter_sidepane');
+                    var pickerEl = $('.daterangepicker');
+                    if(pickerEl.length && sidepane.length) {
+                        var sidepaneRight = sidepane.offset().left + sidepane.outerWidth();
+                        var pickerLeft = pickerEl.offset().left;
+                        var pickerWidth = pickerEl.outerWidth();
+                        if(pickerLeft + pickerWidth > sidepaneRight) {
+                            pickerEl.css({
+                                'left': 'auto',
+                                'right': '10px'
+                            });
+                        }
+                    }
+                }, 10);
+            });
+        }
+    }
+
+    function bindRestaurantFilterEvents() {
+        $('#restaurant_filter_btn').off('click').on('click', function() {
+            var currentFilters = {
+                dateFrom: null,
+                dateTo: null,
+                branches: []
+            };
 
             if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
-                currentFilters = window.restaurantFilters;
+                currentFilters = {
+                    dateFrom: window.restaurantFilters.dateFrom || null,
+                    dateTo: window.restaurantFilters.dateTo || null,
+                    branches: window.restaurantFilters.branches || []
+                };
                 restaurantFilters.dateFrom = currentFilters.dateFrom;
                 restaurantFilters.dateTo = currentFilters.dateTo;
-                restaurantFilters.branches = currentFilters.branches || [];
+                restaurantFilters.branches = currentFilters.branches;
+            } else {
+                currentFilters = {
+                    dateFrom: restaurantFilters.dateFrom,
+                    dateTo: restaurantFilters.dateTo,
+                    branches: restaurantFilters.branches || []
+                };
             }
 
             $('#restaurant_filter_overlay').addClass('show');
             $('#restaurant_filter_sidepane').addClass('open');
 
             setTimeout(function() {
+                initializeRestaurantFilters();
+
                 if(currentFilters.dateFrom && currentFilters.dateTo) {
-                    var dateFromParts = currentFilters.dateFrom.split('-');
-                    var dateToParts = currentFilters.dateTo.split('-');
-                    var startDate = moment(dateFromParts[2] + '-' + dateFromParts[1] + '-' + dateFromParts[0], 'YYYY-MM-DD');
-                    var endDate = moment(dateToParts[2] + '-' + dateToParts[1] + '-' + dateToParts[0], 'YYYY-MM-DD');
+                    try {
+                        var dateFromParts = currentFilters.dateFrom.split('-');
+                        var dateToParts = currentFilters.dateTo.split('-');
+                        var startDate = moment(dateFromParts[2] + '-' + dateFromParts[1] + '-' + dateFromParts[0], 'YYYY-MM-DD');
+                        var endDate = moment(dateToParts[2] + '-' + dateToParts[1] + '-' + dateToParts[0], 'YYYY-MM-DD');
 
-                    var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
-                    if(daterangepicker) {
-                        daterangepicker.setStartDate(startDate);
-                        daterangepicker.setEndDate(endDate);
+                        if(startDate.isValid() && endDate.isValid()) {
+                            var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                            if(daterangepicker) {
+                                daterangepicker.setStartDate(startDate);
+                                daterangepicker.setEndDate(endDate);
+                            }
+
+                            $('#restaurant_date_range').val(startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY'));
+                            $('#restaurant_date_from').val(currentFilters.dateFrom);
+                            $('#restaurant_date_to').val(currentFilters.dateTo);
+                        }
+                    } catch(e) {
+                        console.error('Error setting date range:', e);
                     }
-
-                    $('#restaurant_date_range').val(startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY'));
-                    $('#restaurant_date_from').val(currentFilters.dateFrom);
-                    $('#restaurant_date_to').val(currentFilters.dateTo);
                 } else {
                     $('#restaurant_date_range').val('');
                     $('#restaurant_date_from').val('');
@@ -778,35 +806,42 @@
                 }
 
                 if(currentFilters.branches && currentFilters.branches.length > 0) {
-                    $('#restaurant_branches').val(currentFilters.branches).trigger('change');
+                    var branchesToSet = currentFilters.branches.map(function(b) { return String(b); });
+                    $('#restaurant_branches').val(branchesToSet).trigger('change');
                 } else {
                     $('#restaurant_branches').val(null).trigger('change');
                 }
-            }, 100);
+            }, 200);
         });
 
-        $('#restaurant_filter_close_btn, #restaurant_filter_overlay').click(function() {
+        $('#restaurant_filter_close_btn, #restaurant_filter_overlay').off('click').on('click', function() {
             $('#restaurant_filter_overlay').removeClass('show');
             $('#restaurant_filter_sidepane').removeClass('open');
         });
 
-        $('#restaurant_filter_sidepane').click(function(e) {
+        $('#restaurant_filter_sidepane').off('click').on('click', function(e) {
             e.stopPropagation();
         });
 
-        $('#restaurant_filter_apply_btn').click(function() {
+        $('#restaurant_filter_apply_btn').off('click').on('click', function() {
             var dateFrom = $('#restaurant_date_from').val();
             var dateTo = $('#restaurant_date_to').val();
             var branches = $('#restaurant_branches').val();
 
+            var branchesArray = [];
+            if(branches && branches.length > 0) {
+                branchesArray = Array.isArray(branches) ? branches : [branches];
+                branchesArray = branchesArray.map(function(b) { return String(b); });
+            }
+
             restaurantFilters.dateFrom = dateFrom;
             restaurantFilters.dateTo = dateTo;
-            restaurantFilters.branches = branches || [];
+            restaurantFilters.branches = branchesArray;
 
             window.restaurantFilters = {
                 dateFrom: dateFrom,
                 dateTo: dateTo,
-                branches: branches || []
+                branches: branchesArray
             };
 
             updateFilterButtonState();
@@ -817,7 +852,7 @@
             reloadRestaurantDashboard();
         });
 
-        $('#restaurant_filter_reset_btn').click(function() {
+        $('#restaurant_filter_reset_btn').off('click').on('click', function() {
             $('#restaurant_date_range').val('');
             $('#restaurant_date_from').val('');
             $('#restaurant_date_to').val('');
@@ -842,20 +877,27 @@
 
             reloadRestaurantDashboard();
         });
+    }
 
-        function updateFilterButtonState() {
-            var hasFilters = (restaurantFilters.dateFrom && restaurantFilters.dateTo) ||
-                            (restaurantFilters.branches && restaurantFilters.branches.length > 0);
+    function updateFilterButtonState() {
+        var currentFilters = restaurantFilters;
+        if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+            currentFilters = window.restaurantFilters;
+        }
 
-            var $btn = $('#restaurant_filter_btn');
+        var hasFilters = (currentFilters.dateFrom && currentFilters.dateTo) ||
+                        (currentFilters.branches && currentFilters.branches.length > 0);
+
+        var $btn = $('#restaurant_filter_btn');
+        if($btn.length) {
             if(hasFilters) {
                 $btn.addClass('btn-warning').removeClass('btn-primary');
                 var filterText = [];
-                if(restaurantFilters.dateFrom && restaurantFilters.dateTo) {
-                    filterText.push('Date: ' + restaurantFilters.dateFrom + ' to ' + restaurantFilters.dateTo);
+                if(currentFilters.dateFrom && currentFilters.dateTo) {
+                    filterText.push('Date: ' + currentFilters.dateFrom + ' to ' + currentFilters.dateTo);
                 }
-                if(restaurantFilters.branches && restaurantFilters.branches.length > 0) {
-                    filterText.push('Branches: ' + restaurantFilters.branches.length);
+                if(currentFilters.branches && currentFilters.branches.length > 0) {
+                    filterText.push('Branches: ' + currentFilters.branches.length);
                 }
                 $btn.attr('title', 'Active Filters: ' + filterText.join(', '));
             } else {
@@ -863,8 +905,13 @@
                 $btn.attr('title', 'Apply Filters');
             }
         }
+    }
 
-        window.updateFilterButtonState = updateFilterButtonState;
+    window.updateFilterButtonState = updateFilterButtonState;
+
+    $(document).ready(function() {
+        initializeRestaurantFilters();
+        bindRestaurantFilterEvents();
 
         setTimeout(function() {
             updateFilterButtonState();
@@ -901,7 +948,17 @@
                         restaurantFilters.dateFrom = window.restaurantFilters.dateFrom;
                         restaurantFilters.dateTo = window.restaurantFilters.dateTo;
                         restaurantFilters.branches = window.restaurantFilters.branches || [];
+                    } else {
+                        window.restaurantFilters = {
+                            dateFrom: restaurantFilters.dateFrom,
+                            dateTo: restaurantFilters.dateTo,
+                            branches: restaurantFilters.branches || []
+                        };
                     }
+
+                    initializeRestaurantFilters();
+                    bindRestaurantFilterEvents();
+
                     if(typeof updateFilterButtonState === 'function') {
                         updateFilterButtonState();
                     }
