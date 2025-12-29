@@ -153,6 +153,12 @@
     .restaurant-filter-overlay.show {
         display: block;
     }
+    .daterangepicker {
+        z-index: 10001 !important;
+    }
+    .restaurant-filter-sidepane .select2-container--open {
+        z-index: 10001 !important;
+    }
     @media (max-width: 768px) {
         .restaurant-filter-sidepane {
             width: 100%;
@@ -676,7 +682,7 @@
             allowClear: true
         });
 
-        $('#restaurant_date_range').daterangepicker({
+        var dateRangePicker = $('#restaurant_date_range').daterangepicker({
             autoUpdateInput: false,
             locale: {
                 cancelLabel: 'Clear',
@@ -694,6 +700,25 @@
             }
         });
 
+        $('#restaurant_date_range').on('show.daterangepicker', function(ev, picker) {
+            setTimeout(function() {
+                $('.daterangepicker').css('z-index', '10001');
+                var sidepane = $('#restaurant_filter_sidepane');
+                var pickerEl = $('.daterangepicker');
+                if(pickerEl.length && sidepane.length) {
+                    var sidepaneRight = sidepane.offset().left + sidepane.outerWidth();
+                    var pickerLeft = pickerEl.offset().left;
+                    var pickerWidth = pickerEl.outerWidth();
+                    if(pickerLeft + pickerWidth > sidepaneRight) {
+                        pickerEl.css({
+                            'left': 'auto',
+                            'right': '10px'
+                        });
+                    }
+                }
+            }, 10);
+        });
+
         $('#restaurant_date_range').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('DD-MM-YYYY') + ' to ' + picker.endDate.format('DD-MM-YYYY'));
             $('#restaurant_date_from').val(picker.startDate.format('DD-MM-YYYY'));
@@ -709,6 +734,20 @@
         $('#restaurant_filter_btn').click(function() {
             $('#restaurant_filter_overlay').addClass('show');
             $('#restaurant_filter_sidepane').addClass('open');
+
+            if(restaurantFilters.dateFrom && restaurantFilters.dateTo) {
+                var dateFromParts = restaurantFilters.dateFrom.split('-');
+                var dateToParts = restaurantFilters.dateTo.split('-');
+                var startDate = moment(dateFromParts[2] + '-' + dateFromParts[1] + '-' + dateFromParts[0], 'YYYY-MM-DD');
+                var endDate = moment(dateToParts[2] + '-' + dateToParts[1] + '-' + dateToParts[0], 'YYYY-MM-DD');
+                $('#restaurant_date_range').data('daterangepicker').setStartDate(startDate);
+                $('#restaurant_date_range').data('daterangepicker').setEndDate(endDate);
+                $('#restaurant_date_range').val(startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY'));
+            }
+
+            if(restaurantFilters.branches && restaurantFilters.branches.length > 0) {
+                $('#restaurant_branches').val(restaurantFilters.branches).trigger('change');
+            }
         });
 
         $('#restaurant_filter_close_btn, #restaurant_filter_overlay').click(function() {
@@ -736,9 +775,15 @@
         });
 
         $('#restaurant_filter_reset_btn').click(function() {
+            $('#restaurant_date_range').val('');
             $('#restaurant_date_from').val('');
             $('#restaurant_date_to').val('');
             $('#restaurant_branches').val(null).trigger('change');
+
+            if($('#restaurant_date_range').data('daterangepicker')) {
+                $('#restaurant_date_range').data('daterangepicker').setStartDate(moment());
+                $('#restaurant_date_range').data('daterangepicker').setEndDate(moment());
+            }
 
             restaurantFilters.dateFrom = null;
             restaurantFilters.dateTo = null;
@@ -772,9 +817,20 @@
                 var data = response['data'];
                 var view = data['view'];
                 $('#dashboard_data').html(view);
-                if(typeof loadRestaurantCharts === 'function'){
-                    loadRestaurantCharts();
-                }
+
+                setTimeout(function() {
+                    if(typeof window.getRestaurantFilters === 'function') {
+                        var currentFilters = window.getRestaurantFilters();
+                        if(typeof restaurantFilters !== 'undefined') {
+                            restaurantFilters.dateFrom = currentFilters.dateFrom;
+                            restaurantFilters.dateTo = currentFilters.dateTo;
+                            restaurantFilters.branches = currentFilters.branches;
+                        }
+                    }
+                    if(typeof loadRestaurantCharts === 'function'){
+                        loadRestaurantCharts();
+                    }
+                }, 200);
             },
             error: function() {
                 $('#shimmer_loading').removeClass('loading');
@@ -784,7 +840,18 @@
     }
 
     window.getRestaurantFilters = function() {
+        if(typeof restaurantFilters === 'undefined') {
+            return {
+                dateFrom: null,
+                dateTo: null,
+                branches: []
+            };
+        }
         return restaurantFilters;
     };
+
+    if(typeof window.restaurantFilters === 'undefined') {
+        window.restaurantFilters = restaurantFilters;
+    }
 </script>
 
