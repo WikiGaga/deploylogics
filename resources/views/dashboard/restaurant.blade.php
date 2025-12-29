@@ -125,7 +125,98 @@
         border-radius: 4px;
         margin: 15px 0;
     }
+    .restaurant-filter-sidepane {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100vh;
+        background: #fff;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+    }
+    .restaurant-filter-sidepane.open {
+        right: 0;
+    }
+    .restaurant-filter-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+    .restaurant-filter-overlay.show {
+        display: block;
+    }
+    @media (max-width: 768px) {
+        .restaurant-filter-sidepane {
+            width: 100%;
+            right: -100%;
+        }
+    }
 </style>
+<div class="row kt-margin-b-15">
+    <div class="col-lg-12">
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_btn">
+                <i class="la la-filter"></i> Apply Filters
+            </button>
+        </div>
+    </div>
+</div>
+<div class="restaurant-filter-overlay" id="restaurant_filter_overlay"></div>
+<div class="restaurant-filter-sidepane" id="restaurant_filter_sidepane">
+    <div class="kt-portlet">
+        <div class="kt-portlet__head">
+            <div class="kt-portlet__head-label">
+                <h3 class="kt-portlet__head-title">
+                    Filter Dashboard
+                </h3>
+            </div>
+            <div class="kt-portlet__head-toolbar">
+                <button type="button" class="btn btn-sm btn-icon" id="restaurant_filter_close_btn">
+                    <i class="la la-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kt-portlet__body">
+            <form id="restaurant_filter_form">
+                <div class="form-group">
+                    <label class="erp-col-form-label">Date Range:</label>
+                    <input type="text" class="form-control erp-form-control-sm" id="restaurant_date_range" placeholder="Select Date Range" />
+                    <input type="hidden" name="date_from" id="restaurant_date_from" />
+                    <input type="hidden" name="date_to" id="restaurant_date_to" />
+                </div>
+                <div class="form-group">
+                    <label class="erp-col-form-label">Branches:</label>
+                    <div class="erp-select2">
+                        <select class="form-control kt-select2 erp-form-control-sm" id="restaurant_branches" name="branches[]" multiple>
+                            @php
+                                $branches = App\Library\Utilities::getAllBranches();
+                            @endphp
+                            @foreach($branches as $branch)
+                                <option value="{{$branch->branch_id}}">{{$branch->branch_name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_apply_btn">
+                        <i class="la la-check"></i> Apply Filters
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="restaurant_filter_reset_btn" style="margin-left: 10px;">
+                        <i class="la la-refresh"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div class="row kt-margin-b-15">
     <div class="col-lg-3">
         <div class="kt-portlet" style="background-repeat: no-repeat;
@@ -366,9 +457,6 @@
                     </div>
                 </div>
                 <div class="kt-portlet__head-toolbar">
-                    {{-- <button type="button" class="btn btn-sm btn-secondary" id="end_of_day_report_btn">
-                        {{ __('message.end_of_day_report') }}
-                    </button> --}}
                     <button type="button" class="btn btn-sm btn-icon btn-secondary" style="margin-left: 5px;">
                         <i class="la la-download"></i>
                     </button>
@@ -574,6 +662,129 @@
 <script>
     var translations = {
         sales: '{{ __('message.sales') }}'
+    };
+
+    var restaurantFilters = {
+        dateFrom: null,
+        dateTo: null,
+        branches: []
+    };
+
+    $(document).ready(function() {
+        $('#restaurant_branches').select2({
+            placeholder: 'Select Branches',
+            allowClear: true
+        });
+
+        $('#restaurant_date_range').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: 'Clear',
+                format: 'DD-MM-YYYY',
+                separator: ' to '
+            },
+            opens: 'left',
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        });
+
+        $('#restaurant_date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD-MM-YYYY') + ' to ' + picker.endDate.format('DD-MM-YYYY'));
+            $('#restaurant_date_from').val(picker.startDate.format('DD-MM-YYYY'));
+            $('#restaurant_date_to').val(picker.endDate.format('DD-MM-YYYY'));
+        });
+
+        $('#restaurant_date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            $('#restaurant_date_from').val('');
+            $('#restaurant_date_to').val('');
+        });
+
+        $('#restaurant_filter_btn').click(function() {
+            $('#restaurant_filter_overlay').addClass('show');
+            $('#restaurant_filter_sidepane').addClass('open');
+        });
+
+        $('#restaurant_filter_close_btn, #restaurant_filter_overlay').click(function() {
+            $('#restaurant_filter_overlay').removeClass('show');
+            $('#restaurant_filter_sidepane').removeClass('open');
+        });
+
+        $('#restaurant_filter_sidepane').click(function(e) {
+            e.stopPropagation();
+        });
+
+        $('#restaurant_filter_apply_btn').click(function() {
+            var dateFrom = $('#restaurant_date_from').val();
+            var dateTo = $('#restaurant_date_to').val();
+            var branches = $('#restaurant_branches').val();
+
+            restaurantFilters.dateFrom = dateFrom;
+            restaurantFilters.dateTo = dateTo;
+            restaurantFilters.branches = branches || [];
+
+            $('#restaurant_filter_overlay').removeClass('show');
+            $('#restaurant_filter_sidepane').removeClass('open');
+
+            reloadRestaurantDashboard();
+        });
+
+        $('#restaurant_filter_reset_btn').click(function() {
+            $('#restaurant_date_from').val('');
+            $('#restaurant_date_to').val('');
+            $('#restaurant_branches').val(null).trigger('change');
+
+            restaurantFilters.dateFrom = null;
+            restaurantFilters.dateTo = null;
+            restaurantFilters.branches = [];
+
+            reloadRestaurantDashboard();
+        });
+    });
+
+    function reloadRestaurantDashboard() {
+        $('#dashboard_data').html('');
+        $('#shimmer_loading').addClass('loading');
+
+        var formData = {
+            date_from: restaurantFilters.dateFrom,
+            date_to: restaurantFilters.dateTo,
+            branches: restaurantFilters.branches
+        };
+
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            type: 'POST',
+            url: '/dashboard/get-restaurant-dashboard-detail',
+            dataType: 'json',
+            data: formData,
+            success: function(response) {
+                $('#shimmer_loading').removeClass('loading');
+
+                var data = response['data'];
+                var view = data['view'];
+                $('#dashboard_data').html(view);
+                if(typeof loadRestaurantCharts === 'function'){
+                    loadRestaurantCharts();
+                }
+            },
+            error: function() {
+                $('#shimmer_loading').removeClass('loading');
+                $('#dashboard_data').html('<div class="alert alert-danger">Error loading dashboard. Please try again.</div>');
+            }
+        });
+    }
+
+    window.getRestaurantFilters = function() {
+        return restaurantFilters;
     };
 </script>
 
