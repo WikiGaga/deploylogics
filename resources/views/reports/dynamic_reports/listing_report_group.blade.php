@@ -292,7 +292,7 @@
                                             @for($i=1; $i < count($headings); $i++)
                                                 <td class="text-right rep-font-bold">
                                                     @if(isset($arr_item[$i]))
-                                                        {{number_format($arr_item[$i],3)}}
+                                                        {{number_format($arr_item[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                     @endif
                                                     @php
                                                         if(in_array($i,$calc)){
@@ -367,7 +367,7 @@
                                                     @for($i=1; $i < count($headings); $i++)
                                                         <td class="text-right rep-font-bold">
                                                             @if(isset($arr_item[$i]))
-                                                                {{number_format($arr_item[$i],3)}}
+                                                                {{number_format($arr_item[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                                 @php
                                                                     if(in_array($i,$calc)){
                                                                         $ag_[$i] += $arr_item[$i];
@@ -392,7 +392,7 @@
                                                 @for($i=1; $i < count($headings); $i++)
                                                     <td class="text-right rep-font-bold">
                                                         @if(isset($arr_grp[$i]))
-                                                            {{number_format($arr_grp[$i],3)}}
+                                                            {{number_format($arr_grp[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                         @endif
                                                         @php
                                                             if(in_array($i,$calc)){
@@ -429,7 +429,7 @@
                                 @for($i=1; $i < count($headings); $i++)
                                     <td class="text-right rep-font-bold">
                                         @if(isset($arr[$i]))
-                                            {{number_format($arr[$i],3)}}
+                                            {{number_format($arr[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                         @endif
                                     </td>
                                 @endfor
