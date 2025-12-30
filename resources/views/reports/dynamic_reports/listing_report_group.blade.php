@@ -194,11 +194,20 @@
         @endforeach
         @foreach($TdStyles as $k=>$tdstyle)
             @if($loop->first && $sr != true)
-                table tr.item_row>td:first-child {
+                table tr.item_row>td:first-child,
+                table tr.sub_total>td:first-child,
+                table tr.total>td:first-child,
+                table tr.grand_total>td:first-child {
         @elseif($sr != true)
-                table tr.item_row>td:nth-child({{$k+1}}) {
+                table tr.item_row>td:nth-child({{$k+1}}),
+                table tr.sub_total>td:nth-child({{$k+1}}),
+                table tr.total>td:nth-child({{$k+1}}),
+                table tr.grand_total>td:nth-child({{$k+1}}) {
         @else
-                table tr.item_row>td:nth-child({{$k+2}}) {
+                table tr.item_row>td:nth-child({{$k+2}}),
+                table tr.sub_total>td:nth-child({{$k+2}}),
+                table tr.total>td:nth-child({{$k+2}}),
+                table tr.grand_total>td:nth-child({{$k+2}}) {
         @endif
             @foreach($tdstyle as $pro=>$val)
                 {{$pro}} : {{$val.' !important'}};
@@ -290,7 +299,7 @@
                                         <tr class="sub_total">
                                             <td class="rep-font-bold">Sub Total: <span style="font-size: 12px;color: #fd397a !important;">({{$kd}})</span></td>
                                             @for($i=1; $i < count($headings); $i++)
-                                                <td class="text-right rep-font-bold">
+                                                <td class="rep-font-bold">
                                                     @if(isset($arr_item[$i]))
                                                         {{number_format($arr_item[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                     @endif
@@ -365,7 +374,7 @@
                                                 <tr class="total">
                                                     <td class="rep-font-bold">Total: <span style="font-size: 12px;color: #fd397a !important;">({{$k}})</span></td>
                                                     @for($i=1; $i < count($headings); $i++)
-                                                        <td class="text-right rep-font-bold">
+                                                        <td class="rep-font-bold">
                                                             @if(isset($arr_item[$i]))
                                                                 {{number_format($arr_item[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                                 @php
@@ -390,7 +399,7 @@
                                             <tr class="sub_total">
                                                 <td class="rep-font-bold">Sub Total: <span style="font-size: 12px;color: #fd397a !important;">({{$kd}})</span></td>
                                                 @for($i=1; $i < count($headings); $i++)
-                                                    <td class="text-right rep-font-bold">
+                                                    <td class="rep-font-bold">
                                                         @if(isset($arr_grp[$i]))
                                                             {{number_format($arr_grp[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                                         @endif
@@ -427,7 +436,7 @@
                             <tr class="grand_total">
                                 <td class="rep-font-bold">Grand Total:</td>
                                 @for($i=1; $i < count($headings); $i++)
-                                    <td class="text-right rep-font-bold">
+                                    <td class="rep-font-bold">
                                         @if(isset($arr[$i]))
                                             {{number_format($arr[$i],!empty($decimal[$i])?$decimal[$i]:0)}}
                                         @endif
