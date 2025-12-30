@@ -334,13 +334,30 @@
     <script>
         // Initialize restaurant filter sidepane on page load (since it's now in home.blade.php)
         $(document).ready(function() {
-            // Wait a bit for restaurant.js to load, then initialize if not already done
-            setTimeout(function() {
+            // Wait for restaurant.js to load, then initialize
+            var initAttempts = 0;
+            var maxAttempts = 10;
+
+            var tryInit = function() {
+                initAttempts++;
                 if(typeof initializeRestaurantFilters === 'function' && typeof bindRestaurantFilterEvents === 'function') {
                     initializeRestaurantFilters();
                     bindRestaurantFilterEvents();
+
+                    // Also restore any existing filter values
+                    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                        if(typeof restoreFilterValues === 'function') {
+                            setTimeout(function() {
+                                restoreFilterValues(window.restaurantFilters);
+                            }, 300);
+                        }
+                    }
+                } else if(initAttempts < maxAttempts) {
+                    setTimeout(tryInit, 200);
                 }
-            }, 500);
+            };
+
+            setTimeout(tryInit, 300);
         });
     </script>
 @endsection

@@ -596,10 +596,20 @@
 
     function initializeRestaurantFilters() {
         if($('#restaurant_branches').length && !$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+            // Preserve current values before initializing select2
+            var currentBranches = $('#restaurant_branches').val();
+
             $('#restaurant_branches').select2({
                 placeholder: 'Select Branches',
                 allowClear: true
             });
+
+            // Restore values after initialization
+            if(currentBranches && currentBranches.length > 0) {
+                setTimeout(function() {
+                    $('#restaurant_branches').val(currentBranches).trigger('change');
+                }, 50);
+            }
         }
 
         if($('#restaurant_date_range').length) {
@@ -666,6 +676,7 @@
             }
         }
 
+
         // Restore date range
         if(filters.dateFrom && filters.dateTo) {
             var dateFromStr = String(filters.dateFrom).trim();
@@ -701,14 +712,16 @@
                 }
             }
         } else {
-            // Clear date range
-            $('#restaurant_date_range').val('');
-            $('#restaurant_date_from').val('');
-            $('#restaurant_date_to').val('');
-            var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
-            if(daterangepicker) {
-                daterangepicker.setStartDate(moment());
-                daterangepicker.setEndDate(moment());
+            // Clear date range only if filters are explicitly empty
+            if(filters.dateFrom === null && filters.dateTo === null) {
+                $('#restaurant_date_range').val('');
+                $('#restaurant_date_from').val('');
+                $('#restaurant_date_to').val('');
+                var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                if(daterangepicker) {
+                    daterangepicker.setStartDate(moment());
+                    daterangepicker.setEndDate(moment());
+                }
             }
         }
 
@@ -716,35 +729,51 @@
         if(filters.branches && Array.isArray(filters.branches) && filters.branches.length > 0) {
             var branchesToSet = filters.branches.map(function(b) { return String(b); });
 
-            // Ensure select2 is initialized
+            // Ensure select2 is initialized (preserve values)
+            var currentBranches = $('#restaurant_branches').val();
             if(!$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
                 $('#restaurant_branches').select2({
                     placeholder: 'Select Branches',
                     allowClear: true
                 });
+                // Restore if we had values
+                if(currentBranches && currentBranches.length > 0) {
+                    setTimeout(function() {
+                        $('#restaurant_branches').val(currentBranches).trigger('change');
+                    }, 50);
+                }
             }
 
-            // Set values - use a small delay to ensure select2 is ready
+            // Set values - use a delay to ensure select2 is ready
             setTimeout(function() {
                 $('#restaurant_branches').val(branchesToSet);
 
-                // Trigger change to update select2 display
+                // Trigger change to update select2 display - use select2's change event
                 if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                    $('#restaurant_branches').trigger('change.select2');
+                    $('#restaurant_branches').trigger('change');
                 } else {
                     $('#restaurant_branches').trigger('change');
                 }
-            }, 150);
+
+                // Force select2 to update its display
+                setTimeout(function() {
+                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                        $('#restaurant_branches').trigger('change.select2');
+                    }
+                }, 50);
+            }, 200);
         } else {
-            // Clear branches
-            setTimeout(function() {
-                $('#restaurant_branches').val(null);
-                if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                    $('#restaurant_branches').trigger('change.select2');
-                } else {
-                    $('#restaurant_branches').trigger('change');
-                }
-            }, 150);
+            // Clear branches only if filters are explicitly empty
+            if(!filters.branches || (Array.isArray(filters.branches) && filters.branches.length === 0)) {
+                setTimeout(function() {
+                    $('#restaurant_branches').val(null);
+                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                        $('#restaurant_branches').trigger('change.select2');
+                    } else {
+                        $('#restaurant_branches').trigger('change');
+                    }
+                }, 200);
+            }
         }
     }
 
@@ -775,18 +804,42 @@
                 };
             }
 
-            // Open sidepane
+            // Open sidepane first
             $('#restaurant_filter_overlay').addClass('show');
             $('#restaurant_filter_sidepane').addClass('open');
 
             // Initialize filter inputs (sidepane is persistent, but ensure it's initialized)
             initializeRestaurantFilters();
 
-            // Restore filter values - since sidepane persists, values should already be there
-            // but we'll restore them to be sure
+            // Restore filter values with proper timing
+            // Wait for initialization to complete, then restore values
             setTimeout(function() {
                 restoreFilterValues(currentFilters);
-            }, 150);
+
+                // Double-check restoration after a bit more time
+                setTimeout(function() {
+                    // Verify and re-restore if needed
+                    var needsRestore = false;
+
+                    if(currentFilters.dateFrom && currentFilters.dateTo) {
+                        if($('#restaurant_date_from').val() !== currentFilters.dateFrom ||
+                           $('#restaurant_date_to').val() !== currentFilters.dateTo) {
+                            needsRestore = true;
+                        }
+                    }
+
+                    if(currentFilters.branches && currentFilters.branches.length > 0) {
+                        var currentBranches = $('#restaurant_branches').val() || [];
+                        if(currentBranches.length !== currentFilters.branches.length) {
+                            needsRestore = true;
+                        }
+                    }
+
+                    if(needsRestore) {
+                        restoreFilterValues(currentFilters);
+                    }
+                }, 300);
+            }, 200);
         });
 
         $('#restaurant_filter_close_btn, #restaurant_filter_overlay').off('click').on('click', function() {
@@ -809,6 +862,7 @@
                 branchesArray = branchesArray.map(function(b) { return String(b); });
             }
 
+            // Save to both local and window object
             restaurantFilters.dateFrom = dateFrom;
             restaurantFilters.dateTo = dateTo;
             restaurantFilters.branches = branchesArray;
@@ -819,11 +873,14 @@
                 branches: branchesArray
             };
 
+            // Update filter button state
             updateFilterButtonState();
 
+            // Close sidepane (but don't clear values - they persist in the DOM)
             $('#restaurant_filter_overlay').removeClass('show');
             $('#restaurant_filter_sidepane').removeClass('open');
 
+            // Reload dashboard with new filters
             reloadRestaurantDashboard();
         });
 
@@ -933,14 +990,22 @@
                     }
 
                     // Re-initialize filter inputs (sidepane is now persistent, so just ensure it's initialized)
+                    // But don't re-initialize if already initialized to avoid resetting values
                     initializeRestaurantFilters();
 
                     // Re-bind events (in case they were lost during reload)
                     bindRestaurantFilterEvents();
 
-                    // Restore filter values in the sidepane (since it persists, we need to restore them)
+                    // IMPORTANT: Restore filter values in the sidepane after reload
+                    // This ensures the sidepane shows the correct values when opened
                     if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                        // Restore immediately
                         restoreFilterValues(window.restaurantFilters);
+
+                        // Also restore after a delay to ensure select2/daterangepicker are ready
+                        setTimeout(function() {
+                            restoreFilterValues(window.restaurantFilters);
+                        }, 400);
                     }
 
                     // Update filter button state to show active filters
