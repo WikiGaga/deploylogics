@@ -125,46 +125,6 @@
         border-radius: 4px;
         margin: 15px 0;
     }
-    .restaurant-filter-sidepane {
-        position: fixed;
-        top: 0;
-        right: -400px;
-        width: 400px;
-        height: 100vh;
-        background: #fff;
-        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-        z-index: 1000;
-        transition: right 0.3s ease;
-        overflow-y: auto;
-    }
-    .restaurant-filter-sidepane.open {
-        right: 0;
-    }
-    .restaurant-filter-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
-        display: none;
-    }
-    .restaurant-filter-overlay.show {
-        display: block;
-    }
-    .daterangepicker {
-        z-index: 10001 !important;
-    }
-    .restaurant-filter-sidepane .select2-container--open {
-        z-index: 10001 !important;
-    }
-    @media (max-width: 768px) {
-        .restaurant-filter-sidepane {
-            width: 100%;
-            right: -100%;
-        }
-    }
 </style>
 <div class="row kt-margin-b-15">
     <div class="col-lg-12">
@@ -172,54 +132,6 @@
             <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_btn">
                 <i class="la la-filter"></i> Apply Filters
             </button>
-        </div>
-    </div>
-</div>
-<div class="restaurant-filter-overlay" id="restaurant_filter_overlay"></div>
-<div class="restaurant-filter-sidepane" id="restaurant_filter_sidepane">
-    <div class="kt-portlet">
-        <div class="kt-portlet__head">
-            <div class="kt-portlet__head-label">
-                <h3 class="kt-portlet__head-title">
-                    Filter Dashboard
-                </h3>
-            </div>
-            <div class="kt-portlet__head-toolbar">
-                <button type="button" class="btn btn-sm btn-icon" id="restaurant_filter_close_btn">
-                    <i class="la la-times"></i>
-                </button>
-            </div>
-        </div>
-        <div class="kt-portlet__body">
-            <form id="restaurant_filter_form">
-                <div class="form-group">
-                    <label class="erp-col-form-label">Date Range:</label>
-                    <input type="text" class="form-control erp-form-control-sm" id="restaurant_date_range" placeholder="Select Date Range" />
-                    <input type="hidden" name="date_from" id="restaurant_date_from" />
-                    <input type="hidden" name="date_to" id="restaurant_date_to" />
-                </div>
-                <div class="form-group">
-                    <label class="erp-col-form-label">Branches:</label>
-                    <div class="erp-select2">
-                        <select class="form-control kt-select2 erp-form-control-sm" id="restaurant_branches" name="branches[]" multiple>
-                            @php
-                                $branches = App\Library\Utilities::getAllBranches();
-                            @endphp
-                            @foreach($branches as $branch)
-                                <option value="{{$branch->branch_id}}">{{$branch->branch_name}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_apply_btn">
-                        <i class="la la-check"></i> Apply Filters
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="restaurant_filter_reset_btn" style="margin-left: 10px;">
-                        <i class="la la-refresh"></i> Reset
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -785,10 +697,11 @@
                             dp.setStartDate(startDate);
                             dp.setEndDate(endDate);
                         }
-                    }, 200);
+                    }, 300);
                 }
             }
         } else {
+            // Clear date range
             $('#restaurant_date_range').val('');
             $('#restaurant_date_from').val('');
             $('#restaurant_date_to').val('');
@@ -811,26 +724,27 @@
                 });
             }
 
-            // Set values
-            $('#restaurant_branches').val(branchesToSet);
+            // Set values - use a small delay to ensure select2 is ready
+            setTimeout(function() {
+                $('#restaurant_branches').val(branchesToSet);
 
-            // Trigger change to update select2 display
-            setTimeout(function() {
+                // Trigger change to update select2 display
                 if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
                     $('#restaurant_branches').trigger('change.select2');
                 } else {
                     $('#restaurant_branches').trigger('change');
                 }
-            }, 100);
+            }, 150);
         } else {
-            $('#restaurant_branches').val(null);
+            // Clear branches
             setTimeout(function() {
+                $('#restaurant_branches').val(null);
                 if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
                     $('#restaurant_branches').trigger('change.select2');
                 } else {
                     $('#restaurant_branches').trigger('change');
                 }
-            }, 100);
+            }, 150);
         }
     }
 
@@ -865,60 +779,14 @@
             $('#restaurant_filter_overlay').addClass('show');
             $('#restaurant_filter_sidepane').addClass('open');
 
-            // Initialize filter inputs
+            // Initialize filter inputs (sidepane is persistent, but ensure it's initialized)
             initializeRestaurantFilters();
 
-            // Restore filter values with retry mechanism
-            var restoreAttempts = 0;
-            var maxAttempts = 10;
-
-            var tryRestore = function() {
-                restoreAttempts++;
-                var dateInputExists = $('#restaurant_date_range').length > 0;
-                var branchesInputExists = $('#restaurant_branches').length > 0;
-                var datePickerReady = $('#restaurant_date_range').data('daterangepicker') !== undefined;
-                var select2Ready = $('#restaurant_branches').hasClass('select2-hidden-accessible');
-
-                if(dateInputExists && branchesInputExists) {
-                    // Try to restore values
-                    restoreFilterValues(currentFilters);
-
-                    // Verify restoration worked, retry if needed
-                    if(restoreAttempts < maxAttempts) {
-                        var dateRestored = false;
-                        var branchesRestored = false;
-
-                        if(currentFilters.dateFrom && currentFilters.dateTo) {
-                            dateRestored = ($('#restaurant_date_from').val() === currentFilters.dateFrom &&
-                                          $('#restaurant_date_to').val() === currentFilters.dateTo);
-                        } else {
-                            dateRestored = true; // No date filter to restore
-                        }
-
-                        if(currentFilters.branches && currentFilters.branches.length > 0) {
-                            var currentBranches = $('#restaurant_branches').val() || [];
-                            branchesRestored = (currentBranches.length === currentFilters.branches.length &&
-                                              currentBranches.every(function(b) {
-                                                  return currentFilters.branches.indexOf(String(b)) !== -1;
-                                              }));
-                        } else {
-                            branchesRestored = true; // No branches filter to restore
-                        }
-
-                        if(!dateRestored || !branchesRestored) {
-                            setTimeout(tryRestore, 200);
-                        }
-                    }
-                } else if(restoreAttempts < maxAttempts) {
-                    setTimeout(tryRestore, 150);
-                } else {
-                    // Final attempt even if inputs aren't fully ready
-                    restoreFilterValues(currentFilters);
-                }
-            };
-
-            // Start restoration after a short delay to ensure DOM is ready
-            setTimeout(tryRestore, 100);
+            // Restore filter values - since sidepane persists, values should already be there
+            // but we'll restore them to be sure
+            setTimeout(function() {
+                restoreFilterValues(currentFilters);
+            }, 150);
         });
 
         $('#restaurant_filter_close_btn, #restaurant_filter_overlay').off('click').on('click', function() {
@@ -1064,9 +932,16 @@
                         };
                     }
 
-                    // Re-initialize filter inputs and events
+                    // Re-initialize filter inputs (sidepane is now persistent, so just ensure it's initialized)
                     initializeRestaurantFilters();
+
+                    // Re-bind events (in case they were lost during reload)
                     bindRestaurantFilterEvents();
+
+                    // Restore filter values in the sidepane (since it persists, we need to restore them)
+                    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                        restoreFilterValues(window.restaurantFilters);
+                    }
 
                     // Update filter button state to show active filters
                     if(typeof updateFilterButtonState === 'function') {
