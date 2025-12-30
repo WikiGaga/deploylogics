@@ -754,6 +754,7 @@
             }
         }
 
+        // Restore date range
         if(filters.dateFrom && filters.dateTo) {
             var dateFromStr = String(filters.dateFrom).trim();
             var dateToStr = String(filters.dateTo).trim();
@@ -763,14 +764,28 @@
 
             if(startDate.isValid() && endDate.isValid()) {
                 var dateRangeStr = startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY');
-                $('#restaurant_date_range').val(dateRangeStr);
+
+                // Set hidden inputs first
                 $('#restaurant_date_from').val(dateFromStr);
                 $('#restaurant_date_to').val(dateToStr);
 
+                // Set visible input
+                $('#restaurant_date_range').val(dateRangeStr);
+
+                // Update daterangepicker if it exists
                 var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
                 if(daterangepicker) {
                     daterangepicker.setStartDate(startDate);
                     daterangepicker.setEndDate(endDate);
+                } else {
+                    // If daterangepicker not initialized yet, try again after a delay
+                    setTimeout(function() {
+                        var dp = $('#restaurant_date_range').data('daterangepicker');
+                        if(dp) {
+                            dp.setStartDate(startDate);
+                            dp.setEndDate(endDate);
+                        }
+                    }, 200);
                 }
             }
         } else {
@@ -784,37 +799,44 @@
             }
         }
 
+        // Restore branches
         if(filters.branches && Array.isArray(filters.branches) && filters.branches.length > 0) {
             var branchesToSet = filters.branches.map(function(b) { return String(b); });
 
-            if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                $('#restaurant_branches').val(branchesToSet).trigger('change.select2');
-            } else {
-                $('#restaurant_branches').val(branchesToSet);
-                setTimeout(function() {
-                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                        $('#restaurant_branches').trigger('change.select2');
-                    } else {
-                        $('#restaurant_branches').trigger('change');
-                    }
-                }, 100);
+            // Ensure select2 is initialized
+            if(!$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                $('#restaurant_branches').select2({
+                    placeholder: 'Select Branches',
+                    allowClear: true
+                });
             }
+
+            // Set values
+            $('#restaurant_branches').val(branchesToSet);
+
+            // Trigger change to update select2 display
+            setTimeout(function() {
+                if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                    $('#restaurant_branches').trigger('change.select2');
+                } else {
+                    $('#restaurant_branches').trigger('change');
+                }
+            }, 100);
         } else {
             $('#restaurant_branches').val(null);
-            if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                $('#restaurant_branches').trigger('change.select2');
-            } else {
-                setTimeout(function() {
-                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
-                        $('#restaurant_branches').trigger('change.select2');
-                    }
-                }, 100);
-            }
+            setTimeout(function() {
+                if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                    $('#restaurant_branches').trigger('change.select2');
+                } else {
+                    $('#restaurant_branches').trigger('change');
+                }
+            }, 100);
         }
     }
 
     function bindRestaurantFilterEvents() {
         $('#restaurant_filter_btn').off('click').on('click', function() {
+            // Get current filters from window object (persisted across reloads)
             var currentFilters = {
                 dateFrom: null,
                 dateTo: null,
@@ -827,9 +849,10 @@
                     dateTo: window.restaurantFilters.dateTo || null,
                     branches: window.restaurantFilters.branches || []
                 };
+                // Sync with local variable
                 restaurantFilters.dateFrom = currentFilters.dateFrom;
                 restaurantFilters.dateTo = currentFilters.dateTo;
-                restaurantFilters.branches = currentFilters.branches;
+                restaurantFilters.branches = currentFilters.branches || [];
             } else {
                 currentFilters = {
                     dateFrom: restaurantFilters.dateFrom,
@@ -838,29 +861,64 @@
                 };
             }
 
+            // Open sidepane
             $('#restaurant_filter_overlay').addClass('show');
             $('#restaurant_filter_sidepane').addClass('open');
 
+            // Initialize filter inputs
             initializeRestaurantFilters();
 
+            // Restore filter values with retry mechanism
             var restoreAttempts = 0;
-            var maxAttempts = 5;
+            var maxAttempts = 10;
 
             var tryRestore = function() {
                 restoreAttempts++;
-                var dateInputReady = $('#restaurant_date_range').length > 0;
-                var branchesInputReady = $('#restaurant_branches').length > 0;
+                var dateInputExists = $('#restaurant_date_range').length > 0;
+                var branchesInputExists = $('#restaurant_branches').length > 0;
+                var datePickerReady = $('#restaurant_date_range').data('daterangepicker') !== undefined;
+                var select2Ready = $('#restaurant_branches').hasClass('select2-hidden-accessible');
 
-                if(dateInputReady && branchesInputReady) {
+                if(dateInputExists && branchesInputExists) {
+                    // Try to restore values
                     restoreFilterValues(currentFilters);
+
+                    // Verify restoration worked, retry if needed
+                    if(restoreAttempts < maxAttempts) {
+                        var dateRestored = false;
+                        var branchesRestored = false;
+
+                        if(currentFilters.dateFrom && currentFilters.dateTo) {
+                            dateRestored = ($('#restaurant_date_from').val() === currentFilters.dateFrom &&
+                                          $('#restaurant_date_to').val() === currentFilters.dateTo);
+                        } else {
+                            dateRestored = true; // No date filter to restore
+                        }
+
+                        if(currentFilters.branches && currentFilters.branches.length > 0) {
+                            var currentBranches = $('#restaurant_branches').val() || [];
+                            branchesRestored = (currentBranches.length === currentFilters.branches.length &&
+                                              currentBranches.every(function(b) {
+                                                  return currentFilters.branches.indexOf(String(b)) !== -1;
+                                              }));
+                        } else {
+                            branchesRestored = true; // No branches filter to restore
+                        }
+
+                        if(!dateRestored || !branchesRestored) {
+                            setTimeout(tryRestore, 200);
+                        }
+                    }
                 } else if(restoreAttempts < maxAttempts) {
                     setTimeout(tryRestore, 150);
                 } else {
+                    // Final attempt even if inputs aren't fully ready
                     restoreFilterValues(currentFilters);
                 }
             };
 
-            setTimeout(tryRestore, 300);
+            // Start restoration after a short delay to ensure DOM is ready
+            setTimeout(tryRestore, 100);
         });
 
         $('#restaurant_filter_close_btn, #restaurant_filter_overlay').off('click').on('click', function() {
@@ -993,6 +1051,7 @@
                 $('#dashboard_data').html(view);
 
                 setTimeout(function() {
+                    // Preserve filter state across reloads
                     if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
                         restaurantFilters.dateFrom = window.restaurantFilters.dateFrom;
                         restaurantFilters.dateTo = window.restaurantFilters.dateTo;
@@ -1005,12 +1064,16 @@
                         };
                     }
 
+                    // Re-initialize filter inputs and events
                     initializeRestaurantFilters();
                     bindRestaurantFilterEvents();
 
+                    // Update filter button state to show active filters
                     if(typeof updateFilterButtonState === 'function') {
                         updateFilterButtonState();
                     }
+
+                    // Load charts with current filters
                     if(typeof loadRestaurantCharts === 'function'){
                         loadRestaurantCharts();
                     }
