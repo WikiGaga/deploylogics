@@ -773,44 +773,44 @@
             setTimeout(function() {
                 initializeRestaurantFilters();
 
-                if(currentFilters.dateFrom && currentFilters.dateTo) {
-                    try {
-                        var dateFromParts = currentFilters.dateFrom.split('-');
-                        var dateToParts = currentFilters.dateTo.split('-');
-                        var startDate = moment(dateFromParts[2] + '-' + dateFromParts[1] + '-' + dateFromParts[0], 'YYYY-MM-DD');
-                        var endDate = moment(dateToParts[2] + '-' + dateToParts[1] + '-' + dateToParts[0], 'YYYY-MM-DD');
+                setTimeout(function() {
+                    if(currentFilters.dateFrom && currentFilters.dateTo) {
+                        try {
+                            var dateFromParts = currentFilters.dateFrom.split('-');
+                            var dateToParts = currentFilters.dateTo.split('-');
+                            var startDate = moment(dateFromParts[2] + '-' + dateFromParts[1] + '-' + dateFromParts[0], 'YYYY-MM-DD');
+                            var endDate = moment(dateToParts[2] + '-' + dateToParts[1] + '-' + dateToParts[0], 'YYYY-MM-DD');
 
-                        if(startDate.isValid() && endDate.isValid()) {
-                            var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
-                            if(daterangepicker) {
-                                daterangepicker.setStartDate(startDate);
-                                daterangepicker.setEndDate(endDate);
+                            if(startDate.isValid() && endDate.isValid()) {
+                                var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                                if(daterangepicker) {
+                                    daterangepicker.setStartDate(startDate);
+                                    daterangepicker.setEndDate(endDate);
+                                    $('#restaurant_date_range').val(startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY'));
+                                }
+                                $('#restaurant_date_from').val(currentFilters.dateFrom);
+                                $('#restaurant_date_to').val(currentFilters.dateTo);
                             }
-
-                            $('#restaurant_date_range').val(startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY'));
-                            $('#restaurant_date_from').val(currentFilters.dateFrom);
-                            $('#restaurant_date_to').val(currentFilters.dateTo);
+                        } catch(e) {
                         }
-                    } catch(e) {
-                        console.error('Error setting date range:', e);
+                    } else {
+                        $('#restaurant_date_range').val('');
+                        $('#restaurant_date_from').val('');
+                        $('#restaurant_date_to').val('');
+                        var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                        if(daterangepicker) {
+                            daterangepicker.setStartDate(moment());
+                            daterangepicker.setEndDate(moment());
+                        }
                     }
-                } else {
-                    $('#restaurant_date_range').val('');
-                    $('#restaurant_date_from').val('');
-                    $('#restaurant_date_to').val('');
-                    var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
-                    if(daterangepicker) {
-                        daterangepicker.setStartDate(moment());
-                        daterangepicker.setEndDate(moment());
-                    }
-                }
 
-                if(currentFilters.branches && currentFilters.branches.length > 0) {
-                    var branchesToSet = currentFilters.branches.map(function(b) { return String(b); });
-                    $('#restaurant_branches').val(branchesToSet).trigger('change');
-                } else {
-                    $('#restaurant_branches').val(null).trigger('change');
-                }
+                    if(currentFilters.branches && currentFilters.branches.length > 0) {
+                        var branchesToSet = currentFilters.branches.map(function(b) { return String(b); });
+                        $('#restaurant_branches').val(branchesToSet).trigger('change.select2');
+                    } else {
+                        $('#restaurant_branches').val(null).trigger('change.select2');
+                    }
+                }, 100);
             }, 200);
         });
 

@@ -1071,7 +1071,6 @@ function salesByMenuItemAjax(page){
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error loading menu item data:', error);
             $('#sales_by_menu_item_table').html('<div class="text-center p-5">Error loading data</div>');
         }
     });
@@ -1160,7 +1159,6 @@ function salesByLocationAjax(page){
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error loading location data:', error);
             $('#sales_by_location_table').html('<div class="text-center p-5">Error loading data</div>');
         }
     });
