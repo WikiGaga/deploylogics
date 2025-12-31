@@ -332,9 +332,7 @@
     <script src="/js/pages/js/dashboard/home.js" type="text/javascript"></script>
     <script src="/js/pages/js/dashboard/restaurant.js" type="text/javascript"></script>
     <script>
-        // Initialize restaurant filter sidepane on page load (since it's now in home.blade.php)
         $(document).ready(function() {
-            // Wait for restaurant.js to load, then initialize
             var initAttempts = 0;
             var maxAttempts = 10;
 
@@ -344,7 +342,6 @@
                     initializeRestaurantFilters();
                     bindRestaurantFilterEvents();
 
-                    // Also restore any existing filter values from localStorage
                     if(typeof loadFiltersFromStorage === 'function') {
                         var storedFilters = loadFiltersFromStorage();
                         if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
