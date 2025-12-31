@@ -588,10 +588,59 @@
         branches: []
     };
 
-    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+    // localStorage key for restaurant filters
+    var RESTAURANT_FILTERS_STORAGE_KEY = 'restaurant_dashboard_filters';
+
+    // Load filters from localStorage
+    function loadFiltersFromStorage() {
+        try {
+            var stored = localStorage.getItem(RESTAURANT_FILTERS_STORAGE_KEY);
+            if(stored) {
+                var parsed = JSON.parse(stored);
+                return {
+                    dateFrom: parsed.dateFrom || null,
+                    dateTo: parsed.dateTo || null,
+                    branches: parsed.branches || []
+                };
+            }
+        } catch(e) {
+            console.error('Error loading filters from localStorage:', e);
+        }
+        return {
+            dateFrom: null,
+            dateTo: null,
+            branches: []
+        };
+    }
+
+    // Save filters to localStorage
+    function saveFiltersToStorage(filters) {
+        try {
+            localStorage.setItem(RESTAURANT_FILTERS_STORAGE_KEY, JSON.stringify({
+                dateFrom: filters.dateFrom || null,
+                dateTo: filters.dateTo || null,
+                branches: filters.branches || []
+            }));
+        } catch(e) {
+            console.error('Error saving filters to localStorage:', e);
+        }
+    }
+
+    // Expose functions globally
+    window.loadFiltersFromStorage = loadFiltersFromStorage;
+    window.saveFiltersToStorage = saveFiltersToStorage;
+
+    // Initialize filters from localStorage or window object
+    var storedFilters = loadFiltersFromStorage();
+    if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
+        restaurantFilters = storedFilters;
+        window.restaurantFilters = storedFilters;
+    } else if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
         restaurantFilters.dateFrom = window.restaurantFilters.dateFrom || null;
         restaurantFilters.dateTo = window.restaurantFilters.dateTo || null;
         restaurantFilters.branches = window.restaurantFilters.branches || [];
+        // Also save to localStorage
+        saveFiltersToStorage(restaurantFilters);
     }
 
     function initializeRestaurantFilters() {
@@ -668,11 +717,16 @@
 
     function restoreFilterValues(filters) {
         if(!filters) {
-            filters = {};
-            if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
-                filters = window.restaurantFilters;
-            } else if(typeof restaurantFilters !== 'undefined') {
-                filters = restaurantFilters;
+            // Try to load from localStorage first
+            filters = loadFiltersFromStorage();
+
+            // Fallback to window object
+            if(!filters.dateFrom && !filters.dateTo && (!filters.branches || filters.branches.length === 0)) {
+                if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                    filters = window.restaurantFilters;
+                } else if(typeof restaurantFilters !== 'undefined') {
+                    filters = restaurantFilters;
+                }
             }
         }
 
@@ -779,30 +833,31 @@
 
     function bindRestaurantFilterEvents() {
         $('#restaurant_filter_btn').off('click').on('click', function() {
-            // Get current filters from window object (persisted across reloads)
-            var currentFilters = {
-                dateFrom: null,
-                dateTo: null,
-                branches: []
-            };
+            // Get current filters from localStorage (most reliable)
+            var currentFilters = loadFiltersFromStorage();
 
-            if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
-                currentFilters = {
-                    dateFrom: window.restaurantFilters.dateFrom || null,
-                    dateTo: window.restaurantFilters.dateTo || null,
-                    branches: window.restaurantFilters.branches || []
-                };
-                // Sync with local variable
-                restaurantFilters.dateFrom = currentFilters.dateFrom;
-                restaurantFilters.dateTo = currentFilters.dateTo;
-                restaurantFilters.branches = currentFilters.branches || [];
-            } else {
-                currentFilters = {
-                    dateFrom: restaurantFilters.dateFrom,
-                    dateTo: restaurantFilters.dateTo,
-                    branches: restaurantFilters.branches || []
-                };
+            // Fallback to window object if localStorage is empty
+            if(!currentFilters.dateFrom && !currentFilters.dateTo && (!currentFilters.branches || currentFilters.branches.length === 0)) {
+                if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                    currentFilters = {
+                        dateFrom: window.restaurantFilters.dateFrom || null,
+                        dateTo: window.restaurantFilters.dateTo || null,
+                        branches: window.restaurantFilters.branches || []
+                    };
+                } else {
+                    currentFilters = {
+                        dateFrom: restaurantFilters.dateFrom,
+                        dateTo: restaurantFilters.dateTo,
+                        branches: restaurantFilters.branches || []
+                    };
+                }
             }
+
+            // Sync with local variable
+            restaurantFilters.dateFrom = currentFilters.dateFrom;
+            restaurantFilters.dateTo = currentFilters.dateTo;
+            restaurantFilters.branches = currentFilters.branches || [];
+            window.restaurantFilters = currentFilters;
 
             // Open sidepane first
             $('#restaurant_filter_overlay').addClass('show');
@@ -862,16 +917,22 @@
                 branchesArray = branchesArray.map(function(b) { return String(b); });
             }
 
-            // Save to both local and window object
-            restaurantFilters.dateFrom = dateFrom;
-            restaurantFilters.dateTo = dateTo;
-            restaurantFilters.branches = branchesArray;
-
-            window.restaurantFilters = {
+            // Create filters object
+            var newFilters = {
                 dateFrom: dateFrom,
                 dateTo: dateTo,
                 branches: branchesArray
             };
+
+            // Save to localStorage (primary storage)
+            saveFiltersToStorage(newFilters);
+
+            // Also save to local and window object for immediate use
+            restaurantFilters.dateFrom = dateFrom;
+            restaurantFilters.dateTo = dateTo;
+            restaurantFilters.branches = branchesArray;
+
+            window.restaurantFilters = newFilters;
 
             // Update filter button state
             updateFilterButtonState();
@@ -895,15 +956,20 @@
                 $('#restaurant_date_range').data('daterangepicker').setEndDate(moment());
             }
 
-            restaurantFilters.dateFrom = null;
-            restaurantFilters.dateTo = null;
-            restaurantFilters.branches = [];
-
-            window.restaurantFilters = {
+            var emptyFilters = {
                 dateFrom: null,
                 dateTo: null,
                 branches: []
             };
+
+            // Clear from localStorage
+            saveFiltersToStorage(emptyFilters);
+
+            restaurantFilters.dateFrom = null;
+            restaurantFilters.dateTo = null;
+            restaurantFilters.branches = [];
+
+            window.restaurantFilters = emptyFilters;
 
             updateFilterButtonState();
 
@@ -976,21 +1042,16 @@
                 $('#dashboard_data').html(view);
 
                 setTimeout(function() {
-                    // Preserve filter state across reloads
-                    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
-                        restaurantFilters.dateFrom = window.restaurantFilters.dateFrom;
-                        restaurantFilters.dateTo = window.restaurantFilters.dateTo;
-                        restaurantFilters.branches = window.restaurantFilters.branches || [];
-                    } else {
-                        window.restaurantFilters = {
-                            dateFrom: restaurantFilters.dateFrom,
-                            dateTo: restaurantFilters.dateTo,
-                            branches: restaurantFilters.branches || []
-                        };
-                    }
+                    // Load filters from localStorage (most reliable)
+                    var storedFilters = loadFiltersFromStorage();
+
+                    // Update local and window objects
+                    restaurantFilters.dateFrom = storedFilters.dateFrom;
+                    restaurantFilters.dateTo = storedFilters.dateTo;
+                    restaurantFilters.branches = storedFilters.branches || [];
+                    window.restaurantFilters = storedFilters;
 
                     // Re-initialize filter inputs (sidepane is now persistent, so just ensure it's initialized)
-                    // But don't re-initialize if already initialized to avoid resetting values
                     initializeRestaurantFilters();
 
                     // Re-bind events (in case they were lost during reload)
@@ -998,13 +1059,13 @@
 
                     // IMPORTANT: Restore filter values in the sidepane after reload
                     // This ensures the sidepane shows the correct values when opened
-                    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                    if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
                         // Restore immediately
-                        restoreFilterValues(window.restaurantFilters);
+                        restoreFilterValues(storedFilters);
 
                         // Also restore after a delay to ensure select2/daterangepicker are ready
                         setTimeout(function() {
-                            restoreFilterValues(window.restaurantFilters);
+                            restoreFilterValues(storedFilters);
                         }, 400);
                     }
 
@@ -1027,12 +1088,22 @@
     }
 
     window.getRestaurantFilters = function() {
+        // Try localStorage first
+        var stored = loadFiltersFromStorage();
+        if(stored.dateFrom || stored.dateTo || (stored.branches && stored.branches.length > 0)) {
+            return stored;
+        }
+
+        // Fallback to window object
         if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
             return window.restaurantFilters;
         }
+
+        // Fallback to local variable
         if(typeof restaurantFilters !== 'undefined') {
             return restaurantFilters;
         }
+
         return {
             dateFrom: null,
             dateTo: null,
@@ -1040,12 +1111,19 @@
         };
     };
 
-    if(typeof window.restaurantFilters === 'undefined' || !window.restaurantFilters) {
+    // Ensure window.restaurantFilters is set from localStorage on load
+    var initialFilters = loadFiltersFromStorage();
+    if(initialFilters.dateFrom || initialFilters.dateTo || (initialFilters.branches && initialFilters.branches.length > 0)) {
+        window.restaurantFilters = initialFilters;
+        restaurantFilters = initialFilters;
+    } else if(typeof window.restaurantFilters === 'undefined' || !window.restaurantFilters) {
         window.restaurantFilters = restaurantFilters;
+        saveFiltersToStorage(restaurantFilters);
     } else {
         restaurantFilters.dateFrom = window.restaurantFilters.dateFrom;
         restaurantFilters.dateTo = window.restaurantFilters.dateTo;
         restaurantFilters.branches = window.restaurantFilters.branches || [];
+        saveFiltersToStorage(restaurantFilters);
     }
 </script>
 

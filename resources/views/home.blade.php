@@ -344,12 +344,15 @@
                     initializeRestaurantFilters();
                     bindRestaurantFilterEvents();
 
-                    // Also restore any existing filter values
-                    if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
-                        if(typeof restoreFilterValues === 'function') {
-                            setTimeout(function() {
-                                restoreFilterValues(window.restaurantFilters);
-                            }, 300);
+                    // Also restore any existing filter values from localStorage
+                    if(typeof loadFiltersFromStorage === 'function') {
+                        var storedFilters = loadFiltersFromStorage();
+                        if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
+                            if(typeof restoreFilterValues === 'function') {
+                                setTimeout(function() {
+                                    restoreFilterValues(storedFilters);
+                                }, 300);
+                            }
                         }
                     }
                 } else if(initAttempts < maxAttempts) {
