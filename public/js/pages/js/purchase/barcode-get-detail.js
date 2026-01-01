@@ -711,10 +711,16 @@ function barcodeCommonData(tr, response, formData) {
         if (formData.form_type == 'ist' || formData.form_type == 'sup_prod_reg') {
             var purc_rate = tbl_purc_rate['product_barcode_purchase_rate'];
         } else {
+            // For stock transfer ('st'), calculate rate based on rate_type and rate_perc
             var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-            var purc_rate = calc_rate.origRate;
+            var purc_rate = calc_rate.rate; // Use calculated rate with percentage applied
         }
-        tr.find('.tblGridCal_purc_rate').val(notNullEmpty(purc_rate, 3));
+        // For stock transfer, update the rate field with calculated rate
+        if (formData.form_type == 'st') {
+            tr.find('.tblGridCal_rate').val(notNullEmpty(purc_rate, 3));
+        } else {
+            tr.find('.tblGridCal_purc_rate').val(notNullEmpty(purc_rate, 3));
+        }
         var amount = (parseFloat(default_qty)*parseFloat(purc_rate));
     }
     // end Product Rate
@@ -886,16 +892,12 @@ function barcodeCommonData(tr, response, formData) {
     }
     if(form_type == 'st'){
         var sale_rate = !valueEmpty(tbl_purc_rate['sale_rate'])?tbl_purc_rate['sale_rate']:0;
-        tr.find('.tblGridCal_rate').val(sale_rate);
-        var mrp = !valueEmpty(tbl_purc_rate['mrp'])?tbl_purc_rate['mrp']:0;
-        tr.find('.mrp').val(mrp);
+        tr.find('.tblGridSale_rate').val(sale_rate);
+        // Calculate rate based on rate_type and rate_perc
         var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-        tr.find('.tblGridCal_ex_net_tp').val(notNullEmpty(calc_rate.rate, 3));
-        tr.find('.tblGridCal_purc_rate').val(notNullEmpty(calc_rate.rate, 3));
+        tr.find('.tblGridCal_rate').val(notNullEmpty(calc_rate.rate, 3));
         var store_stock = !valueEmpty(response['store_stock'])?response['store_stock']:0;
         $('#current_product_stock').val(store_stock);
-        $('#sys_qty').val(store_stock);
-
 
         var grn_qty = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity']:0;
         var unit_price = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_rate'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_rate']:0;
@@ -910,7 +912,6 @@ function barcodeCommonData(tr, response, formData) {
         var spec_disc_amount = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_spec_disc_amount'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_spec_disc_amount']:0;
         var gross_amount = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_gross_amount'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_gross_amount']:0;
         var net_amount = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_total_amount'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_total_amount']:0;
-
 
         tr.find('.tblGridCal_unit_price').val(unit_price);
         tr.find('.tblGridCal_discount_perc').val(discount_perc);
@@ -1160,8 +1161,15 @@ function stockTransferBarcodeData(tr, response, formData) {
     var uom_name = barcode['uom_name'];
     var code = response['code'];
     default_qty = (barcode['demand_dtl_demand_quantity'] != '' || barcode['demand_dtl_demand_quantity'] != null) ? barcode['demand_dtl_demand_quantity'] : 1;
+    var current_sale_rate = response['rate'];
+    var tbl_purc_rate = response['purc_rate'];
+    var current_user_branch_id = response['current_user_branch_id'];
     var rate = response['rate']['product_barcode_sale_rate_rate'];
-    var purc_rate = response['purc_rate']['product_barcode_purchase_rate'];
+
+    // Calculate rate based on rate_type and rate_perc using rateFunc
+    var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
+    var purc_rate = calc_rate.rate; // Use calculated rate (with percentage applied)
+
     var vat = response['vat'];
     var vat_purc = 0;
     if (vat != null || vat != "") {
@@ -1181,11 +1189,10 @@ function stockTransferBarcodeData(tr, response, formData) {
     tr.find('.product_name').val(barcode['product_name']);
     tr.find('.pd_uom').val(uom_name);
     tr.find('.pd_packing').val(barcode['product_barcode_packing']);
-    tr.find('.tblGridCal_sys_qty').val(store_stock);
     tr.find('.demand_qty').val(default_qty);
     tr.find('.tblGridCal_qty').val(default_qty);
-    tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
-    tr.find('.tblGridCal_purc_rate').val(notNullEmpty(purc_rate, 3));
+    tr.find('.tblGridSale_rate').val(notNullEmpty(rate, 3));
+    tr.find('.tblGridCal_rate').val(notNullEmpty(purc_rate, 3));
     tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
     tr.find('.tblGridCal_vat_perc').val(notNullEmpty(vat_purc, 3));
     tr.find('.tblGridCal_vat_amount').val(notNullEmpty(vat_amt, 3));

@@ -426,20 +426,11 @@ class StockController extends Controller
                         }
                     }*/
 
-                    if($formType == 'st')
-                    {
-                        $dtl->stock_dtl_ex_net_tp =  isset($pd['ex_net_tp'])?$this->addNo($pd['ex_net_tp']):"";
-                        $dtl->stock_dtl_adjrate =  isset($pd['adjrate'])?$this->addNo($pd['adjrate']):"0";
-                        $dtl->stock_dtl_sys_quantity = isset($pd['sys_qty'])?$this->addNo($pd['sys_qty']):"";
-                    }
-
-                    $dtl->stock_dtl_purc_rate =  isset($pd['purc_rate'])?$this->addNo($pd['purc_rate']):"";
                     $dtl->stock_dtl_demand_quantity =  isset($pd['demand_qty'])?$this->addNo($pd['demand_qty']):"";
                     $dtl->stock_dtl_stock_transfer_qty =  isset($pd['stock_transfer_qty'])?$this->addNo($pd['stock_transfer_qty']):"";
                     //add new column formula qty
                     $dtl->stock_dtl_formula_qty = isset($pd['formula_qty'])?$this->addNo($pd['formula_qty']): 0;
                     $dtl->stock_dtl_batch_no =  isset($pd['batch_no'])?$pd['batch_no']:"";
-                    $dtl->mrp =  isset($pd['mrp'])?$this->addNo($pd['mrp']):"";
                     $dtl->stock_dtl_store =  isset($pd['pd_store'])?$pd['pd_store']:"";
                     $dtl->stock_dtl_amount =  isset($pd['amount'])?$this->addNo($pd['amount']):"";
                     $dtl->stock_dtl_disc_percent =  isset($pd['dis_perc'])?$this->addNo($pd['dis_perc']):"";
@@ -543,7 +534,9 @@ class StockController extends Controller
                             $pRate = TblPurcProductBarcodePurchRate::where('product_id' , $pd['product_id'])->first();
 
                             if(!isset($pRate->product_barcode_purchase_rate) || $pRate->product_barcode_purchase_rate == "0"){
-                                $purc_rate = $this->addNo($pd['purc_rate']);
+                                // Use 'rate' for stock transfer, fallback to 'purc_rate' for other form types
+                                $rate_value = isset($pd['rate']) ? $pd['rate'] : (isset($pd['purc_rate']) ? $pd['purc_rate'] : 0);
+                                $purc_rate = $this->addNo($rate_value);
                                 $purc_rate = (float)$purc_rate/(float)$pd['pd_packing'];
 
                                 $barcodeList = TblPurcProductBarcode::where('product_id',$pd['product_id'])
@@ -560,9 +553,8 @@ class StockController extends Controller
                                         $vExist->update([
                                             'product_barcode_cost_rate'=> $barcodePurcRate,
                                             'product_barcode_purchase_rate'=> $barcodePurcRate,
-                                            'net_tp'=> $this->addNo($pd['purc_rate']),
-                                            'last_tp'=> $this->addNo($pd['purc_rate']),
-                                            'mrp'=> isset($pd['mrp'])?$this->addNo($pd['mrp']):"",
+                                            'net_tp'=> $this->addNo($rate_value),
+                                            'last_tp'=> $this->addNo($rate_value),
                                         ]);
                                     }else{
                                         $PurchRate = new TblPurcProductBarcodePurchRate();
@@ -573,9 +565,8 @@ class StockController extends Controller
                                         $PurchRate->product_barcode_purchase_rate = $barcodePurcRate;
                                         $PurchRate->product_barcode_cost_rate = $barcodePurcRate;
                                         $PurchRate->product_barcode_avg_rate = $barcodePurcRate;
-                                        $PurchRate->net_tp = $this->addNo($pd['purc_rate']);
-                                        $PurchRate->last_tp = $this->addNo($pd['purc_rate']);
-                                        $PurchRate->mrp = isset($pd['mrp'])?$this->addNo($pd['mrp']):"";
+                                        $PurchRate->net_tp = $this->addNo($rate_value);
+                                        $PurchRate->last_tp = $this->addNo($rate_value);
                                         $PurchRate->business_id = auth()->user()->business_id;
                                         $PurchRate->company_id = auth()->user()->company_id;
                                         $PurchRate->branch_id = auth()->user()->branch_id;
@@ -794,7 +785,7 @@ class StockController extends Controller
             return $this->jsonErrorResponse($errData, $e->getMessage(), 200);
         }
         DB::commit();
-        
+
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
             $data['redirect'] = $this->prefixIndexPage.'stock/'.$type;
