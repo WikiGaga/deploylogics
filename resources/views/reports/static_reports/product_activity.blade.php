@@ -117,8 +117,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                         PRODUCT_BARCODE_BARCODE,
                         STOCK_DTL_QTY_BASE_UNIT
                     )
-                    SELECT  
-                        SALES_ID, 
+                    SELECT
+                        SALES_ID,
                         BUSINESS_ID,
                         COMPANY_ID,
                         BRANCH_ID,
@@ -133,11 +133,11 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                         PRODUCT_BARCODE_ID,
                         PRODUCT_BARCODE_BARCODE,
                         TOT_QTY
-                    FROM 
-                        VW_INVE_DEAL_SALE 
+                    FROM
+                        VW_INVE_DEAL_SALE
                     WHERE  SALES_ID NOT IN
                     (
-                        select distinct  STOCK_ID from TBL_INVE_STOCK where STOCK_CODE_TYPE = 'POS' OR STOCK_CODE_TYPE = 'RPOS' 
+                        select distinct  STOCK_ID from TBL_INVE_STOCK where STOCK_CODE_TYPE = 'POS' OR STOCK_CODE_TYPE = 'RPOS'
                     )";
 
 
@@ -170,11 +170,11 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                         SALES_CODE,
                         SALES_TYPE,
                         116
-                    FROM 
-                        VW_INVE_DEAL_SALE  
+                    FROM
+                        VW_INVE_DEAL_SALE
                     WHERE  SALES_ID NOT IN
                     (
-                        select distinct  STOCK_ID from TBL_INVE_STOCK where STOCK_CODE_TYPE = 'POS' OR STOCK_CODE_TYPE = 'RPOS' 
+                        select distinct  STOCK_ID from TBL_INVE_STOCK where STOCK_CODE_TYPE = 'POS' OR STOCK_CODE_TYPE = 'RPOS'
                     )";
 
                     $insert2 = \Illuminate\Support\Facades\DB::insert($insert_data2);
@@ -191,14 +191,16 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             if($data['date_time_wise'] == 1){
                                 $date_field2 = " AND (STOCK.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                                 $date_field = " AND GRN.created_at <= to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
+                                $usage_date_field = " AND (USAGE.USAGE_DATE between to_date ('".date('Y-m-d', strtotime($date_time_from))."', 'yyyy/mm/dd') and to_date ('".date('Y-m-d', strtotime($date_time_to))."', 'yyyy/mm/dd'))";
                             }else{
                                 $date_field2 = "AND (STOCK.DOCUMENT_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
+                                $usage_date_field = " AND (USAGE.USAGE_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
                             }
 
 
                             $store_stock = 0;
-                           
+
                            /* $store_qry = "SELECT SUM (NVL (QTY_BASE_UNIT_VALUE, 0)) qty
                                    FROM VW_PURC_STOCK_DTL GRN
                                    WHERE GRN.PRODUCT_ID =  $productDtl->product_id
@@ -243,9 +245,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 AND STOCK.COMPANY_ID = ".auth()->user()->company_id."
                                                 AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")
                                                 and DOCUMENT_TYPE NOT in ('POS','RPOS')
-                                            
+
                                                 union all
-                                                SELECT 
+                                                SELECT
                                                     PROD.PRODUCT_NAME ,MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
                                                     MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,  MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
                                                     SUM(NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0)) QTY_IN  ,
@@ -255,7 +257,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                     MAX(NVL(STOCK.DOCUMENT_RATE, 0)) BAL_RATE ,
                                                     SUM(STOCK.BONUS_QTY_IN) BONUS_QTY_IN ,   MAX(STOCK.TRANSFER_FROM_BRANCH_ID) TRANSFER_FROM_BRANCH_ID , MAX(STOCK.TRANSFER_TO_BRANCH_ID) TRANSFER_TO_BRANCH_ID ,
                                                     MAX(SORTING_ID ) SORTING_ID
-                                                FROM  
+                                                FROM
                                                     VW_PURC_STOCK_DTL  STOCK  , VW_PURC_PRODUCT PROD
                                                 WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                     $date_field2
@@ -266,8 +268,32 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                     and DOCUMENT_TYPE in ('POS','RPOS')
                                                 GROUP BY to_char(STOCK.DOCUMENT_DATE, 'YYYY-MM'),
                                                     PROD.PRODUCT_NAME ,  STOCK.DOCUMENT_TYPE
+
+                                            UNION ALL
+
+                                            SELECT
+                                                PROD.PRODUCT_NAME , NULL STOCK_EXPIRY,
+                                                USAGE.USAGE_DATE DOCUMENT_DATE ,
+                                                USAGE.ID DOCUMENT_ID,
+                                                'USAGE' DOCUMENT_TYPE ,
+                                                'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
+                                                0 QTY_IN  ,
+                                                0 IN_RATE ,
+                                                USAGE.PRODUCT_QUANTITY_USED QTY_OUT,
+                                                0 OUT_RATE ,
+                                                0 BAL_RATE ,
+                                                0 BONUS_QTY_IN ,
+                                                NULL TRANSFER_FROM_BRANCH_ID,
+                                                NULL TRANSFER_TO_BRANCH_ID,
+                                                999999 SORTING_ID
+                                            FROM
+                                                ORDER_RECIPE_USAGES USAGE, VW_PURC_PRODUCT PROD
+                                            WHERE USAGE.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                                $usage_date_field
+                                                AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
+
                                             ) STOCK
-                                            ORDER BY STOCK.DOCUMENT_DATE , STOCK.SORTING_ID , 
+                                            ORDER BY STOCK.DOCUMENT_DATE , STOCK.SORTING_ID ,
                                                 COALESCE(TO_NUMBER(REGEXP_SUBSTR(STOCK.DOCUMENT_CODE, '^\d+')), 0),
                                                 STOCK.DOCUMENT_CODE";
 
@@ -280,8 +306,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
                                         NVL(STOCK.DOCUMENT_RATE, 0)  OUT_RATE ,
                                         NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
-                                        STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID
-                                    FROM  
+                                        STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID,
+                                        NVL(STOCK.SORTING_ID, 0) SORTING_ID
+                                    FROM
                                         VW_PURC_STOCK_DTL  STOCK  , VW_PURC_PRODUCT PROD
                                     WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
                                         $date_field2
@@ -289,7 +316,32 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
                                         AND STOCK.COMPANY_ID = ".auth()->user()->company_id."
                                         AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")
-                                    ORDER BY  STOCK.DOCUMENT_DATE , STOCK.SORTING_ID    , COALESCE(TO_NUMBER(REGEXP_SUBSTR(STOCK.DOCUMENT_CODE, '^\d+')), 0), STOCK.DOCUMENT_CODE ";
+
+                                    UNION ALL
+
+                                    SELECT
+                                        PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
+                                        '' UOM_NAME , '' PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
+                                        USAGE.USAGE_DATE DOCUMENT_DATE ,
+                                        USAGE.ID DOCUMENT_ID,
+                                        'USAGE' DOCUMENT_TYPE ,
+                                        'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
+                                        0 QTY_IN  ,
+                                        0 IN_RATE ,
+                                        USAGE.PRODUCT_QUANTITY_USED QTY_OUT,
+                                        0 OUT_RATE ,
+                                        0 BAL_RATE ,
+                                        0 BONUS_QTY_IN ,
+                                        NULL TRANSFER_FROM_BRANCH_ID,
+                                        NULL TRANSFER_TO_BRANCH_ID,
+                                        999999 SORTING_ID
+                                    FROM
+                                        ORDER_RECIPE_USAGES USAGE, VW_PURC_PRODUCT PROD
+                                    WHERE USAGE.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                        $usage_date_field
+                                        AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
+
+                                    ORDER BY  DOCUMENT_DATE , SORTING_ID    , COALESCE(TO_NUMBER(REGEXP_SUBSTR(DOCUMENT_CODE, '^\d+')), 0), DOCUMENT_CODE ";
                                 }
 
 

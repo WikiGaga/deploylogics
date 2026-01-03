@@ -142,7 +142,7 @@
                                         <i class="flaticon-more" style="color: #666666;"></i>
                                     </button>
                                     @php
-                                        $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Demand Qty','Stock Transfer Qty','Qty','Purc Rate','amount'];
+                                        $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Demand Qty','Stock Transfer Qty','Qty','Rate','Amount','Disc Percent','Disc Amt','VAT Percent','VAT Amt','Gross Amt'];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                         @foreach($headings as $key=>$heading)
@@ -223,22 +223,25 @@
                                             </div>--}}
                                         </th>
                                         <th scope="col">
-                                            <div class="erp_form__grid_th_title">Purc Rate</div>
-                                            {{--<div class="erp_form__grid_th_input">
-                                                <input id="quantity" type="text" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                            </div>--}}
-                                        </th>
-                                        <th scope="col">
-                                            <div class="erp_form__grid_th_title">MRP</div>
-                                            {{--<div class="erp_form__grid_th_input">
-                                                <input id="quantity" type="text" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                            </div>--}}
+                                            <div class="erp_form__grid_th_title">Rate</div>
                                         </th>
                                         <th scope="col">
                                             <div class="erp_form__grid_th_title">Amount</div>
-                                            {{--<div class="erp_form__grid_th_input">
-                                                <input id="quantity" type="text" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm">
-                                            </div>--}}
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">Disc Percent</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">Disc Amt</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">VAT Percent</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">VAT Amt</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="erp_form__grid_th_title">Gross Amt</div>
                                         </th>
                                         <th scope="col" width="48">
                                             <div class="erp_form__grid_th_title">Action</div>
@@ -261,20 +264,24 @@
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{isset($dtl->product_barcode_id)?$dtl->product_barcode_id:""}}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
                                                 </td>
-                                                <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{$dtl->barcode->product_barcode_barcode}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
-                                                <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->product->product_name)?$dtl->product->product_name:""}}" class="product_name form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{isset($dtl->barcode) && isset($dtl->barcode->product_barcode_barcode) ? $dtl->barcode->product_barcode_barcode : ''}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->product) && isset($dtl->product->product_name) ? $dtl->product->product_name : ''}}" class="product_name form-control erp-form-control-sm" readonly></td>
                                                 <td>
                                                     <select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd[{{$loop->iteration}}][uom]">
-                                                        <option value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}">{{isset($dtl->uom->uom_name)?$dtl->uom->uom_name:""}}</option>
+                                                        <option value="{{isset($dtl->uom) && isset($dtl->uom->uom_id) ? $dtl->uom->uom_id : ''}}">{{isset($dtl->uom) && isset($dtl->uom->uom_name) ? $dtl->uom->uom_name : ''}}</option>
                                                     </select>
                                                 </td>
-                                                <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][pd_packing]" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][pd_packing]" value="{{isset($dtl->barcode) && isset($dtl->barcode->product_barcode_packing) ? $dtl->barcode->product_barcode_packing : ''}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
                                                 <td><input type="text" data-id="demand_qty" name="pd[{{$loop->iteration}}][demand_qty]" value="{{number_format($dtl->stock_dtl_demand_quantity)}}" class="demand_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
                                                 <td><input type="text" data-id="stock_transfer_qty" name="pd[{{$loop->iteration}}][stock_transfer_qty]" value="{{number_format($dtl->stock_dtl_stock_transfer_qty)}}" class="stock_transfer_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
                                                 <td><input type="text" data-id="quantity" name="pd[{{$loop->iteration}}][quantity]" value="{{number_format($dtl->stock_dtl_quantity)}}" class="tblGridCal_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
-                                                <td><input type="text" data-id="purc_rate" name="pd[{{$loop->iteration}}][purc_rate]" value="{{number_format($dtl->stock_dtl_purc_rate,3)}}" class="tblGridCal_purc_rate form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
-                                                <td><input type="text" data-id="mrp" name="pd[{{$loop->iteration}}][mrp]" value="{{number_format($dtl->mrp,3)}}" class="mrp form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
-                                                <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{number_format($dtl->stock_dtl_amount,3)}}" class="tblGridCal_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{isset($dtl->stock_dtl_rate) && $dtl->stock_dtl_rate != '' ? number_format($dtl->stock_dtl_rate,3,'.','') : (isset($dtl->stock_dtl_purc_rate) && $dtl->stock_dtl_purc_rate != '' ? number_format($dtl->stock_dtl_purc_rate,3,'.','') : '')}}" class="tblGridCal_rate form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{isset($dtl->stock_dtl_amount) && $dtl->stock_dtl_amount != '' ? number_format($dtl->stock_dtl_amount,3,'.','') : ''}}" class="tblGridCal_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="dis_perc" name="pd[{{$loop->iteration}}][dis_perc]" value="{{isset($dtl->stock_dtl_disc_percent) && $dtl->stock_dtl_disc_percent != '' ? number_format($dtl->stock_dtl_disc_percent,2,'.','') : ''}}" class="tblGridCal_discount_perc form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="dis_amount" name="pd[{{$loop->iteration}}][dis_amount]" value="{{isset($dtl->stock_dtl_disc_amount) && $dtl->stock_dtl_disc_amount != '' ? number_format($dtl->stock_dtl_disc_amount,3,'.','') : ''}}" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="vat_perc" name="pd[{{$loop->iteration}}][vat_perc]" value="{{isset($dtl->stock_dtl_vat_percent) && $dtl->stock_dtl_vat_percent != '' ? number_format($dtl->stock_dtl_vat_percent,2,'.','') : ''}}" class="tblGridCal_vat_perc form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="vat_amount" name="pd[{{$loop->iteration}}][vat_amount]" value="{{isset($dtl->stock_dtl_vat_amount) && $dtl->stock_dtl_vat_amount != '' ? number_format($dtl->stock_dtl_vat_amount,3,'.','') : ''}}" class="tblGridCal_vat_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
+                                                <td><input type="text" data-id="gross_amount" name="pd[{{$loop->iteration}}][gross_amount]" value="{{isset($dtl->stock_dtl_total_amount) && $dtl->stock_dtl_total_amount != '' ? number_format($dtl->stock_dtl_total_amount,3,'.','') : ''}}" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>
                                                 <td class="text-center">
                                                     {{--<div class="btn-group btn-group btn-group-sm" role="group">
                                                         <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
@@ -300,7 +307,7 @@
                             </table>
                         </div>
                     </div>
-                    @include('inventory.stock_transfer.summary_total')
+                    {{-- @include('inventory.stock_transfer.summary_total') --}}
                     <div class="row form-group-block">
                         <label class="col-lg-2 erp-col-form-label">Notes:</label>
                         <div class="col-lg-10">
@@ -371,18 +378,38 @@
                 'readonly':true
             },
             {
-                'id':'purc_rate',
-                'fieldClass':'tblGridCal_purc_rate validNumber validOnlyNumber',
-                'readonly':true
-            },
-            {
-                'id':'mrp',
-                'fieldClass':'tblGridCal_purc_rate validNumber validOnlyNumber',
+                'id':'rate',
+                'fieldClass':'tblGridCal_rate validNumber validOnlyNumber',
                 'readonly':true
             },
             {
                 'id':'amount',
                 'fieldClass':'tblGridCal_amount validNumber validOnlyNumber',
+                'readonly':true
+            },
+            {
+                'id':'dis_perc',
+                'fieldClass':'tblGridCal_discount_perc validNumber validOnlyFloatNumber',
+                'readonly':true
+            },
+            {
+                'id':'dis_amount',
+                'fieldClass':'tblGridCal_discount_amount validNumber validOnlyFloatNumber',
+                'readonly':true
+            },
+            {
+                'id':'vat_perc',
+                'fieldClass':'tblGridCal_vat_perc validNumber validOnlyFloatNumber',
+                'readonly':true
+            },
+            {
+                'id':'vat_amount',
+                'fieldClass':'tblGridCal_vat_amount validNumber validOnlyFloatNumber',
+                'readonly':true
+            },
+            {
+                'id':'gross_amount',
+                'fieldClass':'tblGridCal_gross_amount validNumber',
                 'readonly':true
             },
         ];
@@ -449,9 +476,13 @@
                                             '<td><input type="text" data-id="demand_qty" name="pd['+iteration+'][demand_qty]" value="'+notEmptyZero(stocki['stock_dtl_demand_quantity'])+'" class="demand_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
                                             '<td><input type="text" data-id="stock_transfer_qty" name="pd['+iteration+'][stock_transfer_qty]" value="'+notEmptyZero(stocki['stock_dtl_quantity'])+'" class="stock_transfer_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
                                             '<td><input type="text" data-id="quantity" name="pd['+iteration+'][quantity]" value="'+notEmptyZero(stocki['stock_dtl_quantity'])+'" class="tblGridCal_qty form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
-                                            '<td><input type="text" data-id="purc_rate" name="pd['+iteration+'][purc_rate]" value="'+notNullEmpty(stocki['stock_dtl_purc_rate'],3)+'" class="tblGridCal_purc_rate form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
-                                            '<td><input type="text" data-id="mrp" name="pd['+iteration+'][mrp]" value="'+notNullEmpty(stocki['mrp'],3)+'" class="mrp form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="rate" name="pd['+iteration+'][rate]" value="'+notNullEmpty(stocki['stock_dtl_rate'],3)+'" class="tblGridCal_rate form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
                                             '<td><input type="text" data-id="amount" name="pd['+iteration+'][amount]" value="'+notNullEmpty(stocki['stock_dtl_amount'],3)+'" class="tblGridCal_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="dis_perc" name="pd['+iteration+'][dis_perc]" value="'+notNullEmpty(stocki['stock_dtl_disc_percent'],2)+'" class="tblGridCal_discount_perc form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="dis_amount" name="pd['+iteration+'][dis_amount]" value="'+notNullEmpty(stocki['stock_dtl_disc_amount'],3)+'" class="tblGridCal_discount_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="vat_perc" name="pd['+iteration+'][vat_perc]" value="'+notNullEmpty(stocki['stock_dtl_vat_percent'],2)+'" class="tblGridCal_vat_perc form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="vat_amount" name="pd['+iteration+'][vat_amount]" value="'+notNullEmpty(stocki['stock_dtl_vat_amount'],3)+'" class="tblGridCal_vat_amount form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
+                                            '<td><input type="text" data-id="gross_amount" name="pd['+iteration+'][gross_amount]" value="'+notNullEmpty(stocki['stock_dtl_total_amount'],3)+'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>\n' +
                                             '<td class="text-center">\n' +
 
                                             '</td>\n' +
