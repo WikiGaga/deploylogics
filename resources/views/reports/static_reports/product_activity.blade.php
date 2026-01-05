@@ -293,9 +293,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
 
                                             ) STOCK
-                                            ORDER BY STOCK.DOCUMENT_DATE , STOCK.SORTING_ID ,
-                                                COALESCE(TO_NUMBER(REGEXP_SUBSTR(STOCK.DOCUMENT_CODE, '^\d+')), 0),
-                                                STOCK.DOCUMENT_CODE";
+                                            ORDER BY DOCUMENT_DATE , SORTING_ID ,
+                                                COALESCE(TO_NUMBER(REGEXP_SUBSTR(DOCUMENT_CODE, '^\d+')), 0),
+                                                DOCUMENT_CODE";
 
                                 }else{
                                     $query = "SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
