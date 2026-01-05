@@ -257,6 +257,8 @@
             background: #f9f9f9 !important;
             z-index: 11;
             box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #777777 !important;
+            border-top: 2px solid #777777 !important;
         }
     </style>
 @endsection

@@ -214,6 +214,31 @@
         @endforeach
 }
         @endforeach
+
+        .table-responsive-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-width: 100%;
+            width: 100%;
+            max-height: calc(100vh - 300px); /* Adjust based on your layout */
+        }
+
+        /* Sticky table header */
+        table#dynamic_report_table tr.header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        table#dynamic_report_table tr.header th {
+            position: sticky;
+            top: 0;
+            background: #f9f9f9 !important;
+            z-index: 11;
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #777777 !important;
+            border-top: 2px solid #777777 !important;
+        }
     </style>
 @endsection
 @section('content')
@@ -246,6 +271,7 @@
             </div>
             <div class="row row-block">
                 <div class="col-lg-12">
+                    <div class="table-responsive-scroll">
                     <table width="100%" id="dynamic_report_table" class="table bt-datatable table-bordered table2ExcelExport">
                         <tr class="header">
                             @foreach($headings as $heading)
@@ -445,6 +471,7 @@
                             </tr>
                         @endif
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
