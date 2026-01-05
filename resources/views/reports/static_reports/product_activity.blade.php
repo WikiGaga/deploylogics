@@ -293,10 +293,11 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
 
                                             ) STOCK
-                                            ORDER BY DOCUMENT_DATE, SORTING_ID, COALESCE(TO_NUMBER(REGEXP_SUBSTR(DOCUMENT_CODE, '^\d+')), 0), DOCUMENT_CODE";
+                                            ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
 
                                 }else{
-                                    $query = "SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
+                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                        SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME ,  '' PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
                                         STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,  STOCK.DOCUMENT_CODE ,
                                         NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
@@ -338,8 +339,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     WHERE USAGE.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
                                         $usage_date_field
                                         AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
-
-                                    ORDER BY  DOCUMENT_DATE , SORTING_ID    , COALESCE(TO_NUMBER(REGEXP_SUBSTR(DOCUMENT_CODE, '^\d+')), 0), DOCUMENT_CODE ";
+                                    ) STOCK_RESULT
+                                    ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }
 
 

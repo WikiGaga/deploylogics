@@ -239,8 +239,24 @@
 
         .table-responsive-scroll {
             overflow-x: auto;
+            overflow-y: auto;
             max-width: 100%;
             width: 100%;
+            max-height: calc(100vh - 300px); /* Adjust based on your layout */
+        }
+
+        table#dynamic_report_table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        table#dynamic_report_table thead tr th {
+            position: sticky;
+            top: 0;
+            background: #f9f9f9 !important;
+            z-index: 11;
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
         }
     </style>
 @endsection
