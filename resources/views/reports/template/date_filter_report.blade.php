@@ -96,18 +96,18 @@
 
             case 'last_7_days':
                 startDate.setDate(today.getDate() - 7);
-                endDate = today;
+                endDate.setDate(today.getDate() - 1);
                 break;
 
             case 'last_30_days':
                 startDate.setDate(today.getDate() - 30);
-                endDate = today;
+                endDate.setDate(today.getDate() - 1);
                 break;
 
             case 'last_days':
                 if (customDays && customDays > 0) {
                     startDate.setDate(today.getDate() - customDays);
-                    endDate = today;
+                    endDate.setDate(today.getDate() - 1);
                 }
                 break;
         }
