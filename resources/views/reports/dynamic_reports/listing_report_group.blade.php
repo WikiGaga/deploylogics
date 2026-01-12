@@ -118,6 +118,21 @@
         table#dynamic_report_table tr.item_row:nth-child(odd){
             background-color: #ffffff;
         }
+        table#dynamic_report_table tr.item_row.row-deleted{
+            background-color: #ffebee !important;
+            color: #c62828;
+        }
+        table#dynamic_report_table tr.item_row.row-deleted td{
+            border-left: 3px solid #e57373;
+        }
+        table#dynamic_report_table tr.item_row.row-deleted td:first-child{
+            border-left: 4px solid #c62828;
+        }
+        table#dynamic_report_table tr.item_row td.cell-zero-amount{
+            background-color: #fff9c4 !important;
+            color: #f57c00;
+            font-weight: 600;
+        }
         /*==========================
         start hidden checkbox
      */
@@ -298,33 +313,46 @@
                                         @endif
                                     </tr>
                                     @foreach($dt as $item_key=>$item)
-                                        <tr class="item_row">
+                                        @php
+                                            $rowClass = 'item_row';
+                                            if(property_exists($item, 'is_deleted') && (strtolower($item->is_deleted) == 'yes' || strtolower($item->is_deleted) == 'y' || $item->is_deleted == '1')){
+                                                $rowClass .= ' row-deleted';
+                                            }
+                                        @endphp
+                                        <tr class="{{ $rowClass }}">
                                             @foreach($fieldsKeys as $key=>$fieldsKey)
-                                                <td>
-                                                    @if($column_types[$key] == 'varchar2')
-                                                        {{$item->$fieldsKey}}
-                                                    @elseif($column_types[$key] == 'number')
-                                                        @php
-                                                            $numVal = (int)$item->$fieldsKey;
-                                                            if(in_array($key,$calc)){
-                                                                $ai_[$key] += $numVal;
-                                                                $arr_item[$key] = $ai_[$key];
-                                                            }
-                                                        @endphp
-                                                        {{$numVal}}
-                                                    @elseif($column_types[$key] == 'float')
-                                                        @php
-                                                            $floatVal = (float)$item->$fieldsKey;
-                                                            if(in_array($key,$calc)){
-                                                                $ai_[$key] += $floatVal;
-                                                                $arr_item[$key] = $ai_[$key];
-                                                            }
-                                                        @endphp
-                                                        {{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}
-                                                    @elseif($column_types[$key] == 'date')
-                                                        {{date('d-m-Y', strtotime($item->$fieldsKey))}}
-                                                    @endif
-                                                </td>
+                                                @php
+                                                    $cellClass = '';
+                                                @endphp
+                                                @if($column_types[$key] == 'varchar2')
+                                                    <td class="{{ $cellClass }}">{{$item->$fieldsKey}}</td>
+                                                @elseif($column_types[$key] == 'number')
+                                                    @php
+                                                        $numVal = (int)$item->$fieldsKey;
+                                                        if(in_array($key,$calc)){
+                                                            $ai_[$key] += $numVal;
+                                                            $arr_item[$key] = $ai_[$key];
+                                                        }
+                                                        if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                            $cellClass = 'cell-zero-amount';
+                                                        }
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}">{{$numVal}}</td>
+                                                @elseif($column_types[$key] == 'float')
+                                                    @php
+                                                        $floatVal = (float)$item->$fieldsKey;
+                                                        if(in_array($key,$calc)){
+                                                            $ai_[$key] += $floatVal;
+                                                            $arr_item[$key] = $ai_[$key];
+                                                        }
+                                                        if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                            $cellClass = 'cell-zero-amount';
+                                                        }
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}">{{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}</td>
+                                                @elseif($column_types[$key] == 'date')
+                                                    <td class="{{ $cellClass }}">{{date('d-m-Y', strtotime($item->$fieldsKey))}}</td>
+                                                @endif
                                             @endforeach
                                         </tr>
                                     @endforeach
@@ -373,33 +401,46 @@
                                                 @endif
                                             </tr>
                                             @foreach($items as $item_key=>$item)
-                                                <tr class="item_row">
+                                                @php
+                                                    $rowClass = 'item_row';
+                                                    if(property_exists($item, 'is_deleted') && (strtolower($item->is_deleted) == 'yes' || strtolower($item->is_deleted) == 'y' || $item->is_deleted == '1')){
+                                                        $rowClass .= ' row-deleted';
+                                                    }
+                                                @endphp
+                                                <tr class="{{ $rowClass }}">
                                                     @foreach($fieldsKeys as $key=>$fieldsKey)
-                                                        <td>
-                                                            @if($column_types[$key] == 'varchar2')
-                                                                {{$item->$fieldsKey}}
-                                                            @elseif($column_types[$key] == 'number')
-                                                                @php
-                                                                    $numVal = (int)$item->$fieldsKey;
-                                                                    if(in_array($key,$calc)){
-                                                                        $ai_[$key] += $numVal;
-                                                                        $arr_item[$key] = $ai_[$key];
-                                                                    }
-                                                                @endphp
-                                                                {{$numVal}}
-                                                            @elseif($column_types[$key] == 'float')
-                                                                @php
-                                                                    $floatVal = (float)$item->$fieldsKey;
-                                                                    if(in_array($key,$calc)){
-                                                                        $ai_[$key] += $floatVal;
-                                                                        $arr_item[$key] = $ai_[$key];
-                                                                    }
-                                                                @endphp
-                                                                {{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}
-                                                            @elseif($column_types[$key] == 'date')
-                                                                {{date('d-m-Y', strtotime($item->$fieldsKey))}}
-                                                            @endif
-                                                        </td>
+                                                        @php
+                                                            $cellClass = '';
+                                                        @endphp
+                                                        @if($column_types[$key] == 'varchar2')
+                                                            <td class="{{ $cellClass }}">{{$item->$fieldsKey}}</td>
+                                                        @elseif($column_types[$key] == 'number')
+                                                            @php
+                                                                $numVal = (int)$item->$fieldsKey;
+                                                                if(in_array($key,$calc)){
+                                                                    $ai_[$key] += $numVal;
+                                                                    $arr_item[$key] = $ai_[$key];
+                                                                }
+                                                                if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                    $cellClass = 'cell-zero-amount';
+                                                                }
+                                                            @endphp
+                                                            <td class="{{ $cellClass }}">{{$numVal}}</td>
+                                                        @elseif($column_types[$key] == 'float')
+                                                            @php
+                                                                $floatVal = (float)$item->$fieldsKey;
+                                                                if(in_array($key,$calc)){
+                                                                    $ai_[$key] += $floatVal;
+                                                                    $arr_item[$key] = $ai_[$key];
+                                                                }
+                                                                if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                    $cellClass = 'cell-zero-amount';
+                                                                }
+                                                            @endphp
+                                                            <td class="{{ $cellClass }}">{{number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0)}}</td>
+                                                        @elseif($column_types[$key] == 'date')
+                                                            <td class="{{ $cellClass }}">{{date('d-m-Y', strtotime($item->$fieldsKey))}}</td>
+                                                        @endif
                                                     @endforeach
                                                 </tr>
                                             @endforeach

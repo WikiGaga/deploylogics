@@ -142,12 +142,26 @@
             border-bottom: 2px solid #777777 !important;
             background: #e8eaf6;
         }
-        /* Alternating row colors for better readability */
         table#dynamic_report_table tbody tr.item_row:nth-child(even){
             background-color: #f5f5f5;
         }
         table#dynamic_report_table tbody tr.item_row:nth-child(odd){
             background-color: #ffffff;
+        }
+        table#dynamic_report_table tbody tr.item_row.row-deleted{
+            background-color: #ffebee !important;
+            color: #c62828;
+        }
+        table#dynamic_report_table tbody tr.item_row.row-deleted td{
+            border-left: 3px solid #e57373;
+        }
+        table#dynamic_report_table tbody tr.item_row.row-deleted td:first-child{
+            border-left: 4px solid #c62828;
+        }
+        table#dynamic_report_table tbody tr.item_row td.cell-zero-amount{
+            background-color: #fff9c4 !important;
+            color: #f57c00;
+            font-weight: 600;
         }
         /*==========================
         start hidden checkbox
@@ -327,7 +341,13 @@
                             <tbody>
                                 @if(count($list) != 0 && count($headings) == count($fieldsKeys))
                                     @foreach($list as $kd=>$dt)
-                                        <tr class="item_row">
+                                        @php
+                                            $rowClass = 'item_row';
+                                            if(property_exists($dt, 'is_deleted') && (strtolower($dt->is_deleted) == 'yes' || strtolower($dt->is_deleted) == 'y' || $dt->is_deleted == '1')){
+                                                $rowClass .= ' row-deleted';
+                                            }
+                                        @endphp
+                                        <tr class="{{ $rowClass }}">
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
                                             @endif
@@ -359,8 +379,12 @@
                                                                 $a_[$key] += $numVal;
                                                                 $arr[$key] = $a_[$key];
                                                             }
+                                                            $cellClass = $class;
+                                                            if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                $cellClass .= ' cell-zero-amount';
+                                                            }
                                                         @endphp
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
+                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
                                                     @elseif($column_types[$key] == 'float')
                                                         @php
                                                             $floatVal = (float)$dt->$fieldsKey;
@@ -370,8 +394,12 @@
                                                                 $a_[$key]+= $floatVal;
                                                                 $arr[$key] = $a_[$key];
                                                             }
+                                                            $cellClass = $class;
+                                                            if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                $cellClass .= ' cell-zero-amount';
+                                                            }
                                                         @endphp
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                     @elseif($column_types[$key] == 'date')
                                                         <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
                                                     @endif
