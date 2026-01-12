@@ -109,7 +109,14 @@
         table#dynamic_report_table tr th{
             border-top: 2px solid #777777 !important;
             border-bottom: 2px solid #777777 !important;
-            background: #f9f9f9;
+            background: #e8eaf6;
+        }
+        /* Alternating row colors for better readability */
+        table#dynamic_report_table tr.item_row:nth-child(even){
+            background-color: #f5f5f5;
+        }
+        table#dynamic_report_table tr.item_row:nth-child(odd){
+            background-color: #ffffff;
         }
         /*==========================
         start hidden checkbox
@@ -233,7 +240,7 @@
         table#dynamic_report_table tr.header th {
             position: sticky;
             top: 0;
-            background: #f9f9f9 !important;
+            background: #e8eaf6 !important;
             z-index: 11;
             box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
             border-bottom: 3px solid #777777 !important;
