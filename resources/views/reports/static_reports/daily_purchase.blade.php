@@ -3,7 +3,6 @@
 
 @section('pageCSS')
     <style>
-        /* Styles go here */
         @media print {
             thead {display: table-header-group;}
             tfoot {display: table-footer-group;}
@@ -13,13 +12,11 @@
 
        .clickable-cell {
     cursor: pointer;
-    /* Force the default blue color */
     color: #17a2b8 !important;
     text-decoration: none;
 }
 
 .clickable-cell:hover {
-    /* Force the slightly darker blue on hover */
     text-decoration: underline;
     color: #117a8b !important;
 }
@@ -397,7 +394,6 @@
         var grn_code = $(this).data('grn_code');
         var grn_id = $(this).data('grn_id');
 
-        // Convert to string if it's a number
         if(grn_id){
             grn_id = String(grn_id);
         }
@@ -430,11 +426,9 @@
             console.log('Loading GRN details', formData)
             var data_url = '/upload-document';
 
-            // Show modal first and clear previous content
             $('#kt_modal_md').modal('show');
             $('#kt_modal_md').find('.modal-content').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading document details...</p></div>');
 
-            // Load content using POST request
             $.ajax({
                 url: data_url,
                 type: 'POST',

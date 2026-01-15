@@ -741,7 +741,7 @@
                                                                             <label class="erp-col-form-label">Condition:</label>
                                                                             <div class="erp-select2 report-select2">
                                                                                 <select class="form-control erp-form-control-sm report_condition conditional_logic_condition"
-                                                                                    name="conditional_logic_condition">
+                                                                                    name="conditional_logic_condition" data-saved-value="{{ $condition }}">
                                                                                     <option value="">Select</option>
                                                                                 </select>
                                                                             </div>
@@ -755,6 +755,7 @@
                                                                         </style>
                                                                         <input type="hidden" class="conditional_logic_field_type"
                                                                             name="conditional_logic_field_type" value="{{ $fieldType }}" />
+                                                                        <input type="hidden" class="conditional_logic_saved_condition" value="{{ $condition }}" />
                                                                         <div class="col-lg-7" id="conditional_logic_filter_block">
                                                                             <div class="row conditional_logic_fields_values" style="display: none">
                                                                                 <div class="col-lg-12">

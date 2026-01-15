@@ -254,64 +254,18 @@ class ReportsController extends Controller
                 if(isset($request->outer_conditional_logic) && is_array($request->outer_conditional_logic)){
                     $outer_conditional_logic_arr = $request->outer_conditional_logic;
                     foreach($outer_conditional_logic_arr as $outerKey => $outerGroup){
+                        // Check if inner_conditional_logic exists (nested structure)
                         if(isset($outerGroup['inner_conditional_logic']) && is_array($outerGroup['inner_conditional_logic'])){
                             foreach($outerGroup['inner_conditional_logic'] as $innerKey => $innerLogic){
                                 if(!empty($innerLogic['conditional_logic_field_name'])){
-                                    $arr = [];
-                                    $arr['report_id'] = $report->report_id;
-                                    $arr['key'] = $outerKey . '_' . $innerKey; // Unique key for each rule
-                                    $arr['type'] = 'conditional_logic';
-
-                                    // Store outer group number
-                                    $arr['colm_key'] = 'outer_group_no';
-                                    $arr['val'] = $outerKey;
-                                    $this->reportStyle($arr);
-
-                                    // Store field name
-                                    $arr['colm_key'] = 'field_name';
-                                    $arr['val'] = $this->strLowerTrim($innerLogic['conditional_logic_field_name']);
-                                    $this->reportStyle($arr);
-
-                                    // Store field type
-                                    $arr['colm_key'] = 'field_type';
-                                    $arr['val'] = isset($innerLogic['conditional_logic_field_type']) ? $this->strLowerTrim($innerLogic['conditional_logic_field_type']) : '';
-                                    $this->reportStyle($arr);
-
-                                    // Store condition
-                                    $arr['colm_key'] = 'condition';
-                                    $arr['val'] = isset($innerLogic['conditional_logic_condition']) ? $this->strLowerTrim($innerLogic['conditional_logic_condition']) : '';
-                                    $this->reportStyle($arr);
-
-                                    // Store value
-                                    $arr['colm_key'] = 'value';
-                                    $arr['val'] = isset($innerLogic['conditional_logic_value']) ? $innerLogic['conditional_logic_value'] : '';
-                                    $this->reportStyle($arr);
-
-                                    // Store value_2 (for between conditions)
-                                    $arr['colm_key'] = 'value_2';
-                                    $arr['val'] = isset($innerLogic['conditional_logic_value_2']) ? $innerLogic['conditional_logic_value_2'] : '';
-                                    $this->reportStyle($arr);
-
-                                    // Store background color
-                                    if(!isset($innerLogic['conditional_logic_background_color_transparent'])){
-                                        $arr['colm_key'] = 'background_color';
-                                        $arr['val'] = isset($innerLogic['conditional_logic_background_color']) ? $innerLogic['conditional_logic_background_color'] : '#ffebee';
-                                        $this->reportStyle($arr);
-                                    }
-
-                                    // Store text color
-                                    if(!isset($innerLogic['conditional_logic_text_color_transparent'])){
-                                        $arr['colm_key'] = 'text_color';
-                                        $arr['val'] = isset($innerLogic['conditional_logic_text_color']) ? $innerLogic['conditional_logic_text_color'] : '#c62828';
-                                        $this->reportStyle($arr);
-                                    }
-
-                                    // Store logic operator (AND/OR) - for inner groups, use OR
-                                    $arr['colm_key'] = 'logic_operator';
-                                    $arr['val'] = 'OR'; // Inner groups are OR
-                                    $this->reportStyle($arr);
+                                    $this->saveConditionalLogic($report->report_id, $outerKey, $innerKey, $innerLogic);
                                 }
                             }
+                        }
+                        // Handle direct structure (conditional logic data directly in outer group)
+                        else if(isset($outerGroup['conditional_logic_field_name']) && !empty($outerGroup['conditional_logic_field_name'])){
+                            // Treat as single rule in outer group with inner key 0
+                            $this->saveConditionalLogic($report->report_id, $outerKey, 0, $outerGroup);
                         }
                     }
                 }
@@ -372,6 +326,98 @@ class ReportsController extends Controller
             'report_styling_value' => $arr['val']
         ];
         TblSoftReportStyling::create($styling);
+    }
+
+    /**
+     * Save conditional logic data to database
+     *
+     * @param string $reportId
+     * @param string|int $outerKey
+     * @param string|int $innerKey
+     * @param array $logicData
+     * @return void
+     */
+    private function saveConditionalLogic($reportId, $outerKey, $innerKey, $logicData){
+        $arr = [];
+        $arr['report_id'] = $reportId;
+        // Create unique numeric ID: (outerKey * 10000) + innerKey
+        // This ensures uniqueness while keeping it numeric for the database
+        $uniqueNumericId = ((int)$outerKey * 10000) + (int)$innerKey;
+        $arr['key'] = $uniqueNumericId;
+        $arr['type'] = 'conditional_logic';
+
+        // Store outer group number
+        $arr['colm_key'] = 'outer_group_no';
+        $arr['val'] = $outerKey;
+        $this->reportStyle($arr);
+
+        // Store field name
+        $arr['colm_key'] = 'field_name';
+        $arr['val'] = $this->strLowerTrim($logicData['conditional_logic_field_name']);
+        $this->reportStyle($arr);
+
+        // Store field type
+        $arr['colm_key'] = 'field_type';
+        $arr['val'] = isset($logicData['conditional_logic_field_type']) ? $this->strLowerTrim($logicData['conditional_logic_field_type']) : '';
+        $this->reportStyle($arr);
+
+        // Store condition
+        $arr['colm_key'] = 'condition';
+        $arr['val'] = isset($logicData['conditional_logic_condition']) ? $this->strLowerTrim($logicData['conditional_logic_condition']) : '';
+        $this->reportStyle($arr);
+
+        // Store value
+        $arr['colm_key'] = 'value';
+        $arr['val'] = isset($logicData['conditional_logic_value']) ? $logicData['conditional_logic_value'] : '';
+        $this->reportStyle($arr);
+
+        // Store value_2 (for between conditions)
+        $arr['colm_key'] = 'value_2';
+        $arr['val'] = isset($logicData['conditional_logic_value_2']) ? $logicData['conditional_logic_value_2'] : '';
+        $this->reportStyle($arr);
+
+        // Store background color
+        // Check if transparent is set (can be array with 'on' or just 'on')
+        $bgTransparent = false;
+        if(isset($logicData['conditional_logic_background_color_transparent'])){
+            if(is_array($logicData['conditional_logic_background_color_transparent']) &&
+               (in_array('on', $logicData['conditional_logic_background_color_transparent']) ||
+                isset($logicData['conditional_logic_background_color_transparent'][0]))){
+                $bgTransparent = true;
+            } elseif($logicData['conditional_logic_background_color_transparent'] == 'on'){
+                $bgTransparent = true;
+            }
+        }
+
+        if(!$bgTransparent){
+            $arr['colm_key'] = 'background_color';
+            $arr['val'] = isset($logicData['conditional_logic_background_color']) ? $logicData['conditional_logic_background_color'] : '#ffebee';
+            $this->reportStyle($arr);
+        }
+
+        // Store text color
+        // Check if transparent is set
+        $textTransparent = false;
+        if(isset($logicData['conditional_logic_text_color_transparent'])){
+            if(is_array($logicData['conditional_logic_text_color_transparent']) &&
+               (in_array('on', $logicData['conditional_logic_text_color_transparent']) ||
+                isset($logicData['conditional_logic_text_color_transparent'][0]))){
+                $textTransparent = true;
+            } elseif($logicData['conditional_logic_text_color_transparent'] == 'on'){
+                $textTransparent = true;
+            }
+        }
+
+        if(!$textTransparent){
+            $arr['colm_key'] = 'text_color';
+            $arr['val'] = isset($logicData['conditional_logic_text_color']) ? $logicData['conditional_logic_text_color'] : '#c62828';
+            $this->reportStyle($arr);
+        }
+
+        // Store logic operator (AND/OR) - for inner groups, use OR
+        $arr['colm_key'] = 'logic_operator';
+        $arr['val'] = 'OR'; // Inner groups are OR
+        $this->reportStyle($arr);
     }
     /**
      * Display the specified resource.
