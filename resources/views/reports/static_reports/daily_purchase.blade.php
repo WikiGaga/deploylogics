@@ -115,7 +115,7 @@
                             }
                         }
 
-                        $qq = "select grn_date,grn_code,grn_type,branch_short_name, supplier_name, product_name, uom_name,
+                        $qq = "select grn_id, grn_date,grn_code,grn_type,branch_short_name, supplier_name, product_name, uom_name,
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_quantity * -1 ELSE tbl_purc_grn_dtl_quantity END  tbl_purc_grn_dtl_quantity ,
                         tbl_purc_grn_dtl_rate,
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_amount * -1 ELSE tbl_purc_grn_dtl_amount END  tbl_purc_grn_dtl_amount ,
@@ -212,7 +212,7 @@
                                     <td>{{$ki}}</td>
                                     <td>{{isset($product->grn_date)? date('d-m-Y', strtotime(trim(str_replace('/','-',$product->grn_date)))):''}}</td>
                                     <td>{{$product->branch_short_name}}</td>
-                                    <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $grn_id_code[$product->grn_code] ?? null }}" data-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
+                                    <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $product->grn_id ?? ($grn_id_code[$product->grn_code] ?? null) }}" data-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
                                     <td>{{$product->product_name}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_quantity)}}</td>
                                     <td class="text-center">{{$product->uom_name}}</td>
@@ -397,8 +397,14 @@
         var grn_code = $(this).data('grn_code');
         var grn_id = $(this).data('grn_id');
 
+        // Convert to string if it's a number
+        if(grn_id){
+            grn_id = String(grn_id);
+        }
+
         if(!grn_id || !grn_code){
             console.error('GRN ID or Code is missing', {grn_id: grn_id, grn_code: grn_code});
+            alert('GRN ID or Code is missing. Please contact support.');
             return;
         }
 
@@ -424,8 +430,9 @@
             console.log('Loading GRN details', formData)
             var data_url = '/upload-document';
 
-            // Show modal first
+            // Show modal first and clear previous content
             $('#kt_modal_md').modal('show');
+            $('#kt_modal_md').find('.modal-content').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading document details...</p></div>');
 
             // Load content using POST request
             $.ajax({
@@ -433,11 +440,21 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    $('#kt_modal_md').find('.modal-content').html(response);
+                    if(response && response.trim() !== ''){
+                        $('#kt_modal_md').find('.modal-content').html(response);
+                    } else {
+                        $('#kt_modal_md').find('.modal-content').html('<div class="alert alert-info">No documents found for this GRN.</div>');
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error loading GRN details:', error);
-                    $('#kt_modal_md').find('.modal-content').html('<div class="alert alert-danger">Error loading document details. Please try again.</div>');
+                    console.error('Error loading GRN details:', error, xhr.responseText);
+                    var errorMsg = 'Error loading document details.';
+                    if(xhr.responseJSON && xhr.responseJSON.message){
+                        errorMsg = xhr.responseJSON.message;
+                    } else if(xhr.responseText){
+                        errorMsg = 'Error: ' + xhr.responseText.substring(0, 100);
+                    }
+                    $('#kt_modal_md').find('.modal-content').html('<div class="alert alert-danger">' + errorMsg + '</div>');
                 }
             });
         })
