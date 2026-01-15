@@ -4,6 +4,7 @@
         $qry = "";
         $selected_style_listing = 'listing';
         $elements = [];
+        $conditionalLogics = [];
     }
     if($case == 'edit'){
         $sr = ($data['current']->report_column_sr_no == 1)?"checked":"";
@@ -14,6 +15,7 @@
         $ThStyles = [];
         $TdStyles = [];
         $elements = [];
+        $conditionalLogics = [];
         if(count($styles) != 0){
             foreach ($styles as $k=>$style){
                 if($style['report_styling_column_type'] == 'th'){
@@ -24,6 +26,9 @@
                 }
                 if($style['report_styling_column_type'] == 'element'){
                      $elements[$style['report_styling_column_no']][$style['report_styling_key']] = $style['report_styling_value'];
+                }
+                if($style['report_styling_column_type'] == 'conditional_logic'){
+                     $conditionalLogics[$style['report_styling_column_no']][$style['report_styling_key']] = $style['report_styling_value'];
                 }
             }
         }
@@ -175,11 +180,11 @@
                     <div data-repeater-item class="user_criteria_block" style="border-bottom: 1px dashed #fb0000;padding-bottom: 5px;margin-bottom: 15px;">
                    <div class="row">
                         <div class="col-lg-12">
-                            
+
                         <h6>Sequens No :</h6>
                         <input type="number" value="{{$k}}" class="col-lg-3 form-control sr" name="sr">
                         </div>
-                    </div>      
+                    </div>
                     <div class="row">
                             <div class="col-lg-4">
                                 <div class="row">
@@ -410,11 +415,11 @@
                     <div data-repeater-item class="user_criteria_block" style="border-bottom: 1px dashed #fb0000;padding-bottom: 5px;margin-bottom: 15px;">
                         <div class="row">
                             <div class="col-lg-12">
-                                
+
                             <h6>Sequens No :</h6>
                             <input type="number" value="" class="col-lg-3 form-control sr" name="sr">
                             </div>
-                        </div> 
+                        </div>
                         <div class="row">
                             <div class="col-lg-4">
                                 <div class="row">
@@ -635,6 +640,388 @@
                     <a href="javascript:;" data-repeater-create="" class="btn btn-bold btn-sm btn-label-brand">
                         Add New Column
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="kt-portlet" id="dynamic_conditional_logic_repeater">
+        <div class="kt-portlet__head">
+            <div class="kt-portlet__head-label">
+                <h3 class="kt-portlet__head-title">
+                    Conditional Logic (Row Highlighting)
+                </h3>
+            </div>
+        </div>
+        <div class="kt-portlet__body">
+            <div id="kt_repeater_conditional_logic">
+                <div data-repeater-list="outer_conditional_logic">
+                    @php
+                        $conditionalLogicGroups = [];
+                        if(isset($conditionalLogics) && count($conditionalLogics) > 0){
+
+                            $tempGroups = [];
+                            foreach($conditionalLogics as $columnNo => $logicData){
+                                // Extract outer and inner keys from column_no
+                                $keyParts = explode('_', $columnNo);
+                                $outerKey = isset($keyParts[0]) ? $keyParts[0] : 0;
+                                $innerKey = isset($keyParts[1]) ? $keyParts[1] : $columnNo;
+
+                                // Get outer_group_no if exists
+                                $groupNo = isset($logicData['outer_group_no']) ? $logicData['outer_group_no'] : $outerKey;
+
+                                if(!isset($tempGroups[$groupNo])){
+                                    $tempGroups[$groupNo] = [];
+                                }
+                                if(!isset($tempGroups[$groupNo][$innerKey])){
+                                    $tempGroups[$groupNo][$innerKey] = [];
+                                }
+                                // Merge all key-value pairs for this rule
+                                foreach($logicData as $keyName => $keyValue){
+                                    if($keyName != 'outer_group_no'){
+                                        $tempGroups[$groupNo][$innerKey][$keyName] = $keyValue;
+                                    }
+                                }
+                            }
+                            $conditionalLogicGroups = $tempGroups;
+                        }
+                        $maxGroup = count($conditionalLogicGroups) > 0 ? max(array_keys($conditionalLogicGroups)) : 0;
+                    @endphp
+                    @if(count($conditionalLogicGroups) > 0)
+                        @for($i = 0; $i <= $maxGroup; $i++)
+                            @if(isset($conditionalLogicGroups[$i]))
+                                <div data-repeater-item class="outer-conditional-logic_block">
+                                    <div class="row">
+                                        <div class="col-lg-12" style="position: relative">
+                                            <button data-repeater-delete="" type="button"
+                                                class="btn btn-danger btn-sm report-conditional-logic-and-del-btn">
+                                                <i class="la la-trash-o"></i> AND
+                                            </button>
+                                            <i class="la la-level-down conditional-logic-and-down"></i>
+                                        </div>
+                                    </div>
+                                    <div class="inner-repeater-conditional-logic">
+                                        <div data-repeater-list="inner_conditional_logic">
+                                            @foreach($conditionalLogicGroups[$i] as $innerKey => $logic)
+                                                @php
+                                                    $fieldName = isset($logic['field_name']) ? $logic['field_name'] : '';
+                                                    $condition = isset($logic['condition']) ? $logic['condition'] : '';
+                                                    $value = isset($logic['value']) ? $logic['value'] : '';
+                                                    $value2 = isset($logic['value_2']) ? $logic['value_2'] : '';
+                                                    $fieldType = isset($logic['field_type']) ? $logic['field_type'] : '';
+                                                    $bgColor = isset($logic['background_color']) ? $logic['background_color'] : '#ffebee';
+                                                    $textColor = isset($logic['text_color']) ? $logic['text_color'] : '#c62828';
+                                                    $bgTransparent = !isset($logic['background_color']) ? 'checked' : '';
+                                                    $textTransparent = !isset($logic['text_color']) ? 'checked' : '';
+                                                @endphp
+                                                <div data-repeater-item class="col-lg-12 conditional-logic_block">
+                                                    <div class="row form-group-block">
+                                                        <div class="col-lg-10">
+                                                            <div class="row">
+                                                                <div class="col-lg-3">
+                                                                    <label class="erp-col-form-label">Field Name:</label>
+                                                                    <input type="text" value="{{ $fieldName }}"
+                                                                        class="form-control erp-form-control-sm conditional_logic_field_name"
+                                                                        name="conditional_logic_field_name" placeholder="Enter field name">
+                                                                </div>
+                                                                <div class="col-lg-2">
+                                                                    <label class="erp-col-form-label">Field Type:</label>
+                                                                    <div class="erp-select2">
+                                                                        <select class="form-control erp-form-control-sm conditional_logic_field_type_select"
+                                                                            name="conditional_logic_field_type">
+                                                                            <option value="">Select</option>
+                                                                            @foreach($data['column_types'] as $key=>$column_types)
+                                                                                <option value="{{$key}}" {{$fieldType==$key?"selected":""}}>{{$column_types}}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-7">
+                                                                    <div class="row">
+                                                                        <div class="col-lg-5" id="conditional_logic_filter_types">
+                                                                            <label class="erp-col-form-label">Condition:</label>
+                                                                            <div class="erp-select2 report-select2">
+                                                                                <select class="form-control erp-form-control-sm report_condition conditional_logic_condition"
+                                                                                    name="conditional_logic_condition">
+                                                                                    <option value="">Select</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <style>
+                                                                            .conditional_logic_number_between,
+                                                                            .conditional_logic_date_between,
+                                                                            .conditional_logic_fields_values {
+                                                                                display: none;
+                                                                            }
+                                                                        </style>
+                                                                        <input type="hidden" class="conditional_logic_field_type"
+                                                                            name="conditional_logic_field_type" value="{{ $fieldType }}" />
+                                                                        <div class="col-lg-7" id="conditional_logic_filter_block">
+                                                                            <div class="row conditional_logic_fields_values" style="display: none">
+                                                                                <div class="col-lg-12">
+                                                                                    <label class="erp-col-form-label">Value:</label>
+                                                                                    <input type="text" name="conditional_logic_value"
+                                                                                        class="conditional_logic_value form-control erp-form-control-sm" value="{{ $value }}">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row conditional_logic_number_between" style="display: none">
+                                                                                <div class="col-lg-12">
+                                                                                    <div class="row">
+                                                                                        <div class="col-lg-6">
+                                                                                            <label class="erp-col-form-label">From:</label>
+                                                                                            <input type="text" name="conditional_logic_value"
+                                                                                                class="form-control erp-form-control-sm text-left validNumber conditional_logic_value"
+                                                                                                value="{{ $value }}">
+                                                                                        </div>
+                                                                                        <div class="col-lg-6">
+                                                                                            <label class="erp-col-form-label">To:</label>
+                                                                                            <input type="text" name="conditional_logic_value_2"
+                                                                                                class="form-control erp-form-control-sm text-left validNumber conditional_logic_value_2"
+                                                                                                value="{{ $value2 }}">
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row conditional_logic_date_between" style="display: none">
+                                                                                <div class="col-lg-12">
+                                                                                    <label class="erp-col-form-label">Select Date Range:</label>
+                                                                                    <div class="erp-selectDateRange">
+                                                                                        <div class="input-daterange input-group kt_datepicker_5">
+                                                                                            <input type="text" class="form-control erp-form-control-sm conditional_logic_value"
+                                                                                                name="conditional_logic_value" value="{{ $value }}" />
+                                                                                            <div class="input-group-append">
+                                                                                                <span class="input-group-text erp-form-control-sm">To</span>
+                                                                                            </div>
+                                                                                            <input type="text" class="form-control erp-form-control-sm conditional_logic_value_2"
+                                                                                                name="conditional_logic_value_2" value="{{ $value2 }}" />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row kt-margin-t-10">
+                                                                        <div class="col-lg-6">
+                                                                            <label class="col-lg-6 erp-col-form-label">Background Color:</label>
+                                                                            <div class="col-lg-6 kt-padding-0 input-group">
+                                                                                <input type="color" name="conditional_logic_background_color"
+                                                                                    class="form-control erp-form-control-sm" value="{{ $bgColor }}">
+                                                                                <div class="input-group-append">
+                                                                                    <span class="input-group-text erp-form-control-sm">
+                                                                                        <label class="kt-checkbox kt-checkbox--single">
+                                                                                            <input class="transparent" name="conditional_logic_background_color_transparent"
+                                                                                                type="checkbox" {{ $bgTransparent }}>
+                                                                                            <span></span>
+                                                                                        </label>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-6">
+                                                                            <label class="col-lg-6 erp-col-form-label">Text Color:</label>
+                                                                            <div class="col-lg-6 kt-padding-0 input-group">
+                                                                                <input type="color" name="conditional_logic_text_color"
+                                                                                    class="form-control erp-form-control-sm" value="{{ $textColor }}">
+                                                                                <div class="input-group-append">
+                                                                                    <span class="input-group-text erp-form-control-sm">
+                                                                                        <label class="kt-checkbox kt-checkbox--single">
+                                                                                            <input class="transparent" name="conditional_logic_text_color_transparent"
+                                                                                                type="checkbox" {{ $textTransparent }}>
+                                                                                            <span></span>
+                                                                                        </label>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-2 text-right">
+                                                            <a href="javascript:;" data-repeater-delete=""
+                                                                class="btn btn-sm btn-label-danger conditional-logic-del-btn">
+                                                                <i class="la la-minus-circle"></i>
+                                                            </a>
+                                                            <a href="javascript:;"
+                                                                class="btn btn-bold btn-sm btn-label-brand conditional-logic-or-btn"
+                                                                disabled readonly>
+                                                                OR
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-9"></div>
+                                            <div class="col-lg-3 text-right">
+                                                <a href="javascript:;" data-repeater-create=""
+                                                    class="btn btn-bold btn-sm btn-label-brand conditional-logic-sec-or-btn conditional-logic-or-btn">
+                                                    OR
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        @endfor
+                    @else
+                        <div data-repeater-item class="outer-conditional-logic_block">
+                            <div class="row">
+                                <div class="col-lg-12" style="position: relative">
+                                    <button data-repeater-delete="" type="button"
+                                        class="btn btn-danger btn-sm report-conditional-logic-and-del-btn">
+                                        <i class="la la-trash-o"></i> AND
+                                    </button>
+                                    <i class="la la-level-down conditional-logic-and-down"></i>
+                                </div>
+                            </div>
+                            <div class="inner-repeater-conditional-logic">
+                                <div data-repeater-list="inner_conditional_logic">
+                                    <div data-repeater-item class="col-lg-12 conditional-logic_block">
+                                        <div class="row form-group-block">
+                                            <div class="col-lg-10">
+                                                <div class="row">
+                                                    <div class="col-lg-3">
+                                                        <label class="erp-col-form-label">Field Name:</label>
+                                                        <input type="text"
+                                                            class="form-control erp-form-control-sm conditional_logic_field_name"
+                                                            name="conditional_logic_field_name" placeholder="Enter field name">
+                                                    </div>
+                                                    <div class="col-lg-2">
+                                                        <label class="erp-col-form-label">Field Type:</label>
+                                                        <div class="erp-select2">
+                                                            <select class="form-control erp-form-control-sm conditional_logic_field_type_select"
+                                                                name="conditional_logic_field_type">
+                                                                <option value="">Select</option>
+                                                                @foreach($data['column_types'] as $key=>$column_types)
+                                                                    <option value="{{$key}}">{{$column_types}}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-7">
+                                                        <div class="row">
+                                                            <div class="col-lg-5" id="conditional_logic_filter_types">
+                                                                <label class="erp-col-form-label">Condition:</label>
+                                                                <div class="erp-select2 report-select2">
+                                                                    <select class="form-control erp-form-control-sm report_condition conditional_logic_condition"
+                                                                        name="conditional_logic_condition">
+                                                                        <option value="">Select</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <input type="hidden" class="conditional_logic_field_type"
+                                                                name="conditional_logic_field_type" value="" />
+                                                            <div class="col-lg-7" id="conditional_logic_filter_block">
+                                                                <div class="row conditional_logic_fields_values">
+                                                                    <div class="col-lg-12">
+                                                                        <label class="erp-col-form-label">Value:</label>
+                                                                        <input type="text" disabled name="conditional_logic_value"
+                                                                            class="conditional_logic_value form-control erp-form-control-sm">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row conditional_logic_number_between" style="display: none">
+                                                                    <div class="col-lg-12">
+                                                                        <div class="row">
+                                                                            <div class="col-lg-6">
+                                                                                <label class="erp-col-form-label">From:</label>
+                                                                                <input type="text" disabled name="conditional_logic_value"
+                                                                                    class="form-control erp-form-control-sm text-left validNumber conditional_logic_value">
+                                                                            </div>
+                                                                            <div class="col-lg-6">
+                                                                                <label class="erp-col-form-label">To:</label>
+                                                                                <input type="text" disabled name="conditional_logic_value_2"
+                                                                                    class="form-control erp-form-control-sm text-left validNumber conditional_logic_value_2">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row conditional_logic_date_between" style="display: none">
+                                                                    <div class="col-lg-12">
+                                                                        <label class="erp-col-form-label">Select Date Range:</label>
+                                                                        <div class="erp-selectDateRange">
+                                                                            <div class="input-daterange input-group kt_datepicker_5">
+                                                                                <input type="text" disabled class="form-control erp-form-control-sm conditional_logic_value"
+                                                                                    name="conditional_logic_value" />
+                                                                                <div class="input-group-append">
+                                                                                    <span class="input-group-text erp-form-control-sm">To</span>
+                                                                                </div>
+                                                                                <input type="text" disabled class="form-control erp-form-control-sm conditional_logic_value_2"
+                                                                                    name="conditional_logic_value_2" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row kt-margin-t-10">
+                                                            <div class="col-lg-6">
+                                                                <label class="col-lg-6 erp-col-form-label">Background Color:</label>
+                                                                <div class="col-lg-6 kt-padding-0 input-group">
+                                                                    <input type="color" name="conditional_logic_background_color"
+                                                                        class="form-control erp-form-control-sm" value="#ffebee">
+                                                                    <div class="input-group-append">
+                                                                        <span class="input-group-text erp-form-control-sm">
+                                                                            <label class="kt-checkbox kt-checkbox--single">
+                                                                                <input class="transparent" name="conditional_logic_background_color_transparent"
+                                                                                    type="checkbox" checked>
+                                                                                <span></span>
+                                                                            </label>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6">
+                                                                <label class="col-lg-6 erp-col-form-label">Text Color:</label>
+                                                                <div class="col-lg-6 kt-padding-0 input-group">
+                                                                    <input type="color" name="conditional_logic_text_color"
+                                                                        class="form-control erp-form-control-sm" value="#c62828">
+                                                                    <div class="input-group-append">
+                                                                        <span class="input-group-text erp-form-control-sm">
+                                                                            <label class="kt-checkbox kt-checkbox--single">
+                                                                                <input class="transparent" name="conditional_logic_text_color_transparent"
+                                                                                    type="checkbox" checked>
+                                                                                <span></span>
+                                                                            </label>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 text-right">
+                                                <a href="javascript:;" data-repeater-delete=""
+                                                    class="btn btn-sm btn-label-danger conditional-logic-del-btn">
+                                                    <i class="la la-minus-circle"></i>
+                                                </a>
+                                                <a href="javascript:;"
+                                                    class="btn btn-bold btn-sm btn-label-brand conditional-logic-or-btn"
+                                                    disabled readonly>
+                                                    OR
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-9"></div>
+                                    <div class="col-lg-3 text-right">
+                                        <a href="javascript:;" data-repeater-create=""
+                                            class="btn btn-bold btn-sm btn-label-brand conditional-logic-sec-or-btn conditional-logic-or-btn">
+                                            OR
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <button data-repeater-create type="button" class="btn btn-brand btn-sm">AND</button>
+                    </div>
                 </div>
             </div>
         </div>

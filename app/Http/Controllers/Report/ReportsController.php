@@ -249,6 +249,72 @@ class ReportsController extends Controller
                         }
                     }
                 }
+
+                // Save Conditional Logic
+                if(isset($request->outer_conditional_logic) && is_array($request->outer_conditional_logic)){
+                    $outer_conditional_logic_arr = $request->outer_conditional_logic;
+                    foreach($outer_conditional_logic_arr as $outerKey => $outerGroup){
+                        if(isset($outerGroup['inner_conditional_logic']) && is_array($outerGroup['inner_conditional_logic'])){
+                            foreach($outerGroup['inner_conditional_logic'] as $innerKey => $innerLogic){
+                                if(!empty($innerLogic['conditional_logic_field_name'])){
+                                    $arr = [];
+                                    $arr['report_id'] = $report->report_id;
+                                    $arr['key'] = $outerKey . '_' . $innerKey; // Unique key for each rule
+                                    $arr['type'] = 'conditional_logic';
+
+                                    // Store outer group number
+                                    $arr['colm_key'] = 'outer_group_no';
+                                    $arr['val'] = $outerKey;
+                                    $this->reportStyle($arr);
+
+                                    // Store field name
+                                    $arr['colm_key'] = 'field_name';
+                                    $arr['val'] = $this->strLowerTrim($innerLogic['conditional_logic_field_name']);
+                                    $this->reportStyle($arr);
+
+                                    // Store field type
+                                    $arr['colm_key'] = 'field_type';
+                                    $arr['val'] = isset($innerLogic['conditional_logic_field_type']) ? $this->strLowerTrim($innerLogic['conditional_logic_field_type']) : '';
+                                    $this->reportStyle($arr);
+
+                                    // Store condition
+                                    $arr['colm_key'] = 'condition';
+                                    $arr['val'] = isset($innerLogic['conditional_logic_condition']) ? $this->strLowerTrim($innerLogic['conditional_logic_condition']) : '';
+                                    $this->reportStyle($arr);
+
+                                    // Store value
+                                    $arr['colm_key'] = 'value';
+                                    $arr['val'] = isset($innerLogic['conditional_logic_value']) ? $innerLogic['conditional_logic_value'] : '';
+                                    $this->reportStyle($arr);
+
+                                    // Store value_2 (for between conditions)
+                                    $arr['colm_key'] = 'value_2';
+                                    $arr['val'] = isset($innerLogic['conditional_logic_value_2']) ? $innerLogic['conditional_logic_value_2'] : '';
+                                    $this->reportStyle($arr);
+
+                                    // Store background color
+                                    if(!isset($innerLogic['conditional_logic_background_color_transparent'])){
+                                        $arr['colm_key'] = 'background_color';
+                                        $arr['val'] = isset($innerLogic['conditional_logic_background_color']) ? $innerLogic['conditional_logic_background_color'] : '#ffebee';
+                                        $this->reportStyle($arr);
+                                    }
+
+                                    // Store text color
+                                    if(!isset($innerLogic['conditional_logic_text_color_transparent'])){
+                                        $arr['colm_key'] = 'text_color';
+                                        $arr['val'] = isset($innerLogic['conditional_logic_text_color']) ? $innerLogic['conditional_logic_text_color'] : '#c62828';
+                                        $this->reportStyle($arr);
+                                    }
+
+                                    // Store logic operator (AND/OR) - for inner groups, use OR
+                                    $arr['colm_key'] = 'logic_operator';
+                                    $arr['val'] = 'OR'; // Inner groups are OR
+                                    $this->reportStyle($arr);
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if(!isset($id)) {
                 $menu = new TblSoftMenuDtl();

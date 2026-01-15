@@ -14,14 +14,14 @@
        .clickable-cell {
     cursor: pointer;
     /* Force the default blue color */
-    color: #17a2b8 !important; 
-    text-decoration: none; 
+    color: #17a2b8 !important;
+    text-decoration: none;
 }
 
 .clickable-cell:hover {
     /* Force the slightly darker blue on hover */
-    text-decoration: underline; 
-    color: #117a8b !important; 
+    text-decoration: underline;
+    color: #117a8b !important;
 }
     </style>
 @endsection
@@ -92,7 +92,7 @@
                         if(isset($data['specific_purchase_type']) && $data['specific_purchase_type'] == 'pr'){
                             $where .= " and lower(grn_type) = 'pr' ";
                         }
-                        
+
                         if(count($data['product_group']) != 0){
                             $inner_where = "";
                             foreach($data['product_group'] as $product_group){
@@ -126,7 +126,7 @@
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_total_amount * -1 ELSE tbl_purc_grn_dtl_total_amount END  tbl_purc_grn_dtl_total_amount ,
                         TBL_PURC_GRN_DTL_NET_TP
                         from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
-                        $where ORDER BY grn_date, grn_code";
+                        $where ORDER BY grn_date, branch_short_name, grn_code";
 
                         $grn_id_code=DB::table('TBL_PURC_GRN')->pluck('grn_id','grn_code')->all();
 
@@ -212,7 +212,7 @@
                                     <td>{{$ki}}</td>
                                     <td>{{isset($product->grn_date)? date('d-m-Y', strtotime(trim(str_replace('/','-',$product->grn_date)))):''}}</td>
                                     <td>{{$product->branch_short_name}}</td>
-                                    <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $grn_id_code[$product->grn_code] ?? null }}" date-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
+                                    <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $grn_id_code[$product->grn_code] ?? null }}" data-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
                                     <td>{{$product->product_name}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_quantity)}}</td>
                                     <td class="text-center">{{$product->uom_name}}</td>
@@ -397,13 +397,18 @@
         var grn_code = $(this).data('grn_code');
         var grn_id = $(this).data('grn_id');
 
+        if(!grn_id || !grn_code){
+            console.error('GRN ID or Code is missing', {grn_id: grn_id, grn_code: grn_code});
+            return;
+        }
+
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
 
-  
+
             var formData = {
 
                 form_id :   grn_id,
@@ -416,9 +421,25 @@
                 // form_type :"grn",
                 // menu_id : 23,
             }
-            console.log('ddddd', formData)
+            console.log('Loading GRN details', formData)
             var data_url = '/upload-document';
-            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,formData);
+
+            // Show modal first
+            $('#kt_modal_md').modal('show');
+
+            // Load content using POST request
+            $.ajax({
+                url: data_url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#kt_modal_md').find('.modal-content').html(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading GRN details:', error);
+                    $('#kt_modal_md').find('.modal-content').html('<div class="alert alert-danger">Error loading document details. Please try again.</div>');
+                }
+            });
         })
 </script>
 @endsection

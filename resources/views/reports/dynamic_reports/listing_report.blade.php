@@ -83,6 +83,7 @@
         $styles = isset($report_tb_data->report_styling)?$report_tb_data->report_styling:[];
         $ThStyles = [];
         $TdStyles = [];
+        $conditionalLogics = [];
         if(count($styles) != 0){
             foreach ($styles as $k=>$style){
                 if($style['report_styling_column_type'] == 'th'){
@@ -94,7 +95,42 @@
                 if($style['report_styling_column_type'] == 'element'){
                      $elements[$style['report_styling_column_no']][$style['report_styling_key']] = $style['report_styling_value'];
                 }
+                if($style['report_styling_column_type'] == 'conditional_logic'){
+                     $conditionalLogics[$style['report_styling_column_no']][$style['report_styling_key']] = $style['report_styling_value'];
+                }
             }
+        }
+
+        // Group conditional logics by outer group
+        $conditionalLogicGroups = [];
+        if(count($conditionalLogics) > 0){
+            // First pass: collect all data
+            $tempGroups = [];
+            foreach($conditionalLogics as $columnNo => $logicData){
+                foreach($logicData as $keyName => $keyValue){
+                    // Extract outer group number and inner rule key from column_no (format: outerKey_innerKey)
+                    $keyParts = explode('_', $columnNo);
+                    $outerKey = isset($keyParts[0]) ? $keyParts[0] : 0;
+                    $innerKey = isset($keyParts[1]) ? $keyParts[1] : $columnNo;
+
+                    // If key is outer_group_no, use it directly
+                    if($keyName == 'outer_group_no'){
+                        $outerKey = $keyValue;
+                    }
+
+                    if(!isset($tempGroups[$outerKey])){
+                        $tempGroups[$outerKey] = [];
+                    }
+                    if(!isset($tempGroups[$outerKey][$innerKey])){
+                        $tempGroups[$outerKey][$innerKey] = [];
+                    }
+
+                    if(!empty($keyName) && $keyName != 'outer_group_no'){
+                        $tempGroups[$outerKey][$innerKey][$keyName] = $keyValue;
+                    }
+                }
+            }
+            $conditionalLogicGroups = $tempGroups;
         }
         if(count($elements) != 0){
             foreach ($elements as $eKey=>$element){
@@ -343,11 +379,111 @@
                                     @foreach($list as $kd=>$dt)
                                         @php
                                             $rowClass = 'item_row';
-                                            if(property_exists($dt, 'is_deleted') && (strtolower($dt->is_deleted) == 'yes' || strtolower($dt->is_deleted) == 'y' || $dt->is_deleted == '1')){
-                                                $rowClass .= ' row-deleted';
+                                            $rowStyle = '';
+
+                                            // Apply conditional logic from database
+                                            if(count($conditionalLogicGroups) > 0){
+                                                foreach($conditionalLogicGroups as $outerGroup => $innerRules){
+                                                    $outerGroupMatches = true;
+                                                    $groupBgColor = '';
+                                                    $groupTextColor = '';
+
+                                                    // Evaluate inner rules (OR logic)
+                                                    $innerGroupMatches = false;
+                                                    foreach($innerRules as $ruleKey => $rule){
+                                                        $fieldName = isset($rule['field_name']) ? $rule['field_name'] : '';
+                                                        $condition = isset($rule['condition']) ? $rule['condition'] : '';
+                                                        $value = isset($rule['value']) ? $rule['value'] : '';
+                                                        $value2 = isset($rule['value_2']) ? $rule['value_2'] : '';
+                                                        $fieldType = isset($rule['field_type']) ? $rule['field_type'] : '';
+
+                                                        if(!empty($fieldName) && property_exists($dt, $fieldName)){
+                                                            $fieldValue = $dt->$fieldName;
+                                                            $matches = false;
+
+                                                            // Evaluate condition
+                                                            switch(strtolower($condition)){
+                                                                case 'equals':
+                                                                case '=':
+                                                                    $matches = (strtolower($fieldValue) == strtolower($value));
+                                                                    break;
+                                                                case 'not equals':
+                                                                case '!=':
+                                                                case '<>':
+                                                                    $matches = (strtolower($fieldValue) != strtolower($value));
+                                                                    break;
+                                                                case 'greater than':
+                                                                case '>':
+                                                                    $matches = ((float)$fieldValue > (float)$value);
+                                                                    break;
+                                                                case 'less than':
+                                                                case '<':
+                                                                    $matches = ((float)$fieldValue < (float)$value);
+                                                                    break;
+                                                                case 'greater than or equal':
+                                                                case '>=':
+                                                                    $matches = ((float)$fieldValue >= (float)$value);
+                                                                    break;
+                                                                case 'less than or equal':
+                                                                case '<=':
+                                                                    $matches = ((float)$fieldValue <= (float)$value);
+                                                                    break;
+                                                                case 'contains':
+                                                                    $matches = (stripos($fieldValue, $value) !== false);
+                                                                    break;
+                                                                case 'not contains':
+                                                                    $matches = (stripos($fieldValue, $value) === false);
+                                                                    break;
+                                                                case 'null':
+                                                                    $matches = ($fieldValue === null || $fieldValue === '' || $fieldValue === 'NULL');
+                                                                    break;
+                                                                case 'not null':
+                                                                    $matches = ($fieldValue !== null && $fieldValue !== '' && $fieldValue !== 'NULL');
+                                                                    break;
+                                                                case 'between':
+                                                                    $matches = ((float)$fieldValue >= (float)$value && (float)$fieldValue <= (float)$value2);
+                                                                    break;
+                                                                case 'starts with':
+                                                                    $matches = (stripos($fieldValue, $value) === 0);
+                                                                    break;
+                                                                case 'ends with':
+                                                                    $matches = (substr(strtolower($fieldValue), -strlen($value)) === strtolower($value));
+                                                                    break;
+                                                            }
+
+                                                            if($matches){
+                                                                $innerGroupMatches = true;
+                                                                if(isset($rule['background_color']) && !empty($rule['background_color'])){
+                                                                    $groupBgColor = $rule['background_color'];
+                                                                }
+                                                                if(isset($rule['text_color']) && !empty($rule['text_color'])){
+                                                                    $groupTextColor = $rule['text_color'];
+                                                                }
+                                                                break; // OR logic - one match is enough
+                                                            }
+                                                        }
+                                                    }
+
+                                                    // If inner group matches, apply styling
+                                                    if($innerGroupMatches){
+                                                        if(!empty($groupBgColor)){
+                                                            $rowStyle .= 'background-color: ' . $groupBgColor . ' !important; ';
+                                                        }
+                                                        if(!empty($groupTextColor)){
+                                                            $rowStyle .= 'color: ' . $groupTextColor . ' !important; ';
+                                                        }
+                                                        break; // Apply first matching group
+                                                    }
+                                                }
                                             }
+
+                                            // Legacy hardcoded logic (keep for backward compatibility if needed)
+                                            // Can be removed once all reports use conditional logic
+                                            // if(property_exists($dt, 'is_deleted') && (strtolower($dt->is_deleted) == 'yes' || strtolower($dt->is_deleted) == 'y' || $dt->is_deleted == '1')){
+                                            //     $rowClass .= ' row-deleted';
+                                            // }
                                         @endphp
-                                        <tr class="{{ $rowClass }}">
+                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif>
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
                                             @endif
@@ -380,9 +516,7 @@
                                                                 $arr[$key] = $a_[$key];
                                                             }
                                                             $cellClass = $class;
-                                                            if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
-                                                                $cellClass .= ' cell-zero-amount';
-                                                            }
+                                                            // Hardcoded cell-zero-amount logic removed - now handled dynamically via Conditional Logic UI
                                                         @endphp
                                                         <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
                                                     @elseif($column_types[$key] == 'float')
@@ -395,9 +529,7 @@
                                                                 $arr[$key] = $a_[$key];
                                                             }
                                                             $cellClass = $class;
-                                                            if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
-                                                                $cellClass .= ' cell-zero-amount';
-                                                            }
+                                                            // Hardcoded cell-zero-amount logic removed - now handled dynamically via Conditional Logic UI
                                                         @endphp
                                                         <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                     @elseif($column_types[$key] == 'date')

@@ -1099,7 +1099,7 @@ class DataTableController extends Controller
             $merge = array_merge($data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
 
-            // Build the base query using the same join structure for both cases
+
             $dataSql = DB::table('tbl_purc_product p')
                 ->join('tbl_purc_product_barcode b', 'b.product_id', '=', 'p.product_id')
                 ->join('tbl_defi_uom uom', 'uom.uom_id', '=', 'b.uom_id')
@@ -1107,7 +1107,6 @@ class DataTableController extends Controller
                 ->select('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name')
                 ->groupby('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name');
 
-            // Add search filter if search term exists
             if (isset($request->val) && !empty($request->val)) {
                 $p_str = strtoupper($request->val);
                 $p_str = str_replace('%2F', '/', $p_str);
@@ -1117,14 +1116,12 @@ class DataTableController extends Controller
                 $replaced_str = str_replace(' ', '%', trim($p_str));
                 $replaced_str = str_replace('%20', '%', trim($replaced_str));
 
-                // Apply search filters
                 $dataSql->where(function($query) use ($replaced_str, $p_str) {
                     $query->where(DB::raw('UPPER(b.product_barcode_barcode)'), 'LIKE', '%' . $replaced_str . '%')
                           ->orWhere(DB::raw('UPPER(p.product_name)'), 'LIKE', '%' . $replaced_str . '%')
                           ->orWhere(DB::raw('UPPER(p.product_arabic_name)'), 'LIKE', '%' . $replaced_str . '%');
                 });
 
-                // Add ordering for search results (exact match first, then starts with, then contains)
                 $dataSql->orderByRaw("
                     CASE
                         WHEN UPPER(b.product_barcode_barcode) = '{$p_str}' THEN 1
@@ -1138,7 +1135,6 @@ class DataTableController extends Controller
                 ->orderBy('p.product_name')
                 ->orderBy('b.product_barcode_barcode');
             } else {
-                // Default ordering when no search
                 $dataSql->orderBy('p.product_name');
             }
 

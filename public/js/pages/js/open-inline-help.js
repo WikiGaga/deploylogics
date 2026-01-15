@@ -210,16 +210,13 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
 
     var mobileRequest = true;
 
-    // if type barcode search open help
     if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 1) {
         var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
         if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
-            // Clear any existing timeout for debouncing
             if (window.inlineSearchTimeout) {
                 clearTimeout(window.inlineSearchTimeout);
             }
 
-            // Debounce - wait 400ms after user stops typing
             window.inlineSearchTimeout = setTimeout(function() {
                 var inLineHelp = table_block.find('.inLineHelp');
                 inLineHelp.find('.data_tbody_row').removeClass('selected_row');
@@ -290,10 +287,9 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                 });
 
                 mobileRequest = false;
-            }, 400); // End of setTimeout - wait 400ms after user stops typing
+            }, 400);
         }
         if ($(window).width() <= 1024 && mobileRequest == true) {
-            // display_help(that,table_block,table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
             var data_url = $(this).attr('data-url');
             var url = data_url + '/' + encodeURIComponent($(this).val());
@@ -318,7 +314,6 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    // if (e.which === 113) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number

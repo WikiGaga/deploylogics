@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class FoodRecipeController extends Controller
 {
@@ -54,7 +56,7 @@ class FoodRecipeController extends Controller
 
     public function getFoodDetailData(Request $request)
     {
-        $optionId = $request->input('food_id'); // Keep same parameter name for compatibility
+        $optionId = $request->input('food_id');
         $option = OptionsList::find($optionId);
 
         if (!$option) {
@@ -68,15 +70,12 @@ class FoodRecipeController extends Controller
             'status' => 'success',
             'data' => [
                 'option' => $option,
-                'grn' => null // Since options_list doesn't have grn relationship like food
+                'grn' => null
             ],
             'message' => 'Option data retrieved successfully'
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request, $id = null)
     {
         $data = [];
@@ -152,6 +151,37 @@ class FoodRecipeController extends Controller
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         }
+    }
+
+    public function destroy($id)
+    {
+        $data = [];
+        DB::beginTransaction();
+        try {
+            $foodRecipe = FoodRecipe::where('id', $id)->first();
+
+            if (!$foodRecipe) {
+                return $this->jsonErrorResponse($data, 'Food Recipe not found', 404);
+            }
+
+            $foodRecipe->dtls()->delete();
+            $foodRecipe->delete();
+
+        } catch (QueryException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ValidationException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+        DB::commit();
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 
 }
