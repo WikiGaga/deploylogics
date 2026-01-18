@@ -159,7 +159,7 @@ class POSVoucherController extends Controller
                         }
                         // 4 =Visa Card , 5 = Cash and Visa Card
                         if($sale_invoice->payment_method == 'cash_card' || $sale_invoice->payment_method == 'card'){
-                            $ac = $sale_invoice->bank_id;
+                            $ac = $sale_invoice->bank_account;
                             $descrip = 'Visa or (Cash and Visa)';
                         }
                         // 2 =Credit
@@ -321,7 +321,7 @@ class POSVoucherController extends Controller
                         }
                         // 4 =Visa Card , 5 = Cash and Visa Card
                         if($sale_invoice->payment_method == 'cash_card' || $sale_invoice->payment_method == 'card'){
-                            $ac = $sale_invoice->bank_id;
+                            $ac = $sale_invoice->bank_account;
                             $descrip = 'Visa or (Cash and Visa)';
                         }
                         // 2 =Credit
@@ -733,7 +733,7 @@ class POSVoucherController extends Controller
             if(!isset($vouNull)){
                 $vou_null = "and voucher_id is null";
             }
-            $col = "sales_id,customer_id,bank_id,sales_sales_type,sales_code,sales_date,sales_remarks,business_id,company_id,branch_id,sales_user_id";
+            $col = "sales_id,customer_id,bank_account,sales_sales_type,sales_code,sales_date,sales_remarks,business_id,company_id,branch_id,sales_user_id";
             $qry = "select $col from tbl_sale_sales where lower(sales_type) = 'si' $vou_null
                 and (SALES_DATE between to_date('".$date_from."','yyyy/mm/dd') and to_date('".$date_to."','yyyy/mm/dd'))";
             dump($qry);
@@ -760,7 +760,7 @@ class POSVoucherController extends Controller
                     $customer_chart_account_id = (int)$customer->customer_account_id;
                 }
                 if($sales->sales_sales_type == 3 || $sales->sales_sales_type == 4 || $sales->sales_sales_type == 5){
-                    $customer_chart_account_id = $sales->bank_id;
+                    $customer_chart_account_id = $sales->bank_account;
                 }
 
                 $net_total = 0;
