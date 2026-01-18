@@ -129,6 +129,14 @@ class StockRequestController extends Controller
             $purchaseDemand->demand_forward_for_approval = 1;
             $purchaseDemand->demand_branch_to = $request->demand_branch_to;
             $purchaseDemand->demand_notes = $request->demand_notes;
+            if(isset($request->consumption_from_date) && !empty($request->consumption_from_date)){
+                $purchaseDemand->consumption_from_date = date('Y-m-d', strtotime($request->consumption_from_date));
+            }
+            if(isset($request->consumption_to_date) && !empty($request->consumption_to_date)){
+                $purchaseDemand->consumption_to_date = date('Y-m-d', strtotime($request->consumption_to_date));
+            }
+            $purchaseDemand->sales_consumption = isset($request->salesConsumption) && $request->salesConsumption == 'on' ? 1 : 0;
+            $purchaseDemand->transfer_consumption = isset($request->transferConsumption) && $request->transferConsumption == 'on' ? 1 : 0;
             $purchaseDemand->demand_entry_status = 1;
             $purchaseDemand->business_id = auth()->user()->business_id;
             $purchaseDemand->company_id = auth()->user()->company_id;
@@ -162,6 +170,9 @@ class StockRequestController extends Controller
                     $DemandDtl->demand_dtl_suggest_quantity1 = $pd['pd_suggest_qty_1'];
                     $DemandDtl->demand_dtl_suggest_quantity2 = $pd['pd_suggest_qty_2'];
                     $DemandDtl->demand_dtl_demand_quantity = $pd['pd_demand_qty'];
+                    if(isset($pd['pd_comsume_qty']) && !empty($pd['pd_comsume_qty'])){
+                        $DemandDtl->demand_dtl_comsume_qty = $pd['pd_comsume_qty'];
+                    }
                     $DemandDtl->demand_dtl_entry_status = 1;
                     $DemandDtl->demand_dtl_approve_status = 'pending';
                     $DemandDtl->business_id = auth()->user()->business_id;

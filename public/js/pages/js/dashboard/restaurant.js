@@ -17,8 +17,12 @@ function loadRestaurantCharts(){
 }
 
 function restMonthSaleBranchAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'rest_month_sale_branch'
+        chart_name : 'rest_month_sale_branch',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -178,8 +182,12 @@ function restMonthSaleBranchChart(chartData){
 }
 
 function salesByDayAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'sales_by_day'
+        chart_name : 'sales_by_day',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -341,8 +349,12 @@ function salesByDayChart(chartData, summary, breakdown){
 }
 
 function salesByHourAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'sales_by_hour'
+        chart_name : 'sales_by_hour',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -589,8 +601,12 @@ function salesByHourChart(chartData){
 }
 
 function paymentMethodChartAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'payment_method_chart'
+        chart_name : 'payment_method_chart',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -676,8 +692,12 @@ function paymentMethodChart(data){
 }
 
 function orderTypeChartAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'order_type_chart'
+        chart_name : 'order_type_chart',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -763,8 +783,12 @@ function orderTypeChart(data){
 }
 
 function topFoodItemsAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'top_food_items'
+        chart_name : 'top_food_items',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -861,8 +885,12 @@ function topFoodItemsChart(chartData){
 }
 
 function branchPerformanceAjax(){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
-        chart_name : 'branch_performance'
+        chart_name : 'branch_performance',
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
     $.ajax({
         headers: {
@@ -1010,10 +1038,14 @@ function showLocationShimmer(){
 }
 
 function salesByMenuItemAjax(page){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
         chart_name : 'sales_by_menu_item',
         page: parseInt(page) || 1,
-        per_page: 5
+        per_page: 5,
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
 
     showMenuItemShimmer();
@@ -1039,7 +1071,6 @@ function salesByMenuItemAjax(page){
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error loading menu item data:', error);
             $('#sales_by_menu_item_table').html('<div class="text-center p-5">Error loading data</div>');
         }
     });
@@ -1095,10 +1126,14 @@ function renderMenuItemTable(data, total, currentPage, perPage){
 }
 
 function salesByLocationAjax(page){
+    var filters = typeof getRestaurantFilters === 'function' ? getRestaurantFilters() : {};
     var formData = {
         chart_name : 'sales_by_location',
         page: parseInt(page) || 1,
-        per_page: 5
+        per_page: 5,
+        date_from: filters.dateFrom || null,
+        date_to: filters.dateTo || null,
+        branches: filters.branches || []
     };
 
     showLocationShimmer();
@@ -1124,7 +1159,6 @@ function salesByLocationAjax(page){
             }
         },
         error: function(xhr, status, error) {
-            console.error('Error loading location data:', error);
             $('#sales_by_location_table').html('<div class="text-center p-5">Error loading data</div>');
         }
     });

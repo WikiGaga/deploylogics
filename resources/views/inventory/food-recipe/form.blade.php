@@ -77,7 +77,7 @@
                                         <div class="erp_form___block">
                                             <div class="input-group open-modal-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text btn-minus-selected-data"
+                                                    <span class="input-group-text btn-minus-selected-data" title="Clear Selection"
                                                         id="btn-minus-selected-data">
                                                         <i class="la la-minus-circle"></i>
                                                     </span>
@@ -85,8 +85,9 @@
                                                 <input type="text" id="food_id" name="food_id"
                                                     value="{{ isset($option_id) ? $option_id : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}"
-                                                    class="open_inline__help form-control erp-form-control-sm"
-                                                    placeholder="Enter Here">
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm"
+                                                    placeholder="Enter Here"
+                                                    {{ isset($option_id) && $option_id != '' ? 'readonly' : '' }}>
                                             </div>
                                         </div>
                                     </div>
@@ -326,31 +327,46 @@
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
 
     <script>
-        // Store the original food_id value to prevent it from being cleared
-        var originalFoodId = $('#food_id').val();
+        function updateFoodIdReadonly() {
+            var foodId = $('#food_id');
+            if (foodId.val() && foodId.val().trim() != '') {
+                foodId.prop('readonly', true);
+            } else {
+                foodId.prop('readonly', false);
+            }
+        }
 
-        // Prevent food_id field from being cleared when products are selected
-        $(document).on('change', '.pd_barcode, .open_inline__help', function() {
-            // Preserve the food_id value
-            var currentFoodId = $('#food_id').val();
-            if (originalFoodId && !currentFoodId) {
-                $('#food_id').val(originalFoodId);
+        $(document).ready(function() {
+            updateFoodIdReadonly();
+        });
+
+        $(document).on('click', '#btn-minus-selected-data', function(e) {
+            e.preventDefault();
+            $('#food_id').val('').prop('readonly', false);
+            $('#food_name').val('');
+            $('#food_id').focus();
+        });
+
+        $(document).on('keydown', '#food_id', function(e) {
+            var foodId = $(this);
+            if (e.which === 115) {
+                return true;
+            }
+            if (foodId.val() && foodId.val().trim() != '' && foodId.prop('readonly')) {
+                var navigationKeys = [35, 36, 37, 38, 39, 40];
+                if (navigationKeys.indexOf(e.which) === -1) {
+                    e.preventDefault();
+                    return false;
+                }
             }
         });
 
-        // Update original value when food_id is manually changed
-        $(document).on('change', '#food_id', function() {
-            if ($(this).val()) {
-                originalFoodId = $(this).val();
+        $(document).on('input paste change', '#food_id', function() {
+            var foodId = $(this);
+            if (foodId.val() && foodId.val().trim() != '') {
+                foodId.prop('readonly', true);
             }
         });
-
-        // Additional protection - check periodically
-        setInterval(function() {
-            if (originalFoodId && !$('#food_id').val()) {
-                $('#food_id').val(originalFoodId);
-            }
-        }, 500);
 
         $(document).on('click', '#getFoodDetailData', function(e) {
             validate = true
@@ -379,7 +395,6 @@
                     success: function(response) {
                         if (response.status == 'success') {
                             $('tbody.erp_form__grid_body').html('');
-                            // Since we're not loading from GRN, just show success message
                             toastr.success(response.message);
                         } else {
                             toastr.error(response.message);
@@ -398,19 +413,57 @@
 
         }
         var formcase = '{{ $case }}';
+
+        $(document).on('click', '#addData', function(e) {
+            var quantity = $('#quantity').val();
+            var quantityTrimmed = quantity ? quantity.trim() : '';
+            var productId = $('#product_id').val();
+            var productName = $('#product_name').val();
+            var pdBarcode = $('#pd_barcode').val();
+
+            if ((!quantityTrimmed || quantityTrimmed === '') &&
+                (!productId || productId === '') &&
+                (!productName || productName.trim() === '') &&
+                (!pdBarcode || pdBarcode.trim() === '')) {
+                return true;
+            }
+
+            if (!productId || !productName || productName.trim() === '') {
+                toastr.error('Please select a product first');
+                $('#pd_barcode').focus();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+
+            if (!quantityTrimmed || quantityTrimmed === '') {
+                toastr.error('Please enter quantity for the item');
+                $('#quantity').focus();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+
+            var quantityNum = parseFloat(quantityTrimmed);
+            if (isNaN(quantityNum) || quantityNum <= 0) {
+                toastr.error('Quantity must be greater than 0');
+                $('#quantity').focus();
+                $('#quantity').select();
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return false;
+            }
+        });
     </script>
 
     <script>
         var productHelpUrl = "{{ url('/common/inline-help/productHelp') }}";
         var arr_text_Field = [
-            // keys = id, fieldClass, readonly(boolean), require(boolean)
-
             {
                 'id': 'pd_barcode',
                 'fieldClass': 'pd_barcode tb_moveIndex open_inline__help',
                 'require': true,
                 'readonly': true
-                //  'data-url' : productHelpUrl
             },
             {
                 'id': 'product_name',
@@ -431,7 +484,9 @@
             },
             {
                 'id': 'quantity',
-                'fieldClass': 'tblGridCal_qty validNumber validOnlyNumber tb_moveIndex'
+                'fieldClass': 'tblGridCal_qty validNumber validOnlyNumber tb_moveIndex',
+                'require': true,
+                'message': 'Please enter quantity for the item'
             },
         ];
         var arr_hidden_field = ['id', 'name'];

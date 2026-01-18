@@ -126,6 +126,46 @@
                 background-position: 200% 0;
             }
         }
+        .restaurant-filter-sidepane {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+        .restaurant-filter-sidepane.open {
+            right: 0;
+        }
+        .restaurant-filter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .restaurant-filter-overlay.show {
+            display: block;
+        }
+        .daterangepicker {
+            z-index: 10001 !important;
+        }
+        .restaurant-filter-sidepane .select2-container--open {
+            z-index: 10001 !important;
+        }
+        @media (max-width: 768px) {
+            .restaurant-filter-sidepane {
+                width: 100%;
+                right: -100%;
+            }
+        }
     </style>
 @endsection
 @permission(['dash-view'])
@@ -164,6 +204,57 @@
         <!--End::Section-->
         <div id="dashboard_data" >
         </div>
+
+        <!-- Restaurant Filter Sidepane (outside dashboard_data to persist across reloads) -->
+        <div class="restaurant-filter-overlay" id="restaurant_filter_overlay"></div>
+        <div class="restaurant-filter-sidepane" id="restaurant_filter_sidepane">
+            <div class="kt-portlet">
+                <div class="kt-portlet__head">
+                    <div class="kt-portlet__head-label">
+                        <h3 class="kt-portlet__head-title">
+                            Filter Dashboard
+                        </h3>
+                    </div>
+                    <div class="kt-portlet__head-toolbar">
+                        <button type="button" class="btn btn-sm btn-icon" id="restaurant_filter_close_btn">
+                            <i class="la la-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="kt-portlet__body">
+                    <form id="restaurant_filter_form">
+                        <div class="form-group">
+                            <label class="erp-col-form-label">Date Range:</label>
+                            <input type="text" class="form-control erp-form-control-sm" id="restaurant_date_range" placeholder="Select Date Range" />
+                            <input type="hidden" name="date_from" id="restaurant_date_from" />
+                            <input type="hidden" name="date_to" id="restaurant_date_to" />
+                        </div>
+                        <div class="form-group">
+                            <label class="erp-col-form-label">Branches:</label>
+                            <div class="erp-select2">
+                                <select class="form-control kt-select2 erp-form-control-sm" id="restaurant_branches" name="branches[]" multiple>
+                                    @php
+                                        $branches = App\Library\Utilities::getAllBranches();
+                                    @endphp
+                                    @foreach($branches as $branch)
+                                        <option value="{{$branch->branch_id}}">{{$branch->branch_name}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_apply_btn">
+                                <i class="la la-check"></i> Apply Filters
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="restaurant_filter_reset_btn" style="margin-left: 10px;">
+                                <i class="la la-refresh"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Shimmer Loading Placeholder -->
         <div id="shimmer_loading" class="shimmer-container">
             <div class="row kt-margin-b-15">
@@ -240,4 +331,33 @@
     <script src="/assets/chart_apex/apexcharts.js" type="text/javascript"></script>
     <script src="/js/pages/js/dashboard/home.js" type="text/javascript"></script>
     <script src="/js/pages/js/dashboard/restaurant.js" type="text/javascript"></script>
+    <script>
+        $(document).ready(function() {
+            var initAttempts = 0;
+            var maxAttempts = 10;
+
+            var tryInit = function() {
+                initAttempts++;
+                if(typeof initializeRestaurantFilters === 'function' && typeof bindRestaurantFilterEvents === 'function') {
+                    initializeRestaurantFilters();
+                    bindRestaurantFilterEvents();
+
+                    if(typeof loadFiltersFromStorage === 'function') {
+                        var storedFilters = loadFiltersFromStorage();
+                        if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
+                            if(typeof restoreFilterValues === 'function') {
+                                setTimeout(function() {
+                                    restoreFilterValues(storedFilters);
+                                }, 300);
+                            }
+                        }
+                    }
+                } else if(initAttempts < maxAttempts) {
+                    setTimeout(tryInit, 200);
+                }
+            };
+
+            setTimeout(tryInit, 300);
+        });
+    </script>
 @endsection

@@ -17,10 +17,8 @@
                 $id = $data['current']->demand_id;
                 $code = $data['current']->demand_no;
                 $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->demand_date))));
-                $from_date = isset($data['current']->consumption_from_date) && !empty($data['current']->consumption_from_date) ? date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->consumption_from_date)))) : date('d-m-Y');
-                $to_date = isset($data['current']->consumption_to_date) && !empty($data['current']->consumption_to_date) ? date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->consumption_to_date)))) : date('d-m-Y');
-                $sales_consumption = isset($data['current']->sales_consumption) && $data['current']->sales_consumption == 1 ? true : false;
-                $transfer_consumption = isset($data['current']->transfer_consumption) && $data['current']->transfer_consumption == 1 ? true : false;
+                $from_date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->consumption_from_date))));
+                $to_date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->consumption_to_date))));
                 $supplier_name = isset($data['current']->supplier->supplier_name)?$data['current']->supplier->supplier_name:"";
                 $supplier_id = isset($data['current']->supplier->supplier_id)?$data['current']->supplier->supplier_id:"";
                 $branch_to = $data['current']->demand_branch_to;
@@ -97,7 +95,7 @@
                             <label class="col-lg-6 erp-col-form-label">Consumption From Date:</label>
                             <div class="col-lg-6">
                                 <div class="input-group date">
-                                    <input type="text" name="consumption_from_date" class="consumption_from_date form-control erp-form-control-sm moveIndex c-date-p" value="{{isset($from_date)?$from_date:date('d-m-Y')}}" id="kt_datepicker_3" />
+                                    <input type="text" name="consumption_from_date" class="consumption_from_date form-control erp-form-control-sm moveIndex c-date-p" value="{{$from_date}}" id="kt_datepicker_3" />
                                     <div class="input-group-append">
                                             <span class="input-group-text">
                                                 <i class="la la-calendar"></i>
@@ -112,7 +110,7 @@
                             <label class="col-lg-6 erp-col-form-label">Consumption To Date:</label>
                             <div class="col-lg-6">
                                 <div class="input-group date">
-                                    <input type="text" name="consumption_to_date" class="consumption_to_date form-control erp-form-control-sm moveIndex c-date-p" value="{{isset($to_date)?$to_date:date('d-m-Y')}}" id="kt_datepicker_3" />
+                                    <input type="text" name="consumption_to_date" class="consumption_to_date form-control erp-form-control-sm moveIndex c-date-p" value="{{$to_date}}" id="kt_datepicker_3" />
                                     <div class="input-group-append">
                                             <span class="input-group-text">
                                                 <i class="la la-calendar"></i>
@@ -127,7 +125,7 @@
                     <div class="col-lg-2">
                         <div class="kt-checkbox-inline">
                             <label class="kt-checkbox kt-checkbox--tick kt-checkbox--brand">
-                                <input type="checkbox" name="salesConsumption" class="salesConsumption" {{isset($sales_consumption) && $sales_consumption ? 'checked' : ''}}> Sales Consumption
+                                <input type="checkbox" name="salesConsumption" class="salesConsumption"> Sales Consumption
                                 <span></span>
                             </label>
                         </div>
@@ -135,7 +133,7 @@
                     <div class="col-lg-2">
                         <div class="kt-checkbox-inline">
                             <label class="kt-checkbox kt-checkbox--tick kt-checkbox--brand">
-                                <input type="checkbox" name="transferConsumption" class="transferConsumption" {{isset($transfer_consumption) && $transfer_consumption ? 'checked' : ''}}> Transfers Consumption
+                                <input type="checkbox" name="transferConsumption" class="transferConsumption"> Transfers Consumption
                                 <span></span>
                             </label>
                         </div>
@@ -152,7 +150,7 @@
                                 @php
                                     $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Physical Stock',
                                                   'Store Stock','Stock Match','Suggest Reorder','Suggest Consumption',
-                                                  'Consumption','Demand Qty','WIP LPO Stock','Pur.Ret in Waiting'];
+                                                  'Demand Qty','WIP LPO Stock','Pur.Ret in Waiting'];
                                 @endphp
                                 <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                     @foreach($headings as $key=>$heading)
@@ -288,11 +286,11 @@
                                             </td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_packing]" data-id="pd_packing" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_physical_stock]" data-id="pd_physical_stock" value="{{$dtl->demand_dtl_physical_stock}}" title="{{$dtl->demand_dtl_physical_stock}}" class="tb_moveIndex physical_stock form-control erp-form-control-sm validNumber"></td>
-                                            <td><input type="text" name="pd[{{$loop->iteration}}][pd_store_stock]" data-id="pd_store_stock" value="{{number_format($dtl->demand_dtl_store_stock, 3)}}" title="{{$dtl->demand_dtl_store_stock}}" class="pd_store_stock form-control erp-form-control-sm text-right" readonly></td>
+                                            <td><input type="text" name="pd[{{$loop->iteration}}][pd_store_stock]" data-id="pd_store_stock" value="{{number_format($dtl->demand_dtl_store_stock , 3)}}" title="{{$dtl->demand_dtl_store_stock}}" class="pd_store_stock form-control erp-form-control-sm text-right" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_stock_match]" data-id="pd_stock_match" value="{{$dtl->demand_dtl_stock_match}}" title="{{$dtl->demand_dtl_stock_match}}" class="stock_match form-control erp-form-control-sm" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_suggest_qty_1]" data-id="pd_suggest_qty_1" value="{{$dtl->demand_dtl_suggest_quantity1}}" title="{{$dtl->demand_dtl_suggest_quantity1}}" class="suggest_qty_1 form-control erp-form-control-sm validNumber" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_suggest_qty_2]" data-id="pd_suggest_qty_2" value="{{$dtl->demand_dtl_suggest_quantity2}}" title="{{$dtl->demand_dtl_suggest_quantity2}}" class="suggest_qty_2 form-control erp-form-control-sm validNumber" readonly></td>
-                                            <td><input type="text" name="pd[{{$loop->iteration}}][pd_comsume_qty]" data-id="pd_comsume_qty" value="{{isset($dtl->demand_dtl_comsume_qty)?$dtl->demand_dtl_comsume_qty:''}}" title="{{isset($dtl->demand_dtl_comsume_qty)?$dtl->demand_dtl_comsume_qty:''}}" class="pd_comsume_qty form-control erp-form-control-sm validNumber" readonly></td>
+                                            <td><input type="text" name="pd[{{$loop->iteration}}][pd_comsume_qty]" data-id="pd_comsume_qty" value="{{$dtl->demand_dtl_comsume_qty}}" title="{{$dtl->demand_dtl_comsume_qty}}" class="pd_comsume_qty form-control erp-form-control-sm validNumber" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_demand_qty]" data-id="pd_demand_qty" value="{{$dtl->demand_dtl_demand_quantity}}" title="{{$dtl->demand_dtl_demand_quantity}}" class="tb_moveIndex stock_amount tblGridCal_qty form-control erp-form-control-sm pd_demand_qty validNumber"></td>
                                             <td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group" aria-label="..."><button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>
                                         </tr>
@@ -349,16 +347,45 @@
             return false;
         }
     });
-    $(document).on('keyup' , '.physical_stock' , function (e) {
+    $('.physical_stock').keyup(function (e) {
         var tr = $(this).parents('tr');
-        tr = tr[0];
-        var stock = tr.querySelector('.pd_store_stock').value;
+        var stock = tr.find('td>.pd_store_stock').val();
         var physical = $(this).val();
         if(stock == physical){
-            tr.querySelector('.stock_match').value = 'Yes';
+            tr.find('td>.stock_match').val('Yes');
         }else{
-            tr.querySelector('.stock_match').value = 'No';
+            tr.find('td>.stock_match').val('No');
         }
+        /*
+        if($(this).val() != ""){
+            if(e.which === 13){
+                $.ajax({
+                    type:'GET',
+                    url:'/demand/itembarcode/'+code,
+                    data:{},
+                    success: function(response, status){
+                        var branch = {{auth()->user()->branch_id}};
+                        if(status)
+                        {
+                            for(var i=0;response['data']['barcode_dtl'].length>i;i++){
+                                if(branch == response['data']['barcode_dtl'][i]['branch_id']){
+                                    var min_shelf_stock = response['data']['barcode_dtl'][i]['product_barcode_shelf_stock_min_qty'];
+                                    var max_stock_limit = response['data']['barcode_dtl'][i]['product_barcode_stock_limit_max_qty'];
+                                    var SQty1 = max_stock_limit - stock;
+                                    if(stock == min_shelf_stock){
+                                        tr.find('td> .stock_match').val('Yes');
+                                    }else{
+                                        tr.find('td> .stock_match').val('No');
+                                    }
+                                    tr.find('td> .suggest_qty_1').val(SQty1);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        */
     });
     </script>
        <script>
@@ -412,7 +439,7 @@
             },
             {
                 'id':'pd_suggest_qty_2',
-                'fieldClass':'suggest_qty_2 validNumber',
+                'fieldClass':'suggest_qty_1 validNumber',
                 'readonly':true
             },
             {
@@ -448,6 +475,17 @@
         $(document).on('keyup','.pd_demand_qty', function(){
             totalAllDemandQty();
         });
+        $(document).on('keyup' , '.physical_stock' , function (e) {
+        var tr = $(this).parents('tr');
+        tr = tr[0];
+        var stock = tr.querySelector('.pd_store_stock').value;
+        var physical = $(this).val();
+        if(stock == physical){
+            tr.querySelector('.stock_match').value = 'Yes';
+        }else{
+            tr.querySelector('.stock_match').value = 'No';
+        }
+        });
 
         $('#makePD').click(function(){
             $.ajaxSetup({
@@ -456,15 +494,18 @@
                 }
             });
             var formData = {
+                // supplier_id : $('#supplier_id').val(),
                 form_type : $('#form_type').val(),
             }
             var data_url = '/common/select-multiple-products';
+            console.log(data_url);
             $('#kt_modal_xl').modal('show').find('.modal-content').load(data_url,formData);
         })
         $(document).on('click','.btn_add',function(e){
             e.preventDefault();
             var thix = $(this);
             addRow(thix)
+
         })
 
         function addRow(thix){
@@ -477,7 +518,7 @@
                 var item_duplicate = false;
                 $(document).find('#smp_selected_products table tbody tr').each(function(){
                     if($(this).find('td[data-field="product_barcode_barcode"]>span').text() == parentTr.find('td[data-field="product_barcode_barcode"]>span').text()){
-                        toastr.warning("Item already added.");
+                        toastr.warning("Item alread added.");
                         item_duplicate = true;
                     }
                 })
@@ -534,6 +575,7 @@
                 initBarcode(keycodeNo,tr,form_type,formData);
             });
             $(document).ajaxStop(function(e,d) {
+                // place code to be executed on completion of last outstanding ajax call here
                 $('.modal').find('.modal-content').empty();
                 $('.modal').find('.modal-content').html(' <div class="kt-spinner kt-spinner--lg kt-spinner--success kt-spinner-center"> <span>loading..</span></div>');
                 $('.modal').modal('hide');
@@ -547,7 +589,96 @@
                 var thix = $(this);
                 addRow(thix)
             }
+            if(e.keyCode == 38){ // press ArrowUp
+
+            }
+            if(e.keyCode == 40){ // press ArrowDown
+
+            }
         })
+
+        $(document).on('click' , '#lpoGetData' , function(e){
+            var errors = 0;
+            var required = ['lpo_generation_no_id' , 'supplier_id'];
+            required.forEach(function(el){
+                if($('#' + el).val() == ""){
+                    errors++;
+                }
+            });
+            if(errors > 0){
+                toastr.error('Please Select LPO Generation No. First');
+            }else{
+                var lpo_id = $('#lpo_generation_no_id').val();
+                var supplier_id = $('#supplier_id').val();
+
+                $.ajax({
+                    headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    type : 'GET',
+                    url : 'lpo/' + lpo_id + '/' + supplier_id,
+                    beforeSend : function(){
+                        $('body').addClass('pointerEventsNone');
+                    },
+                    success : function(response){
+                        $('body').removeClass('pointerEventsNone');
+                        if(response.status == 'success'){
+                            var lpos = response.data['all'];
+                            var tr = '';
+                            var total_length = $('tbody.erp_form__grid_body tr').length;
+                            for(var p=0; p < lpos.length; p++ ){
+                                total_length++;
+                                var  row = lpos[p];
+                                console.log("rate: " + parseFloat(lpos[p].lpo_dtl_rate).toFixed(2));
+                                tr +='<tr>' +
+                                    '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>' +
+                                    '<input type="text" name="pd['+total_length+'][sr_no]" value="'+total_length+'" title="'+total_length+'" class="form-control sr_no erp-form-control-sm handle" readonly>'+
+                                    '<input type="hidden" name="pd['+total_length+'][product_id]" data-id="product_id" value="'+lpos[p].product_id+'" class="product_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
+                                    '<input type="hidden" name="pd['+total_length+'][product_barcode_id]" data-id="product_barcode_id" value="'+lpos[p].product_barcode_id+'" class="product_barcode_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
+                                    '<input type="hidden" name="pd['+total_length+'][uom_id]" data-id="uom_id" value="'+lpos[p].uom_id+'" class="uom_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
+                                    '</td>'+
+                                    '<td><input type="text" name="pd['+total_length+'][pd_barcode]" data-id="pd_barcode" data-url="" value="'+lpos[p].product_barcode_barcode+'" title="'+lpos[p].product_barcode_barcode+'" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off"></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][product_name]" data-id="product_name" data-url="" value="'+lpos[p].product_name+'" title="'+lpos[p].product_name+'" class="form-control erp-form-control-sm product_name" readonly="" autocomplete="off"></td>' +
+                                    '<td>'+
+                                        '<select class="pd_uom field_readonly form-control erp-form-control-sm" name="pd['+total_length+'][uom]" data-id="uom" title="'+notNull(lpos[p].uom_name)+'">'+
+                                            '<option value="'+notNull(lpos[p].uom_id)+'">'+notNull(lpos[p].uom_name)+'</option>'+
+                                        '</select>'+
+                                    '</td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][packing]" data-id="packing" value="'+notNull(lpos[p].product_barcode_packing)+'" title="'+notNull(lpos[p].product_barcode_packing)+'" class="pd_packing form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][remarks]" data-id="notes" value="'+notNull(lpos[p].lpo_remarks)+'" title="'+notNull(lpos[p].lpo_remarks)+'" class="pd_packing form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][quantity]" data-id="quantity" value="'+notNull(lpos[p].lpo_dtl_quantity)+'" title="'+notNull(lpos[p].lpo_dtl_quantity)+'" class="tblGridCal_qty moveIndex form-control erp-form-control-sm validNumber validOnlyNumber" ></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][foc_qty]" data-id="foc_qty" value="'+notNull(lpos[p].lpo_dtl_foc_quantity)+'" title="'+notNull(lpos[p].lpo_dtl_foc_quantity)+'" class="foc_qty moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][fc_rate]" data-id="fc_rate" value="'+notNull(lpos[p].lpo_dtl_fc_rate)+'" title="'+notNull(lpos[p].lpo_dtl_fc_rate)+'" class="fc-rate moveIndex form-control erp-form-control-sm validNumber"></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][rate]" data-id="rate" value="'+notNullEmpty(lpos[p].lpo_dtl_rate,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_rate,threeDecimal)+'" class="tblGridCal_rate moveIndex form-control erp-form-control-sm validNumber" ></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][amount]" data-id="amount" value="'+notNullEmpty(lpos[p].lpo_dtl_amount,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_amount,threeDecimal)+'" class="tblGridCal_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][dis_perc]" data-id="dis_perc" value="'+notNullEmpty(lpos[p].lpo_dtl_disc_percent,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_disc_percent,threeDecimal)+'" class="form-control erp-form-control-sm tblGridCal_discount_perc tb_moveIndex validNumber" ></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][dis_amount]" data-id="dis_amount" value="'+notNullEmpty(lpos[p].lpo_dtl_disc_amount,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_disc_amount,threeDecimal)+'" class="form-control erp-form-control-sm tblGridCal_discount_amount tb_moveIndex validNumber" readonly></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][vat_perc]" data-id="vat_perc" value="'+notNullEmpty(lpos[p].lpo_dtl_vat_percent,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_vat_percent,threeDecimal)+'" class="form-control erp-form-control-sm tblGridCal_vat_perc tb_moveIndex validNumber" ></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][vat_amount]" data-id="vat_amount" value="'+notNullEmpty(lpos[p].lpo_dtl_vat_amount,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_vat_amount,threeDecimal)+'" class="form-control erp-form-control-sm tblGridCal_vat_amount validNumber"></td>' +
+                                    '<td><input type="text" name="pd['+total_length+'][gross_amount]" data-id="gross_amount" value="'+notNullEmpty(lpos[p].lpo_dtl_gross_amount,threeDecimal)+'" title="'+notNullEmpty(lpos[p].lpo_dtl_gross_amount,threeDecimal)+'" class="form-control erp-form-control-sm tblGridCal_gross_amount validNumber" readonly></td>' +
+                                    '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group"><button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>' +
+                                    '</tr>';
+                            }
+                            $('tbody.erp_form__grid_body').append(tr);
+                            addDataInit();
+                                    $(".date_inputmask").inputmask("99-99-9999", {
+                                        "mask": "99-99-9999",
+                                        "placeholder": "dd-mm-yyyy",
+                                        autoUnmask: true
+                                    });
+                            toastr.success(response.message);
+                        }else{
+                            toastr.error(response.message);
+                        }
+                    },
+                    error : function(xhr,response){
+                        $('body').removeClass('pointerEventsNone');
+                        toastr.error('Something went wrong!');
+                    }
+                });
+            }
+        });
+
     </script>
 @endsection
 

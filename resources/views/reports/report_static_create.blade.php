@@ -1984,100 +1984,6 @@
         });
     </script>
     <script>
-
-        $(document).ready(function(){
-            $("#all").click(function(){
-                $("#inputDays").hide();
-                $('#kt_datepicker_3').val('');
-                var allDate = '01-01-2000';
-                $('#kt_datepicker_3').val(allDate);
-                $('#date_from').val(allDate);
-                $('#date').val(allDate);
-            });
-            $("#today").click(function(){
-                $("#inputDays").hide();
-                var d = new Date();
-                var month = d.getMonth()+1;
-                var day = d.getDate();
-
-                var today = (day<10 ? '0' : '') + day + '-' +
-                (month<10 ? '0' : '') + month + '-' +
-                d.getFullYear();
-                $('#kt_datepicker_3').val(today);
-                $('#date_from').val(today);
-                $('#date').val(today);
-            });
-            $("#yesterday").click(function(){
-                $("#inputDays").hide();
-                var date = new Date();
-                date.setDate(date.getDate() - 1);
-                var nd = new Date(date);
-
-                var month = nd.getMonth()+1;
-                var day = nd.getDate();
-
-                var yesterday = (day<10 ? '0' : '') + day + '-' +
-                (month<10 ? '0' : '') + month + '-' +
-                nd.getFullYear();
-                $('#kt_datepicker_3').val(yesterday);
-                $('#date_from').val(yesterday);
-                $('#date').val(yesterday);
-            });
-            $("#last_7_days").click(function(){
-                $("#inputDays").hide();
-                var date = new Date();
-                date.setDate(date.getDate() - 7);
-                var nd = new Date(date);
-
-                var month = nd.getMonth()+1;
-                var day = nd.getDate();
-
-                var last_7_days = (day<10 ? '0' : '') + day + '-' +
-                (month<10 ? '0' : '') + month + '-' +
-                nd.getFullYear();
-                $('#kt_datepicker_3').val(last_7_days);
-                $('#date_from').val(last_7_days);
-                $('#date').val(last_7_days);
-            });
-            $("#last_30_days").click(function(){
-                $("#inputDays").hide();
-                var date = new Date();
-                date.setDate(date.getDate() - 30);
-                var nd = new Date(date);
-
-                var month = nd.getMonth()+1;
-                var day = nd.getDate();
-
-                var last_30_days = (day<10 ? '0' : '') + day + '-' +
-                (month<10 ? '0' : '') + month + '-' +
-                nd.getFullYear();
-                $('#kt_datepicker_3').val(last_30_days);
-                $('#date_from').val(last_30_days);
-                $('#date').val(last_30_days);
-            });
-
-            $("#last_days").click(function(){
-                $("#inputDays").show();
-                $("#days").keyup(function(){
-                    var daysNumber = $('#days').val();
-                    var date = new Date();
-                    date.setDate(date.getDate() - daysNumber);
-                    var nd = new Date(date);
-
-                    var month = nd.getMonth()+1;
-                    var day = nd.getDate();
-
-                    var manual_days = (day<10 ? '0' : '') + day + '-' +
-                    (month<10 ? '0' : '') + month + '-' +
-                    nd.getFullYear();
-                    $('#kt_datepicker_3').val(manual_days);
-                    $('#date_from').val(manual_days);
-                    $('#date').val(manual_days);
-                });
-            });
-        });
-    </script>
-    <script>
         $(document).ready(function(){
             product_id_fun(90,false);
             product_name_fun(90,false);
@@ -2125,37 +2031,23 @@
             }
         });
         $(document).on('change','.select_all_branch',function(){
-            var branches = <?=$data['branches']?>;
+            var isChecked = $(this).is(':checked');
+            var $select = $('#report_branch_name');
 
-            var select_all_branch = document.getElementById('select_all_branch').checked;
-            var newArr = [];
-            if(select_all_branch == true)
-            {
-                var valArr = ["1","2","3","4","5","6","7","8","9","10","11","12"], // array of option values
-                i = 0, size = valArr.length, // index and array size declared here to avoid overhead
-                $options = $('#report_branch_name option'); // options cached here to avoid overhead of fetching inside loop
+            if(isChecked) {
+                $select.find('option').prop('selected', true);
+            } else {
+                $select.find('option').prop('selected', false);
 
-                // run the loop only for the given values
-                for(i; i < size; i++){
-                    // filter the options with the specific value and select them
-                    $options.filter('[value="'+valArr[i]+'"]').prop('selected', true);
-                }
-            }
-            if(select_all_branch == false)
-            {
-                $options = $('#report_branch_name option'); // options cached here to avoid overhead of fetching inside loop
-                branches.forEach((element, index, array) => {
-
-                    $options.filter('[value="'+element.branch_id+'"]').prop('selected', false);
-                    if(element.default_branch == "1"){
-                         console.log(element.branch_id);
-                        $options.filter('[value="'+element.branch_id+'"]').prop('selected', true);
-                        $('#report_branch_name option').val().trigger('change');
+                var branches = <?=$data['branches']?>;
+                branches.forEach(function(branch) {
+                    if(branch.default_branch == "1") {
+                        $select.find('option[value="'+branch.branch_id+'"]').prop('selected', true);
                     }
                 });
-
             }
 
+            $select.trigger('change');
         });
 
        /* $('.kt_select_none').select2({

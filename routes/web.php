@@ -1092,6 +1092,10 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('form/{id?}','Development\UserManagementSystemController@create');
             Route::post('form/{id?}','Development\UserManagementSystemController@store');
         });
+        Route::prefix('system-configuration')->group(function () {
+            Route::get('form','Development\SystemConfigurationController@create');
+            Route::post('form','Development\SystemConfigurationController@store');
+        });
 
         Route::prefix('listing-studio')->group(function () {
             Route::get('form/{id?}','Development\ListingStudioController@create');

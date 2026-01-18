@@ -56,9 +56,9 @@ var KTLogin = function() {
                     //debugger
                     $("form").find(":submit").prop('disabled', true);
                     var mobileNotLogin = 'desktop';
-                    if($('body').width() < 1000){
-                        mobileNotLogin = 'mobile';
-                    }
+                    // if($('body').width() < 1000){
+                    //     mobileNotLogin = 'mobile';
+                    // }
                     var formData = new FormData(document.getElementById("kt_login_signin_form"));
                     formData.append('device', mobileNotLogin);
                     if(mobileNotLogin == 'desktop'){

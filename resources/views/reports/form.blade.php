@@ -156,6 +156,207 @@
         $('.kt-select2').select2({
             placeholder: "Select"
         });
+
+        // Handle Field Type change for Conditional Logic to populate Condition dropdown
+        $(document).on('change', '.conditional_logic_field_type_select', function(event) {
+            var that = $(this);
+            var fieldType = $(this).val();
+            var conditionSelect = that.closest('.conditional-logic_block, .outer-conditional-logic_block').find('.conditional_logic_condition');
+            var hiddenFieldType = that.closest('.conditional-logic_block, .outer-conditional-logic_block').find('.conditional_logic_field_type');
+
+            if(fieldType == "" || fieldType == "0"){
+                conditionSelect.html('<option value="">Select</option>');
+                if(hiddenFieldType.length > 0){
+                    hiddenFieldType.val('');
+                }
+                return false;
+            }
+
+            // Map column types to filter type data type names
+            var typeMapping = {
+                'varchar2': 'varchar2',
+                'number': 'number',
+                'float': 'number', // float maps to number for filter types
+                'date': 'date',
+                'boolean': 'boolean'
+            };
+
+            var filterTypeName = typeMapping[fieldType] || fieldType;
+
+            // Update hidden field type
+            if(hiddenFieldType.length > 0){
+                hiddenFieldType.val(fieldType);
+            }
+
+            var url = '/reports/get-column-conditions';
+            var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    _token: CSRF_TOKEN,
+                    col_type: filterTypeName
+                },
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                success: function(response, status){
+                    if(response.status == 'success') {
+                        var FiledConditionsList = '';
+                        var data = response['data']['conditions'];
+                        FiledConditionsList += '<option value="">Select</option>';
+                        if(data != "" && data.length > 0){
+                            for(var i=0; data.length > i; i++){
+                                FiledConditionsList += '<option value="'+data[i]['filter_type_value'].toLowerCase()+'">'+data[i]['filter_type_title']+'</option>';
+                            }
+                        }
+                        conditionSelect.html(FiledConditionsList);
+
+                        // Set saved condition value if exists
+                        var savedCondition = conditionSelect.data('saved-value') || conditionSelect.closest('.conditional-logic_block, .outer-conditional-logic_block').find('.conditional_logic_saved_condition').val();
+                        if (savedCondition && savedCondition != '') {
+                            conditionSelect.val(savedCondition.toLowerCase());
+                        }
+
+                        conditionSelect.select2({
+                            placeholder: "Select"
+                        });
+
+                        // Update fields visibility based on condition
+                        var currentCondition = conditionSelect.val();
+                        if (currentCondition && currentCondition != '') {
+                            updateConditionalLogicFields(conditionSelect);
+                        }
+                    }
+                    else{
+                        conditionSelect.html('<option value="">Select</option>');
+                        updateConditionalLogicFields(conditionSelect);
+                    }
+                },
+                error: function(response,status) {
+                    conditionSelect.html('<option value="">Select</option>');
+                    updateConditionalLogicFields(conditionSelect);
+                },
+            });
+        });
+
+        function updateConditionalLogicFields(conditionSelect) {
+            var that = conditionSelect;
+            var condition = that.val();
+            var block = that.closest('.conditional-logic_block, .outer-conditional-logic_block');
+            var fieldType = block.find('.conditional_logic_field_type').val();
+
+            var fieldsValues = block.find('.conditional_logic_fields_values');
+            var numberBetween = block.find('.conditional_logic_number_between');
+            var dateBetween = block.find('.conditional_logic_date_between');
+
+            if (!fieldType || fieldType == '') {
+                fieldsValues.hide();
+                numberBetween.hide();
+                dateBetween.hide();
+                fieldsValues.find('input').attr('disabled', true);
+                numberBetween.find('input').attr('disabled', true);
+                dateBetween.find('input').attr('disabled', true);
+                return;
+            }
+
+            fieldsValues.find('input').attr('disabled', true);
+            numberBetween.find('input').attr('disabled', true);
+            dateBetween.find('input').attr('disabled', true);
+
+            fieldsValues.hide();
+            numberBetween.hide();
+            dateBetween.hide();
+
+            if (condition == '' || condition == 'null' || condition == 'not null') {
+                return;
+            }
+
+            if (fieldType == 'boolean' || condition == 'yes' || condition == 'no') {
+                fieldsValues.hide();
+            } else if (fieldType == 'number' && condition == 'between') {
+                numberBetween.show();
+                numberBetween.find('input').attr('disabled', false);
+            } else if (fieldType == 'date' && condition == 'between') {
+                dateBetween.show();
+                dateBetween.find('input').attr('disabled', false);
+
+                var arrows = {
+                    leftArrow: '<i class="la la-angle-left"></i>',
+                    rightArrow: '<i class="la la-angle-right"></i>'
+                };
+                dateBetween.find('.kt_datepicker_5').datepicker({
+                    rtl: KTUtil.isRTL(),
+                    todayHighlight: true,
+                    format: 'dd-mm-yyyy',
+                    templates: arrows
+                });
+            } else {
+                fieldsValues.show();
+                fieldsValues.find('input').attr('disabled', false);
+            }
+        }
+
+        $(document).on('change', '.conditional_logic_condition', function(event) {
+            updateConditionalLogicFields($(this));
+        });
+
+        $(document).ready(function() {
+            // Initialize conditional logic repeater if it exists
+            if ($('#kt_repeater_conditional_logic').length > 0) {
+                $('#kt_repeater_conditional_logic').repeater({
+                    initEmpty: false,
+                    isFirstItemUndeletable: false,
+                    show: function() {
+                        $(this).slideDown();
+                    },
+                    hide: function(deleteElement) {
+                        $(this).slideUp(deleteElement);
+                    }
+                });
+            }
+
+            // Initialize saved conditional logic values on page load
+            setTimeout(function() {
+                $('.conditional-logic_block, .outer-conditional-logic_block').each(function() {
+                    var block = $(this);
+                    var fieldTypeSelect = block.find('.conditional_logic_field_type_select');
+                    var fieldType = fieldTypeSelect.val();
+                    var savedCondition = block.find('.conditional_logic_saved_condition').val() || block.find('.conditional_logic_condition').data('saved-value') || '';
+                    var conditionSelect = block.find('.conditional_logic_condition');
+
+                    // If field type is set, populate conditions and set saved value
+                    if (fieldType && fieldType != '' && fieldType != '0') {
+                        // Trigger change to populate condition dropdown
+                        fieldTypeSelect.trigger('change');
+
+                        // After AJAX completes, set the saved condition value
+                        var checkCondition = setInterval(function() {
+                            if (conditionSelect.find('option').length > 1) {
+                                clearInterval(checkCondition);
+                                if (savedCondition && savedCondition != '') {
+                                    conditionSelect.val(savedCondition.toLowerCase()).trigger('change');
+                                    conditionSelect.select2({
+                                        placeholder: "Select"
+                                    });
+                                }
+                            }
+                        }, 100);
+
+                        // Timeout after 2 seconds
+                        setTimeout(function() {
+                            clearInterval(checkCondition);
+                        }, 2000);
+                    }
+                });
+
+                // Also handle existing conditions
+                $('.conditional_logic_condition').each(function() {
+                    if ($(this).val() != '') {
+                        updateConditionalLogicFields($(this));
+                    }
+                });
+            }, 100);
+        });
+
         $('#report_static_dynamic').on('change', function() {
             if($(this).val() == 'static'){
                 $('#report_form').find('#dynamic_criteria').hide();

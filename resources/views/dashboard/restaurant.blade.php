@@ -127,6 +127,15 @@
     }
 </style>
 <div class="row kt-margin-b-15">
+    <div class="col-lg-12">
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary btn-sm" id="restaurant_filter_btn">
+                <i class="la la-filter"></i> Apply Filters
+            </button>
+        </div>
+    </div>
+</div>
+<div class="row kt-margin-b-15">
     <div class="col-lg-3">
         <div class="kt-portlet" style="background-repeat: no-repeat;
             background-position: right top;
@@ -366,9 +375,6 @@
                     </div>
                 </div>
                 <div class="kt-portlet__head-toolbar">
-                    {{-- <button type="button" class="btn btn-sm btn-secondary" id="end_of_day_report_btn">
-                        {{ __('message.end_of_day_report') }}
-                    </button> --}}
                     <button type="button" class="btn btn-sm btn-icon btn-secondary" style="margin-left: 5px;">
                         <i class="la la-download"></i>
                     </button>
@@ -575,5 +581,495 @@
     var translations = {
         sales: '{{ __('message.sales') }}'
     };
+
+    var restaurantFilters = {
+        dateFrom: null,
+        dateTo: null,
+        branches: []
+    };
+
+    var RESTAURANT_FILTERS_STORAGE_KEY = 'restaurant_dashboard_filters';
+
+    function loadFiltersFromStorage() {
+        try {
+            var stored = localStorage.getItem(RESTAURANT_FILTERS_STORAGE_KEY);
+            if(stored) {
+                var parsed = JSON.parse(stored);
+                return {
+                    dateFrom: parsed.dateFrom || null,
+                    dateTo: parsed.dateTo || null,
+                    branches: parsed.branches || []
+                };
+            }
+        } catch(e) {
+            console.error('Error loading filters from localStorage:', e);
+        }
+        return {
+            dateFrom: null,
+            dateTo: null,
+            branches: []
+        };
+    }
+
+    function saveFiltersToStorage(filters) {
+        try {
+            localStorage.setItem(RESTAURANT_FILTERS_STORAGE_KEY, JSON.stringify({
+                dateFrom: filters.dateFrom || null,
+                dateTo: filters.dateTo || null,
+                branches: filters.branches || []
+            }));
+        } catch(e) {
+            console.error('Error saving filters to localStorage:', e);
+        }
+    }
+
+    window.loadFiltersFromStorage = loadFiltersFromStorage;
+    window.saveFiltersToStorage = saveFiltersToStorage;
+
+    var storedFilters = loadFiltersFromStorage();
+    if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
+        restaurantFilters = storedFilters;
+        window.restaurantFilters = storedFilters;
+    } else if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+        restaurantFilters.dateFrom = window.restaurantFilters.dateFrom || null;
+        restaurantFilters.dateTo = window.restaurantFilters.dateTo || null;
+        restaurantFilters.branches = window.restaurantFilters.branches || [];
+        saveFiltersToStorage(restaurantFilters);
+    }
+
+    function initializeRestaurantFilters() {
+        if($('#restaurant_branches').length && !$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+            var currentBranches = $('#restaurant_branches').val();
+
+            $('#restaurant_branches').select2({
+                placeholder: 'Select Branches',
+                allowClear: true
+            });
+
+            if(currentBranches && currentBranches.length > 0) {
+                setTimeout(function() {
+                    $('#restaurant_branches').val(currentBranches).trigger('change');
+                }, 50);
+            }
+        }
+
+        if($('#restaurant_date_range').length) {
+            if(!$('#restaurant_date_range').data('daterangepicker')) {
+                $('#restaurant_date_range').daterangepicker({
+                    autoUpdateInput: false,
+                    locale: {
+                        cancelLabel: 'Clear',
+                        format: 'DD-MM-YYYY',
+                        separator: ' to '
+                    },
+                    opens: 'left',
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    }
+                });
+
+                $('#restaurant_date_range').off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+                    $(this).val(picker.startDate.format('DD-MM-YYYY') + ' to ' + picker.endDate.format('DD-MM-YYYY'));
+                    $('#restaurant_date_from').val(picker.startDate.format('DD-MM-YYYY'));
+                    $('#restaurant_date_to').val(picker.endDate.format('DD-MM-YYYY'));
+                });
+
+                $('#restaurant_date_range').off('cancel.daterangepicker').on('cancel.daterangepicker', function(ev, picker) {
+                    $(this).val('');
+                    $('#restaurant_date_from').val('');
+                    $('#restaurant_date_to').val('');
+                });
+
+                $('#restaurant_date_range').off('show.daterangepicker').on('show.daterangepicker', function(ev, picker) {
+                    setTimeout(function() {
+                        $('.daterangepicker').css('z-index', '10001');
+                        var sidepane = $('#restaurant_filter_sidepane');
+                        var pickerEl = $('.daterangepicker');
+                        if(pickerEl.length && sidepane.length) {
+                            var sidepaneRight = sidepane.offset().left + sidepane.outerWidth();
+                            var pickerLeft = pickerEl.offset().left;
+                            var pickerWidth = pickerEl.outerWidth();
+                            if(pickerLeft + pickerWidth > sidepaneRight) {
+                                pickerEl.css({
+                                    'left': 'auto',
+                                    'right': '10px'
+                                });
+                            }
+                        }
+                    }, 10);
+                });
+            }
+        }
+    }
+
+    function restoreFilterValues(filters) {
+        if(!filters) {
+            filters = loadFiltersFromStorage();
+
+            if(!filters.dateFrom && !filters.dateTo && (!filters.branches || filters.branches.length === 0)) {
+                if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                    filters = window.restaurantFilters;
+                } else if(typeof restaurantFilters !== 'undefined') {
+                    filters = restaurantFilters;
+                }
+            }
+        }
+
+
+        if(filters.dateFrom && filters.dateTo) {
+            var dateFromStr = String(filters.dateFrom).trim();
+            var dateToStr = String(filters.dateTo).trim();
+
+            var startDate = moment(dateFromStr, 'DD-MM-YYYY');
+            var endDate = moment(dateToStr, 'DD-MM-YYYY');
+
+            if(startDate.isValid() && endDate.isValid()) {
+                var dateRangeStr = startDate.format('DD-MM-YYYY') + ' to ' + endDate.format('DD-MM-YYYY');
+
+                $('#restaurant_date_from').val(dateFromStr);
+                $('#restaurant_date_to').val(dateToStr);
+                $('#restaurant_date_range').val(dateRangeStr);
+
+                var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                if(daterangepicker) {
+                    daterangepicker.setStartDate(startDate);
+                    daterangepicker.setEndDate(endDate);
+                } else {
+                    setTimeout(function() {
+                        var dp = $('#restaurant_date_range').data('daterangepicker');
+                        if(dp) {
+                            dp.setStartDate(startDate);
+                            dp.setEndDate(endDate);
+                        }
+                    }, 300);
+                }
+            }
+        } else {
+            if(filters.dateFrom === null && filters.dateTo === null) {
+                $('#restaurant_date_range').val('');
+                $('#restaurant_date_from').val('');
+                $('#restaurant_date_to').val('');
+                var daterangepicker = $('#restaurant_date_range').data('daterangepicker');
+                if(daterangepicker) {
+                    daterangepicker.setStartDate(moment());
+                    daterangepicker.setEndDate(moment());
+                }
+            }
+        }
+
+        if(filters.branches && Array.isArray(filters.branches) && filters.branches.length > 0) {
+            var branchesToSet = filters.branches.map(function(b) { return String(b); });
+
+            var currentBranches = $('#restaurant_branches').val();
+            if(!$('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                $('#restaurant_branches').select2({
+                    placeholder: 'Select Branches',
+                    allowClear: true
+                });
+                if(currentBranches && currentBranches.length > 0) {
+                    setTimeout(function() {
+                        $('#restaurant_branches').val(currentBranches).trigger('change');
+                    }, 50);
+                }
+            }
+
+            setTimeout(function() {
+                $('#restaurant_branches').val(branchesToSet);
+
+                if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                    $('#restaurant_branches').trigger('change');
+                } else {
+                    $('#restaurant_branches').trigger('change');
+                }
+
+                setTimeout(function() {
+                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                        $('#restaurant_branches').trigger('change.select2');
+                    }
+                }, 50);
+            }, 200);
+        } else {
+            if(!filters.branches || (Array.isArray(filters.branches) && filters.branches.length === 0)) {
+                setTimeout(function() {
+                    $('#restaurant_branches').val(null);
+                    if($('#restaurant_branches').hasClass('select2-hidden-accessible')) {
+                        $('#restaurant_branches').trigger('change.select2');
+                    } else {
+                        $('#restaurant_branches').trigger('change');
+                    }
+                }, 200);
+            }
+        }
+    }
+
+    function bindRestaurantFilterEvents() {
+        $('#restaurant_filter_btn').off('click').on('click', function() {
+            var currentFilters = loadFiltersFromStorage();
+
+            if(!currentFilters.dateFrom && !currentFilters.dateTo && (!currentFilters.branches || currentFilters.branches.length === 0)) {
+                if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+                    currentFilters = {
+                        dateFrom: window.restaurantFilters.dateFrom || null,
+                        dateTo: window.restaurantFilters.dateTo || null,
+                        branches: window.restaurantFilters.branches || []
+                    };
+                } else {
+                    currentFilters = {
+                        dateFrom: restaurantFilters.dateFrom,
+                        dateTo: restaurantFilters.dateTo,
+                        branches: restaurantFilters.branches || []
+                    };
+                }
+            }
+
+            restaurantFilters.dateFrom = currentFilters.dateFrom;
+            restaurantFilters.dateTo = currentFilters.dateTo;
+            restaurantFilters.branches = currentFilters.branches || [];
+            window.restaurantFilters = currentFilters;
+
+            $('#restaurant_filter_overlay').addClass('show');
+            $('#restaurant_filter_sidepane').addClass('open');
+
+            initializeRestaurantFilters();
+
+            setTimeout(function() {
+                restoreFilterValues(currentFilters);
+
+                setTimeout(function() {
+                    var needsRestore = false;
+
+                    if(currentFilters.dateFrom && currentFilters.dateTo) {
+                        if($('#restaurant_date_from').val() !== currentFilters.dateFrom ||
+                           $('#restaurant_date_to').val() !== currentFilters.dateTo) {
+                            needsRestore = true;
+                        }
+                    }
+
+                    if(currentFilters.branches && currentFilters.branches.length > 0) {
+                        var currentBranches = $('#restaurant_branches').val() || [];
+                        if(currentBranches.length !== currentFilters.branches.length) {
+                            needsRestore = true;
+                        }
+                    }
+
+                    if(needsRestore) {
+                        restoreFilterValues(currentFilters);
+                    }
+                }, 300);
+            }, 200);
+        });
+
+        $('#restaurant_filter_close_btn, #restaurant_filter_overlay').off('click').on('click', function() {
+            $('#restaurant_filter_overlay').removeClass('show');
+            $('#restaurant_filter_sidepane').removeClass('open');
+        });
+
+        $('#restaurant_filter_sidepane').off('click').on('click', function(e) {
+            e.stopPropagation();
+        });
+
+        $('#restaurant_filter_apply_btn').off('click').on('click', function() {
+            var dateFrom = $('#restaurant_date_from').val();
+            var dateTo = $('#restaurant_date_to').val();
+            var branches = $('#restaurant_branches').val();
+
+            var branchesArray = [];
+            if(branches && branches.length > 0) {
+                branchesArray = Array.isArray(branches) ? branches : [branches];
+                branchesArray = branchesArray.map(function(b) { return String(b); });
+            }
+
+            // Create filters object
+            var newFilters = {
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+                branches: branchesArray
+            };
+
+            saveFiltersToStorage(newFilters);
+
+            restaurantFilters.dateFrom = dateFrom;
+            restaurantFilters.dateTo = dateTo;
+            restaurantFilters.branches = branchesArray;
+
+            window.restaurantFilters = newFilters;
+
+            updateFilterButtonState();
+
+            $('#restaurant_filter_overlay').removeClass('show');
+            $('#restaurant_filter_sidepane').removeClass('open');
+
+            reloadRestaurantDashboard();
+        });
+
+        $('#restaurant_filter_reset_btn').off('click').on('click', function() {
+            $('#restaurant_date_range').val('');
+            $('#restaurant_date_from').val('');
+            $('#restaurant_date_to').val('');
+            $('#restaurant_branches').val(null).trigger('change');
+
+            if($('#restaurant_date_range').data('daterangepicker')) {
+                $('#restaurant_date_range').data('daterangepicker').setStartDate(moment());
+                $('#restaurant_date_range').data('daterangepicker').setEndDate(moment());
+            }
+
+            var emptyFilters = {
+                dateFrom: null,
+                dateTo: null,
+                branches: []
+            };
+
+            saveFiltersToStorage(emptyFilters);
+
+            restaurantFilters.dateFrom = null;
+            restaurantFilters.dateTo = null;
+            restaurantFilters.branches = [];
+
+            window.restaurantFilters = emptyFilters;
+
+            updateFilterButtonState();
+
+            reloadRestaurantDashboard();
+        });
+    }
+
+    function updateFilterButtonState() {
+        var currentFilters = restaurantFilters;
+        if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+            currentFilters = window.restaurantFilters;
+        }
+
+        var hasFilters = (currentFilters.dateFrom && currentFilters.dateTo) ||
+                        (currentFilters.branches && currentFilters.branches.length > 0);
+
+        var $btn = $('#restaurant_filter_btn');
+        if($btn.length) {
+            if(hasFilters) {
+                $btn.addClass('btn-warning').removeClass('btn-primary');
+                var filterText = [];
+                if(currentFilters.dateFrom && currentFilters.dateTo) {
+                    filterText.push('Date: ' + currentFilters.dateFrom + ' to ' + currentFilters.dateTo);
+                }
+                if(currentFilters.branches && currentFilters.branches.length > 0) {
+                    filterText.push('Branches: ' + currentFilters.branches.length);
+                }
+                $btn.attr('title', 'Active Filters: ' + filterText.join(', '));
+            } else {
+                $btn.addClass('btn-primary').removeClass('btn-warning');
+                $btn.attr('title', 'Apply Filters');
+            }
+        }
+    }
+
+    window.updateFilterButtonState = updateFilterButtonState;
+
+    $(document).ready(function() {
+        initializeRestaurantFilters();
+        bindRestaurantFilterEvents();
+
+        setTimeout(function() {
+            updateFilterButtonState();
+        }, 500);
+    });
+
+    function reloadRestaurantDashboard() {
+        $('#dashboard_data').html('');
+        $('#shimmer_loading').addClass('loading');
+
+        var formData = {
+            date_from: restaurantFilters.dateFrom,
+            date_to: restaurantFilters.dateTo,
+            branches: restaurantFilters.branches
+        };
+
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            type: 'POST',
+            url: '/dashboard/get-restaurant-dashboard-detail',
+            dataType: 'json',
+            data: formData,
+            success: function(response) {
+                $('#shimmer_loading').removeClass('loading');
+
+                var data = response['data'];
+                var view = data['view'];
+                $('#dashboard_data').html(view);
+
+                setTimeout(function() {
+                    var storedFilters = loadFiltersFromStorage();
+
+                    restaurantFilters.dateFrom = storedFilters.dateFrom;
+                    restaurantFilters.dateTo = storedFilters.dateTo;
+                    restaurantFilters.branches = storedFilters.branches || [];
+                    window.restaurantFilters = storedFilters;
+
+                    initializeRestaurantFilters();
+                    bindRestaurantFilterEvents();
+
+                    if(storedFilters.dateFrom || storedFilters.dateTo || (storedFilters.branches && storedFilters.branches.length > 0)) {
+                        restoreFilterValues(storedFilters);
+
+                        setTimeout(function() {
+                            restoreFilterValues(storedFilters);
+                        }, 400);
+                    }
+
+                    if(typeof updateFilterButtonState === 'function') {
+                        updateFilterButtonState();
+                    }
+
+                    if(typeof loadRestaurantCharts === 'function'){
+                        loadRestaurantCharts();
+                    }
+                }, 200);
+            },
+            error: function() {
+                $('#shimmer_loading').removeClass('loading');
+                $('#dashboard_data').html('<div class="alert alert-danger">Error loading dashboard. Please try again.</div>');
+            }
+        });
+    }
+
+    window.getRestaurantFilters = function() {
+        var stored = loadFiltersFromStorage();
+        if(stored.dateFrom || stored.dateTo || (stored.branches && stored.branches.length > 0)) {
+            return stored;
+        }
+
+        if(typeof window.restaurantFilters !== 'undefined' && window.restaurantFilters) {
+            return window.restaurantFilters;
+        }
+
+        if(typeof restaurantFilters !== 'undefined') {
+            return restaurantFilters;
+        }
+
+        return {
+            dateFrom: null,
+            dateTo: null,
+            branches: []
+        };
+    };
+
+    var initialFilters = loadFiltersFromStorage();
+    if(initialFilters.dateFrom || initialFilters.dateTo || (initialFilters.branches && initialFilters.branches.length > 0)) {
+        window.restaurantFilters = initialFilters;
+        restaurantFilters = initialFilters;
+    } else if(typeof window.restaurantFilters === 'undefined' || !window.restaurantFilters) {
+        window.restaurantFilters = restaurantFilters;
+        saveFiltersToStorage(restaurantFilters);
+    } else {
+        restaurantFilters.dateFrom = window.restaurantFilters.dateFrom;
+        restaurantFilters.dateTo = window.restaurantFilters.dateTo;
+        restaurantFilters.branches = window.restaurantFilters.branches || [];
+        saveFiltersToStorage(restaurantFilters);
+    }
 </script>
 

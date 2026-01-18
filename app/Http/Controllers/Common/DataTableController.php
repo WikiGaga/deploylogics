@@ -850,8 +850,6 @@ class DataTableController extends Controller
 
     public function inlineHelpOpen(Request $request, $helpType, $str = null)
     {
-
-        // dd($request->all(), $helpType, $str);
         $data['case'] = $helpType;
         if (isset($request['query']['generalSearch']) && !empty($request['query']['generalSearch'])) {
             $str = $request['query']['generalSearch'];
@@ -1101,25 +1099,15 @@ class DataTableController extends Controller
             $merge = array_merge($data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
 
-            if (!$str) {
-                /*                  $dataSql = ViewPurcProductBarcodeHelp::where('product_barcode_id', '<>', '0');
-                    if($str){
-                        $dataSql->where(DB::raw('lower(product_barcode_barcode)'),'like','%'.strtolower($str).'%')
-                                ->orWhere(DB::raw('lower(product_name)'),'like','%'.strtolower($str).'%');
-                    }
-                    $data['list'] = $dataSql->where('business_id',auth()->user()->business_id)->limit(50)->get();
-*/
 
-                $data['list'] = DB::table('tbl_purc_product p')
-                    ->join('tbl_purc_product_barcode b', 'b.product_id', '=', 'p.product_id')
-                    ->join('tbl_defi_uom uom', 'uom.uom_id', '=', 'b.uom_id')
-                    ->join('vw_purc_group_item item', 'item.group_item_id', '=', 'p.group_item_id')
-                    ->join('vw_purc_group_item item', 'item.group_parent_item_id', '=', 'p.group_item_parent_id')
-                    ->select('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name')
-                    ->groupby('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name')
-                    ->limit(50)->get();
-            }
-            if (isset($request->val)) {
+            $dataSql = DB::table('tbl_purc_product p')
+                ->join('tbl_purc_product_barcode b', 'b.product_id', '=', 'p.product_id')
+                ->join('tbl_defi_uom uom', 'uom.uom_id', '=', 'b.uom_id')
+                ->join('vw_purc_group_item item', 'item.group_item_id', '=', 'p.group_item_id')
+                ->select('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name')
+                ->groupby('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'item.group_item_name', 'item.parent_group_item_name');
+
+            if (isset($request->val) && !empty($request->val)) {
                 $p_str = strtoupper($request->val);
                 $p_str = str_replace('%2F', '/', $p_str);
                 $p_str = str_replace('%22', '"', $p_str);
@@ -1127,50 +1115,30 @@ class DataTableController extends Controller
                 $p_str = str_replace("'", "''", $p_str);
                 $replaced_str = str_replace(' ', '%', trim($p_str));
                 $replaced_str = str_replace('%20', '%', trim($replaced_str));
-                $qry = "
-SELECT
-    PRODUCT_ID,
-    PRODUCT_NAME,
-    PRODUCT_ARABIC_NAME,
-    PRODUCT_BARCODE_ID,
-    PRODUCT_BARCODE_BARCODE,
-    UOM_ID,
-    UOM_NAME,
-    GROUP_ITEM_NAME,
-    GROUP_ITEM_PARENT_NAME,
-    PRODUCT_BARCODE_PACKING
-FROM VW_PURC_PRODUCT_BARCODE_RATE
-WHERE
-    UPPER(PRODUCT_BARCODE_BARCODE) LIKE '%{$replaced_str}%'
-    OR UPPER(PRODUCT_NAME) LIKE '%{$replaced_str}%'
-    OR UPPER(PRODUCT_ARABIC_NAME) LIKE '%{$replaced_str}%'
-GROUP BY
-    PRODUCT_ID,
-    PRODUCT_NAME,
-    PRODUCT_ARABIC_NAME,
-    PRODUCT_BARCODE_ID,
-    PRODUCT_BARCODE_BARCODE,
-    UOM_ID,
-    UOM_NAME,
-    GROUP_ITEM_NAME,
-    GROUP_ITEM_PARENT_NAME,
-    PRODUCT_BARCODE_PACKING
-ORDER BY
-    CASE
-        WHEN UPPER(PRODUCT_BARCODE_BARCODE) = '{$replaced_str}' THEN 1
-        WHEN UPPER(PRODUCT_NAME) LIKE '{$replaced_str}%' THEN 2
-        WHEN UPPER(PRODUCT_ARABIC_NAME) LIKE '{$replaced_str}%' THEN 2
-        WHEN UPPER(PRODUCT_NAME) LIKE '%{$replaced_str}' THEN 4
-        WHEN UPPER(PRODUCT_ARABIC_NAME) LIKE '%{$replaced_str}' THEN 4
-        ELSE 3
-    END,
-    PRODUCT_NAME,
-    PRODUCT_BARCODE_BARCODE
-FETCH FIRST 50 ROWS ONLY";
 
+                $dataSql->where(function($query) use ($replaced_str, $p_str) {
+                    $query->where(DB::raw('UPPER(b.product_barcode_barcode)'), 'LIKE', '%' . $replaced_str . '%')
+                          ->orWhere(DB::raw('UPPER(p.product_name)'), 'LIKE', '%' . $replaced_str . '%')
+                          ->orWhere(DB::raw('UPPER(p.product_arabic_name)'), 'LIKE', '%' . $replaced_str . '%');
+                });
 
-                $data['list'] = DB::select($qry);
+                $dataSql->orderByRaw("
+                    CASE
+                        WHEN UPPER(b.product_barcode_barcode) = '{$p_str}' THEN 1
+                        WHEN UPPER(p.product_name) LIKE '{$p_str}%' THEN 2
+                        WHEN UPPER(p.product_arabic_name) LIKE '{$p_str}%' THEN 2
+                        WHEN UPPER(p.product_name) LIKE '%{$p_str}' THEN 4
+                        WHEN UPPER(p.product_arabic_name) LIKE '%{$p_str}' THEN 4
+                        ELSE 3
+                    END
+                ")
+                ->orderBy('p.product_name')
+                ->orderBy('b.product_barcode_barcode');
+            } else {
+                $dataSql->orderBy('p.product_name');
             }
+
+            $data['list'] = $dataSql->limit(50)->get();
             $data['head'] = ['Barcode', 'Name', 'Arabic Name', 'UOM', 'Packing'];
         }
         if ($helpType == 'productHelpSI') {

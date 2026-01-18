@@ -45,50 +45,6 @@ function display_help(that, table_block, table_block__table) {
     }
 }
 
-// $(document).on('keyup', ' #helper_search', function(e) {
-
-//     var that = $(this);
-    
-//     // if( that.val().length >= 1){
-//         //  $('#inLineHelp').remove();
-
-//         // console.log(currenturl)
-//   currentForm.val = that.val();
-
-//     setTimeout(function() {
-
-//         currentRequest = $.ajax({
-//             headers: {
-//                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-//             },
-//             beforeSend : function(){
-//                 if(currentRequest != null) {
-//                     currentRequest.abort();
-//                 }
-//             },
-//             type: 'POST',
-//             url: currenturl+'/' +encodeURIComponent(that.val()),
-//             dataType: 'json',
-//             data: currentForm,
-//             success: function(response) {
-//                 if (response['body'] != null) {
-//                     currentinLineHelp.html(response['body']);
-//                     var input = $('#helper_search');
-//                     input.focus();
-//                     var tmp = input.val();
-//                     input.val('');
-//                     input.val(tmp);
-//                     // $('#helper_search').focus();
-//                     // setTimeout(function() {
-//                     //     currentinLineHelp.html('');
-//                     // }, 1000);
-//                 }
-//             }
-//         });
-//     }, 1000);
-//     // }
-   
-// });
 
 $(document).on('keyup click', '.open_inline__help', function(e) {
     var that = $(this);
@@ -96,7 +52,7 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
     // console.log('hello from f2');
-    if ((e.which === 113) || that.hasClass('on_click_event') ) { //F2
+    if ((e.which === 113) || (e.type === 'click' && that.hasClass('on_click_event')) ) { //F2 or Click
 
         e.preventDefault();
         $('#inLineHelp').remove();
@@ -169,12 +125,12 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                 url: data_url,
                 dataType: 'json',
                 data: formData,
-                
+
                 success: function(response) {
                     if (response['body'] != null) {
                         inLineHelp.html(response['body']);
-                        $('#helper_search').focus();
-                        
+                        // Keep focus on the original input field
+                        that.focus();
                     }
                 }
             });
@@ -254,23 +210,29 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
 
     var mobileRequest = true;
 
-    // if type barcode search open help
-    if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 3) {
+    if (table_block.find('#inLineHelp').length != 0 && that.val().length >= 1) {
         var notAllowKeyCode = [113, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
         if (that.val() != '' && !notAllowKeyCode.includes(e.keyCode)) {
-            //  display_help(that,table_block,table_block__table);
-            var inLineHelp = table_block.find('.inLineHelp');
-            inLineHelp.find('.data_tbody_row').removeClass('selected_row');
-            if (inLineHelp.find('.data_tbody_row').hasClass('selected_row') == false) {
+            if (window.inlineSearchTimeout) {
+                clearTimeout(window.inlineSearchTimeout);
+            }
+
+            window.inlineSearchTimeout = setTimeout(function() {
+                var inLineHelp = table_block.find('.inLineHelp');
+                inLineHelp.find('.data_tbody_row').removeClass('selected_row');
+
                 var data_url = that.attr('data-url');
+                var searchValue = that.val();
+
                 if( inLineHelp.find('.data_thead_row').attr('id') == 'productHelp'){
                     var url = data_url;
                 }else{
-                    var url = data_url + '/' + encodeURIComponent($(this).val());
+                    var url = data_url + '/' + encodeURIComponent(searchValue);
                 }
                 var formData = {};
                 formData.form_type = form_type;
-                formData.val = $(this).val();
+                formData.val = searchValue;
+
                 var acc_form = ['cpv', '']
                 if (acc_form.includes(form_type)) {
                     formData.account_id = that.parents('tr').find('.account_id').val();
@@ -316,22 +278,18 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                             inLineHelp.html(response['body']);
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
+                    },
+                    complete: function() {
                         table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
                     }
                 });
-                $(document).ajaxStop(function(e, d) {
-                    table_block.find('#inLineHelp').find('.kt-inline-spinner').remove();
-                    $(document).unbind("ajaxStop");
-                });
-                //if(inLineHelp.length != 0){
-                //inLineHelp.load(url);
-                //}
+
                 mobileRequest = false;
-            }
+            }, 400);
         }
         if ($(window).width() <= 1024 && mobileRequest == true) {
-            // display_help(that,table_block,table_block__table);
             var inLineHelp = table_block.find('.inLineHelp');
             var data_url = $(this).attr('data-url');
             var url = data_url + '/' + encodeURIComponent($(this).val());
@@ -356,7 +314,6 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
     var table_block = that.closest('.erp_form___block');
     var table_block__table = that.closest('.erp_form___block');
     var form_type = $('#form_type').val();
-    // if (e.which === 113) { //F2
         e.preventDefault();
         $('#inLineHelp').remove();
         // Purchase Return (GRV) Validation If he try to enter reffrence number
@@ -367,7 +324,6 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
         }
         if (table_block.find('#inLineHelp').length == 0) {
             display_help(that, table_block, table_block__table);
-            console.log(display_help(that, table_block, table_block__table));
             var inLineHelp = table_block.find('.inLineHelp');
             var data_url = that.attr('data-url');
             if(that.attr('id') == 'formulation_code'){
@@ -464,6 +420,11 @@ if ($(window).width() <= 1024) {
     });
 }
 $(document).on('click', function(e) {
+    // Don't close if clicking inside the inline help dropdown
+    if ($(e.target).closest('#inLineHelp').length > 0) {
+        return;
+    }
+
     if (!$(e.target).hasClass('open-inline-help') && !$(e.target).hasClass('on_click_event')) {
         if ($(window).width() <= 1024) {
             $('#inLineHelp').hide();

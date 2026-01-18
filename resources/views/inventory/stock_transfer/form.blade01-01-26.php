@@ -281,8 +281,8 @@
                                     <i class="flaticon-more" style="color: #666666;"></i>
                                 </button>
                                 @php
-                                    $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Demand Qty','Qty',
-                                    'Sale Rate','Rate','Amount','Disc Percent','Disc Amt','VAT Percent','VAT Amt','Gross Amt'];
+                                    $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Sys Qty','Demand Qty','Qty',
+                                    'Sale Rate','MRP','Net TP','Adj Rate','Purc Rate','Amount'];
                                 @endphp
                                 <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                     @foreach($headings as $key=>$heading)
@@ -316,7 +316,7 @@
                                             <input id="product_id" readonly type="hidden" class="product_id form-control erp-form-control-sm">
                                             <input id="product_barcode_id" readonly type="hidden" class="product_barcode_id form-control erp-form-control-sm">
                                             <input id="uom_id" readonly type="hidden" class="uom_id form-control erp-form-control-sm">
-
+                                           
                                             <input id="grn_qty" readonly type="hidden" class="tblGridCal_grn_qty form-control erp-form-control-sm">
                                             <input id="dis_perc" readonly type="hidden" class="tblGridCal_discount_perc form-control erp-form-control-sm">
                                             <input id="dis_amount" readonly type="hidden" class="tblGridCal_discount_amount form-control erp-form-control-sm">
@@ -365,6 +365,12 @@
                                         </div>
                                     </th>
                                     <th scope="col">
+                                        <div class="erp_form__grid_th_title">Sys Qty</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <input id="sys_qty" readonly type="text" class="tblGridCal_sys_qty validNumber validOnlyNumber form-control erp-form-control-sm">
+                                        </div>
+                                    </th>
+                                    <th scope="col">
                                         <div class="erp_form__grid_th_title">Demand Qty</div>
                                         <div class="erp_form__grid_th_input">
                                             <input id="demand_qty" readonly type="text" class="demand_qty tb_moveIndex validNumber validOnlyNumber form-control erp-form-control-sm">
@@ -379,49 +385,37 @@
                                     <th scope="col">
                                         <div class="erp_form__grid_th_title">Sale Rate</div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="sale_rate" data-id="sale_rate" readonly type="text" class="tblGridSale_rate validNumber form-control erp-form-control-sm">
+                                            <input id="rate" data-id="rate" readonly type="text" class="tblGridCal_rate validNumber form-control erp-form-control-sm">
                                         </div>
                                     </th>
                                     <th scope="col">
-                                        <div class="erp_form__grid_th_title">Rate</div>
+                                        <div class="erp_form__grid_th_title">MRP</div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="rate" type="text" class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
+                                            <input id="mrp" data-id="mrp" type="text" class="mrp validNumber form-control erp-form-control-sm">
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="erp_form__grid_th_title">Net TP</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <input id="ex_net_tp" data-id="ex_net_tp" type="text" class="tblGridCal_ex_net_tp validNumber form-control erp-form-control-sm">
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="erp_form__grid_th_title">Adj Rate</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <input id="adjrate" data-id="adjrate" type="text" class="tblGridCal_adjrate validNumber tb_moveIndex form-control erp-form-control-sm">
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="erp_form__grid_th_title">Purc Rate</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <input id="purc_rate" type="text" class="tblGridCal_purc_rate tb_moveIndex validNumber form-control erp-form-control-sm">
                                         </div>
                                     </th>
                                     <th scope="col">
                                         <div class="erp_form__grid_th_title">Amount</div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="amount" type="text" class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                        </div>
-                                    </th>
-                                    <th scope="col">
-                                        <div class="erp_form__grid_th_title">Disc Percent</div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="dis_perc" type="text" class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                        </div>
-                                    </th>
-                                    <th scope="col">
-                                        <div class="erp_form__grid_th_title">Disc Amt</div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="dis_amount" type="text" class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                        </div>
-                                    </th>
-                                    <th scope="col">
-                                        <div class="erp_form__grid_th_title">VAT Percent</div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="vat_perc" type="text" class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm">
-                                        </div>
-                                    </th>
-                                    <th scope="col">
-                                        <div class="erp_form__grid_th_title">VAT Amt</div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="vat_amount" type="text" class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
-                                        </div>
-                                    </th>
-                                    <th scope="col">
-                                        <div class="erp_form__grid_th_title">Gross Amt</div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="gross_amount" readonly type="text" class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
+                                            <input readonly id="amount" type="text" class="tblGridCal_amount stock_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm">
                                         </div>
                                     </th>
                                     <th scope="col" width="48">
@@ -443,7 +437,7 @@
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][product_id]" data-id="product_id" value="{{isset($dtl->product->product_id)?$dtl->product->product_id:""}}" class="product_id form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{isset($dtl->product_barcode_id)?$dtl->product_barcode_id:""}}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
-
+                                                
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][grn_qty]" data-id="grn_qty" value="{{isset($dtl->grn_qty)?$dtl->grn_qty:""}}" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][dis_perc]" data-id="dis_perc" value="{{isset($dtl->grn_disc_per)?$dtl->grn_disc_per:""}}" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][dis_amount]" data-id="dis_amount" value="{{isset($dtl->grn_disc_amount)?$dtl->grn_disc_amount:""}}" class="tblGridCal_discount_amount _barcode_id form-control erp-form-control-sm handle" readonly>
@@ -466,16 +460,15 @@
                                                 </select>
                                             </td>
                                             <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][pd_packing]" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
+                                            <td><input type="text" data-id="sys_qty" name="pd[{{$loop->iteration}}][sys_qty]" value="{{$dtl->stock_dtl_sys_quantity}}" class="tblGridCal_sys_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
                                             <td><input type="text" data-id="demand_qty" name="pd[{{$loop->iteration}}][demand_qty]" value="{{$dtl->stock_dtl_demand_quantity}}" class="demand_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>
                                             <td><input type="text" data-id="quantity" name="pd[{{$loop->iteration}}][quantity]" value="{{$dtl->stock_dtl_quantity}}" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" readonly data-id="sale_rate" name="pd[{{$loop->iteration}}][sale_rate]" value="{{number_format($dtl->stock_dtl_sale_rate,3,'.','')}}" class="tblGridSale_rate form-control erp-form-control-sm validNumber" ></td>
-                                            <td><input type="text" data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{number_format($dtl->stock_dtl_rate,3,'.','')}}" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{number_format($dtl->stock_dtl_amount,3,'.','')}}" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>
-                                            <td><input type="text" data-id="dis_perc" name="pd[{{$loop->iteration}}][dis_perc]" value="{{number_format($dtl->stock_dtl_disc_percent,2,'.','')}}" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" data-id="dis_amount" name="pd[{{$loop->iteration}}][dis_amount]" value="{{number_format($dtl->stock_dtl_disc_amount,3,'.','')}}" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" data-id="vat_perc" name="pd[{{$loop->iteration}}][vat_perc]" value="{{number_format($dtl->stock_dtl_vat_percent,2,'.','')}}" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" data-id="vat_amount" name="pd[{{$loop->iteration}}][vat_amount]" value="{{number_format($dtl->stock_dtl_vat_amount,3,'.','')}}" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                            <td><input type="text" readonly data-id="gross_amount" name="pd[{{$loop->iteration}}][gross_amount]" value="{{number_format($dtl->stock_dtl_total_amount,3,'.','')}}" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>
+                                            <td><input type="text" readonly data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{number_format($dtl->stock_dtl_rate,3,'.','')}}" class="tblGridCal_rate form-control erp-form-control-sm validNumber" ></td>
+                                            <td><input type="text" data-id="mrp" name="pd[{{$loop->iteration}}][mrp]" value="{{number_format($dtl->mrp,3,'.','')}}" class="mrp form-control erp-form-control-sm validNumber" ></td>
+                                            <td><input type="text" data-id="ex_net_tp" name="pd[{{$loop->iteration}}][ex_net_tp]" value="{{number_format($dtl->stock_dtl_ex_net_tp,3,'.','')}}" class="tblGridCal_ex_net_tp tb_moveIndex form-control erp-form-control-sm validNumber" ></td>
+                                            <td><input type="text" data-id="adjrate" name="pd[{{$loop->iteration}}][adjrate]" value="{{number_format($dtl->stock_dtl_adjrate,3,'.','')}}" class="tblGridCal_adjrate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>
+                                            <td><input type="text" data-id="purc_rate" name="pd[{{$loop->iteration}}][purc_rate]" value="{{number_format($dtl->stock_dtl_purc_rate,3,'.','')}}" class="tblGridCal_purc_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>
+                                            <td><input type="text" readonly data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{number_format($dtl->stock_dtl_amount,3,'.','')}}" class="tblGridCal_amount readonly form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>
                                             <td class="text-center">
                                                 <div class="btn-group btn-group btn-group-sm" role="group">
                                                     <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
@@ -501,8 +494,8 @@
                         </table>
                     </div>
                 </div>
-
-                {{-- @include('inventory.stock_transfer.summary_total') --}}
+                
+                @include('inventory.stock_transfer.summary_total')
 
                 <div class="row form-group-block">
                     <label class="col-lg-2 erp-col-form-label">Notes:</label>
@@ -524,7 +517,7 @@
 @section('customJS')
     @include('partial_script.po_header_calc');
     <script src="{{ asset('js/pages/js/stock.js?v='.time()) }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
+    {{-- <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script> --}}
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         $(document).on('click' , '#getGRNRequestData' , function(e){
@@ -584,7 +577,7 @@
                                             '<input type="hidden" name="pd['+total_length+'][gross_amount]" data-id="gross_amount" value="'+row.gross_amount+'" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][net_amount]" data-id="net_amount" value="'+row.net_amount+'" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][unit_price]" data-id="unit_price" value="'+row.unit_price+'" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
-
+                                            
                                         '</td>'+
                                         '<td>'+
                                             '<input type="text" name="pd['+total_length+'][pd_barcode]" data-id="pd_barcode" data-url="" value="'+ row.barcode.product_barcode_barcode +'" title="'+row.barcode.product_barcode_barcode+'" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off">'+
@@ -600,16 +593,15 @@
                                             '</div>' +
                                         '</td>'+
                                         '<td><input readonly data-id="pd_packing" name="pd['+total_length+'][pd_packing]" value="'+ row.barcode.product_barcode_packing +'" type="text" class="pd_packing form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input readonly data-id="sys_qty" name="pd['+total_length+'][sys_qty]" value="'+ row.tbl_purc_grn_dtl_sys_quantity +'" type="text" class="tblGridCal_sys_qty form-control erp-form-control-sm validNumber validOnlyNumber "></td>'+
                                         '<td><input readonly data-id="demand_qty" name="pd['+total_length+'][demand_qty]" value="" type="text" class="demand_qty form-control erp-form-control-sm validNumber validOnlyNumber "></td>'+
                                         '<td><input  data-id="quantity" name="pd['+total_length+'][quantity]" value="'+ row.tbl_purc_grn_dtl_quantity +'" type="text" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
-                                        '<td><input readonly data-id="sale_rate" name="pd['+total_length+'][sale_rate]" value="'+ row.tbl_purc_grn_dtl_sale_rate +'" type="text" class="tblGridSale_rate form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
-                                        '<td><input data-id="rate" name="pd['+total_length+'][rate]" value="'+ row.tbl_purc_grn_dtl_rate +'" type="text" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="amount" name="pd['+total_length+'][amount]" value="'+ row.tbl_purc_grn_dtl_amount +'" type="text" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="dis_perc" name="pd['+total_length+'][dis_perc]" value="'+ (row.tbl_purc_grn_dtl_disc_percent || '') +'" type="text" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="dis_amount" name="pd['+total_length+'][dis_amount]" value="'+ (row.tbl_purc_grn_dtl_disc_amount || '') +'" type="text" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="vat_perc" name="pd['+total_length+'][vat_perc]" value="'+ (row.tbl_purc_grn_dtl_vat_percent || '') +'" type="text" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="vat_amount" name="pd['+total_length+'][vat_amount]" value="'+ (row.tbl_purc_grn_dtl_vat_amount || '') +'" type="text" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input readonly data-id="gross_amount" name="pd['+total_length+'][gross_amount]" value="'+ (row.tbl_purc_grn_dtl_total_amount || '') +'" type="text" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>'+
+                                        '<td><input readonly data-id="rate" name="pd['+total_length+'][rate]" value="'+ row.tbl_purc_grn_dtl_sale_rate +'" type="text" class="tblGridCal_rate form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input data-id="mrp" name="pd['+total_length+'][mrp]" value="'+ row.tbl_purc_grn_dtl_mrp +'" type="text" class="mrp form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input  data-id="ex_net_tp" name="pd['+total_length+'][ex_net_tp]" value="'+ row.tbl_purc_grn_dtl_net_tp +'" type="text" class="tblGridCal_ex_net_tp tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input  data-id="adjrate" name="pd['+total_length+'][adjrate]" value="" type="text" class="tblGridCal_adjrate  tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input  data-id="purc_rate" name="pd['+total_length+'][purc_rate]" value="'+ row.tbl_purc_grn_dtl_net_tp +'" type="text" class="tblGridCal_purc_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input readonly data-id="amount" name="pd['+total_length+'][amount]" value="'+ row.tbl_purc_grn_dtl_gross_amount +'" type="text" class="tblGridCal_amount form-control erp-form-control-sm validNumber validOnlyNumber tb_moveIndex"></td>'+
 
                                         '<td class="text-center">'+
                                         '<div class="btn-group btn-group btn-group-sm" role="group">'+
@@ -671,6 +663,11 @@
                 'readonly':true
             },
             {
+                'id':'sys_qty',
+                'fieldClass':'tblGridCal_sys_qty tb_moveIndex validNumber validOnlyNumber',
+                'readonly':true
+            },
+            {
                 'id':'demand_qty',
                 'fieldClass':'demand_qty tb_moveIndex validNumber validOnlyNumber',
                 'readonly':true
@@ -680,46 +677,63 @@
                 'fieldClass':'tblGridCal_qty validNumber validOnlyNumber tb_moveIndex'
             },
             {
-                'id':'sale_rate',
-                'fieldClass':'tblGridSale_rate validNumber',
+                'id':'rate',
+                'fieldClass':'tblGridCal_rate validNumber',
                 'readonly':true
             },
             {
-                'id':'rate',
-                'fieldClass':'tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber'
+                'id':'mrp',
+                'fieldClass':'mrp validNumber',
+            },
+            {
+                'id':'ex_net_tp',
+                'fieldClass':'tblGridCal_ex_net_tp tb_moveIndex validNumber'
+            },
+            {
+                'id':'adjrate',
+                'fieldClass':'tblGridCal_adjrate tb_moveIndex validNumber'
+            },
+            {
+                'id':'purc_rate',
+                'fieldClass':'tblGridCal_purc_rate tb_moveIndex validNumber'
             },
             {
                 'id':'amount',
-                'fieldClass':'tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber'
-            },
-            {
-                'id':'dis_perc',
-                'fieldClass':'tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber'
-            },
-            {
-                'id':'dis_amount',
-                'fieldClass':'tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber'
-            },
-            {
-                'id':'vat_perc',
-                'fieldClass':'tblGridCal_vat_perc tb_moveIndex validNumber validOnlyFloatNumber'
-            },
-            {
-                'id':'vat_amount',
-                'fieldClass':'tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber'
-            },
-            {
-                'id':'gross_amount',
-                'fieldClass':'tblGridCal_gross_amount validNumber',
+                'fieldClass':'tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber',
                 'readonly':true
             },
         ];
         var arr_hidden_field = ['product_id','product_barcode_id','uom_id','grn_qty','dis_perc','dis_amount','after_dis_amount','gst_perc','gst_amount','fed_perc','fed_amount','spec_disc_perc','spec_disc_amount','gross_amount','net_amount','unit_price'];
 
+        $(document).on('keyup','.tblGridCal_purc_rate',function(){
+            //var thix = $(this);
+            //var val = thix.val();
+            //var qty = thix.parents('tr').find('.tblGridCal_qty').val();
+            //var amount = parseFloat(qty) * parseFloat(val);
+            //thix.parents('tr').find('.tblGridCal_amount').val(parseFloat(amount).toFixed(3));
+        });
         $(".date_inputmask").inputmask("99-99-9999", {
             "mask": "99-99-9999",
             "placeholder": "dd-mm-yyyy",
             autoUnmask: true
+        });
+        $(document).on("blur",".tblGridCal_adjrate",function(){
+            var thix = $(this);
+            var adjrate = parseFloat(thix.val()).toFixed(3);
+            var ex_net_tp = thix.parents('tr').find('.tblGridCal_ex_net_tp').val();
+            if(valueEmpty(adjrate)){
+                adjrate = 0;
+            }
+            var purc_rate = parseFloat(ex_net_tp) + parseFloat(adjrate);
+            thix.parents('tr').find('.tblGridCal_purc_rate').val(parseFloat(purc_rate).toFixed(3));
+        });
+        $(document).on("blur",".tblGridCal_purc_rate",function(){
+            var thix = $(this);
+            var purc_rate = parseFloat(thix.val()).toFixed(3)
+            if(valueEmpty(purc_rate)){
+                purc_rate = "";
+            }
+            thix.val(purc_rate)
         });
         $('#getStockRequestData').click(function(){
             var thix = $(this);
@@ -772,7 +786,7 @@
                                                 '<input type="hidden" name="pd['+iteration+'][product_id]" data-id="product_id" value="'+stocki['product_id']+'" class="product_id form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][uom_id]" data-id="uom_id" value="'+stocki['uom']['uom_id']+'" class="uom_id form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][product_barcode_id]" data-id="product_barcode_id" value="'+stocki['product_barcode_id']+'" class="product_barcode_id form-control erp-form-control-sm handle" readonly>\n' +
-
+                                                
                                                 '<input type="hidden" name="pd['+iteration+'][dis_perc]" data-id="dis_perc" value="'+stocki['dis_perc']+'" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][dis_amount]" data-id="dis_amount" value="'+stocki['dis_amount']+'" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][after_dis_amount]" data-id="after_dis_amount" value="'+stocki['after_dis_amount']+'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
@@ -796,14 +810,11 @@
                                             '<td><input type="text" data-id="pd_packing" name="pd['+iteration+'][pd_packing]" value="'+stocki['demand_dtl_packing']+'" class="pd_packing form-control erp-form-control-sm" readonly></td>\n' +
                                             '<td><input type="text" data-id="demand_qty" name="pd['+iteration+'][demand_qty]" value="'+qty+'" class="demand_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
                                             '<td><input type="text" data-id="quantity" name="pd['+iteration+'][quantity]" value="'+qty+'" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>\n' +
-                                            '<td><input type="text" readonly data-id="sale_rate" name="pd['+iteration+'][sale_rate]" value="'+notNullEmpty(rate,3)+'" class="tblGridSale_rate form-control erp-form-control-sm validNumber" ></td>\n' +
-                                            '<td><input type="text" data-id="rate" name="pd['+iteration+'][rate]" value="'+notNullEmpty(purc_rate,3)+'" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>\n' +
-                                            '<td><input type="text" data-id="amount" name="pd['+iteration+'][amount]" value="'+notNullEmpty(amount,3)+'" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>\n' +
-                                            '<td><input type="text" data-id="dis_perc" name="pd['+iteration+'][dis_perc]" value="" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>\n' +
-                                            '<td><input type="text" data-id="dis_amount" name="pd['+iteration+'][dis_amount]" value="" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>\n' +
-                                            '<td><input type="text" data-id="vat_perc" name="pd['+iteration+'][vat_perc]" value="'+notNullEmpty(vatPerc,2)+'" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>\n' +
-                                            '<td><input type="text" data-id="vat_amount" name="pd['+iteration+'][vat_amount]" value="'+notNullEmpty(vat_amt,3)+'" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>\n' +
-                                            '<td><input type="text" readonly data-id="gross_amount" name="pd['+iteration+'][gross_amount]" value="'+notNullEmpty(gross_amount,3)+'" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>\n' +
+                                            '<td><input type="text" readonly data-id="rate" name="pd['+iteration+'][rate]" value="'+notNullEmpty(rate,3)+'" class="tblGridCal_rate form-control erp-form-control-sm validNumber" ></td>\n' +
+                                            '<td><input type="text" data-id="ex_net_tp" name="pd['+iteration+'][ex_net_tp]" value="'+notNullEmpty(ex_net_tp,3)+'" class="tblGridCal_ex_net_tp tb_moveIndex form-control erp-form-control-sm validNumber" ></td>\n' +
+                                            '<td><input type="text" data-id="adjrate" name="pd['+iteration+'][adjrate]" value="'+notNullEmpty(adjrate,3)+'" class="tblGridCal_adjrate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>\n' +
+                                            '<td><input type="text" data-id="purc_rate" name="pd['+iteration+'][purc_rate]" value="'+notNullEmpty(purc_rate,3)+'" class="tblGridCal_purc_rate tb_moveIndex form-control erp-form-control-sm validNumber" ></td>\n' +
+                                            '<td><input type="text" data-id="amount" name="pd['+iteration+'][amount]" value="'+notNullEmpty(amount,3)+'" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" readonly></td>\n' +
                                             '<td class="text-center">\n' +
                                                 '<div class="btn-group btn-group btn-group-sm" role="group">\n' +
                                                     '<button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>\n' +
@@ -935,7 +946,7 @@
         },100)
     </script>
         <script>
-            $(document).on('keyup blur' , '.overall_vat_perc, .tblGridCal_qty, .tblGridCal_rate',function(e){
+            $(document).on('keyup blur' , '.overall_vat_perc, .tblGridCal_qty, .tblGridCal_adjrate, .tblGridCal_purc_rate',function(e){
                 //Cost according to quantity
                 var thix = this;
                 var tr = $(this).parents('tr');
@@ -954,15 +965,14 @@
                 }
                 //debugger
                 var qty = tr.find('.tblGridCal_qty').val();
-                var rate = tr.find('.tblGridCal_rate').val();
-                var amount = funcCalcNumberFloat(qty) * funcCalcNumberFloat(rate);
-                tr.find('.tblGridCal_amount').val(funcNumberFloat(amount));
+                var purc = tr.find('.tblGridCal_purc_rate').val();
+                var purc_amount = funcCalcNumberFloat(qty) * funcCalcNumberFloat(purc);
+                tr.find('.tblGridCal_amount').val(funcNumberFloat(purc_amount));
             }
         </script>
-
+    
     @yield('summary_total_pageJS')
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
 @endsection
-
