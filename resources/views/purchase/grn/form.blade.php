@@ -628,8 +628,8 @@
                                                 </th>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_input">
-                                                        <input id="gross_amount" readonly type="text"
-                                                            class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
+                                                        <input id="gross_amount" type="text"
+                                                            class="tblGridCal_gross_amount validNumber tb_moveIndex form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
