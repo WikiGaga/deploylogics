@@ -809,7 +809,7 @@
                                                                 data-id="gross_amount"
                                                                 value="{{ number_format($dtl->tbl_purc_grn_dtl_total_amount, 3, '.', '') }}"
                                                                 class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"
-                                                                readonly></td>
+                                                                ></td>
                                                         <td class="text-center">
                                                             <div class="btn-group btn-group btn-group-sm" role="group">
                                                                 <button type="button"
@@ -1262,7 +1262,7 @@
                                     '][gross_amount]" data-id="gross_amount" value="' + notNullNo(row[
                                         'purchase_order_dtltotal_amount']) + '" title="' + notNullNo(
                                         row['purchase_order_dtltotal_amount']) +
-                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>' +
                                     '<td class="text-center"></td>' +
                                     '</tr>';
                             }
@@ -1368,7 +1368,6 @@
             {
                 'id': 'gross_amount',
                 'fieldClass': 'tblGridCal_gross_amount validNumber',
-                'readonly': true
             }
         ];
         var arr_hidden_field = ['purc_grn_dtl_id', 'product_id', 'product_barcode_id', 'uom_id', 'grn_supplier_id',
