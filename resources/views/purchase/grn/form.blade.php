@@ -108,7 +108,7 @@
                                                     value="{{ isset($data['current']->supplier->supplier_name) ? $data['current']->supplier->supplier_name : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
                                                     autocomplete="off" name="supplier_name"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($data['current']->supplier->supplier_id) ? $data['current']->supplier->supplier_id : '' }}" />
@@ -138,7 +138,7 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'poHelp') }}"
                                                     value="{{ isset($data['current']->PO->purchase_order_code) ? $data['current']->PO->purchase_order_code : '' }}"
                                                     id="purchase_order" name="purchase_order"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="purchase_order_id" name="purchase_order_id"
                                                     value="{{ isset($data['current']->PO->purchase_order_id) ? $data['current']->PO->purchase_order_id : '' }}" />
