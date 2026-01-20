@@ -250,11 +250,9 @@ class ReportsController extends Controller
                     }
                 }
 
-                // Save Conditional Logic
                 if(isset($request->outer_conditional_logic) && is_array($request->outer_conditional_logic)){
                     $outer_conditional_logic_arr = $request->outer_conditional_logic;
                     foreach($outer_conditional_logic_arr as $outerKey => $outerGroup){
-                        // Check if inner_conditional_logic exists (nested structure)
                         if(isset($outerGroup['inner_conditional_logic']) && is_array($outerGroup['inner_conditional_logic'])){
                             foreach($outerGroup['inner_conditional_logic'] as $innerKey => $innerLogic){
                                 if(!empty($innerLogic['conditional_logic_field_name'])){
@@ -262,9 +260,7 @@ class ReportsController extends Controller
                                 }
                             }
                         }
-                        // Handle direct structure (conditional logic data directly in outer group)
                         else if(isset($outerGroup['conditional_logic_field_name']) && !empty($outerGroup['conditional_logic_field_name'])){
-                            // Treat as single rule in outer group with inner key 0
                             $this->saveConditionalLogic($report->report_id, $outerKey, 0, $outerGroup);
                         }
                     }
