@@ -491,57 +491,61 @@
                                                     }
                                                 }
                                             }
+
+                                            if(isset($dt->order_id)){
+                                               $dataOrderId = 'data-order-id="'.$dt->order_id.'"';
+                                               $rowClass .= ' cursor-pointer order-row';
+                                            }
                                         @endphp
-                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif >
+                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif {!! isset($dataOrderId) ? $dataOrderId : '' !!}>
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
                                             @endif
                                             @foreach($fieldsKeys as $key=>$fieldsKey)
+                                                @php
+                                                    if($fieldsKey == 'grn_code'){
+                                                        $class = "open_model clickable-cell TEXT-INFO";
 
-                                            @php
-                                                if($fieldsKey == 'grn_code'){
-                                                    $class = "open_model clickable-cell TEXT-INFO";
+                                                        $grn_code=$dt->$fieldsKey;
+                                                        $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
+                                                    }else{
+                                                        $class = "";
+                                                        $grn_code="";
+                                                        $grn_id="";
+                                                    }
 
-                                                    $grn_code=$dt->$fieldsKey;
-                                                    $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
-                                                }else{
-                                                    $class = "";
-                                                    $grn_code="";
-                                                    $grn_id="";
-                                                }
+                                                @endphp
 
-                                            @endphp
+                                                @if($column_types[$key] == 'varchar2')
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $dt->$fieldsKey !!}</td>
+                                                @elseif($column_types[$key] == 'number')
+                                                    @php
+                                                        $numVal = (int)$dt->$fieldsKey;
 
-                                                    @if($column_types[$key] == 'varchar2')
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $dt->$fieldsKey !!}</td>
-                                                    @elseif($column_types[$key] == 'number')
-                                                        @php
-                                                            $numVal = (int)$dt->$fieldsKey;
-
-                                                            if(in_array($key,$calc)){
-                                                                //$a_{$key} += $numVal;
-                                                                //$arr[$key] = $a_{$key};
-                                                                $a_[$key] += $numVal;
-                                                                $arr[$key] = $a_[$key];
-                                                            }
-                                                            $cellClass = $class;
-                                                        @endphp
-                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $numVal !!}</td>
-                                                    @elseif($column_types[$key] == 'float')
-                                                        @php
-                                                            $floatVal = (float)$dt->$fieldsKey;
-                                                            if(in_array($key,$calc)){
-                                                                //$a_{$key} += $floatVal;
-                                                                //$arr[$key] = $a_{$key};
-                                                                $a_[$key]+= $floatVal;
-                                                                $arr[$key] = $a_[$key];
-                                                            }
-                                                            $cellClass = $class;
-                                                        @endphp
-                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
-                                                    @elseif($column_types[$key] == 'date')
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
-                                                    @endif
+                                                        if(in_array($key,$calc)){
+                                                            //$a_{$key} += $numVal;
+                                                            //$arr[$key] = $a_{$key};
+                                                            $a_[$key] += $numVal;
+                                                            $arr[$key] = $a_[$key];
+                                                        }
+                                                        $cellClass = $class;
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $numVal !!}</td>
+                                                @elseif($column_types[$key] == 'float')
+                                                    @php
+                                                        $floatVal = (float)$dt->$fieldsKey;
+                                                        if(in_array($key,$calc)){
+                                                            //$a_{$key} += $floatVal;
+                                                            //$arr[$key] = $a_{$key};
+                                                            $a_[$key]+= $floatVal;
+                                                            $arr[$key] = $a_[$key];
+                                                        }
+                                                        $cellClass = $class;
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                @elseif($column_types[$key] == 'date')
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                @endif
                                             @endforeach
                                         </tr>
                                     @endforeach
