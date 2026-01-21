@@ -492,7 +492,7 @@
                                                 }
                                             }
                                         @endphp
-                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif @if($fieldKey == 'order_id') data-order_id="{{ $dt->order_id }}" @endif>
+                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif>
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
                                             @endif
