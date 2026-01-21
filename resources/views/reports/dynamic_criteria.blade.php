@@ -647,13 +647,14 @@
     <div class="kt-portlet" id="dynamic_conditional_logic_repeater">
         <div class="kt-portlet__head">
             <div class="kt-portlet__head-label">
-                <h3 class="kt-portlet__head-title">
+                <h3 class="kt-portlet__head-title"></h3>
                     Conditional Logic (Row Highlighting)
                 </h3>
             </div>
         </div>
         <div class="kt-portlet__body">
             <div id="kt_repeater_conditional_logic">
+                <a href="javascript:;" data-repeater-create="" class="js-conditional-logic-add-and-create" style="display:none;"></a>
                 <div data-repeater-list="outer_conditional_logic">
                     @php
                         $conditionalLogicGroups = [];
@@ -661,12 +662,10 @@
 
                             $tempGroups = [];
                             foreach($conditionalLogics as $columnNo => $logicData){
-                                // Extract outer and inner keys from column_no
                                 $keyParts = explode('_', $columnNo);
                                 $outerKey = isset($keyParts[0]) ? $keyParts[0] : 0;
                                 $innerKey = isset($keyParts[1]) ? $keyParts[1] : $columnNo;
 
-                                // Get outer_group_no if exists
                                 $groupNo = isset($logicData['outer_group_no']) ? $logicData['outer_group_no'] : $outerKey;
 
                                 if(!isset($tempGroups[$groupNo])){
@@ -675,7 +674,6 @@
                                 if(!isset($tempGroups[$groupNo][$innerKey])){
                                     $tempGroups[$groupNo][$innerKey] = [];
                                 }
-                                // Merge all key-value pairs for this rule
                                 foreach($logicData as $keyName => $keyValue){
                                     if($keyName != 'outer_group_no'){
                                         $tempGroups[$groupNo][$innerKey][$keyName] = $keyValue;
@@ -694,7 +692,7 @@
                                         <div class="col-lg-12" style="position: relative">
                                             <button data-repeater-delete="" type="button"
                                                 class="btn btn-danger btn-sm report-conditional-logic-and-del-btn">
-                                                <i class="la la-trash-o"></i> AND
+                                                <i class="la la-trash-o"></i> Condition
                                             </button>
                                             <i class="la la-level-down conditional-logic-and-down"></i>
                                         </div>
@@ -713,6 +711,7 @@
                                                     $bgTransparent = !isset($logic['background_color']) ? 'checked' : '';
                                                     $textTransparent = !isset($logic['text_color']) ? 'checked' : '';
                                                 @endphp
+                                                @php $innerCount = count($conditionalLogicGroups[$i]); @endphp
                                                 <div data-repeater-item class="col-lg-12 conditional-logic_block">
                                                     <div class="row form-group-block">
                                                         <div class="col-lg-10">
@@ -842,11 +841,6 @@
                                                                 class="btn btn-sm btn-label-danger conditional-logic-del-btn">
                                                                 <i class="la la-minus-circle"></i>
                                                             </a>
-                                                            <a href="javascript:;"
-                                                                class="btn btn-bold btn-sm btn-label-brand conditional-logic-or-btn"
-                                                                disabled readonly>
-                                                                OR
-                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -857,7 +851,7 @@
                                             <div class="col-lg-3 text-right">
                                                 <a href="javascript:;" data-repeater-create=""
                                                     class="btn btn-bold btn-sm btn-label-brand conditional-logic-sec-or-btn conditional-logic-or-btn">
-                                                    OR
+                                                    AND
                                                 </a>
                                             </div>
                                         </div>
@@ -871,7 +865,7 @@
                                 <div class="col-lg-12" style="position: relative">
                                     <button data-repeater-delete="" type="button"
                                         class="btn btn-danger btn-sm report-conditional-logic-and-del-btn">
-                                        <i class="la la-trash-o"></i> AND
+                                        <i class="la la-trash-o"></i> Condition
                                     </button>
                                     <i class="la la-level-down conditional-logic-and-down"></i>
                                 </div>
@@ -997,11 +991,6 @@
                                                     class="btn btn-sm btn-label-danger conditional-logic-del-btn">
                                                     <i class="la la-minus-circle"></i>
                                                 </a>
-                                                <a href="javascript:;"
-                                                    class="btn btn-bold btn-sm btn-label-brand conditional-logic-or-btn"
-                                                    disabled readonly>
-                                                    OR
-                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -1011,7 +1000,7 @@
                                     <div class="col-lg-3 text-right">
                                         <a href="javascript:;" data-repeater-create=""
                                             class="btn btn-bold btn-sm btn-label-brand conditional-logic-sec-or-btn conditional-logic-or-btn">
-                                            OR
+                                            AND
                                         </a>
                                     </div>
                                 </div>
@@ -1021,7 +1010,7 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
-                        <button data-repeater-create type="button" class="btn btn-brand btn-sm">AND</button>
+                        <button type="button" class="btn btn-brand btn-sm js-conditional-logic-add-and-btn">Condition</button>
                     </div>
                 </div>
             </div>

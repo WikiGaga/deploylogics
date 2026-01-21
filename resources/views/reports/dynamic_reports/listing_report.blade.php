@@ -105,24 +105,21 @@
         if(count($conditionalLogics) > 0){
             $tempGroups = [];
             foreach($conditionalLogics as $columnNo => $logicData){
+                $keyParts = explode('_', $columnNo);
+                $outerKey = isset($keyParts[0]) ? $keyParts[0] : 0;
+                $innerKey = isset($keyParts[1]) ? $keyParts[1] : $columnNo;
+
+                $groupNo = isset($logicData['outer_group_no']) ? $logicData['outer_group_no'] : $outerKey;
+
+                if(!isset($tempGroups[$groupNo])){
+                    $tempGroups[$groupNo] = [];
+                }
+                if(!isset($tempGroups[$groupNo][$innerKey])){
+                    $tempGroups[$groupNo][$innerKey] = [];
+                }
                 foreach($logicData as $keyName => $keyValue){
-                    $keyParts = explode('_', $columnNo);
-                    $outerKey = isset($keyParts[0]) ? $keyParts[0] : 0;
-                    $innerKey = isset($keyParts[1]) ? $keyParts[1] : $columnNo;
-
-                    if($keyName == 'outer_group_no'){
-                        $outerKey = $keyValue;
-                    }
-
-                    if(!isset($tempGroups[$outerKey])){
-                        $tempGroups[$outerKey] = [];
-                    }
-                    if(!isset($tempGroups[$outerKey][$innerKey])){
-                        $tempGroups[$outerKey][$innerKey] = [];
-                    }
-
-                    if(!empty($keyName) && $keyName != 'outer_group_no'){
-                        $tempGroups[$outerKey][$innerKey][$keyName] = $keyValue;
+                    if($keyName != 'outer_group_no'){
+                        $tempGroups[$groupNo][$innerKey][$keyName] = $keyValue;
                     }
                 }
             }
@@ -375,14 +372,17 @@
                                         @php
                                             $rowClass = 'item_row';
                                             $rowStyle = '';
-                                            
+                                            $rowTextColor = '';
+
                                             if(count($conditionalLogicGroups) > 0){
                                                 foreach($conditionalLogicGroups as $outerGroup => $innerRules){
                                                     $outerGroupMatches = true;
                                                     $groupBgColor = '';
                                                     $groupTextColor = '';
 
-                                                    $innerGroupMatches = false;
+                                                    $innerGroupMatches = true;
+                                                    $hasRules = false;
+                                                    $allRulesMatched = true;
                                                     foreach($innerRules as $ruleKey => $rule){
                                                         $fieldName = isset($rule['field_name']) ? $rule['field_name'] : '';
                                                         $condition = isset($rule['condition']) ? $rule['condition'] : '';
@@ -390,78 +390,102 @@
                                                         $value2 = isset($rule['value_2']) ? $rule['value_2'] : '';
                                                         $fieldType = isset($rule['field_type']) ? $rule['field_type'] : '';
 
-                                                        if(!empty($fieldName) && property_exists($dt, $fieldName)){
-                                                            $fieldValue = $dt->$fieldName;
-                                                            $matches = false;
+                                                        if(empty($fieldName) || empty($condition)){
+                                                            continue;
+                                                        }
+                                                        $hasRules = true;
 
-                                                            switch(strtolower($condition)){
-                                                                case 'equals':
-                                                                case '=':
-                                                                    $matches = (strtolower($fieldValue) == strtolower($value));
-                                                                    break;
-                                                                case 'not equals':
-                                                                case '!=':
-                                                                case '<>':
-                                                                    $matches = (strtolower($fieldValue) != strtolower($value));
-                                                                    break;
-                                                                case 'greater than':
-                                                                case '>':
-                                                                    $matches = ((float)$fieldValue > (float)$value);
-                                                                    break;
-                                                                case 'less than':
-                                                                case '<':
-                                                                    $matches = ((float)$fieldValue < (float)$value);
-                                                                    break;
-                                                                case 'greater than or equal':
-                                                                case '>=':
-                                                                    $matches = ((float)$fieldValue >= (float)$value);
-                                                                    break;
-                                                                case 'less than or equal':
-                                                                case '<=':
-                                                                    $matches = ((float)$fieldValue <= (float)$value);
-                                                                    break;
-                                                                case 'contains':
-                                                                    $matches = (stripos($fieldValue, $value) !== false);
-                                                                    break;
-                                                                case 'not contains':
-                                                                    $matches = (stripos($fieldValue, $value) === false);
-                                                                    break;
-                                                                case 'null':
-                                                                    $matches = ($fieldValue === null || $fieldValue === '' || $fieldValue === 'NULL');
-                                                                    break;
-                                                                case 'not null':
-                                                                    $matches = ($fieldValue !== null && $fieldValue !== '' && $fieldValue !== 'NULL');
-                                                                    break;
-                                                                case 'between':
-                                                                    $matches = ((float)$fieldValue >= (float)$value && (float)$fieldValue <= (float)$value2);
-                                                                    break;
-                                                                case 'starts with':
-                                                                    $matches = (stripos($fieldValue, $value) === 0);
-                                                                    break;
-                                                                case 'ends with':
-                                                                    $matches = (substr(strtolower($fieldValue), -strlen($value)) === strtolower($value));
-                                                                    break;
-                                                            }
+                                                        $ruleMatches = false;
+                                                        if(!property_exists($dt, $fieldName)){
+                                                            $allRulesMatched = false;
+                                                            $innerGroupMatches = false;
+                                                            break 2;
+                                                        }
 
-                                                            if($matches){
-                                                                $innerGroupMatches = true;
-                                                                if(isset($rule['background_color']) && !empty($rule['background_color'])){
-                                                                    $groupBgColor = $rule['background_color'];
-                                                                }
-                                                                if(isset($rule['text_color']) && !empty($rule['text_color'])){
-                                                                    $groupTextColor = $rule['text_color'];
-                                                                }
+                                                        $fieldValue = $dt->$fieldName;
+
+                                                        switch(strtolower($condition)){
+                                                            case 'equals':
+                                                            case '=':
+                                                                $ruleMatches = (strtolower($fieldValue) == strtolower($value));
                                                                 break;
+                                                            case 'not equals':
+                                                            case '!=':
+                                                            case '<>':
+                                                                $ruleMatches = (strtolower($fieldValue) != strtolower($value));
+                                                                break;
+                                                            case 'greater than':
+                                                            case '>':
+                                                                $ruleMatches = ((float)$fieldValue > (float)$value);
+                                                                break;
+                                                            case 'less than':
+                                                            case '<':
+                                                                $ruleMatches = ((float)$fieldValue < (float)$value);
+                                                                break;
+                                                            case 'greater than or equal':
+                                                            case '>=':
+                                                                $ruleMatches = ((float)$fieldValue >= (float)$value);
+                                                                break;
+                                                            case 'less than or equal':
+                                                            case '<=':
+                                                                $ruleMatches = ((float)$fieldValue <= (float)$value);
+                                                                break;
+                                                            case 'contains':
+                                                                $ruleMatches = (stripos($fieldValue, $value) !== false);
+                                                                break;
+                                                            case 'not contains':
+                                                                $ruleMatches = (stripos($fieldValue, $value) === false);
+                                                                break;
+                                                            case 'null':
+                                                                $ruleMatches = ($fieldValue === null || $fieldValue === '' || $fieldValue === 'NULL');
+                                                                break;
+                                                            case 'not null':
+                                                                $ruleMatches = ($fieldValue !== null && $fieldValue !== '' && $fieldValue !== 'NULL');
+                                                                break;
+                                                            case 'between':
+                                                                $ruleMatches = ((float)$fieldValue >= (float)$value && (float)$fieldValue <= (float)$value2);
+                                                                break;
+                                                            case 'starts with':
+                                                                $ruleMatches = (stripos($fieldValue, $value) === 0);
+                                                                break;
+                                                            case 'ends with':
+                                                                $ruleMatches = (substr(strtolower($fieldValue), -strlen($value)) === strtolower($value));
+                                                                break;
+                                                        }
+
+                                                        if(!$ruleMatches){
+                                                            $allRulesMatched = false;
+                                                            $innerGroupMatches = false;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if(!$allRulesMatched){
+                                                        $innerGroupMatches = false;
+                                                    }
+
+                                                    if($hasRules && $innerGroupMatches){
+                                                        foreach($innerRules as $ruleKey => $rule){
+                                                            $fieldName = isset($rule['field_name']) ? $rule['field_name'] : '';
+                                                            if(empty($fieldName)){
+                                                                continue;
+                                                            }
+                                                            if(empty($groupBgColor) && isset($rule['background_color']) && !empty($rule['background_color'])){
+                                                                $groupBgColor = $rule['background_color'];
+                                                            }
+                                                            if(empty($groupTextColor) && isset($rule['text_color']) && !empty($rule['text_color'])){
+                                                                $groupTextColor = $rule['text_color'];
                                                             }
                                                         }
                                                     }
 
-                                                    if($innerGroupMatches){
+                                                    if($hasRules && $innerGroupMatches && $allRulesMatched){
                                                         if(!empty($groupBgColor)){
                                                             $rowStyle .= 'background-color: ' . $groupBgColor . ' !important; ';
                                                         }
                                                         if(!empty($groupTextColor)){
                                                             $rowStyle .= 'color: ' . $groupTextColor . ' !important; ';
+                                                            $rowTextColor = $groupTextColor;
                                                         }
                                                         break;
                                                     }
@@ -489,7 +513,7 @@
                                             @endphp
 
                                                     @if($column_types[$key] == 'varchar2')
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" >{!! $dt->$fieldsKey !!}</td>
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $dt->$fieldsKey !!}</td>
                                                     @elseif($column_types[$key] == 'number')
                                                         @php
                                                             $numVal = (int)$dt->$fieldsKey;
@@ -502,7 +526,7 @@
                                                             }
                                                             $cellClass = $class;
                                                         @endphp
-                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! $numVal !!}</td>
+                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $numVal !!}</td>
                                                     @elseif($column_types[$key] == 'float')
                                                         @php
                                                             $floatVal = (float)$dt->$fieldsKey;
@@ -514,9 +538,9 @@
                                                             }
                                                             $cellClass = $class;
                                                         @endphp
-                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
+                                                        <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                     @elseif($column_types[$key] == 'date')
-                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}">{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                        <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
                                                     @endif
                                             @endforeach
                                         </tr>
@@ -665,58 +689,6 @@
             table.appendChild(grand_total[0])
         })));
 
-        setTimeout(function() {
-            $('.btnExcelExport').off('click');
-            $(document).off('click', '.btnExcelExport');
-
-            $(document).on('click', '.btnExcelExport', function(e) {
-                var table = document.getElementById('dynamic_report_table');
-                if (table) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-
-                    var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
-                    if (rowCount === 0) {
-                        alert('No data to export');
-                        return false;
-                    }
-
-                    var hiddenColumns = [];
-                    $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
-                        var val = $(this).val();
-                        if (!$(this).is(':checked')) {
-                            hiddenColumns.push(val);
-                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
-                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
-                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
-                        }
-                    });
-
-                    setTimeout(function() {
-                        try {
-                            $("#dynamic_report_table").table2excel({
-                                exclude: ".noExport",
-                                filename: "report.xls",
-                            });
-                        } catch(err) {
-                            console.error('Excel export error:', err);
-                            alert('Error exporting to Excel. Please try again.');
-                        }
-
-                        setTimeout(function() {
-                            hiddenColumns.forEach(function(val) {
-                                $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
-                                $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
-                                $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
-                            });
-                        }, 200);
-                    }, 100);
-
-                    return false;
-                }
-            });
-        }, 100);
     </script>
 @endsection
 

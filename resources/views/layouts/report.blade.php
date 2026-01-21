@@ -75,18 +75,18 @@
         -moz-box-shadow: 0px -2px 20px 0px rgba(0, 0, 0, 0.35);
     }
 
-    
+
        .clickable-cell {
             cursor: pointer;
             /* Force the default blue color */
-            color: #17a2b8 !important; 
-            text-decoration: none; 
+            color: #17a2b8 !important;
+            text-decoration: none;
         }
 
         .clickable-cell:hover {
             /* Force the slightly darker blue on hover */
-            text-decoration: underline; 
-            color: #117a8b !important; 
+            text-decoration: underline;
+            color: #117a8b !important;
         }
     </style>
 
@@ -305,29 +305,14 @@
 
     $(document).find('table:first-child').addClass('table2ExcelExport');
 
-    $(document).on('click','.btnExcelExport',function() {
-        $(".table2ExcelExport").table2excel({
-            // exclude: ".noExport",
-            filename: "report.xls",
-        });
-    });
+    $(document).on('click', '.btnReportExport', function(e) {
+        e.preventDefault();
 
-    $(document).on('click','.btnPdfExport',function() {
-        const element = document.getElementById('content');
-        var opt = {
-            filename: 'report.pdf',
-            image: {
-                type: 'jpeg',
-                quality: 0.98
-            },
-            jsPDF: {
-                unit: 'in',
-                format: 'a4',
-                orientation: 'portrait'
-            }
-        };
-        // Choose the element that our invoice is rendered in.
-        html2pdf().set(opt).from(element).save();
+        var exportType = ($(this).data('export') || '').toString().toLowerCase();
+        if (!exportType) return false;
+
+        window.open("{{ route('reports.export') }}?type=" + encodeURIComponent(exportType), '_blank');
+        return false;
     });
 </script>
 <script>
@@ -560,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             });
-            
+
             const innerRows = document.querySelectorAll('.form-group-block .col-lg-4 > .row, .form-group-block .col-lg-6 > .row, .form-group-block .col-md-4 > .row, .form-group-block .col-md-6 > .row, .kt-portlet__body .col-lg-4 > .row, .kt-portlet__body .col-lg-6 > .row');
             innerRows.forEach(function(row) {
                 const label = row.querySelector('label[class*="col-"]');

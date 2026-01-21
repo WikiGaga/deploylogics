@@ -300,18 +300,68 @@
         });
 
         $(document).ready(function() {
+            function syncConditionalLogicButtons(scope) {
+                var $scope = scope ? $(scope) : $(document);
+
+                // AND groups: hide delete for first outer group, show for others
+                $scope.find('#kt_repeater_conditional_logic [data-repeater-list="outer_conditional_logic"] > [data-repeater-item]').each(function(idx){
+                    var $group = $(this);
+                    var $andDel = $group.find('.report-conditional-logic-and-del-btn').first();
+                    var $andDown = $group.find('.conditional-logic-and-down').first();
+                    if (idx === 0) {
+                        $andDel.css('display','none');
+                        $andDown.css('display','none');
+                    } else {
+                        $andDel.css('display','inline-block');
+                        $andDown.css('display','inline-block');
+                    }
+                });
+
+                $scope.find('.inner-repeater-conditional-logic').each(function() {
+                    var $inner = $(this);
+                    var $items = $inner.find('[data-repeater-list] > [data-repeater-item]');
+                    $items.each(function(idx) {
+                        var $item = $(this);
+                        var $del = $item.find('.conditional-logic-del-btn').first();
+                        if (!$del.length) return;
+                        if (idx === 0) {
+                            $del.css('display', 'none');
+                        } else {
+                            $del.css('display', 'inline-block');
+                        }
+                    });
+                });
+            }
+
             // Initialize conditional logic repeater if it exists
             if ($('#kt_repeater_conditional_logic').length > 0) {
                 $('#kt_repeater_conditional_logic').repeater({
                     initEmpty: false,
-                    isFirstItemUndeletable: false,
+                    isFirstItemUndeletable: true,
+                    repeaters: [{
+                        selector: '.inner-repeater-conditional-logic',
+                        isFirstItemUndeletable: true,
+                        show: function () {
+                            $(this).slideDown();
+                            syncConditionalLogicButtons($(this).closest('#kt_repeater_conditional_logic'));
+                        },
+                        hide: function (deleteElement) {
+                            $(this).slideUp(deleteElement);
+                            syncConditionalLogicButtons($(this).closest('#kt_repeater_conditional_logic'));
+                        }
+                    }],
                     show: function() {
                         $(this).slideDown();
+                        syncConditionalLogicButtons($(this).closest('#kt_repeater_conditional_logic'));
                     },
                     hide: function(deleteElement) {
                         $(this).slideUp(deleteElement);
+                        syncConditionalLogicButtons($(this).closest('#kt_repeater_conditional_logic'));
                     }
                 });
+
+                // Ensure correct state on first render (edit mode) as well
+                syncConditionalLogicButtons($('#kt_repeater_conditional_logic'));
             }
 
             // Initialize saved conditional logic values on page load
@@ -355,6 +405,17 @@
                     }
                 });
             }, 100);
+        });
+
+        // OR add is handled by the single bottom-right OR button (data-repeater-create) inside each AND group
+        // AND add: explicitly trigger outer repeater create to avoid nested-repeater ambiguity
+        $(document).on('click', '.js-conditional-logic-add-and-btn', function(e) {
+            e.preventDefault();
+            var $wrap = $(this).closest('#kt_repeater_conditional_logic');
+            var $create = $wrap.find('> .js-conditional-logic-add-and-create[data-repeater-create]').first();
+            if ($create.length) {
+                $create.trigger('click');
+            }
         });
 
         $('#report_static_dynamic').on('change', function() {

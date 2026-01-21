@@ -112,15 +112,19 @@ function discountAmount(tr){
     var amount = (tr.find(".tblGridCal_amount").val()== "")? 0 : tr.find(".tblGridCal_amount").val();
     var discount_amount = (tr.find(".tblGridCal_discount_amount").val()== "")? 0 : tr.find(".tblGridCal_discount_amount").val();
     if(discount_amount == "" || discount_amount == 0){
-        tr.find(".tblGridCal_discount_perc").val(0);
-    }else{
-        var v = (parseFloat(discount_amount)*100)/parseFloat(amount);
-        v = v.toFixed(3);
-        if(v > 100){
-            v = 0;
-            tr.find('.tblGridCal_discount_amount').val(v.toFixed(3));
+        if(parseFloat(amount) > 0) {
+            tr.find(".tblGridCal_discount_perc").val(0);
         }
-        tr.find(".tblGridCal_discount_perc").val(v).attr('title',v);
+    }else{
+        if(parseFloat(amount) > 0) {
+            var v = (parseFloat(discount_amount)*100)/parseFloat(amount);
+            v = v.toFixed(3);
+            if(v > 100){
+                v = 0;
+                tr.find('.tblGridCal_discount_amount').val(v.toFixed(3));
+            }
+            tr.find(".tblGridCal_discount_perc").val(v).attr('title',v);
+        }
     }
 }
 
@@ -143,14 +147,21 @@ function vatAmount(tr){
     var grossAmount = parseFloat(amount) - parseFloat(discount_amount);
     var lpo_vat_amount = (tr.find(".tblGridCal_vat_amount").val()== "")? 0 : tr.find(".tblGridCal_vat_amount").val();
     if(lpo_vat_amount == ""){
-        tr.find(".tblGridCal_vat_perc").val("");
+        if(parseFloat(grossAmount) > 0) {
+            tr.find(".tblGridCal_vat_perc").val("");
+        }
     }else{
-        var v = (parseFloat(lpo_vat_amount)*100)/parseFloat(grossAmount);
-        v = math.round(v , 1);
-        tr.find(".tblGridCal_vat_perc").val(v).attr('title',v);
+        if(parseFloat(grossAmount) > 0) {
+            var v = (parseFloat(lpo_vat_amount)*100)/parseFloat(grossAmount);
+            v = math.round(v , 1);
+            tr.find(".tblGridCal_vat_perc").val(v).attr('title',v);
+        }
     }
 }
 function grossAmount(tr) {
+    if(tr.data('reverse-calculating')) {
+        return;
+    }
     var amount = (tr.find(".tblGridCal_amount").val() == "")? 0 : tr.find(".tblGridCal_amount").val();
     var discount_amount = (tr.find(".tblGridCal_discount_amount").val() == "" || tr.find(".tblGridCal_discount_amount").val() == undefined)?0:tr.find(".tblGridCal_discount_amount").val();
     var vat_amount = (tr.find(".tblGridCal_vat_amount").val() == "") ? 0 : tr.find(".tblGridCal_vat_amount").val();
@@ -165,6 +176,118 @@ function grossAmount(tr) {
     }else{
         tr.find(".tblGridCal_gross_amount").val(v).attr('title',v);
     }
+}
+function reverseGrossAmount(tr) {
+    if(tr.data('reverse-calculating')) {
+        return;
+    }
+    tr.data('reverse-calculating', true);
+
+    var gross_amount = (tr.find(".tblGridCal_gross_amount").val() == "")? 0 : tr.find(".tblGridCal_gross_amount").val();
+    var qty = (tr.find(".tblGridCal_qty").val() == "")? 0 : tr.find(".tblGridCal_qty").val();
+    var original_discount_perc = tr.find(".tblGridCal_discount_perc").val();
+    var original_vat_perc = tr.find(".tblGridCal_vat_perc").val();
+    var discount_perc = (original_discount_perc == "")? 0 : original_discount_perc;
+    var vat_perc = (original_vat_perc == "")? 0 : original_vat_perc;
+
+    if(gross_amount == "" || gross_amount == 0 || qty == "" || qty == 0) {
+        tr.data('reverse-calculating', false);
+        return;
+    }
+
+    if(typeof gross_amount == 'string') {
+        gross_amount = gross_amount.replace(/,/g, '');
+    }
+    if(typeof qty == 'string') {
+        qty = qty.replace(/,/g, '');
+    }
+    if(typeof discount_perc == 'string') {
+        discount_perc = discount_perc.replace(/,/g, '');
+    }
+    if(typeof vat_perc == 'string') {
+        vat_perc = vat_perc.replace(/,/g, '');
+    }
+
+    gross_amount = parseFloat(gross_amount);
+    qty = parseFloat(qty);
+    discount_perc = parseFloat(discount_perc) || 0;
+    vat_perc = parseFloat(vat_perc) || 0;
+
+    var amount = 0;
+    var discount_amount = 0;
+    var vat_amount = 0;
+    var rate = 0;
+
+    if(vat_perc > 0 && discount_perc > 0) {
+        var denominator = (1 + vat_perc / 100) * (1 - discount_perc / 100);
+        if(denominator != 0 && !isNaN(denominator)) {
+            amount = gross_amount / denominator;
+        }
+        discount_amount = amount * (discount_perc / 100);
+        var amount_after_discount = amount - discount_amount;
+        vat_amount = amount_after_discount * (vat_perc / 100);
+    } else if(vat_perc > 0) {
+        amount = gross_amount / (1 + vat_perc / 100);
+        discount_amount = 0;
+        var amount_after_discount = amount - discount_amount;
+        vat_amount = amount_after_discount * (vat_perc / 100);
+    } else if(discount_perc > 0) {
+        var denominator = (1 - discount_perc / 100);
+        if(denominator != 0 && !isNaN(denominator)) {
+            amount = gross_amount / denominator;
+        }
+        discount_amount = amount * (discount_perc / 100);
+        vat_amount = 0;
+    } else {
+        amount = gross_amount;
+        discount_amount = 0;
+        vat_amount = 0;
+    }
+
+    if(qty > 0 && !isNaN(amount)) {
+        rate = amount / qty;
+    }
+
+    amount = isNaN(amount) ? 0 : amount;
+    discount_amount = isNaN(discount_amount) ? 0 : discount_amount;
+    vat_amount = isNaN(vat_amount) ? 0 : vat_amount;
+    rate = isNaN(rate) ? 0 : rate;
+
+    amount = js__number_format(amount);
+    discount_amount = js__number_format(discount_amount);
+    vat_amount = js__number_format(vat_amount);
+    rate = rate.toFixed(3);
+
+    var form_type = $('#form_type').val();
+    var round_dec_arr = ['sale_invoice'];
+
+    if(round_dec_arr.includes(form_type)){
+        tr.find(".tblGridCal_amount").val(roundDecimalFive(amount)).attr('title',roundDecimalFive(amount));
+    } else {
+        tr.find(".tblGridCal_amount").val(amount).attr('title',amount);
+    }
+
+    tr.find(".tblGridCal_rate").val(rate).attr('title',rate);
+    tr.find(".tblGridCal_discount_amount").val(discount_amount).attr('title',discount_amount);
+    tr.find(".tblGridCal_vat_amount").val(vat_amount).attr('title',vat_amount);
+
+    if(original_discount_perc != "" && original_discount_perc != undefined && parseFloat(original_discount_perc) > 0) {
+        tr.find(".tblGridCal_discount_perc").val(original_discount_perc).attr('title',original_discount_perc);
+    }
+
+    if(original_vat_perc != "" && original_vat_perc != undefined && parseFloat(original_vat_perc) > 0) {
+        tr.find(".tblGridCal_vat_perc").val(original_vat_perc).attr('title',original_vat_perc);
+    }
+
+    fcRate(tr);
+
+    totalAllGrossAmount();
+    totalStockAmount();
+    if (typeof allGridTotal !== 'undefined') {
+        allGridTotal();
+    }
+
+    tr.data('reverse-calculating', false);
 }
 function fcRate(tr) {
     var rate = (tr.find(".tblGridCal_rate").val() == "")? 0 : tr.find(".tblGridCal_rate").val();
@@ -307,6 +430,10 @@ function allCalcFunc(){
         vatAmount(tr);
         grossAmount(tr);
         totalAllGrossAmount();
+    });
+    $(".tblGridCal_gross_amount").keyup(function(){
+        var tr = $(this).parents('tr');
+        reverseGrossAmount(tr);
     });
     $(".tblGridCal_rate").keyup(function(){
         var tr = $(this).parents('tr');

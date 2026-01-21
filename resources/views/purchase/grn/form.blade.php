@@ -108,7 +108,7 @@
                                                     value="{{ isset($data['current']->supplier->supplier_name) ? $data['current']->supplier->supplier_name : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
                                                     autocomplete="off" name="supplier_name"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($data['current']->supplier->supplier_id) ? $data['current']->supplier->supplier_id : '' }}" />
@@ -138,7 +138,7 @@
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'poHelp') }}"
                                                     value="{{ isset($data['current']->PO->purchase_order_code) ? $data['current']->PO->purchase_order_code : '' }}"
                                                     id="purchase_order" name="purchase_order"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="purchase_order_id" name="purchase_order_id"
                                                     value="{{ isset($data['current']->PO->purchase_order_id) ? $data['current']->PO->purchase_order_id : '' }}" />
@@ -628,8 +628,8 @@
                                                 </th>
                                                 <th scope="col">
                                                     <div class="erp_form__grid_th_input">
-                                                        <input id="gross_amount" readonly type="text"
-                                                            class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
+                                                        <input id="gross_amount" type="text"
+                                                            class="tblGridCal_gross_amount validNumber tb_moveIndex form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
@@ -809,7 +809,7 @@
                                                                 data-id="gross_amount"
                                                                 value="{{ number_format($dtl->tbl_purc_grn_dtl_total_amount, 3, '.', '') }}"
                                                                 class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"
-                                                                readonly></td>
+                                                                ></td>
                                                         <td class="text-center">
                                                             <div class="btn-group btn-group btn-group-sm" role="group">
                                                                 <button type="button"
@@ -1262,7 +1262,7 @@
                                     '][gross_amount]" data-id="gross_amount" value="' + notNullNo(row[
                                         'purchase_order_dtltotal_amount']) + '" title="' + notNullNo(
                                         row['purchase_order_dtltotal_amount']) +
-                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber" readonly></td>' +
+                                    '" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>' +
                                     '<td class="text-center"></td>' +
                                     '</tr>';
                             }
@@ -1368,7 +1368,6 @@
             {
                 'id': 'gross_amount',
                 'fieldClass': 'tblGridCal_gross_amount validNumber',
-                'readonly': true
             }
         ];
         var arr_hidden_field = ['purc_grn_dtl_id', 'product_id', 'product_barcode_id', 'uom_id', 'grn_supplier_id',
