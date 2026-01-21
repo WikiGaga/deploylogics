@@ -2562,6 +2562,12 @@ class UserReportsController extends Controller
 
     public function ViewReport(){
         $data = Session::get('data');
+
+        $requestedFileType = request('form_file_type');
+        if (!empty($requestedFileType)) {
+            $data['form_file_type'] = $requestedFileType;
+            Session::put('data', $data);
+        }
         /***
          *  Dynamic Report
          ********/
@@ -2698,6 +2704,135 @@ class UserReportsController extends Controller
             // Output the generated PDF to Browser
             return $dompdf->stream();
         }
+    }
+
+    public function export(Request $request)
+    {
+        $data = Session::get('data');
+        if (empty($data) || empty($data['qry'])) {
+            abort(404, 'Report session not found.');
+        }
+
+        $type = strtolower((string)$request->query('type', 'csv'));
+        $baseQuery = $data['qry'];
+
+        $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
+        $total = (int)(DB::select($sqlCount)[0]->total ?? 0);
+
+        if ($type === 'xlsx' || $type === 'xls') {
+            $maxXlsxRows = 50000;
+            if ($total > $maxXlsxRows) {
+                return response(
+                    "Too many rows ({$total}) for Excel export. Please use CSV export instead.",
+                    422
+                );
+            }
+
+            $rows = [];
+            $headings = [];
+            $sums = [];
+            $rowCount = 0;
+
+            foreach (DB::cursor($baseQuery) as $row) {
+                $arr = (array)$row;
+                if (empty($headings)) {
+                    $headings = array_keys($arr);
+                    foreach ($headings as $h) {
+                        $sums[$h] = 0.0;
+                    }
+                }
+
+                foreach ($arr as $k => $v) {
+                    if (is_numeric($v)) {
+                        $sums[$k] += (float)$v;
+                    }
+                }
+
+                $rows[] = array_values($arr);
+                $rowCount++;
+            }
+
+            if (!empty($headings)) {
+                $totalsRow = array_fill(0, count($headings), '');
+                $totalsRow[0] = 'Grand Total:';
+                for ($i = 1; $i < count($headings); $i++) {
+                    $key = $headings[$i];
+                    if (isset($sums[$key]) && $sums[$key] != 0) {
+                        $totalsRow[$i] = round($sums[$key], 3);
+                    }
+                }
+                $rows[] = $totalsRow;
+
+                $countRow = array_fill(0, count($headings), '');
+                $countRow[0] = 'Count:';
+                $countRow[1] = $rowCount;
+                $rows[] = $countRow;
+            }
+
+            $boldRows = [1];
+            if ($rowCount > 0) {
+                $boldRows[] = 1 + $rowCount + 1;
+                $boldRows[] = 1 + $rowCount + 2;
+            }
+
+            return Excel::download(new \App\Exports\BladeExport($rows, $headings, $boldRows), 'report.xlsx');
+        }
+
+        if ($type === 'pdf') {
+            $maxPdfRows = 5000;
+            if ($total > $maxPdfRows) {
+                return response(
+                    "Too many rows ({$total}) for PDF export. Please export Excel/CSV instead.",
+                    422
+                );
+            }
+
+            $data['form_file_type'] = 'pdf';
+            Session::put('data', $data);
+            return redirect()->route('reports.view_report', ['form_file_type' => 'pdf', 'limit' => 'All', 'page' => 1]);
+        }
+
+        @set_time_limit(0);
+
+        $fileName = 'report_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+            'Cache-Control' => 'no-store, no-cache',
+        ];
+
+        return response()->streamDownload(function () use ($baseQuery) {
+            $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
+
+            fwrite($out, "\xEF\xBB\xBF");
+
+            $wroteHeader = false;
+            foreach (DB::cursor($baseQuery) as $row) {
+                $arr = (array)$row;
+
+                if (!$wroteHeader) {
+                    fputcsv($out, array_keys($arr));
+                    $wroteHeader = true;
+                }
+
+                $values = array_map(function ($v) {
+                    if (is_null($v)) return '';
+                    if (is_bool($v)) return $v ? '1' : '0';
+                    if (is_scalar($v)) return (string)$v;
+                    return json_encode($v);
+                }, array_values($arr));
+
+                fputcsv($out, $values);
+            }
+            if (!$wroteHeader) {
+                fputcsv($out, []);
+            }
+
+            fclose($out);
+        }, $fileName, $headers);
     }
 
     public function getOrderDetails(Request $request)

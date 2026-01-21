@@ -689,58 +689,6 @@
             table.appendChild(grand_total[0])
         })));
 
-        setTimeout(function() {
-            $('.btnExcelExport').off('click');
-            $(document).off('click', '.btnExcelExport');
-
-            $(document).on('click', '.btnExcelExport', function(e) {
-                var table = document.getElementById('dynamic_report_table');
-                if (table) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-
-                    var rowCount = $('#dynamic_report_table tbody tr.item_row').length;
-                    if (rowCount === 0) {
-                        alert('No data to export');
-                        return false;
-                    }
-
-                    var hiddenColumns = [];
-                    $('.listing_dropdown>li>label>input[type="checkbox"]').each(function() {
-                        var val = $(this).val();
-                        if (!$(this).is(':checked')) {
-                            hiddenColumns.push(val);
-                            $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').show();
-                            $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').show();
-                            $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').show();
-                        }
-                    });
-
-                    setTimeout(function() {
-                        try {
-                            $("#dynamic_report_table").table2excel({
-                                exclude: ".noExport",
-                                filename: "report.xls",
-                            });
-                        } catch(err) {
-                            console.error('Excel export error:', err);
-                            alert('Error exporting to Excel. Please try again.');
-                        }
-
-                        setTimeout(function() {
-                            hiddenColumns.forEach(function(val) {
-                                $('#dynamic_report_table thead tr.header').find('th:eq('+val+')').hide();
-                                $('#dynamic_report_table tbody tr.item_row').find('td:eq('+val+')').hide();
-                                $('#dynamic_report_table tbody tr.grand_total').find('td:eq('+val+')').hide();
-                            });
-                        }, 200);
-                    }, 100);
-
-                    return false;
-                }
-            });
-        }, 100);
     </script>
 @endsection
 
