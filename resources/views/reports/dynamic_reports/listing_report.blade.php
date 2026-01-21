@@ -512,10 +512,6 @@
 
                                                 @endphp
                                             @endforeach
-                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif {{ $dataField ?? '' }}>
-                                            @if($sr == 1)
-                                                <td>{{$loop->iteration}}</td>
-                                            @endif
                                             @if($column_types[$key] == 'varchar2')
                                                 <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $dt->$fieldsKey !!}</td>
                                             @elseif($column_types[$key] == 'number')
