@@ -375,7 +375,7 @@
                                         @php
                                             $rowClass = 'item_row';
                                             $rowStyle = '';
-
+                                            
                                             if(count($conditionalLogicGroups) > 0){
                                                 foreach($conditionalLogicGroups as $outerGroup => $innerRules){
                                                     $outerGroupMatches = true;
@@ -468,7 +468,7 @@
                                                 }
                                             }
                                         @endphp
-                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif>
+                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif @if($fieldKey == 'order_id') data-order_id="{{ $dt->order_id }}" @endif>
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
                                             @endif
