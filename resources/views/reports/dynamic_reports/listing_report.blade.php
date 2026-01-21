@@ -492,26 +492,25 @@
                                                 }
                                             }
                                         @endphp
-                                        <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif @if($fieldKey == 'order_id') data-order_id="{{ $dt->order_id }}" @endif>
-                                            @if($sr == 1)
-                                                <td>{{$loop->iteration}}</td>
-                                            @endif
-                                            @foreach($fieldsKeys as $key=>$fieldsKey)
+                                        @foreach($fieldsKeys as $key=>$fieldsKey)
+                                            @php
+                                                if($fieldsKey == 'grn_code'){
+                                                    $class = "open_model clickable-cell TEXT-INFO";
 
-                                                @php
-                                                    if($fieldsKey == 'grn_code'){
-                                                        $class = "open_model clickable-cell TEXT-INFO";
+                                                    $grn_code=$dt->$fieldsKey;
+                                                    $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
+                                                }else{
+                                                    $class = "";
+                                                    $grn_code="";
+                                                    $grn_id="";
+                                                }
 
-                                                        $grn_code=$dt->$fieldsKey;
-                                                        $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
-                                                    }else{
-                                                        $class = "";
-                                                        $grn_code="";
-                                                        $grn_id="";
-                                                    }
+                                                if($fieldsKey == 'order_id'){
+                                                    $dataField = 'data-order_id="'.$dt->$fieldsKey.'"';
+                                                }
 
-                                                @endphp
-                                            @endforeach
+                                            @endphp
+                                        @endforeach
                                         <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif {{ $dataField ?? '' }}>
                                             @if($sr == 1)
                                                 <td>{{$loop->iteration}}</td>
