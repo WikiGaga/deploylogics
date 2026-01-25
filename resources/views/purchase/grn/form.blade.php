@@ -339,6 +339,7 @@
                                                 __('message.sr_no'),
                                                 __('message.barcode'),
                                                 __('message.product_name'),
+                                                __('message.product_arabic_name'),
                                                 __('message.uom'),
                                                 __('message.packing'),
                                                 __('message.sup_barcode'),
@@ -435,6 +436,9 @@
                                                 <div class="erp_form__grid_th_title">{{ __('message.product_name') }}</div>
                                             </th>
                                             <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.product_arabic_name') }}</div>
+                                            </th>
+                                            <th scope="col">
                                                 <div class="erp_form__grid_th_title">{{ __('message.uom') }}</div>
                                             </th>
                                             <th scope="col">
@@ -523,6 +527,12 @@
                                                     <div class="erp_form__grid_th_input">
                                                         <input id="product_name" readonly type="text"
                                                             class="product_name form-control erp-form-control-sm">
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="product_arabic_name" readonly type="text"
+                                                            class="product_arabic_name form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
@@ -710,6 +720,11 @@
                                                                 name="pd[{{ $loop->iteration }}][product_name]"
                                                                 value="{{ isset($dtl->product->product_name) ? $dtl->product->product_name : '' }}"
                                                                 class="product_name form-control erp-form-control-sm" readonly>
+                                                        </td>
+                                                        <td><input type="text" data-id="product_arabic_name"
+                                                                name="pd[{{ $loop->iteration }}][product_arabic_name]"
+                                                                value="{{ isset($dtl->product->product_arabic_name) ? $dtl->product->product_arabic_name : '' }}"
+                                                                class="product_arabic_name form-control erp-form-control-sm" readonly>
                                                         </td>
                                                         <td>
                                                             <select
@@ -1193,6 +1208,12 @@
                                         'product']['product_name']) +
                                     '" class="pd_product_name form-control erp-form-control-sm" readonly></td>' +
                                     '<td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
+                                    '][product_arabicname]" data-id="product_arabic_name" value="' + notNull(row[
+                                        'product']['product_arabic_name']) + '" title="' + notNull(row[
+                                        'product']['product_arabic_name']) +
+                                    '" class="pd_product_arabic_name form-control erp-form-control-sm" readonly></td>' +
+                                    '<td>' +
                                     '<select class="pd_uom field_readonly moveIndex form-control erp-form-control-sm" name="pd[' +
                                     total_length + '][uom]" data-id="uom" title="' + row['uom'][
                                         'uom_name'
@@ -1295,6 +1316,13 @@
                 'fieldClass': 'product_name',
                 'message': 'Enter Product Detail',
                 'require': true,
+                'readonly': true
+            },
+            {
+                'id': 'product_arabic_name',
+                'fieldClass': 'product_arabic_name',
+                'message': 'Enter Product Detail',
+                'require': false,
                 'readonly': true
             },
             {
@@ -1722,6 +1750,7 @@
                             </th>
                             <td><input type="text" readonly name="pd[${total_length}][pd_barcode]" value="${notNull(row.product_barcode_barcode)}" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"></td>
                             <td><input type="text" readonly name="pd[${total_length}][product_name]" value="${notNull(row.product_name)}" class="product_name form-control erp-form-control-sm"></td>
+                            <td><input type="text" readonly name="pd[${total_length}][product_arabic_name]" value="${notNull(row.product_arabic_name)}" class="product_arabic_name form-control erp-form-control-sm"></td>
                             <td>
                                 <select name="pd[${total_length}][pd_uom]" class="pd_uom tb_moveIndex form-control erp-form-control-sm">
                                     <option value="${notNull(row.uom_id)}" selected>${notNull(row.uom_name)}</option>

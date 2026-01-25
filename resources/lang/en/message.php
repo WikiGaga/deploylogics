@@ -35,6 +35,7 @@ return array (
   'sr' => 'Sr.',
   'barcode' => 'Barcode',
   'product_name' => 'Product Name',
+  'product_arabic_name' => 'Product Arabic Name',
   'uom' => 'UOM',
   'packing' => 'Packing',
   'notes' => 'Notes',

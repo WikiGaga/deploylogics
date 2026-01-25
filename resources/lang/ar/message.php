@@ -35,6 +35,7 @@ return array (
   'sr' => 'م.',
   'barcode' => 'الباركود',
   'product_name' => 'اسم المنتج',
+  'product_arabic_name' => 'اسم المنتج بالعربية',
   'uom' => 'وحدة القياس',
   'packing' => 'التعبئة',
   'notes' => 'ملاحظات',
