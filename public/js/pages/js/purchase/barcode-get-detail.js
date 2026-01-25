@@ -838,7 +838,12 @@ function barcodeCommonData(tr, response, formData) {
         }
     }
     if(form_type == 'grn'){
-        var qty = 1;
+        if (formData.from_favorite == 1){
+            var qty = 0;
+        }else{
+            var qty = 1;
+        }
+        
         var cost_rate = !valueEmpty(tbl_purc_rate['product_barcode_cost_rate'])?tbl_purc_rate['product_barcode_cost_rate']:0;
         var sale_rate = !valueEmpty(tbl_purc_rate['sale_rate'])?tbl_purc_rate['sale_rate']:0;
         var gst_perc = !valueEmpty(tbl_purc_rate['tax_rate'])?tbl_purc_rate['tax_rate']:0;
