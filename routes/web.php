@@ -1351,7 +1351,9 @@ Route::group(['middleware' => ['auth']], function () {
                 }
             });
             Route::get('new','Development\FlowCriteriaController@create');
+            Route::get('edit/{id}','Development\FlowCriteriaController@edit');
             Route::post('store','Development\FlowCriteriaController@store');
+            Route::post('update/{id}','Development\FlowCriteriaController@update');
             Route::get('menu-data/{formtable}','Development\FlowCriteriaController@getAjaxData');
         });
 
