@@ -5,6 +5,9 @@
 @endsection
 @section('content')
     @php
+
+     $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->get();
+
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             if($case == 'new'){
                 $voucher_no = $data['voucher_no'];
@@ -39,49 +42,7 @@
     @endphp
     @permission($data['permission'])
 
-     <div class="modal" id="print_cheque_modal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-      
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h4 class="modal-title">Print Cheque</h4>
-          <button type="button" class="close" data-dismiss="modal"></button>
-        </div>
-         <form method="POST" action="{{ route('cheque.print') }}" target="_blank">
-                @csrf
-        <!-- Modal body -->
-        <div class="modal-body">
-          <h4>Date:</h4>    
-            <input type="text" name="date" class="form-control" readonly value=""  id="cheque_date" />
-            <br>
-            <h4>Account title:</h4>   
-                <input type="text" name="account_title" class="form-control" readonly value=""  id="cheque_title" />
-                <br>
-                <h4>Amount:</h4>   
-                <input type="text" name="amount" class="form-control" readonly value=""  id="cheque_amount" />
-                <br>
-                <h4>Template:</h4>   
-
-                <select name="cheque_template_id" id="" class="form-control" required>
-                <option value="">Select</option>
-                @foreach ($data['TBL_cheque_layouts'] as $val)
-                <option value="{{ $val->id }}">{{ $val->name }}</option>
-                @endforeach
-                
-                
-                </select>
-        </div>
-        
-        <!-- Modal footer -->
-        <div class="modal-footer">
-             <button type="submit" class="btn btn-success" >Print Cheque</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-        </div>
-        
-      </div>
-    </div>
-  </div>
+   
   
     <!--begin::Form-->
     @if($type == 'brv')
@@ -588,6 +549,50 @@
     </form>
                 <!--end::Form-->
     @endpermission
+
+     <div class="modal" id="print_cheque_modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Print Cheque</h4>
+          <button type="button" class="close" data-dismiss="modal"></button>
+        </div>
+         <form method="POST" action="{{ route('cheque.print') }}" target="_blank">
+                @csrf
+        <!-- Modal body -->
+        <div class="modal-body">
+          <h4>Date:</h4>    
+            <input type="text" name="date" class="form-control" readonly value=""  id="cheque_date" />
+            <br>
+            <h4>Account title:</h4>   
+                <input type="text" name="account_title" class="form-control" readonly value=""  id="cheque_title" />
+                <br>
+                <h4>Amount:</h4>   
+                <input type="text" name="amount" class="form-control" readonly value=""  id="cheque_amount" />
+                <br>
+                <h4>Template:</h4>   
+
+                <select name="cheque_template_id" id="" class="form-control" required>
+                <option value="">Select</option>
+                @foreach ($TBL_cheque_layouts as $val)
+                <option value="{{ $val->id }}">{{ $val->name }}</option>
+                @endforeach
+                
+                
+                </select>
+        </div>
+        
+        <!-- Modal footer -->
+        <div class="modal-footer">
+             <button type="submit" class="btn btn-success" >Print Cheque</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
 @endsection
 @section('pageJS')
     <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
