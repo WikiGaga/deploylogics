@@ -376,7 +376,7 @@ class ProductCardController extends Controller
                     $barcode->product_barcode_purchase_rate = isset($barcode_data['barcode_rate_purchase_rate'])?$barcode_data['barcode_rate_purchase_rate']:'';
                     $barcode->uom_id = $barcode_data["uom_packing_uom"];
                     $barcode->product_barcode_packing = $barcode_data["product_barcode_packing"];
-                    $barcode->variant_id = $barcode_data["uom_packing_other_tag"];
+                    $barcode->product_barcode_variant = $barcode_data["uom_packing_other_tag"];
                     $barcode->color_id = $barcode_data["uom_packing_color_tag"];
                     $barcode->size_id = $barcode_data["uom_packing_size_tag"];
                     $barcode->weight_id = $barcode_data["weight_id"];

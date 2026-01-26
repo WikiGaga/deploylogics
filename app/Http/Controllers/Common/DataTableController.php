@@ -1095,7 +1095,7 @@ class DataTableController extends Controller
         if (in_array($helpType, $listHelpProducts)) {
             $data['show_name'] = 'product_barcode_barcode';
             $data['hideKeys'] = ['product_id', 'product_barcode_id', 'uom_id'];
-            $data['keys'] = ['product_barcode_barcode', 'product_name', 'product_arabic_name', 'uom_name', 'product_barcode_packing', 'variant_name'];
+            $data['keys'] = ['product_barcode_barcode', 'product_name', 'product_arabic_name', 'uom_name', 'product_barcode_packing', 'product_barcode_variant'];
             $merge = array_merge($data['keys'], $data['hideKeys']);
             $selectColumns = implode(', ', $merge);
 
@@ -1104,9 +1104,8 @@ class DataTableController extends Controller
                 ->join('tbl_purc_product_barcode b', 'b.product_id', '=', 'p.product_id')
                 ->join('tbl_defi_uom uom', 'uom.uom_id', '=', 'b.uom_id')
                 ->join('vw_purc_group_item item', 'item.group_item_id', '=', 'p.group_item_id')
-                ->join('tbl_defi_variant v', 'v.variant_id', '=', 'b.variant_id')
-                ->select('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'b.variant_id', 'v.variant_name', 'item.group_item_name', 'item.parent_group_item_name')
-                ->groupby('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'b.variant_id', 'v.variant_name', 'item.group_item_name', 'item.parent_group_item_name');
+                ->select('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'b.product_barcode_variant', 'item.group_item_name', 'item.parent_group_item_name')
+                ->groupby('p.product_id', 'p.product_name', 'p.product_arabic_name', 'b.product_barcode_id', 'b.product_barcode_barcode', 'b.product_barcode_packing', 'b.uom_id', 'uom.uom_name', 'b.product_barcode_variant', 'item.group_item_name', 'item.parent_group_item_name');
 
             if (isset($request->val) && !empty($request->val)) {
                 $p_str = strtoupper($request->val);

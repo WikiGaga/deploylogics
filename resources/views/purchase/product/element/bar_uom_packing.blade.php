@@ -72,7 +72,12 @@
                 <input type="text" class="form-control erp-form-control-sm mob_no validNumber uom_packing_size_tag" name="uom_packing_size_tag" value="{{$size_id}}">
             </div>
         </td>
-        <td class="tag_select2_block">
+        <td>
+            <div class="form-group-block">
+                <input type="text" class="form-control erp-form-control-sm small_text" name="uom_packing_other_tag" value="{{$product_barcode_variant}}">
+            </div>
+        </td>
+        {{-- <td class="tag_select2_block">
             <div class="erp-select2">
                 <select class="form-control kt-select2 erp-form-control-sm uom_packing_other_tag" name="uom_packing_other_tag">
                     <option value="0">{{ __('message.select') }}</option>
@@ -81,7 +86,7 @@
                     @endforeach
                 </select>
             </div>
-        </td>
+        </td> --}}
         <td class="tag_select2_block">
             <div class="erp-select2">
                 <select class="form-control kt-select2 erp-form-control-sm weight_id" name="weight_id">
