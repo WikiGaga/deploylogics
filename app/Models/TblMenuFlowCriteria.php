@@ -11,6 +11,10 @@ class TblMenuFlowCriteria extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
+    protected static function primaryKeyName() {
+        return (new static)->getKeyName();
+    }
+
     protected $fillable = [
         'menu_flow_criteria_id',
         'menu_flow_criteria_dtl_id',
