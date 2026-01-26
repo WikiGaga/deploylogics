@@ -187,6 +187,21 @@ function calculateAmounts() {
 
 }
 
+function calculateSameAmounts() {
+    var voucherCredit = parseFloat(document.getElementById('voucher_credit').value.replace(/,/g, '')) || 0;
+    var vatPerc = parseFloat(document.getElementById('vat_perc').value.replace(/,/g, '')) || 0;
+
+    var vatPerc = 0;
+    var vatAmt = 0;
+    var netAmt = voucherCredit;
+    
+    document.getElementById('vat_perc').value = vatPerc.toFixed(3);
+    document.getElementById('vat_amt').value = vatAmt.toFixed(3);
+    document.getElementById('net_amt').value = netAmt.toFixed(3);
+    TotalAmount();
+
+}
+
 function calculateVAT() {
     var voucherCredit = parseFloat(document.getElementById('voucher_credit').value.replace(/,/g, '')) || 0;
     var vatAmt = parseFloat(document.getElementById('vat_amt').value.replace(/,/g, '')) || 0;

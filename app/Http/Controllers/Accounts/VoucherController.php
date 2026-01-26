@@ -181,6 +181,10 @@ class VoucherController extends Controller
         $data['switch_entry'] = $this->switchEntry($arr);
 
         // dd($formUrl);
+        $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->get();
+        $data['TBL_cheque_layouts'] = $TBL_cheque_layouts;
+
+
         return view('accounts.'.$formUrl.'.form',compact('data'));
     }
 
