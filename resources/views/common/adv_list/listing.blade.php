@@ -394,6 +394,7 @@
 @endsection
 
 @section('customJS')
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
     <script src="{{ asset('js/pages/listing/data-listing.js?v=') . time() }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/data-delete.js?v=') . time() }}" type="text/javascript"></script>
     <div class="modal fade" id="kt_modal_1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -405,6 +406,32 @@
         </div>
     </div>
     <script>
+        // alert('cccccccccccccc');
+
+        Pusher.logToConsole = true;
+        var pusher = new Pusher('cd64b71c5c904100352c', {
+        cluster: 'mt1',
+        // forceTLS: true,
+        //   enabledTransports: ['ws', 'wss', 'xhr_streaming', 'xhr_polling']
+        enabledTransports: ['ws', 'wss']
+        });
+        console.log("Using Pusher key:", '{{ env("PUSHER_APP_KEY") }}');
+        console.log("Using Pusher cluster:", '{{ env("PUSHER_APP_CLUSTER") }}');
+
+        var channel = pusher.subscribe('my-channel');
+        channel.bind('my-event', function(data) {
+            // if(data.message =='unpaid'){
+                window.location.reload();
+                    alert('Event received!');
+            // }
+            console.log('vvvvvvvvvvvvvvvv',data,data.message);
+            
+        });
+       
+
+
+
+
         var userId = @json(Auth::user()->id);
 
 
@@ -461,7 +488,7 @@
             $('#custom_date_div').hide();
             val = $(this).val();
 
-            console.log(val)
+            // console.log(val)
             if(val == 'custom_date'){
                 $('#custom_date_div').show();
 
@@ -486,7 +513,7 @@
             formData.data = [];
             var data_id = $(this).attr('data-id');
             formData.data.push(data_id);
-            console.log(formData);
+            // console.log(formData);
             var url = '/grn/grn-price-tag';
             $.ajax({
                 headers: {

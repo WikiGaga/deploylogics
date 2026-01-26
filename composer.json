@@ -58,7 +58,10 @@
         "classmap": [
             "database/seeds",
             "database/factories"
-        ]
+        ],
+         "files": [
+        "app/Helpers/NumberToWords.php"
+    ]
     },
     "autoload-dev": {
         "psr-4": {

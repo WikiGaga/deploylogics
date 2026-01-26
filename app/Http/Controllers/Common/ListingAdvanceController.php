@@ -39,13 +39,16 @@ class ListingAdvanceController extends Controller
     // event(new PusherNotifyEvent('17580923022021', 'hello world', 'https://example.com/report'));
 
         // event(new PusherNotifyEvent('test', 'Test Message', 'https://example.com'));
+
+            // dd($request->all(),$caseType,$subType);
  
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
-        if(empty($listing)){
-            return abort('404');
-        }
+        // dd( $listing, );
+        // if(empty($listing)){
+        //     return abort('404');
+        // }
         $data['data_url'] = action('Common\ListingAdvanceController@index',$case_name);
         $data['menu_dtl_id'] = $listing->menu_dtl_id;
         $data['title'] =  $listing->listing_studio_title;
@@ -204,7 +207,7 @@ class ListingAdvanceController extends Controller
             ];
             return response()->json($result);
         }
-        // dd('df');
+        // dd($data,'df');
 
         return view('common.adv_list.listing',compact('data'));
     }

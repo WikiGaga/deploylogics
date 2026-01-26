@@ -2,6 +2,34 @@
 @section('title', 'Form Flow Criteria')
 
 @section('pageCSS')
+<style>
+    /* Criteria table styling */
+    #repeated_data tr {
+        transition: background-color 0.2s;
+    }
+
+    #repeated_data tr:hover {
+        background-color: #f7f8fa;
+    }
+
+    /* Fix for Select2 dropdown visibility */
+    .select2-container {
+        z-index: 9999 !important;
+    }
+
+    /* Flow tabs styling */
+    .flow-tabs .nav-link {
+        cursor: pointer;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+</style>
 @endsection
 @section('content')
     <!-- begin:: Content -->
@@ -18,15 +46,18 @@
             </div>
             <div class="kt-portlet__body">
                 <!--begin::Form-->
-                <form id="FlowCriteria_form" class="kt-form" method="post" action="{{ action('Development\FlowCriteriaController@store') }}">
+                <form id="FlowCriteria_form" class="kt-form" method="post" action="{{ isset($data['flowCriteria']) ? action('Development\FlowCriteriaController@update', $data['flowCriteria']->menu_flow_criteria_id) : action('Development\FlowCriteriaController@store') }}">
                     @csrf
+                    @if(isset($data['flowCriteria']))
+                        <input type="hidden" name="_method" value="PUT">
+                    @endif
                     <div class="kt-portlet__body">
                         <div class="form-group row">
                             <div class="col-lg-6">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">ID:</label>
+                                    <label class="col-lg-6 col-form-label">Reference ID:</label>
                                     <div class="col-lg-6">
-                                        <input type="text" name="menu_flow_criteria_dtl_id" class="form-control form-control-sm">
+                                        <input type="text" name="menu_flow_criteria_dtl_id" class="form-control form-control-sm" readonly value="{{ isset($data['flowCriteria']) ? $data['flowCriteria']->menu_flow_criteria_dtl_id : '' }}" placeholder="Auto-generated on save" style="background-color: #f7f8fa;">
                                     </div>
                                 </div>
                             </div>
@@ -35,7 +66,7 @@
                                     <label class="col-lg-6 col-form-label">Date:</label>
                                     <div class="col-lg-6">
                                         <div class="input-group date">
-                                            <input type="text" class="form-control" readonly value="{{ date('d-m-Y') }}" name="menu_flow_criteria_apply_at" id="kt_datepicker_3" />
+                                            <input type="text" class="form-control" readonly value="{{ isset($data['flowCriteria']) ? date('d-m-Y', strtotime($data['flowCriteria']->menu_flow_criteria_apply_at)) : date('d-m-Y') }}" name="menu_flow_criteria_apply_at" id="kt_datepicker_3" />
                                             <div class="input-group-append">
 										<span class="input-group-text">
 											<i class="la la-calendar"></i>
@@ -52,7 +83,7 @@
                                         <select class="form-control kt-select2" id="menu_flow_criteria_name" name="menu_flow_criteria_name">
                                              <option value="">Select</option>
                                              @foreach($data['menu'] as $menue)
-                                            <option value="{{ $menue->menu_dtl_table_name }}">{{ $menue->menu_dtl_name }}</option>
+                                            <option value="{{ $menue->menu_dtl_name }}" data-table-name="{{ $menue->menu_dtl_table_name }}" {{ (isset($data['flowCriteria']) && $data['flowCriteria']->menu_flow_criteria_name == $menue->menu_dtl_name) ? 'selected' : '' }}>{{ $menue->menu_dtl_name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -83,7 +114,7 @@
                                                     <th width="20%">Field Name</th>
                                                     <th width="20%">Operator</th>
                                                     <th width="20%">Value</th>
-                                                    <th width="15%">Value</th>
+                                                    <th width="15%">Logic Operator</th>
                                                     <th width="15%">Action</th>
                                                 </tr>
                                                 </thead>
@@ -161,22 +192,23 @@
                                                     </div>
                                                 </div>{{-- end row--}}
                                                 <div class="row">
-                                                    <ul class="nav nav-tabs col-lg-12" role="tablist" style="    background: #f2f3f7;">
-                                                        <li class="nav-item">
-                                                            <a class="nav-link active rep_action" data-toggle="tab" href="#rep_action" role="tab">Actions</a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link rep_designation" data-toggle="tab" href="#rep_designation" role="tab">Designation / Users</a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link rep_time" data-toggle="tab" href="#rep_time" role="tab">Time</a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link rep_bypass" data-toggle="tab" href="#rep_bypass" role="tab">By Pass</a>
-                                                        </li>
-                                                    </ul>
-                                                    <div class="tab-content col-lg-12">
-                                                        <div class="tab-pane active rep_action_content" id="rep_action" role="tabpanel">
+                                                    <div class="col-lg-12">
+                                                        <ul class="nav nav-tabs flow-tabs" role="tablist" style="background: #f2f3f7; margin-bottom: 15px;">
+                                                            <li class="nav-item">
+                                                                <a class="nav-link active" data-toggle="tab" data-target-tab="actions" role="tab">Actions</a>
+                                                            </li>
+                                                            <li class="nav-item">
+                                                                <a class="nav-link" data-toggle="tab" data-target-tab="designation" role="tab">Designation / Users</a>
+                                                            </li>
+                                                            <li class="nav-item">
+                                                                <a class="nav-link" data-toggle="tab" data-target-tab="time" role="tab">Time</a>
+                                                            </li>
+                                                            <li class="nav-item">
+                                                                <a class="nav-link" data-toggle="tab" data-target-tab="bypass" role="tab">By Pass</a>
+                                                            </li>
+                                                        </ul>
+                                                        <div class="tab-content" style="padding: 15px; border: 1px solid #e2e5ec; border-top: none;">
+                                                            <div class="tab-pane active" data-tab-pane="actions">
                                                             <div class="row">
                                                                 <div class="col-lg-3">
                                                                     <label class="kt-checkbox kt-checkbox--bold kt-checkbox--brand"> Archive
@@ -205,8 +237,8 @@
                                                                     </label>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="tab-pane rep_designation_content" id="rep_designation" role="tabpanel">
+                                                            </div>
+                                                            <div class="tab-pane" data-tab-pane="designation">
                                                             <div class="row">
                                                                 <div class="col-lg-6">
                                                                     <div class="row">
@@ -214,11 +246,10 @@
                                                                         <div class="col-lg-9">
                                                                             <div class="erp-select2 form-group">
                                                                                 <select class="form-control tag-select2 erp-form-control-sm" multiple name="users[]">
-                                                                                    <option value="1">Ehsan</option>
-                                                                                    <option value="2">Ali</option>
-                                                                                    <option value="3">Zaid</option>
-                                                                                    <option value="4">Imran</option>
-                                                                                    <option value="5">Khalid</option>
+                                                                                    <option value="">Select Users</option>
+                                                                                    @foreach($data['users'] as $user)
+                                                                                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                                                                    @endforeach
                                                                                 </select>
                                                                             </div>
                                                                         </div>
@@ -232,10 +263,10 @@
                                                                         <div class="col-lg-9">
                                                                             <div class="erp-select2 form-group">
                                                                                 <select class="form-control tag-select2 erp-form-control-sm" multiple name="designation[]">
-                                                                                    <option value="1">Manager</option>
-                                                                                    <option value="2">Data Operator</option>
-                                                                                    <option value="3">Accountant</option>
-                                                                                    <option value="4">Cashier</option>
+                                                                                    <option value="">Select Roles</option>
+                                                                                    @foreach($data['roles'] as $role)
+                                                                                        <option value="{{ $role->id }}">{{ $role->display_name ?? $role->name }}</option>
+                                                                                    @endforeach
                                                                                 </select>
                                                                             </div>
                                                                         </div>
@@ -248,7 +279,7 @@
                                                                         <label class="col-lg-3 erp-col-form-label">All of them:</label>
                                                                         <div class="col-lg-9">
                                                                             <label class="kt-radio kt-radio--bold kt-radio--brand">
-                                                                                <input type="radio" name="select_user">
+                                                                                <input type="radio" name="select_user_type" value="all">
                                                                                 <span></span>
                                                                             </label>
                                                                         </div>
@@ -261,15 +292,15 @@
                                                                         <label class="col-lg-3 erp-col-form-label">Any of them:</label>
                                                                         <div class="col-lg-9">
                                                                             <label class="kt-radio kt-radio--bold kt-radio--brand">
-                                                                                <input type="radio" name="select_user">
+                                                                                <input type="radio" name="select_user_type" value="any" checked>
                                                                                 <span></span>
                                                                             </label>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="tab-pane rep_time_content" id="rep_time" role="tabpanel">
+                                                            </div>
+                                                            <div class="tab-pane" data-tab-pane="time">
                                                             <div class="row form-group">
                                                                 <div class="col-lg-6">
                                                                     <div class="row">
@@ -277,7 +308,7 @@
                                                                         <div class="col-lg-9">
                                                                             <div class="input-group">
                                                                                 <div class="erp-select2" style="width: 66.66%;">
-                                                                                    <select class="form-control erp-form-control-sm" id="product_warranty_period" name="product_warranty_period">
+                                                                                    <select class="form-control erp-form-control-sm" name="product_warranty_period">
                                                                                         <option value="0">Select</option>
                                                                                         <option value="1">Minutes</option>
                                                                                         <option value="2">Hours</option>
@@ -287,7 +318,7 @@
                                                                                     </select>
                                                                                 </div>
                                                                                 <div style="width: 33.33%;">
-                                                                                    <input type="text" id="product_warranty_mode" name="product_warranty_mode" class="form-control erp-form-control-sm">
+                                                                                    <input type="text" name="product_warranty_mode" class="form-control erp-form-control-sm">
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -305,8 +336,8 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="tab-pane rep_bypass_content" id="rep_bypass" role="tabpanel">
+                                                            </div>
+                                                            <div class="tab-pane" data-tab-pane="bypass">
                                                             <div class="row">
                                                                 <div class="col-lg-6">
                                                                     <div class="row">
@@ -314,11 +345,10 @@
                                                                         <div class="col-lg-9">
                                                                             <div class="erp-select2 form-group">
                                                                                 <select class="form-control tag-select2 erp-form-control-sm" multiple name="bypass_users[]">
-                                                                                    <option value="1">Ehsan</option>
-                                                                                    <option value="2">Ali</option>
-                                                                                    <option value="3">Zaid</option>
-                                                                                    <option value="4">Imran</option>
-                                                                                    <option value="5">Khalid</option>
+                                                                                    <option value="">Select Users</option>
+                                                                                    @foreach($data['users'] as $user)
+                                                                                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                                                                    @endforeach
                                                                                 </select>
                                                                             </div>
                                                                         </div>
@@ -332,16 +362,16 @@
                                                                         <div class="col-lg-9">
                                                                             <div class="erp-select2 form-group">
                                                                                 <select class="form-control tag-select2 erp-form-control-sm" multiple name="bypass_designation[]">
-                                                                                    <option value="">Select</option>
-                                                                                    <option value="1">Manager</option>
-                                                                                    <option value="2">Data Operator</option>
-                                                                                    <option value="3">Accountant</option>
-                                                                                    <option value="4">Cashier</option>
+                                                                                    <option value="">Select Roles</option>
+                                                                                    @foreach($data['roles'] as $role)
+                                                                                        <option value="{{ $role->id }}">{{ $role->display_name ?? $role->name }}</option>
+                                                                                    @endforeach
                                                                                 </select>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                            </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -459,10 +489,55 @@
 @endsection
 @section('pageJS')
     <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
-    <script src="/assets/js/pages/crud/forms/widgets/form-repeater.js" type="text/javascript"></script>
 @endsection
 
 @section('customJS')
+@if(isset($data['flowCriteria']))
+<script>
+    var flowCriteriaData = {!! json_encode([
+        'conditions' => $data['flowCriteria']->conditions->map(function($c) {
+            return [
+                'condition_sr_number' => $c->condition_sr_number,
+                'condition_field' => $c->condition_field,
+                'condition_operator' => $c->condition_operator,
+                'condition_value' => $c->condition_value,
+                'condition_logic_operator' => $c->condition_logic_operator
+            ];
+        })->values(),
+        'flows' => $data['flowCriteria']->flows->map(function($f) {
+            return [
+                'stg_flows_id' => $f->stg_flows_id,
+                'flow_name' => $f->flow_name,
+                'flow_order' => $f->flow_order,
+                'lead_time_value' => $f->lead_time_value,
+                'lead_time_unit' => $f->lead_time_unit,
+                'reminder_time_minutes' => $f->reminder_time_minutes,
+                'require_all_users' => $f->require_all_users,
+                'actions' => $f->actions->map(function($a) {
+                    return ['action_name' => $a->action_name];
+                })->values(),
+                'users' => $f->users->map(function($u) {
+                    return ['user_id' => $u->user_id];
+                })->values(),
+                'designations' => $f->designations->map(function($d) {
+                    return ['designation_id' => $d->designation_id];
+                })->values(),
+                'bypasses' => $f->bypasses->map(function($b) {
+                    return [
+                        'bypass_type' => $b->bypass_type,
+                        'bypass_user_id' => $b->bypass_user_id,
+                        'bypass_designation_id' => $b->bypass_designation_id
+                    ];
+                })->values()
+            ];
+        })->values()
+    ]) !!};
+</script>
+@else
+<script>
+    var flowCriteriaData = null;
+</script>
+@endif
 <script>
     $('.open_notification').on('click',function(e){
         var data_url = $(this).attr('data-url');
@@ -470,7 +545,8 @@
     });
    $(document).ready(function(){
   $("#menu_flow_criteria_name").change(function(){
-    var formtable =  $(this).val();
+    var formtable =  $(this).find('option:selected').attr('data-table-name');
+    if (!formtable) return;
     $.ajax({
             type:'GET',
             url:'/flow-criteria/menu-data/'+ formtable,
