@@ -508,7 +508,7 @@ $(document).ready(function() {
                     <span class="font-weight-bold">${subtotal.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal:</span>
+                    <span>Addons:</span>
                     <span class="font-weight-bold text-info">+${totalAddon.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
