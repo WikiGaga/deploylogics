@@ -397,9 +397,11 @@ $(document).ready(function() {
         var totalDiscount = 0;
 
         orderDetails.forEach(function(item) {
-            var itemTotal = parseFloat((item.price * item.discount_on_food) + item.total_add_on_price || 0);
+            totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
+            var itemTotal = parseFloat((item.price * item.item.quantity) + item.total_add_on_price || 0);
+            itemTotal = itemTotal - (item.discount_on_food * item.quantity || 0);
             subtotal += itemTotal;
-            totalDiscount += parseFloat(item.discount_on_food * item.discount_on_food || 0);
+            
 
             // Parse variations and addons
             var variationsHtml = '';
@@ -483,7 +485,7 @@ $(document).ready(function() {
                     </td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
                 </tr>
