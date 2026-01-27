@@ -234,7 +234,9 @@ class ChequeController extends Controller
         ->get();
 
     $inputs = $request->all();
-    $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
+    // $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
+    $inputs['amount_words'] = \App\Library\Utilities::AmountWords($inputs['amount']);
+    
 
     $pdf = PDF::loadView('check.print_pdf', [
         'template' => $template,
@@ -248,9 +250,9 @@ class ChequeController extends Controller
      // return view('check.print_pdf',  compact('template', 'fields', 'inputs'));
 }
 
-    private function numberToWords($number)
-    {
-        $f = new \NumberFormatter("en", \NumberFormatter::SPELLOUT);
-        return ucfirst($f->format($number));
-    }
+    // private function numberToWords($number)
+    // {
+    //     $f = new \NumberFormatter("en", \NumberFormatter::SPELLOUT);
+    //     return ucfirst($f->format($number));
+    // }
 }
