@@ -395,13 +395,14 @@ $(document).ready(function() {
         var itemsHtml = '';
         var subtotal = 0;
         var totalDiscount = 0;
+        var totalAddon = 0;
 
         orderDetails.forEach(function(item) {
             totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
             var itemTotal = parseFloat((item.price * item.quantity) + item.total_add_on_price || 0);
             itemTotal = itemTotal - (item.discount_on_food * item.quantity || 0);
-            subtotal += itemTotal;
-            
+            subtotal += parseFloat(item.price * item.quantity || 0);            
+            totalAddon += parseFloat(item.total_add_on_price || 0);
 
             // Parse variations and addons
             var variationsHtml = '';
@@ -505,6 +506,10 @@ $(document).ready(function() {
                 <div class="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
                     <span class="font-weight-bold">${subtotal.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span class="font-weight-bold">+${totalAddon.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Tax Amount:</span>
