@@ -509,7 +509,7 @@ $(document).ready(function() {
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
-                    <span class="font-weight-bold">+${totalAddon.toFixed(3)}</span>
+                    <span class="font-weight-bold text-info">+${totalAddon.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Tax Amount:</span>
@@ -517,7 +517,7 @@ $(document).ready(function() {
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Total Discount:</span>
-                    <span class="font-weight-bold text-info">+${discountTotal.toFixed(3)}</span>
+                    <span class="font-weight-bold text-danger">-${discountTotal.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Delivery Charge:</span>
