@@ -389,17 +389,44 @@ var KTFormRepeater = function() {
                                 url         : '/product/check-barcode/'+ barcode_id,
                                 dataType	: 'json',
                                 success: function(response,  data) {
-                                    if(response['data']['check'] == true){
+                                    if(response.status == 'error'){
                                         swal.fire({
-                                            title: 'Alert? Not Delete',
-                                            text: "Barcode Exist in Detail Tables!",
+                                            title: 'Alert? Error',
+                                            text: response.message,
                                             type: 'warning',
                                             showCancelButton: false,
                                             confirmButtonText: 'Ok'
                                         });
+                                        return false;
                                     }else{
-                                        thix.slideUp(deleteElement);
+                                        if(response['data']['check'] == true){
+                                            swal.fire({
+                                                title: 'Alert? Not Delete',
+                                                text: "Barcode Exist in Detail Tables!",
+                                                type: 'warning',
+                                                showCancelButton: false,
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }else{
+                                            thix.slideUp(deleteElement);
+                                            swal.fire({
+                                                title: 'Deleted!',
+                                                text: 'Your element has been deleted.',
+                                                type: 'success',
+                                                showCancelButton: false,
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
                                     }
+                                },
+                                error: function(response,status) {
+                                    swal.fire({
+                                        title: 'Alert? Error',
+                                        text: response.responseJSON.message || 'Something went wrong!',
+                                        type: 'warning',
+                                        showCancelButton: false,
+                                        confirmButtonText: 'Ok'
+                                    });
                                 }
                             });
                         }
