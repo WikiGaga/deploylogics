@@ -394,10 +394,12 @@ $(document).ready(function() {
         // Populate order items
         var itemsHtml = '';
         var subtotal = 0;
+        var totalDiscount = 0;
 
         orderDetails.forEach(function(item) {
             var itemTotal = parseFloat(item.net_amount || 0);
             subtotal += itemTotal;
+            totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
 
             // Parse variations and addons
             var variationsHtml = '';
@@ -412,13 +414,12 @@ $(document).ready(function() {
                         variations.forEach(function(variation) {
                             if (variation.name && variation.values) {
                                 variationsHtml += '<div class="variation-item mb-1">';
-                                variationsHtml += '<div class="variation-name">' + variation.name + '</div>';
                                 variation.values.forEach(function(value) {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     if(value.is_deleted == 'Y'){
-                                        variationsHtml += '<ins>' + value.label + ': <strong>' + parseFloat(value.optionPrice || 0).toFixed(3) + '</strong></ins>';
+                                        variationsHtml += '- <ins>' + value.label + '</ins>';
                                     }else{
-                                        variationsHtml += value.label + ': <strong>' + parseFloat(value.optionPrice || 0).toFixed(3) + '</strong>';
+                                        variationsHtml += '- ' + value.label + '</strong>';
                                     }
                                     variationsHtml += '</div>';
                                 });
@@ -482,7 +483,7 @@ $(document).ready(function() {
                     </td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
                 </tr>
@@ -495,6 +496,7 @@ $(document).ready(function() {
         var taxAmount = parseFloat(orderSummary.total_tax_amount || 0);
         var deliveryCharge = parseFloat(orderSummary.delivery_charge || 0);
         var grandTotal = parseFloat(orderSummary.order_amount || 0);
+        var discountTotal = totalDiscount;
 
         var totalsHtml = `
             <div class="col-md-6">
@@ -505,6 +507,10 @@ $(document).ready(function() {
                 <div class="d-flex justify-content-between mb-2">
                     <span>Tax Amount:</span>
                     <span class="font-weight-bold text-info">+${taxAmount.toFixed(3)}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Discount:</span>
+                    <span class="font-weight-bold text-info">+${discountTotal.toFixed(3)}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Delivery Charge:</span>
