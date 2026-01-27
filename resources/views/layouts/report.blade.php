@@ -420,9 +420,17 @@ $(document).ready(function() {
                                 variation.values.forEach(function(value) {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     if(value.is_deleted == 'Y'){
-                                        variationsHtml += '- <ins>' + value.label + '</ins>';
+                                        if(value.printing_option == 'option_list_name'){
+                                            variationsHtml += '- <del>' + variation.name + '</del>';
+                                        }else{
+                                            variationsHtml += '- <del>' + value.label + '</del>';
+                                        }
                                     }else{
-                                        variationsHtml += '- ' + value.label + '</strong>';
+                                        if(value.printing_option == 'option_list_name'){
+                                            variationsHtml += '- ' + variation.name + '</strong>';
+                                        }else{
+                                            variationsHtml += '- ' + value.label + '</strong>';
+                                        }
                                     }
                                     variationsHtml += '</div>';
                                 });
