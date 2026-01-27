@@ -421,15 +421,15 @@ $(document).ready(function() {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     if(value.is_deleted == 'Y'){
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- <del>' + variation.name + '</del>';
-                                        }else{
                                             variationsHtml += '- <del>' + value.label + '</del>';
+                                        }else{
+                                            variationsHtml += '- <del>' + variation.name + '</del>';
                                         }
                                     }else{
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- ' + variation.name + '</strong>';
-                                        }else{
                                             variationsHtml += '- ' + value.label + '</strong>';
+                                        }else{
+                                            variationsHtml += '- ' + variation.name + '</strong>';
                                         }
                                     }
                                     variationsHtml += '</div>';
