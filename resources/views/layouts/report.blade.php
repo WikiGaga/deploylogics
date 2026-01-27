@@ -397,7 +397,7 @@ $(document).ready(function() {
         var totalDiscount = 0;
 
         orderDetails.forEach(function(item) {
-            var itemTotal = parseFloat(item.net_amount || 0);
+            var itemTotal = parseFloat(item.net_amount * item.quantity || 0);
             subtotal += itemTotal;
             totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
 
