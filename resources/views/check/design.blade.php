@@ -220,6 +220,28 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
                                     class="w-full bg-green-600 text-white py-3 rounded-lg font-bold">
                                 Save Template Layout
                             </button>
+                            <label>Date X:</label>
+                            <input id='field-date_x' name='date_x' val="" readonly><br>
+                            <label>Date Y:</label>
+                            <input id='field-date_y' name='date_y' val="" readonly>
+                            <br>
+
+                            <label>Account Title X:</label>
+                            <input id='field-account_title_x' name='account_title_x' val="" readonly><br>
+                            <label>Account Title Y:</label>
+                            <input id='field-account_title_y' name='account_title_y' val="" readonly>
+                            <br>
+
+                            <label>Amount X:</label>
+                            <input id='field-amount_x' name='amount_x' val="" readonly><br>
+                            <label>Amount Y:</label>
+                            <input id='field-amount_y' name='amount_y' val="" readonly>
+                            <br>
+
+                            <label>Amount In Words X:</label>
+                            <input id='field-amount_words_x' name='amount_words_x' val="" readonly><br>
+                            <label>Amount In Words Y:</label>
+                            <input id='field-amount_words_y' name='amount_words_y' val="" readonly>
                         </div>
 
                         <!-- RIGHT CANVAS -->
@@ -239,7 +261,7 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
                             data-x="{{ $field->left_px }}"
                             data-y="{{ $field->top_px }}"
                             style="transform: translate({{ $field->left_px }}px, {{ $field->top_px }}px)">
-
+                       
                             <span class="text-gray-400 text-xs block">
                                 {{ ucfirst(str_replace('_',' ', $field->field_name)) }}
                             </span>
@@ -275,6 +297,21 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
 @section('customJS')
 
 <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Loop through all draggables and update their respective input boxes
+        document.querySelectorAll('.draggable').forEach(el => {
+            const fieldName = el.getAttribute('data-field');
+            const x = el.getAttribute('data-x');
+            const y = el.getAttribute('data-y');
+
+            // Update the sidebar inputs
+            if(document.getElementById(`field-${fieldName}_x`)) {
+                document.getElementById(`field-${fieldName}_x`).value = x;
+                document.getElementById(`field-${fieldName}_y`).value = y;
+            }
+        });
+    });
 const canvas = document.getElementById('check-canvas');
 
 document.getElementById('canvas-w').addEventListener('input', e => {
@@ -293,6 +330,12 @@ interact('.draggable').draggable({
 
             let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
             let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+            let field_name = target.getAttribute('id')
+
+            $('#'+field_name+'_x').val(x);
+            $('#'+field_name+'_y').val(y);
+
+            // console.log(x,y,target.getAttribute('id'));
 
             target.style.transform = `translate(${x}px, ${y}px)`;
             target.setAttribute('data-x', x);

@@ -567,7 +567,7 @@
             <input type="text" name="date" class="form-control" readonly value=""  id="cheque_date" />
             <br>
             <h4>Account title:</h4>   
-                <input type="text" name="account_title" class="form-control" readonly value=""  id="cheque_title" />
+                <input type="text" name="account_title" class="form-control"  value=""  id="cheque_title" />
                 <br>
                 <h4>Amount:</h4>   
                 <input type="text" name="amount" class="form-control" readonly value=""  id="cheque_amount" />
