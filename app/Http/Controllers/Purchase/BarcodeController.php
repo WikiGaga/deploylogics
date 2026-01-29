@@ -326,9 +326,9 @@ class BarcodeController extends Controller
                     AND GRN.BRANCH_ID = '".auth()->user()->branch_id."'
                     AND GRN.DOCUMENT_DATE <= '".$date."'";
 
-                $data['s_i_h'] = DB::selectOne($query);
+                // $data['s_i_h'] = DB::selectOne($query);
                 //$store_stock =  collect(DB::select('SELECT get_stock_current_qty_date(?,?,?,?,?,?,?) AS code from dual', $arr))->first()->code;
-                $data['store_stock'] = $data['s_i_h']->stock;
+                $data['store_stock'] = 0;
             }
             if($form_type == 'purc_demand'){
                 $now = new \DateTime("now");
