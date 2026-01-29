@@ -27,7 +27,7 @@ Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@s
 
 Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 
-
+Route::get('get_employee', 'Api\ApiHomeController@get_employee');
 Route::group(['middleware'=>['auth:api']], function () {
 
     Route::get('test', 'Api\ApiHomeController@index');

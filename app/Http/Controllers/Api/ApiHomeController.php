@@ -71,6 +71,61 @@ class ApiHomeController extends ApiController
 
         return $this->ApiJsonSuccessResponse($data,'Test Api data');
     }
+
+        public function get_employee(Request $request)
+    {
+
+        // dd($request->all()) ;
+        // $validator = Validator::make($request->all(), [
+        //      'customer_id'    => 'required'
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Validation error',
+        //         'errors' => $validator->errors()
+        //     ], 422);
+        // }
+
+        // $bearerToken = $request->bearerToken();
+        // if (!$bearerToken) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Authorization token missing'
+        //     ], 401);
+        // }
+
+        // $user = User::where('authkey',  $bearerToken)->first();
+        // if (!$user) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Invalid or expired token'
+        //     ], 401);
+        // }
+
+        $employee_id = $request->input('employee_id');
+
+        $Employee = DB::table('tbl_payr_employee')
+        ->where('employee_id', $employee_id)
+        ->first();
+
+        if (empty($Employee)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404); // Use 404 Not Found HTTP status
+        }
+ 
+        // 3. Return the user data as a JSON response
+        return response()->json([
+            'success' => true,
+            'message' => 'User data send successfully.',
+            'Data' => $Employee,
+        ], 200); // Use 200 OK HTTP status
+    }
+
+
     /**
      * Display a listing of the resource.
      *
