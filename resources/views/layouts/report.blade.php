@@ -398,9 +398,9 @@ $(document).ready(function() {
         var totalAddon = 0;
 
         orderDetails.forEach(function(item) {
-            totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
+            totalDiscount += parseFloat(item.discount_on_food || 0);
             var itemTotal = parseFloat((item.price * item.quantity) + item.total_add_on_price || 0);
-            itemTotal = itemTotal - (item.discount_on_food * item.quantity || 0);
+            itemTotal = itemTotal - (item.discount_on_food || 0);
             subtotal += parseFloat(item.price * item.quantity || 0);            
             totalAddon += parseFloat(item.total_add_on_price || 0);
 
@@ -421,15 +421,15 @@ $(document).ready(function() {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     if(value.is_deleted == 'Y'){
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- <del>' + value.label + '</del>';
+                                            variationsHtml += '- <del>' + value.options_list_name + '</del>';
                                         }else{
-                                            variationsHtml += '- <del>' + variation.name + '</del>';
+                                            variationsHtml += '- <del>' + value.label + '</del>';
                                         }
                                     }else{
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- ' + value.label + '</strong>';
+                                            variationsHtml += '- ' + value.options_list_name + '</strong>';
                                         }else{
-                                            variationsHtml += '- ' + variation.name + '</strong>';
+                                            variationsHtml += '- ' + value.label + '</strong>';
                                         }
                                     }
                                     variationsHtml += '</div>';
@@ -496,9 +496,10 @@ $(document).ready(function() {
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
                     <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
+                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${parseFloat(item.net_amount || 0).toFixed(3)}</td>
                 </tr>
             `;
+            console.log('Processed item:', item);
         });
 
         $('#orderItemsTable').html(itemsHtml);

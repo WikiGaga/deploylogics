@@ -2864,6 +2864,65 @@ class UserReportsController extends Controller
                 ORDER BY od.id
             ", [$orderId]);
 
+            foreach ($orderDetails as &$detail) {
+
+                $variation = $detail->variation ? json_decode($detail->variation, true) : null;
+
+                if (is_array($variation)) {
+
+                    // 1) Collect all options_list_id used in the variation values
+                    $ids = [];
+
+                    foreach ($variation as $var) {
+                        if (($var['printing_option'] ?? null) !== 'option_list_name') {
+                            continue;
+                        }
+
+                        $values = $var['values'] ?? [];
+                        if (is_array($values)) {
+                            foreach ($values as $v) {
+                                if (!empty($v['options_list_id'])) {
+                                    $ids[] = (int) $v['options_list_id'];
+                                }
+                            }
+                        }
+                    }
+
+                    $ids = array_values(array_unique($ids));
+
+                    // 2) Fetch all names in ONE query: [id => name]
+                    $namesById = [];
+                    if (!empty($ids)) {
+                        $namesById = DB::table('options_list')
+                            ->whereIn('id', $ids)
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    }
+
+                    // 3) Inject options_list_name into each value
+                    foreach ($variation as $varKey => $var) {
+                        if (($var['printing_option'] ?? null) !== 'option_list_name') {
+                            continue;
+                        }
+
+                        if (!isset($variation[$varKey]['values']) || !is_array($variation[$varKey]['values'])) {
+                            continue;
+                        }
+
+                        foreach ($variation[$varKey]['values'] as $valKey => $val) {
+                            $id = isset($val['options_list_id']) ? (int) $val['options_list_id'] : null;
+
+                            if ($id && isset($namesById[$id])) {
+                                $variation[$varKey]['values'][$valKey]['options_list_name'] = $namesById[$id];
+                            }
+                        }
+                    }
+                }
+
+                $detail->variation = json_encode($variation);
+            }
+
+
             $orderSummary = DB::select("
                 SELECT
                     o.ID,
