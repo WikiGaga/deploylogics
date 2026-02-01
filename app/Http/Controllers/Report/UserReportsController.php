@@ -2859,7 +2859,7 @@ class UserReportsController extends Controller
                     f.name as food_name,
                     f.image as food_image,
                     (od.price * od.quantity) as gross_amount,
-                    ((od.price * od.quantity) - od.discount_on_food + od.total_add_on_price) as net_amount
+                    ((od.price * od.quantity) - (od.discount_on_food * od.quantity) + od.total_add_on_price) as net_amount
                 FROM order_details od
                 JOIN orders o ON o.id = od.order_id
                 LEFT JOIN food f ON f.id = od.food_id

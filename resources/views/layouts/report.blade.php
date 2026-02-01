@@ -494,7 +494,7 @@ $(document).ready(function() {
                     </td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)} (${(((item.discount_on_food * item.quantity) / item.price) * 100 || 0).toFixed(3)}%)</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${parseFloat(item.net_amount || 0).toFixed(3)}</td>
                 </tr>
