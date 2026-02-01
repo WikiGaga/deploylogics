@@ -2846,6 +2846,7 @@ class UserReportsController extends Controller
 
             $orderDetails = DB::select("
                 SELECT
+                    o.order_note,
                     od.food_id,
                     od.price,
                     od.discount_on_food,
@@ -2854,11 +2855,13 @@ class UserReportsController extends Controller
                     od.variation,
                     od.add_ons,
                     od.is_deleted,
+                    od.notes,
                     f.name as food_name,
                     f.image as food_image,
                     (od.price * od.quantity) as gross_amount,
                     ((od.price * od.quantity) - od.discount_on_food + od.total_add_on_price) as net_amount
                 FROM order_details od
+                JOIN orders o ON o.id = od.order_id
                 LEFT JOIN food f ON f.id = od.food_id
                 WHERE od.order_id = ?
                 ORDER BY od.id

@@ -497,9 +497,13 @@ $(document).ready(function() {
                     <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${parseFloat(item.net_amount || 0).toFixed(3)}</td>
+                    <td colspan="5">
+                        <div class="mt-2">
+                            <strong>Notes:</strong> ${item.notes || 'N/A'}
+                        </div>
+                    </td>    
                 </tr>
             `;
-            console.log('Processed item:', item);
         });
 
         $('#orderItemsTable').html(itemsHtml);
@@ -534,6 +538,10 @@ $(document).ready(function() {
                 </div>
             </div>
             <div class="col-md-6">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="h5">Notes:</span>
+                    <span class="h5 text-primary font-weight-bold">${orderDetails.order_notes || 'N/A'}</span>
+                </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="h5">Grand Total:</span>
                     <span class="h5 text-primary font-weight-bold">${grandTotal.toFixed(3)}</span>
