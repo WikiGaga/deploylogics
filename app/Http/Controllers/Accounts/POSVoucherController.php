@@ -262,7 +262,7 @@ class POSVoucherController extends Controller
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Addons
-                            $data['chart_account_id'] = $income_chart_account_id;
+                            $data['chart_account_id'] = 65981926021315;
                             $data['voucher_debit'] = 0;
                             $data['voucher_credit'] = abs(number_format((float)$sale_invoice->total_add_on_price,3));
                             $data['voucher_sr_no'] = 4;
@@ -419,7 +419,7 @@ class POSVoucherController extends Controller
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Ad-ons
-                            $data['chart_account_id'] = $sale_return_income_ac;
+                            $data['chart_account_id'] = 65981926021315;
                             $data['voucher_debit'] = abs(number_format((float)$sale_invoice->total_add_on_price,3));
                             $data['voucher_credit'] = 0;
                             $data['voucher_sr_no'] = 3;
