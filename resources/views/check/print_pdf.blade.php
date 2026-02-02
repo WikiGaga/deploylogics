@@ -106,7 +106,6 @@ font-size:{{ $field->font_size }}px;">
             position: relative;
             width: {{ $template->width_px }}px;
             height: {{ $template->height_px }}px;
-            /* background-image: url('{{ asset('storage/' . $template->cheque_image) }}'); */
             background-size: 100% 100%;
             background-repeat: no-repeat;
         }
