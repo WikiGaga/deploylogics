@@ -270,8 +270,8 @@ class POSVoucherController extends Controller
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Extra Discount
-                            $data['chart_account_id'] = $discount_chart_account_id;
-                            $data['voucher_debit'] = (abs(number_format((float)$sale_invoice->discount_by_restaurant,3)) + abs(number_format((float)$sale_invoice->coupon_discount,3)));
+                            $data['chart_account_id'] = 11916726021355;
+                            $data['voucher_debit'] = (abs(number_format((float)$sale_invoice->order_total_discounts,3)) + abs(number_format((float)$sale_invoice->coupon_discount,3)));
                             $data['voucher_credit'] = 0;
                             $data['voucher_sr_no'] = 5;
                             // for credit entry amount_total
@@ -427,9 +427,9 @@ class POSVoucherController extends Controller
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Extra Discount
-                            $data['chart_account_id'] = $sale_return_discount_ac;
+                            $data['chart_account_id'] = 11916726021355;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = (abs(number_format((float)$sale_invoice->discount_by_restaurant,3)) + abs(number_format((float)$sale_invoice->coupon_discount,3)));;
+                            $data['voucher_credit'] = (abs(number_format((float)$sale_invoice->order_total_discounts,3)) + abs(number_format((float)$sale_invoice->coupon_discount,3)));;
                             $data['voucher_sr_no'] = 4;
                             // for credit entry vat_amount_total
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
