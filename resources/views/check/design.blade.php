@@ -177,6 +177,29 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
             background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
             background-size: 20px 20px;
         }
+        /* For Amount in Words: Allow wrapping and set a line height */
+    .field-amount_words {
+        white-space: normal !important;
+        word-wrap: break-word;
+        line-height: 1.4;
+        text-align: left;
+    }
+
+    /* For Date: Space out the digits to match cheque boxes */
+
+    .field-date {
+        display: flex !important;
+        justify-content: space-between;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .date-digit {
+        flex: 1; /* Each digit takes equal space */
+        text-align: center;
+    }
     </style>
 @endsection
 
@@ -214,7 +237,13 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
 
                                 <input type="number" id="canvas-h" value="{{ $template->height_px }}"
                                     class="w-1/2 border p-2 rounded">
+                                
+                                <input type="file"  name="cheque_image" id="chequeImage" accept="image/png,image/jpeg"  onchange="previewCheque(this)" class="w-full border p-2 rounded">
                             </div>
+
+                            <label>Font Size: </label>
+                             <input type="number" id="font_size" value=""
+                                    class="w-1/2 border p-2 rounded">
 
                             <button id="saveTemplate"
                                     class="w-full bg-green-600 text-white py-3 rounded-lg font-bold">
@@ -248,40 +277,44 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
                         <div class="md:col-span-2">
                         <div class="overflow-auto border-2 border-gray-300 rounded-lg p-4 bg-gray-200">
 
-                        <div id="check-canvas"
-                            class="relative shadow-2xl mx-auto border border-gray-400"
-                            style="width: {{ $template->width_px }}px;
-                                    height: {{ $template->height_px }}px;">
+             <div id="check-canvas"
+            class="relative border shadow-lg mx-auto"
+            style="width: {{ $template->width_px }}px;height: {{ $template->height_px }}px; background-size: 100% 100%;background-repeat: no-repeat;">
 
-                        @foreach($fields as $field)
+                       @foreach($fields as $field)
+                            <div class="draggable absolute overflow-hidden border border-transparent hover:border-blue-400"
+                                id="field-{{ $field->field_name }}"
+                                data-field="{{ $field->field_name }}"
+                                data-x="{{ $field->left_px }}"
+                                data-y="{{ $field->top_px }}"
+                                style="transform: translate({{ $field->left_px }}px, {{ $field->top_px }}px); 
+                                        width: {{ $field->width_px ?? 200 }}px; 
+                                        height: {{ $field->height_px ?? 40 }}px;">
 
-                        <div class="draggable absolute"
-                            id="field-{{ $field->field_name }}"
-                            data-field="{{ $field->field_name }}"
-                            data-x="{{ $field->left_px }}"
-                            data-y="{{ $field->top_px }}"
-                            style="transform: translate({{ $field->left_px }}px, {{ $field->top_px }}px)">
-                       
-                            <span class="text-gray-400 text-xs block">
-                                {{ ucfirst(str_replace('_',' ', $field->field_name)) }}
-                            </span>
+                                <span class="text-gray-400 text-[9px] absolute top-0 left-0 leading-none">
+                                    {{ ucfirst(str_replace('_',' ', $field->field_name)) }}
+                                </span>
 
-                            <span class="font-bold">
-                                SAMPLE TEXT
-                            </span>
+                                <div class="font-bold h-full {{ $field->field_name == 'date' ? 'field-date' : '' }} 
+                                                    {{ $field->field_name == 'amount_words' ? 'field-amount_words' : '' }}">
+                                    @if($field->field_name == 'date')
+                                        @php $dateDigits = str_split('28012026'); @endphp
+                                        @foreach($dateDigits as $digit)
+                                            <span class="date-digit text-lg">{{ $digit }}</span>
+                                        @endforeach
+                                    @elseif($field->field_name == 'amount_words')
+                                        ONE HUNDRED AND TWENTY FIVE THOUSAND ONLY
+                                    @else
+                                        <span class="p-2">SAMPLE TEXT</span>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
 
                         </div>
-
-                        @endforeach
-
-                        </div>
                         </div>
 
                         </div>
-
-
-
-                     
                     </div>
                 </div>
             </div>
@@ -297,6 +330,20 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
 @section('customJS')
 
 <script>
+
+    
+function previewCheque(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            document.getElementById('check-canvas').style.backgroundImage =
+                `url('${e.target.result}')`;
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
 
     document.addEventListener('DOMContentLoaded', function() {
         // Loop through all draggables and update their respective input boxes
@@ -323,61 +370,127 @@ document.getElementById('canvas-h').addEventListener('input', e => {
 });
 
 // ===== DRAG LOGIC (INTERACT.JS) =====
-interact('.draggable').draggable({
+interact('.draggable')
+  .resizable({
+    edges: { left: false, right: true, bottom: true, top: false },
     listeners: {
+      move (event) {
+        let target = event.target;
+        
+        // Update width and height
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+
+        // Update the data attributes so they save correctly
+        target.setAttribute('data-width', event.rect.width);
+        target.setAttribute('data-height', event.rect.height);
+      }
+    }
+  })
+  .draggable({
+      listeners: {
         move (event) {
             const target = event.target;
-
             let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
             let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-            let field_name = target.getAttribute('id')
-
-            $('#'+field_name+'_x').val(x);
-            $('#'+field_name+'_y').val(y);
-
-            // console.log(x,y,target.getAttribute('id'));
 
             target.style.transform = `translate(${x}px, ${y}px)`;
             target.setAttribute('data-x', x);
             target.setAttribute('data-y', y);
+            
+            // Update sidebar inputs
+            const fieldName = target.getAttribute('data-field');
+            if(document.getElementById(`field-${fieldName}_x`)) {
+                document.getElementById(`field-${fieldName}_x`).value = Math.round(x);
+                document.getElementById(`field-${fieldName}_y`).value = Math.round(y);
+            }
         }
     },
-    modifiers: [
-        interact.modifiers.restrictRect({
-            restriction: 'parent'
-        })
-    ]
-});
+    modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent' }) ]
+  });
 
 // ===== SAVE TEMPLATE TO LARAVEL =====
-document.getElementById('saveTemplate').addEventListener('click', function(){
 
+document.getElementById('saveTemplate').addEventListener('click', function() {
+    const formData = new FormData();
+    const imageFile = document.getElementById('chequeImage').files[0];
+    
+    // 1. Prepare the fields array
     let fields = [];
-
     document.querySelectorAll('.draggable').forEach(el => {
         fields.push({
             field_name: el.dataset.field,
-            left_px: parseFloat(el.getAttribute('data-x')),
-            top_px: parseFloat(el.getAttribute('data-y')),
+            left_px: parseFloat(el.getAttribute('data-x')) || 0,
+            top_px: parseFloat(el.getAttribute('data-y')) || 0,
             width_px: el.offsetWidth,
             height_px: el.offsetHeight
         });
     });
 
+    // 2. Append the file if it exists
+    if (imageFile) {
+        formData.append('cheque_image', imageFile);
+    }
+
+    // 3. Append the other data
+    // Note: FormData sends everything as strings, so we stringify the array
+    formData.append('template_id', '{{ $template->id }}');
+    formData.append('font_size', document.getElementById('font_size').value);
+    formData.append('canvas_h', document.getElementById('canvas-h').value);
+    formData.append('canvas_w', document.getElementById('canvas-w').value);
+    formData.append('fields', JSON.stringify(fields));
+
+    // 4. Send the request
     fetch('/cheque/template/save-layout', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            // Important: DO NOT set 'Content-Type' header when using FormData.
+            // The browser will automatically set it to 'multipart/form-data' with the correct boundary.
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
-        body: JSON.stringify({
-            template_id: {{ $template->id }},
-            fields: fields
-        })
+        body: formData
     })
     .then(r => r.json())
-    .then(() => alert('Template Saved Successfully!'));
+    .then(data => {
+        alert('Template and Image Saved Successfully!');
+    })
+    .catch(err => console.error('Error:', err));
 });
+
+    // document.getElementById('saveTemplate').addEventListener('click', function(){
+
+    //     let fields = [];
+
+    //     document.querySelectorAll('.draggable').forEach(el => {
+    //         fields.push({
+    //             field_name: el.dataset.field,
+    //             left_px: parseFloat(el.getAttribute('data-x')),
+    //             top_px: parseFloat(el.getAttribute('data-y')),
+    //             width_px: el.offsetWidth,
+    //             height_px: el.offsetHeight
+    //         });
+    //     });
+
+    //     canvas_h = document.getElementById('canvas-h').value;
+    //     canvas_w = document.getElementById('canvas-w').value;
+    //     const imageFile = document.getElementById('chequeImage').files[0];
+
+    //     fetch('/cheque/template/save-layout', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    //         },
+    //         body: JSON.stringify({
+    //             template_id: {{ $template->id }},
+    //             canvas_h : canvas_h,
+    //             canvas_w : canvas_w,
+    //             fields: fields
+    //         })
+    //     })
+    //     .then(r => r.json())
+    //     .then(() => alert('Template Saved Successfully!'));
+    // });
 </script>
 
 @endsection

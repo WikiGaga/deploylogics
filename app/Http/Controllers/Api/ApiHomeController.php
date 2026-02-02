@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use \Illuminate\Support\Facades\Session;
 use Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class ApiHomeController extends ApiController
 {
@@ -109,6 +110,61 @@ class ApiHomeController extends ApiController
         $Employee = DB::table('tbl_payr_employee')
         ->where('employee_id', $employee_id)
         ->first();
+
+        $Employee = DB::table('TBL_PAYR_attendance')
+        ->get();
+
+        dd($Employee);
+
+        if (empty($Employee)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404); // Use 404 Not Found HTTP status
+        }
+ 
+        // 3. Return the user data as a JSON response
+        return response()->json([
+            'success' => true,
+            'message' => 'User data send successfully.',
+            'Data' => $Employee,
+        ], 200); // Use 200 OK HTTP status
+    }
+
+         public function store_attendance(Request $request)
+    {
+
+        // dd($request->all()) ;
+        $validator = Validator::make($request->all(), [
+             'emp_id'    => 'required',
+             'attendance_date'    => 'required',
+             'attendance_time'    => 'required',
+             'attendance_type'    => 'required',
+             'shift_id'    => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+      
+        $p_id= DB::table('TBL_PAYR_attendance')->max('id') +1;
+
+        $data=[
+            'id'=>$p_id, 'emp_id'=>$request->emp_id, 'attendance_date'=>date('Y-m-d',strtotime($request->attendance_date)), 'attendance_time'=> date('Y-m-d H:i:s',strtotime($request->attendance_time)), 'attendance_type'=>$request->attendance_type, 'shift_id'=>$request->shift_id
+        ];
+
+        $Employee = DB::table('TBL_PAYR_attendance')
+        ->insert([  $data ]);
+
+        //       $Employee = DB::table('TBL_PAYR_attendance')
+        // ->get();
+
+        // dd($Employee);
 
         if (empty($Employee)) {
             return response()->json([

@@ -408,25 +408,23 @@
     <script>
         // alert('cccccccccccccc');
 
-        Pusher.logToConsole = true;
-        var pusher = new Pusher('cd64b71c5c904100352c', {
-        cluster: 'mt1',
-        // forceTLS: true,
-        //   enabledTransports: ['ws', 'wss', 'xhr_streaming', 'xhr_polling']
-        enabledTransports: ['ws', 'wss']
-        });
-        console.log("Using Pusher key:", '{{ env("PUSHER_APP_KEY") }}');
-        console.log("Using Pusher cluster:", '{{ env("PUSHER_APP_CLUSTER") }}');
-
-        var channel = pusher.subscribe('my-channel');
-        channel.bind('my-event', function(data) {
-            // if(data.message =='unpaid'){
-                window.location.reload();
-                    alert('Event received!');
-            // }
-            console.log('vvvvvvvvvvvvvvvv',data,data.message);
+        // Pusher.logToConsole = true;
+        // var pusher = new Pusher('cd64b71c5c904100352c', {
+        // cluster: 'mt1',
+        // // forceTLS: true,
+        // //   enabledTransports: ['ws', 'wss', 'xhr_streaming', 'xhr_polling']
+        // enabledTransports: ['ws', 'wss']
+        // });
+  
+        // var channel = pusher.subscribe('my-channel');
+        // channel.bind('my-event', function(data) {
+        //     // if(data.message =='unpaid'){
+        //         window.location.reload();
+        //             alert('Event received!');
+        //     // }
+        //     console.log('vvvvvvvvvvvvvvvv',data,data.message);
             
-        });
+        // });
        
 
 

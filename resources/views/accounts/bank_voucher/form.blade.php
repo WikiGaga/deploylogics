@@ -563,25 +563,35 @@
                 @csrf
         <!-- Modal body -->
         <div class="modal-body">
-          <h4>Date:</h4>    
+            <h4>Select Date Formate:</h4> 
+            <select name="date_formate" id="" class="form-control" >
+            <option value="1">25-02-2026</option>
+            <option value="2">25/02/2026</option>
+            <option value="3">25 02 2026</option>
+            </select><br>
+
+            <h4>Date:</h4>    
             <input type="text" name="date" class="form-control" readonly value=""  id="cheque_date" />
             <br>
             <h4>Account title:</h4>   
-                <input type="text" name="account_title" class="form-control"  value=""  id="cheque_title" />
-                <br>
-                <h4>Amount:</h4>   
-                <input type="text" name="amount" class="form-control" readonly value=""  id="cheque_amount" />
-                <br>
-                <h4>Template:</h4>   
+            <input type="text" name="account_title" class="form-control"  value=""  id="cheque_title" />
+            <br>
+            <h4>Amount:</h4>   
+            <input type="text" name="amount" class="form-control" readonly value=""  id="cheque_amount" />
+            <br>
+            <h4>Amount Partision:</h4>   
+            <input type="text" name="amount_partision" class="form-control" readonly value=""  id="cheque_amount_partision" />
+            <br>
+            <h4>Template:</h4>   
 
-                <select name="cheque_template_id" id="" class="form-control" required>
-                <option value="">Select</option>
-                @foreach ($TBL_cheque_layouts as $val)
-                <option value="{{ $val->id }}">{{ $val->name }}</option>
-                @endforeach
-                
-                
-                </select>
+            <select name="cheque_template_id" id="" class="form-control" required>
+            <option value="">Select</option>
+            @foreach ($TBL_cheque_layouts as $val)
+            <option value="{{ $val->id }}">{{ $val->name }}</option>
+            @endforeach
+            
+            
+            </select>
         </div>
         
         <!-- Modal footer -->
@@ -784,13 +794,18 @@
         $('.print_cheque').on('click', function(e) {
             date = $(this).attr('data-date');
             name = $(this).attr('data-name');
-            amount = $(this).attr('data-amount');
-
-            console.log(amount);
+            total_amount = $(this).attr('data-amount');
+            
+            parts = total_amount.split('.');
+            amount = parts[0];
+            amount_partision = parts[1];
+            console.log(amount,amount_partision);
 
              $('#cheque_date').val(date);
              $('#cheque_title').val(name);
              $('#cheque_amount').val(amount);
+             $('#cheque_amount_partision').val(amount_partision);
+             
             // $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
             $('#print_cheque_modal').modal('show');
         });

@@ -77,17 +77,12 @@ class ChequeController extends Controller
     //     return $pdf->stream('check.pdf');
     // }
 
-    public function index()
-    {
-        $templates = DB::table('TBL_cheque_layouts')->get();
-        $id = DB::table('TBL_cheque_layouts')->update([
-            
-            'business_id' => auth()->user()->business_id,
-            'company_id' => auth()->user()->company_id,
-            'branch_id' => auth()->user()->branch_id,
-        ]);
-        return view('check.templates', compact('templates'));
-    }
+    // public function index()
+    // {
+    //     $templates = DB::table('TBL_cheque_layouts')->get();
+       
+    //     return view('check.templates', compact('templates'));
+    // }
 
     public function create()
     {
@@ -96,6 +91,12 @@ class ChequeController extends Controller
 
     public function store(Request $request)
     {
+    //     $imagePath = null;
+
+    // if ($request->hasFile('cheque_image')) {
+    //     $imagePath = $request->file('cheque_image')->store('cheques', 'public');
+    // }
+    //     dd($request->all());
         $p_id= DB::table('TBL_cheque_layouts')->max('id') +1;
         $id = DB::table('TBL_cheque_layouts')->insertGetId([
             'id' => $p_id,
@@ -107,13 +108,15 @@ class ChequeController extends Controller
             'business_id' => auth()->user()->business_id,
             'company_id' => auth()->user()->company_id,
             'branch_id' => auth()->user()->branch_id,
+            // 'cheque_image'=> $imagePath,
         ]);
 
         // Default fields
         $fields = [
             ['date', 20, 600, 150, 30],
             ['account_title', 100, 150, 300, 30],
-            ['amount', 100, 550, 150, 30],
+            ['amount', 100, 550, 100, 30],
+            ['amount_partision', 100, 670, 80, 30],
             ['amount_words', 150, 150, 500, 30],
         ];
 
@@ -123,6 +126,7 @@ class ChequeController extends Controller
                 'id' => $p_id,
                 'layout_id' => $id,
                 'field_name' => $f[0],
+                'font_size' => 12,
                 'top_px' => $f[1],
                 'left_px' => $f[2],
                 'width_px' => $f[3],
@@ -141,32 +145,37 @@ class ChequeController extends Controller
         $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
         $fields = DB::table('TBL_cheque_fields')->where('layout_id', $id)->get();
 
+
         return view('check.design', compact('template', 'fields'));
     }
 
     public function saveLayout(Request $request)
     {
-        // foreach ($request->fields as $field) {
-        //     DB::table('TBL_cheque_fields')
-        //         ->where('layout_id', $request->template_id)
-        //         ->where('field_name', $field['field_name'])
-        //         ->update([
-        //             'top_px' => $field['top_px'],
-        //             'left_px' => $field['left_px'],
-        //             'width_px' => $field['width_px'],
-        //             'height_px' => $field['height_px'],
-        //         ]);
-        // }
-
-        // return response()->json(['success' => true]);
 
         // dd($request->all());
 
-        foreach ($request->fields as $field) {
+        $update_array=[
+            'width_px' => $request->canvas_w,
+            'height_px' => $request->canvas_h,
+        ];
+
+        if ($request->hasFile('cheque_image')) {
+            $imagePath = $request->file('cheque_image')->store('cheques', 'public');
+            $update_array['cheque_image']= $imagePath;
+        }
+
+        DB::table('TBL_cheque_layouts')
+        ->where('id', $request->template_id)
+        ->update($update_array);
+
+        $fields = json_decode($request->input('fields'), true);
+
+        foreach ($fields as $field) {
             DB::table('TBL_cheque_fields')
                 ->where('layout_id', $request->template_id)
                 ->where('field_name', $field['field_name'])
                 ->update([
+                    'font_size' => $request->font_size,
                     'top_px' => $field['top_px'],
                     'left_px' => $field['left_px'],
                     'width_px' => $field['width_px'],
@@ -177,34 +186,17 @@ class ChequeController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function printForm($id)
-    {
-        $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
-        return view('check.print_form', compact('template'));
-    }
-
-    // public function printCheque(Request $request, $id)
+    // public function printForm($id)
     // {
     //     $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
-    //     $fields = DB::table('TBL_cheque_fields')
-    //         ->where('layout_id', $id)
-    //         ->get()
-    //         ->keyBy('field_name');
-
-    //         $inputs = $request->all();
-    //         $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
-
-    //         return view('check.print_pdf',  compact('template', 'fields', 'inputs'));
-    
-    //         $pdf = PDF::loadView('check.print_pdf', compact('template', 'fields', 'inputs'))
-    //             ->setPaper([0, 0, $template->width_px, $template->height_px]);
-    
-    //         return $pdf->stream('cheque.pdf');
-
+    //     return view('check.print_form', compact('template'));
     // }
 
-//     public function printCheque(Request $request, $id)
+  
+
+//     public function printCheque(Request $request)
 // {
+//     $id= $request->cheque_template_id;
 //     $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
 
 //     $fields = DB::table('TBL_cheque_fields')
@@ -212,7 +204,9 @@ class ChequeController extends Controller
 //         ->get();
 
 //     $inputs = $request->all();
-//     $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
+//     // $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
+//     $inputs['amount_words'] = \App\Library\Utilities::AmountWords($inputs['amount']);
+    
 
 //     $pdf = PDF::loadView('check.print_pdf', [
 //         'template' => $template,
@@ -224,30 +218,39 @@ class ChequeController extends Controller
 //     return $pdf->stream('cheque.pdf');
 // }
 
-    public function printCheque(Request $request)
+public function printCheque(Request $request)
 {
-    $id= $request->cheque_template_id;
+    $id = $request->cheque_template_id;
     $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
-
-    $fields = DB::table('TBL_cheque_fields')
-        ->where('layout_id', $id)
-        ->get();
+    $fields = DB::table('TBL_cheque_fields')->where('layout_id', $id)->get();
 
     $inputs = $request->all();
-    // $inputs['amount_words'] = $this->numberToWords($inputs['amount']);
-    $inputs['amount_words'] = \App\Library\Utilities::AmountWords($inputs['amount']);
     
+    // Ensure date is 8 digits only (e.g., 28012026) for character spacing
+    // if (!empty($inputs['date'])) {
+    //     $inputs['date'] = preg_replace('/[^0-9]/', '', $inputs['date']);
+    // }
+
+    if($request->date_formate==3){
+        $inputs['date'] = preg_replace('/[^0-9]/', '', $inputs['date']);
+    }elseif($request->date_formate==2){
+        $inputs['date'] = preg_replace('/[^0-9]/', '/', $inputs['date']);
+    }
+
+    $inputs['amount_words'] = \App\Library\Utilities::AmountWords($inputs['amount']);
+
+    return view('check.print_pdf', compact('template', 'fields','inputs'));
 
     $pdf = PDF::loadView('check.print_pdf', [
         'template' => $template,
         'fields'   => $fields,
         'inputs'   => $inputs
     ])
-    ->setPaper([0, 0, $template->width_px, $template->height_px]);
+    // Set paper size to match your template dimensions
+    // ->setPaper([0, 0, $template->width_px, $template->height_px], 'landscape');
+    ->setPaper([0, 0, $template->width_px * 0.75, $template->height_px* 0.75], 'portrait');
 
     return $pdf->stream('cheque.pdf');
-
-     // return view('check.print_pdf',  compact('template', 'fields', 'inputs'));
 }
 
     // private function numberToWords($number)

@@ -27,6 +27,7 @@
                         <form method="POST" action="/cheque/template/store">
                         @csrf
                         <input name="name" placeholder="Template Name" required>
+                        <!-- <input type="file" name="cheque_image" accept="image/png,image/jpeg" onchange="previewCheque(this)" class="w-full border p-2 rounded"> -->
                         <button>Create</button>
                         </form>
                      
