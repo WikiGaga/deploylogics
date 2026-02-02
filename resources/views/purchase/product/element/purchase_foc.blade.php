@@ -64,7 +64,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="text" class="supplier_name tb_moveIndex open_inline__help form-control erp-form-control-sm" autocomplete="off" name="foc[{{$loop->iteration}}][supplier_name]" value="{{$product_foc->supplier->supplier_name}}" data-id="supplier_name" readonly>
+                                    <input type="text" class="supplier_name tb_moveIndex open_inline__help form-control erp-form-control-sm" autocomplete="off" name="foc[{{$loop->iteration}}][supplier_name]" value="{{$product_foc->supplier->supplier_name ?? ''}}" data-id="supplier_name" readonly>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group btn-group-sm" role="group">
