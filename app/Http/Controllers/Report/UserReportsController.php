@@ -2846,6 +2846,7 @@ class UserReportsController extends Controller
 
             $orderDetails = DB::select("
                 SELECT
+                    o.order_note,
                     od.food_id,
                     od.price,
                     od.discount_on_food,
@@ -2854,15 +2855,76 @@ class UserReportsController extends Controller
                     od.variation,
                     od.add_ons,
                     od.is_deleted,
+                    od.notes,
                     f.name as food_name,
                     f.image as food_image,
                     (od.price * od.quantity) as gross_amount,
-                    ((od.price * od.quantity) - od.discount_on_food + od.total_add_on_price) as net_amount
+                    ((od.price * od.quantity) - (od.discount_on_food * od.quantity) + od.total_add_on_price) as net_amount
                 FROM order_details od
+                JOIN orders o ON o.id = od.order_id
                 LEFT JOIN food f ON f.id = od.food_id
                 WHERE od.order_id = ?
                 ORDER BY od.id
             ", [$orderId]);
+
+            foreach ($orderDetails as &$detail) {
+
+                $variation = $detail->variation ? json_decode($detail->variation, true) : null;
+
+                if (is_array($variation)) {
+
+                    // 1) Collect all options_list_id used in the variation values
+                    $ids = [];
+
+                    foreach ($variation as $var) {
+                        if (($var['printing_option'] ?? null) !== 'option_list_name') {
+                            continue;
+                        }
+
+                        $values = $var['values'] ?? [];
+                        if (is_array($values)) {
+                            foreach ($values as $v) {
+                                if (!empty($v['options_list_id'])) {
+                                    $ids[] = (int) $v['options_list_id'];
+                                }
+                            }
+                        }
+                    }
+
+                    $ids = array_values(array_unique($ids));
+
+                    // 2) Fetch all names in ONE query: [id => name]
+                    $namesById = [];
+                    if (!empty($ids)) {
+                        $namesById = DB::table('options_list')
+                            ->whereIn('id', $ids)
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    }
+
+                    // 3) Inject options_list_name into each value
+                    foreach ($variation as $varKey => $var) {
+                        if (($var['printing_option'] ?? null) !== 'option_list_name') {
+                            continue;
+                        }
+
+                        if (!isset($variation[$varKey]['values']) || !is_array($variation[$varKey]['values'])) {
+                            continue;
+                        }
+
+                        foreach ($variation[$varKey]['values'] as $valKey => $val) {
+                            $id = isset($val['options_list_id']) ? (int) $val['options_list_id'] : null;
+
+                            if ($id && isset($namesById[$id])) {
+                                $variation[$varKey]['values'][$valKey]['options_list_name'] = $namesById[$id];
+                            }
+                        }
+                    }
+                }
+
+                $detail->variation = json_encode($variation);
+            }
+
 
             $orderSummary = DB::select("
                 SELECT

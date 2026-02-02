@@ -106,7 +106,7 @@
 @endif
 @include('elements/popup')
 <!-- Order Details Modal -->
-<div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true" data-keyboard="false">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -398,9 +398,9 @@ $(document).ready(function() {
         var totalAddon = 0;
 
         orderDetails.forEach(function(item) {
-            totalDiscount += parseFloat(item.discount_on_food * item.quantity || 0);
+            totalDiscount += parseFloat(item.discount_on_food || 0);
             var itemTotal = parseFloat((item.price * item.quantity) + item.total_add_on_price || 0);
-            itemTotal = itemTotal - (item.discount_on_food * item.quantity || 0);
+            itemTotal = itemTotal - (item.discount_on_food || 0);
             subtotal += parseFloat(item.price * item.quantity || 0);            
             totalAddon += parseFloat(item.total_add_on_price || 0);
 
@@ -421,15 +421,15 @@ $(document).ready(function() {
                                     variationsHtml += '<div class="variation-value ml-1">';
                                     if(value.is_deleted == 'Y'){
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- <del>' + value.label + '</del>';
+                                            variationsHtml += '- <del>' + value.options_list_name + '</del>';
                                         }else{
-                                            variationsHtml += '- <del>' + variation.name + '</del>';
+                                            variationsHtml += '- <del>' + value.label + '</del>';
                                         }
                                     }else{
                                         if(variation.printing_option == 'option_list_name'){
-                                            variationsHtml += '- ' + value.label + '</strong>';
+                                            variationsHtml += '- ' + value.options_list_name + '</strong>';
                                         }else{
-                                            variationsHtml += '- ' + variation.name + '</strong>';
+                                            variationsHtml += '- ' + value.label + '</strong>';
                                         }
                                     }
                                     variationsHtml += '</div>';
@@ -494,9 +494,14 @@ $(document).ready(function() {
                     </td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${parseFloat(item.price || 0).toFixed(3)}</td>
                     <td class="text-center align-middle" style="font-size: 0.95rem;">${item.quantity || 0}</td>
-                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)}</td>
+                    <td class="text-center align-middle text-danger" style="font-size: 0.95rem;">-${parseFloat(item.discount_on_food * item.quantity || 0).toFixed(3)} (${(((item.discount_on_food * item.quantity) / item.price) * 100 || 0).toFixed(0)}%)</td>
                     <td class="text-center align-middle text-success" style="font-size: 0.95rem;">+${parseFloat(item.total_add_on_price || 0).toFixed(3)}</td>
-                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${itemTotal.toFixed(3)}</td>
+                    <td class="text-center align-middle font-weight-bold" style="font-size: 0.95rem;">${parseFloat(item.net_amount || 0).toFixed(3)}</td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <strong>Notes:</strong> ${item.notes || 'N/A'}
+                    </td>    
                 </tr>
             `;
         });
@@ -533,6 +538,10 @@ $(document).ready(function() {
                 </div>
             </div>
             <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="h5">Notes:</div>
+                    <p>${orderDetails.order_notes || 'N/A'}</p>
+                </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="h5">Grand Total:</span>
                     <span class="h5 text-primary font-weight-bold">${grandTotal.toFixed(3)}</span>
