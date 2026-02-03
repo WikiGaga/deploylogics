@@ -144,9 +144,9 @@ class ChequeController extends Controller
     {
         $template = DB::table('TBL_cheque_layouts')->where('id', $id)->first();
         $fields = DB::table('TBL_cheque_fields')->where('layout_id', $id)->get();
+        $font_size = DB::table('TBL_cheque_fields')->where('layout_id', $id)->value('font_size');
 
-
-        return view('check.design', compact('template', 'fields'));
+        return view('check.design', compact('template', 'fields','font_size'));
     }
 
     public function saveLayout(Request $request)

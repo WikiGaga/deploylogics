@@ -16,7 +16,7 @@ use \Illuminate\Support\Facades\Session;
 use Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\File;
 class ApiHomeController extends ApiController
 {
     /**
@@ -108,13 +108,15 @@ class ApiHomeController extends ApiController
         $employee_id = $request->input('employee_id');
 
         $Employee = DB::table('tbl_payr_employee')
+        ->select("EMPLOYEE_ID","EMPLOYEE_NAME","EMPLOYEE_IMG","EMPLOYEE_LOCAL_ADDRESS_1","EMPLOYEE_DATE_OF_BIRTH","EMPLOYEE_LOCAL_PHONE_NO","EMPLOYEE_PERMANENT_PHONE_NO",
+        "GENDER_ID","NATIONALITY_ID","EMPLOYEE_LOCAL_CITY_ID","EMPLOYEE_LOCAL_COUNTRY_ID","REGISTER_STATUS","EMBEDED_CODE")
         ->where('employee_id', $employee_id)
         ->first();
 
-        $Employee = DB::table('TBL_PAYR_attendance')
-        ->get();
+        // $Employee = DB::table('TBL_PAYR_attendance')
+        // ->get();
 
-        dd($Employee);
+        // dd($Employee);
 
         if (empty($Employee)) {
             return response()->json([
@@ -177,6 +179,64 @@ class ApiHomeController extends ApiController
         return response()->json([
             'success' => true,
             'message' => 'User data send successfully.',
+            'Data' => $Employee,
+        ], 200); // Use 200 OK HTTP status
+    }
+   public function update_employee(Request $request)
+    {
+
+        // dd($request->all()) ;
+        $validator = Validator::make($request->all(), [
+             'emp_id'    => 'required',
+             'employee_img'    => 'required',
+             'embeded_code'    => 'required',
+             
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $employee_id = $request->input('employee_id');
+
+        $Employee = DB::table('tbl_payr_employee')
+        ->where('employee_id', $employee_id)
+        ->first();
+
+        if (empty($Employee)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404); // Use 404 Not Found HTTP status
+        }
+
+        $employee_img=NULL;
+        if($request->hasFile('employee_img'))
+        {
+            $folder = 'images/employee/';
+            if (! File::exists($folder)) {
+                File::makeDirectory($folder, 0775, true,true);
+            }
+            $image = $request->file('employee_img');
+            $filename = time() . '.' . $image->getClientOriginalExtension();
+            $path = public_path($folder . $filename);
+            Image::make($image->getRealPath())->save($path);
+            $employee_img = isset($filename)?$filename:'';
+        }
+
+        $data=['employee_img'=>$employee_img, 'embeded_code'=>$request->embeded_code];
+        $Employee = DB::table('tbl_payr_employee')
+         ->where('employee_id', $employee_id)
+        ->UPDATE([  $data ]);
+
+        // 3. Return the user data as a JSON response
+        return response()->json([
+            'success' => true,
+            'message' => 'User data update successfully.',
             'Data' => $Employee,
         ], 200); // Use 200 OK HTTP status
     }

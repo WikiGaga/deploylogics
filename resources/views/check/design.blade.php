@@ -174,8 +174,9 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
 
         #check-canvas {
             background-color: #fff;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: {{ empty($template->cheque_image)  ? 'radial-gradient(#e5e7eb 1px, transparent 1px)' 
+            : 'url(' . asset('storage/' . $template->cheque_image) . ')' }};
+           background-size: 20px 20px;
         }
         /* For Amount in Words: Allow wrapping and set a line height */
     .field-amount_words {
@@ -242,13 +243,8 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
                             </div>
 
                             <label>Font Size: </label>
-                             <input type="number" id="font_size" value=""
-                                    class="w-1/2 border p-2 rounded">
-
-                            <button id="saveTemplate"
-                                    class="w-full bg-green-600 text-white py-3 rounded-lg font-bold">
-                                Save Template Layout
-                            </button>
+                            <input type="number" id="font_size" value="{{ $font_size ?? 12 }}" class="w-1/2 border p-2 rounded">
+                            <button id="saveTemplate" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold"> Save Template Layout </button>
                             <label>Date X:</label>
                             <input id='field-date_x' name='date_x' val="" readonly><br>
                             <label>Date Y:</label>
@@ -295,7 +291,7 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
                                     {{ ucfirst(str_replace('_',' ', $field->field_name)) }}
                                 </span>
 
-                                <div class="font-bold h-full {{ $field->field_name == 'date' ? 'field-date' : '' }} 
+                                <div class="hedding_div font-bold h-full {{ $field->field_name == 'date' ? 'field-date' : '' }} 
                                                     {{ $field->field_name == 'amount_words' ? 'field-amount_words' : '' }}">
                                     @if($field->field_name == 'date')
                                         @php $dateDigits = str_split('28012026'); @endphp
@@ -331,7 +327,47 @@ document.getElementById('saveTemplate').addEventListener('click', function(){
 
 <script>
 
-    
+    // document.getElementById('font_size').addEventListener('input', function() {
+    //     const size = this.value + "px";
+    //     const elements = document.getElementsByClassName('hedding_div');
+        
+    //     // Loop through the collection to update each one
+    //     Array.from(elements).forEach(el => {
+    //         el.style.fontSize = size;
+    //     });
+    // });
+        // 1. Define a reusable function to apply the font size
+        function applyFontSize(sizeValue) {
+            if (!sizeValue) return; // Don't do anything if the value is empty
+
+            const sizeWithUnit = sizeValue + "px";
+            const elements = document.getElementsByClassName('hedding_div');
+
+            Array.from(elements).forEach(el => {
+                el.style.fontSize = sizeWithUnit;
+                
+                // Also update internal spans (like date digits) 
+                // which might have their own font-size classes
+                const spans = el.querySelectorAll('span');
+                spans.forEach(span => {
+                    span.style.fontSize = sizeWithUnit;
+                });
+            });
+        }
+
+        // 2. Run on Page Load
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const fontSizeInput = document.getElementById('font_size');
+            if (fontSizeInput && fontSizeInput.value) {
+                applyFontSize(fontSizeInput.value);
+            }
+        });
+
+        // 3. Run on User Input
+        document.getElementById('font_size').addEventListener('input', function() {
+            applyFontSize(this.value);
+        });
+            
 function previewCheque(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -457,40 +493,7 @@ document.getElementById('saveTemplate').addEventListener('click', function() {
     .catch(err => console.error('Error:', err));
 });
 
-    // document.getElementById('saveTemplate').addEventListener('click', function(){
-
-    //     let fields = [];
-
-    //     document.querySelectorAll('.draggable').forEach(el => {
-    //         fields.push({
-    //             field_name: el.dataset.field,
-    //             left_px: parseFloat(el.getAttribute('data-x')),
-    //             top_px: parseFloat(el.getAttribute('data-y')),
-    //             width_px: el.offsetWidth,
-    //             height_px: el.offsetHeight
-    //         });
-    //     });
-
-    //     canvas_h = document.getElementById('canvas-h').value;
-    //     canvas_w = document.getElementById('canvas-w').value;
-    //     const imageFile = document.getElementById('chequeImage').files[0];
-
-    //     fetch('/cheque/template/save-layout', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-    //         },
-    //         body: JSON.stringify({
-    //             template_id: {{ $template->id }},
-    //             canvas_h : canvas_h,
-    //             canvas_w : canvas_w,
-    //             fields: fields
-    //         })
-    //     })
-    //     .then(r => r.json())
-    //     .then(() => alert('Template Saved Successfully!'));
-    // });
+   
 </script>
 
 @endsection

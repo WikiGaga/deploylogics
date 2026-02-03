@@ -107,6 +107,8 @@ font-size:{{ $field->font_size }}px;">
             width: {{ $template->width_px }}px;
             height: {{ $template->height_px }}px;
             background-size: 100% 100%;
+            background-image: {{ empty($template->cheque_image)  ? 'radial-gradient(#e5e7eb 1px, transparent 1px)' 
+            : 'url(' . asset('storage/' . $template->cheque_image) . ')' }};
             background-repeat: no-repeat;
         }
 
@@ -172,8 +174,8 @@ font-size:{{ $field->font_size }}px;">
 
         @elseif($isWords)
             {{-- This field will wrap because of the .field-amount_words CSS --}}
-            {{ strtoupper($val) }}
-
+            <!-- {{ strtoupper($val) }} -->
+         {{ $val }}
         @else
             {{ $val }}
         @endif

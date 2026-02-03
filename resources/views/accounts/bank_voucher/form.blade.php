@@ -6,7 +6,7 @@
 @section('content')
     @php
 
-     $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->get();
+     $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->orderBy('name')->get();
 
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             if($case == 'new'){

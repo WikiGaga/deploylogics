@@ -111,7 +111,7 @@ class EmployeeController extends Controller
 
         $data['form_type'] = 'employee';
         $data['menu_id'] = self::$menu_dtl_id;
-
+        // dd($data['gender'],$this->currentBusinessCompanyBranch);
         return view('PayrDepartment.employee.form',compact('data'));
     }
 
