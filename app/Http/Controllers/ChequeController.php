@@ -10,80 +10,6 @@ use PDF;
 
 class ChequeController extends Controller
 {
-    // Cheque Designer Screen
-    // public function designer($layout_id)
-    // {
-
-    //     // dd($layout_id);
-
-    //     // DB::table('TBL_cheque_fields')->where('id', 1)
-    //     //       ->update([ 'FIELD_NAME'=>'date', 'layout_id'=>1,'height_px'=>50,'width_px'=>250,'top_px'=>50,'left_px'=>50,'font_size'=>15]);
-    //     // DB::table('TBL_cheque_fields')->where('id', 2)
-    //     //       ->update([ 'FIELD_NAME'=>'ammount', 'layout_id'=>1,'height_px'=>50,'width_px'=>250,'top_px'=>100,'left_px'=>50,'font_size'=>15]);
-    //     // DB::table('TBL_cheque_fields')->where('id', 3)
-    //     //       ->update([ 'FIELD_NAME'=>'account title', 'layout_id'=>1,'height_px'=>50,'width_px'=>250,'top_px'=>150,'left_px'=>50,'font_size'=>15]);
-    //     // DB::table('TBL_cheque_fields')->where('id', 4)
-    //     //       ->update([ 'FIELD_NAME'=>'ammount in words', 'layout_id'=>1,'height_px'=>50,'width_px'=>250,'top_px'=>200,'left_px'=>50,'font_size'=>15]);
-
-    //     $layout = DB::table('TBL_cheque_layouts')->where('id', $layout_id)->first();
-    //     $fields = DB::table('TBL_cheque_fields')->where('layout_id', $layout_id)->get();
-
-    //     // dd( $fields, $layout);
-    //     return view('check/cheque_designer', compact('layout', 'fields'));
-    // }
-
-    // // Save Layout
-    // public function saveLayout(Request $request)
-    // {
-    //     foreach ($request->fields as $field) {
-    //         DB::table('TBL_cheque_fields')->updateOrInsert(
-    //             [
-    //                 'tem_id' => $request->layout_id,
-    //                 'field_name' => $field['field_name']
-    //             ],
-    //             [
-    //                 'top_px' => $field['top_px'],
-    //                 'left_px' => $field['left_px'],
-    //                 'width_px' => $field['width_px'],
-    //                 'height_px' => $field['height_px'],
-    //             ]
-    //         );
-    //     }
-    //     return response()->json(['success' => true]);
-    // }
-
-    // // Show Form to enter cheque details
-    // public function printForm($layout_id)
-    // {
-
-    //     dd($layout_id);
-    //     $layout = DB::table('TBL_cheque_layouts')->where('id', $layout_id)->first();
-    //     return view('check/cheque_print', compact('layout'));
-    // }
-
-    // // Generate PDF cheque
-    // public function printCheque(Request $request, $layout_id)
-    // {
-    //     $layout = DB::table('TBL_cheque_layouts')->where('id', $layout_id)->first();
-    //     $fields = DB::table('TBL_cheque_fields')->where('tem_id', $layout_id)->get()->keyBy('field_name');
-
-    //     $inputs = $request->all();
-    //     // $inputs['amount_words'] = convertNumberToWords($inputs['amount'] ?? 0);
-    //     $inputs['amount_words'] =  'abc';
-
-    //     $pdf = PDF::loadView('check/cheque_output_pdf', compact('layout', 'fields', 'inputs'))
-    //               ->setPaper([0,0,$layout->width_px,$layout->height_px]);
-
-    //     return $pdf->stream('check.pdf');
-    // }
-
-    // public function index()
-    // {
-    //     $templates = DB::table('TBL_cheque_layouts')->get();
-       
-    //     return view('check.templates', compact('templates'));
-    // }
-
     public function create()
     {
         return view('check.create_template');
@@ -91,12 +17,11 @@ class ChequeController extends Controller
 
     public function store(Request $request)
     {
-    //     $imagePath = null;
+        //     $imagePath = null;
+        // if ($request->hasFile('cheque_image')) {
+        //     $imagePath = $request->file('cheque_image')->store('cheques', 'public');
+        // }
 
-    // if ($request->hasFile('cheque_image')) {
-    //     $imagePath = $request->file('cheque_image')->store('cheques', 'public');
-    // }
-    //     dd($request->all());
         $p_id= DB::table('TBL_cheque_layouts')->max('id') +1;
         $id = DB::table('TBL_cheque_layouts')->insertGetId([
             'id' => $p_id,
@@ -151,9 +76,6 @@ class ChequeController extends Controller
 
     public function saveLayout(Request $request)
     {
-
-        // dd($request->all());
-
         $update_array=[
             'width_px' => $request->canvas_w,
             'height_px' => $request->canvas_h,
@@ -226,11 +148,6 @@ public function printCheque(Request $request)
 
     $inputs = $request->all();
     
-    // Ensure date is 8 digits only (e.g., 28012026) for character spacing
-    // if (!empty($inputs['date'])) {
-    //     $inputs['date'] = preg_replace('/[^0-9]/', '', $inputs['date']);
-    // }
-
     if($request->date_formate==3){
         $inputs['date'] = preg_replace('/[^0-9]/', '', $inputs['date']);
     }elseif($request->date_formate==2){

@@ -17,6 +17,9 @@ use Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
+use Image;
+
+
 class ApiHomeController extends ApiController
 {
     /**
@@ -113,11 +116,6 @@ class ApiHomeController extends ApiController
         ->where('employee_id', $employee_id)
         ->first();
 
-        // $Employee = DB::table('TBL_PAYR_attendance')
-        // ->get();
-
-        // dd($Employee);
-
         if (empty($Employee)) {
             return response()->json([
                 'success' => false,
@@ -185,7 +183,6 @@ class ApiHomeController extends ApiController
    public function update_employee(Request $request)
     {
 
-        // dd($request->all()) ;
         $validator = Validator::make($request->all(), [
              'emp_id'    => 'required',
              'employee_img'    => 'required',
@@ -228,7 +225,7 @@ class ApiHomeController extends ApiController
             $employee_img = isset($filename)?$filename:'';
         }
 
-        $data=['employee_img'=>$employee_img, 'embeded_code'=>$request->embeded_code];
+        $data=['employee_img'=>$employee_img, 'embeded_code'=>$request->embeded_code,'REGISTER_STATUS'=>'inactive'];
         $Employee = DB::table('tbl_payr_employee')
          ->where('employee_id', $employee_id)
         ->UPDATE([  $data ]);
