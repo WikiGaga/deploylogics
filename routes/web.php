@@ -848,6 +848,12 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','PayrDepartment\EmployeeTypeController@destroy');
     });
 
+    Route::prefix('Employee-Attendance')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\EmployeeAttendanceController@create');
+        Route::post('form/{id?}','PayrDepartment\EmployeeAttendanceController@store');
+        Route::post('delete/{id}','PayrDepartment\EmployeeAttendanceController@destroy');
+    });
+
     Route::prefix('retirement-type')->group(function(){
         Route::get('form/{id?}','PayrDepartment\RetirementTypeController@create');
         Route::post('form/{id?}','PayrDepartment\RetirementTypeController@store');

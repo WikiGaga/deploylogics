@@ -45,7 +45,7 @@ class ListingAdvanceController extends Controller
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
-        // dd( $listing, );
+        // dd( $case_name, $listing );
         // if(empty($listing)){
         //     return abort('404');
         // }

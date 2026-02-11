@@ -131,7 +131,7 @@ class ApiHomeController extends ApiController
         ], 200); // Use 200 OK HTTP status
     }
 
-         public function store_attendance(Request $request)
+        public function store_attendance(Request $request)
     {
 
         // dd($request->all()) ;
@@ -152,19 +152,14 @@ class ApiHomeController extends ApiController
         }
 
       
-        $p_id= DB::table('TBL_PAYR_attendance')->max('id') +1;
+        $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
         $data=[
             'id'=>$p_id, 'emp_id'=>$request->emp_id, 'attendance_date'=>date('Y-m-d',strtotime($request->attendance_date)), 'attendance_time'=> date('Y-m-d H:i:s',strtotime($request->attendance_time)), 'attendance_type'=>$request->attendance_type, 'shift_id'=>$request->shift_id
         ];
 
-        $Employee = DB::table('TBL_PAYR_attendance')
+        $Employee = DB::table('Tbl_hr_attendence_dtl')
         ->insert([  $data ]);
-
-        //       $Employee = DB::table('TBL_PAYR_attendance')
-        // ->get();
-
-        // dd($Employee);
 
         if (empty($Employee)) {
             return response()->json([
@@ -198,11 +193,13 @@ class ApiHomeController extends ApiController
             ], 422);
         }
 
-        $employee_id = $request->input('employee_id');
+        $employee_id = $request->input('emp_id');
 
         $Employee = DB::table('tbl_payr_employee')
         ->where('employee_id', $employee_id)
         ->first();
+
+        // dd($Employee,DB::table('tbl_payr_employee')->get());
 
         if (empty($Employee)) {
             return response()->json([
@@ -225,10 +222,15 @@ class ApiHomeController extends ApiController
             $employee_img = isset($filename)?$filename:'';
         }
 
+        
+
         $data=['employee_img'=>$employee_img, 'embeded_code'=>$request->embeded_code,'REGISTER_STATUS'=>'inactive'];
+
+        // dd($data);
+
         $Employee = DB::table('tbl_payr_employee')
          ->where('employee_id', $employee_id)
-        ->UPDATE([  $data ]);
+        ->UPDATE(  $data );
 
         // 3. Return the user data as a JSON response
         return response()->json([
