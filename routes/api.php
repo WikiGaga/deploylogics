@@ -28,7 +28,7 @@ Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@s
 Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 
 Route::get('get_employee', 'Api\ApiHomeController@get_employee');
-Route::get('get_all_employee', 'Api\ApiHomeController@get_all_employee');
+Route::get('get_all_employees', 'Api\ApiHomeController@get_all_employees');
 Route::post('store_attendance', 'Api\ApiHomeController@store_attendance');
 Route::post('update_employee', 'Api\ApiHomeController@update_employee');
 
