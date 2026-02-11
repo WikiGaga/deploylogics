@@ -131,6 +131,31 @@ class ApiHomeController extends ApiController
         ], 200); // Use 200 OK HTTP status
     }
 
+        public function get_all_employee(Request $request)
+    {
+        // $employee_id = $request->input('employee_id');
+
+        $Employee = DB::table('tbl_payr_employee')
+        ->select("EMPLOYEE_ID","EMPLOYEE_NAME","EMPLOYEE_IMG","EMPLOYEE_LOCAL_ADDRESS_1","EMPLOYEE_DATE_OF_BIRTH","EMPLOYEE_LOCAL_PHONE_NO","EMPLOYEE_PERMANENT_PHONE_NO",
+        "GENDER_ID","NATIONALITY_ID","EMPLOYEE_LOCAL_CITY_ID","EMPLOYEE_LOCAL_COUNTRY_ID","REGISTER_STATUS","EMBEDED_CODE")
+        // ->where('employee_id', $employee_id)
+        ->get();
+
+        if (empty($Employee)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404); // Use 404 Not Found HTTP status
+        }
+ 
+        // 3. Return the user data as a JSON response
+        return response()->json([
+            'success' => true,
+            'message' => 'User data send successfully.',
+            'Data' => $Employee,
+        ], 200); // Use 200 OK HTTP status
+    }
+
         public function store_attendance(Request $request)
     {
 
