@@ -98,6 +98,7 @@ function addData(){
 }
 function addRowData(thix){
     var currentTable = thix.parents('table');
+    console.log('text_Fields',text_Fields);
     for(var i=0;i<text_Fields.length;i++){
         var require = text_Fields[i]['require'];
         var message = text_Fields[i]['message'];

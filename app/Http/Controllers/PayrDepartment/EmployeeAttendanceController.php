@@ -4,7 +4,7 @@ namespace App\Http\Controllers\PayrDepartment;
 
 use App\Http\Controllers\Controller;
 use App\Library\Utilities;
-use App\Models\TblHrEmployeeType;
+use App\Models\TblHrEmployeeAttendance;
 use Illuminate\Http\Request;
 
 use App\Models\Defi\TblDefiConstants;
@@ -68,11 +68,11 @@ class EmployeeAttendanceController extends Controller
     //     $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
     //     $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
     //     if(isset($id)){
-    //         if(TblHrEmployeeType::where('employee_type_id','LIKE',$id)->exists()){
+    //         if(TblHrEmployeeAttendance::where('employee_type_id','LIKE',$id)->exists()){
     //             $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
     //             $data['permission'] = self::$menu_dtl_id.'-edit';
     //             $data['id'] = $id;
-    //             $data['current'] = TblHrEmployeeType::where('employee_type_id',$id)->first();
+    //             $data['current'] = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
     //         }else{
     //             abort('404');
     //         }
@@ -100,14 +100,19 @@ class EmployeeAttendanceController extends Controller
         ->get();
         $data['type']='brv';
 
-        // dd( $data['employee']);
+        // dd( $data['page_data'],$data['employee']);
 
-         $data['data'] =[];
+         $data['att_data'] =[];
 
-        if(isset($id)){
-     
-            $data['data'] = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+          if(isset($id)){
+             $data['att_data'] = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+           
+        }else{
+            // $data['permission'] = $data['stock_menu_id'].'-create';
+            $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
         }
+
+      
         return view('PayrDepartment.employee_attendance.form', compact('data'));
     }
 
@@ -119,54 +124,68 @@ class EmployeeAttendanceController extends Controller
      */
     public function store(Request $request, $id=null)
     {
-        $data = [];
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|max:100'
-        ]);
-        if ($validator->fails()) {
-            $data['validator_errors'] = $validator->errors();
-            return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
-        }
-        DB::beginTransaction();
-        try{
-            if(isset($id)){
-                $employee = TblHrEmployeeType::where('employee_type_id',$id)->first();
-            }else{
-                $employee = new TblHrEmployeeType();
-                $employee->employee_type_id = Utilities::uuid();
-            }
-            $form_id = $employee->employee_type_id;
-            $employee->employee_type_name = $request->name;
-            $employee->employee_type_entry_status = isset($request->employee_type_entry_status)?"1":"0";
-            $employee->business_id = auth()->user()->business_id;
-            $employee->company_id = auth()->user()->company_id;
-            $employee->branch_id = auth()->user()->branch_id;
-            $employee->employee_type_user_id = auth()->user()->id;
-            $employee->save();
 
-        }catch (QueryException $e) {
-            DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        } catch (ValidationException $e) {
-            DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-        }
-        DB::commit();
-        if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
-            return $this->jsonSuccessResponse($data, trans('message.update'), 200);
-        }else{
-            $data = array_merge($data, Utilities::returnJsonNewForm());
-            $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$form_id;
-            return $this->jsonSuccessResponse($data, trans('message.create'), 200);
-        }  
+        dd($request->all(), $id);
+
+        // $validator = Validator::make($request->all(), [
+        //     'name' => 'required|max:100'
+        // ]);
+        // if ($validator->fails()) {
+        //     $data['validator_errors'] = $validator->errors();
+        //     return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
+        // }
+  
+        $data=[];
+            // if(isset($id)){
+            //     $employee = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
+            // }else{
+                 $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+
+                $data=[
+                        'id'=>$p_id, 
+                        'emp_id'=>$request->employee_select, 
+                        'attendance_date'=>date('Y-m-d',strtotime($request->date)),
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($request->att_date)), 
+                        'attendance_type'=>$request->type_select, 
+                        'shift_id'=>1
+                    ];
+
+                $Employee = DB::table('Tbl_hr_attendence_dtl')
+                ->insert([  $data ]);
+
+                $array=$request->pd;
+                foreach($array as $arr){
+
+                    // dd($arr);
+
+                    $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+
+                    $data=[
+                        'id'=>$p_id, 
+                        'emp_id'=>$arr['employee_select'], 
+                        'attendance_date'=>date('Y-m-d',strtotime($request->date)),
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['att_date'])), 
+                        'attendance_type'=>$arr['type_select'], 
+                        'shift_id'=>1
+                    ];
+
+                    $Employee = DB::table('Tbl_hr_attendence_dtl')
+                    ->insert([  $data ]);
+
+
+
+                }
+            // }
+       
+        // if(isset($id)){
+        //     $data = array_merge($data, Utilities::returnJsonEditForm());
+        //     $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+        //     return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+        // }else{
+        //     $data = array_merge($data, Utilities::returnJsonNewForm());
+        //     $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$form_id;
+        //     return $this->jsonSuccessResponse($data, trans('message.create'), 200);
+        // }  
     }
 
     /**
@@ -214,7 +233,7 @@ class EmployeeAttendanceController extends Controller
         $data = [];
         DB::beginTransaction();
         try{
-            $employee =TblHrEmployeeType::where('employee_type_id',$id)->first();
+            $employee =TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
             $employee->delete();
         }
         catch (QueryException $e) {

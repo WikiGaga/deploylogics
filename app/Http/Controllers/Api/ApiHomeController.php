@@ -108,13 +108,18 @@ class ApiHomeController extends ApiController
         //     ], 401);
         // }
 
+         $Employee = DB::table('tbl_payr_employee as e')
+      ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
+        ->where('e.employee_id', $employee_id)
+        ->first();
+
         $employee_id = $request->input('employee_id');
 
         $Employee = DB::table('tbl_payr_employee as e')
         ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
         ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
         ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
-        ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
+        ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
         "g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
         ->where('e.employee_id', $employee_id)
         ->first();
@@ -125,6 +130,8 @@ class ApiHomeController extends ApiController
                 'message' => 'Employee not found.',
             ], 404); // Use 404 Not Found HTTP status
         }
+
+        $Employee->id = (int) $Employee->id;
  
         // 3. Return the user data as a JSON response
         return response()->json([
@@ -138,23 +145,27 @@ class ApiHomeController extends ApiController
     {
         // $employee_id = $request->input('employee_id');
 
-         $Employee = DB::table('tbl_payr_employee as e')
+        //  $Employee = DB::table('tbl_payr_employee')
+        // ->where('employee_id', 12123325261244)
+        
+        //  ->update(['EMPLOYEE_LOCAL_PERSONAL_EMAIL'=>'o26s26m@gmail.com']);
+
+         $Employees = DB::table('tbl_payr_employee as e')
         ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
         ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
         ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
-        ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
+        ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
         "g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
         // ->where('employee_id', $employee_id)
         ->get();
 
-        //   $Employee = DB::table('tbl_payr_employee as e')
-        // ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
-        // ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
-        // ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
-        // ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
-        // "g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","e.EMBEDED_CODE","e.CREATED_AT")
-        // // ->where('employee_id', $employee_id)
-        // ->get();
+        foreach($Employees as $Employee){
+
+            $Employee->id = (int) $Employee->id;
+
+        }
+
+    //    dd($Employee);
 
         // if (empty($Employee)) {
         //     return response()->json([
@@ -164,7 +175,7 @@ class ApiHomeController extends ApiController
         // }
  
         // 3. Return the user data as a JSON response
-        return response()->json( $Employee); // Use 200 OK HTTP status
+        return response()->json( $Employees); // Use 200 OK HTTP status
     }
 
         public function store_attendance(Request $request)

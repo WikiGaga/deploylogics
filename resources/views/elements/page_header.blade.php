@@ -1,4 +1,7 @@
 
+@php
+// dd('s',$data['page_data'])
+@endphp
 <div class="kt-portlet__head-label">
     <span class="kt-portlet__head-icon">
         <i class="kt-font-brand flaticon2-file"></i>
