@@ -8,44 +8,21 @@
     @php
 
    
-$employees = $data['employee'];
+            $employees = $data['employee'];
 
-     $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->orderBy('name')->get();
 
-            $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $id = $data['att_id'];
+            $att_no = $data['att_no'];
+            $form_type = $data['form_type'];
+            $att_data = $data['att_data'];
+            $att_note = $data['att_note'];
 
-            if($case == 'new'){
-                $voucher_no = 'voucher_no';
+            if(empty($id)){
                 $date =  date('d-m-Y');
-                $type = $data['type'];
-                $voucher_bill = [];
             }
             else{
-            // if($case == 'edit'){
-                $type = $data['type'];
-                $att_data = $data['att_data'];
-                $id = 'voucher_id';
-                $voucher_no= 'voucher_no';
-                $date = date('d-m-Y', strtotime(trim(str_replace('/','-','voucher_date'))));
-                $currency_id = 'currency_id';
-                $exchange_rate = 'voucher_exchange_rate';
-                $cash_type = 'chart_code';
-                $narration = 'voucher_descrip';
-                $saleman = 'saleman_id';
-                $payment_mode = 'voucher_payment_mode';
-                $mode = 'voucher_mode_no';
-
-                $notes = 'voucher_notes';
-                $dtls = [];
-                $voucher_bill = 'voucher_bill';
+                $date = date('d-m-Y', strtotime($data['att_date']));
             }
-
-            if($type == 'brv'){
-                $InvHelp = 'SI';
-            }else{
-                $InvHelp = 'GRN';
-            }
-        $form_type = $type;
 
     @endphp
 
@@ -53,10 +30,11 @@ $employees = $data['employee'];
    
   
     <!--begin::Form-->
-        <form id="voucher_form" class="kt-form" method="post" action="{{action('PayrDepartment\EmployeeAttendanceController@store', [$type,isset($id)?$id:''])}}">
+        <form id="voucher_form" class="kt-form" method="post" action="{{action('PayrDepartment\EmployeeAttendanceController@store', [$id])}}">
  
     @csrf
-        <input type="hidden" value='{{$type}}' id="form_type">
+        <input type="hidden" value='{{$form_type}}' id="form_type">
+        <input type="hidden" value='{{$att_no}}' name="att_no">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
                 <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
@@ -68,7 +46,7 @@ $employees = $data['employee'];
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="erp-page--title">
-                                        {{$voucher_no}}
+                                        {{$att_no}}
                                     </div>
                                 </div>
                             </div>
@@ -80,7 +58,7 @@ $employees = $data['employee'];
                                 <label class="col-lg-5 erp-col-form-label">Date:</label>
                                 <div class="col-lg-7">
                                     <div class="input-group date">
-                                        <input type="text" name="voucher_date" class="moveIndex form-control erp-form-control-sm moveIndex c-date-p" readonly value="{{isset($date)?$date:""}}"  id="kt_datepicker_3" autofocus/>
+                                        <input type="text" name="date" class="moveIndex form-control erp-form-control-sm moveIndex c-date-p" readonly value="{{ $date}}"  id="kt_datepicker_3" autofocus/>
                                         <div class="input-group-append">
                                                 <span class="input-group-text">
                                                     <i class="la la-calendar"></i>
@@ -201,13 +179,13 @@ $employees = $data['employee'];
                                                 <td>
                                                     <select id="pd_uom" class="pd_uom form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
-                                                        <option value="Check-In" {{$rec->emp_id == 'Check-In'?'selected':''}}>Check-In</option>
-                                                        <option value="Check-Out" {{$rec->emp_id == 'Check-Out'?'selected':''}}>Check-Out</option>
-                                                    </select>
+                                                        <option value="Check-In" {{$rec->attendance_type == 'Check-In'?'selected':''}}>Check-In</option>
+                                                        <option value="Check-Out" {{$rec->attendance_type == 'Check-Out'?'selected':''}}>Check-Out</option>
+                                                    </select> 
                                                 </td>
 
-                                                <input type="text" name="po_date" class="form-control erp-form-control-sm moveIndex c-date-p kt_datepicker_33" readonly
-                                                    value="{{ isset($date) ? $date : '' }}" id="kt_datepicker_33" autofocus />
+                                                <input type="text" name="po_date" class="form-control erp-form-control-sm kt_datepicker_33" readonly
+                                                    value="{{ isset($date) ? $date : '' }}" id="kt_datepicker_33"  />
 
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
@@ -270,7 +248,12 @@ $employees = $data['employee'];
                             outline: 0;
                         }
                     </style>
-                  
+                    <div class="form-group-block row">
+                        <label class="col-lg-2 erp-col-form-label">{{ __('message.notes') }}:</label>
+                        <div class="col-lg-10">
+                            <textarea type="text" rows="2" id="att_note" name="att_note" class="form-control erp-form-control-sm">{{$att_note}}</textarea>
+                        </div>
+                    </div>
                    
                 </div>
             </div>

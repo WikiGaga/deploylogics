@@ -30,7 +30,7 @@ Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 Route::get('get_employee', 'Api\ApiHomeController@get_employee');
 Route::get('get_all_employees', 'Api\ApiHomeController@get_all_employees');
 Route::post('store_attendance', 'Api\ApiHomeController@store_attendance');
-Route::post('update_employee', 'Api\ApiHomeController@update_employee');
+Route::post('update_employee_face', 'Api\ApiHomeController@update_employee_face');
 
 Route::group(['middleware'=>['auth:api']], function () {
 

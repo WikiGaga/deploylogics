@@ -7,31 +7,6 @@ use App\Library\Utilities;
 use App\Models\TblHrEmployeeAttendance;
 use Illuminate\Http\Request;
 
-use App\Models\Defi\TblDefiConstants;
-use App\Models\Defi\TblDefiTaxGroup;
-use App\Models\Draft\DraftPurcPurchaseOrder;
-use App\Models\Draft\DraftPurcPurchaseOrderDtl;
-use App\Models\TblAccoPaymentMode;
-use App\Models\TblAccoPaymentTerm;
-use App\Models\TblAccoPaymentType;
-use App\Models\TblAutoDemandDtl;
-use App\Models\TblDefiCurrency;
-use App\Models\TblDefiPaymentType;
-use App\Models\TblPurcComparativeQuotation;
-use App\Models\TblPurcComparativeQuotationDtl;
-use App\Models\TblPurcDemand;
-use App\Models\TblPurcLpo;
-use App\Models\TblPurcLpoDtl;
-use App\Models\TblPurcGrn;
-use App\Models\TblPurcProduct;
-use App\Models\TblPurcProductBarcode;
-use App\Models\TblPurcPurchaseOrder;
-use App\Models\TblPurcPurchaseOrderDtl;
-use App\Models\TblPurcSupplier;
-use App\Models\TblSoftUserPageSetting;
-use App\Models\User;
-use App\Models\ViewPurcGRN;
-use App\Models\ViewPurcLpoDetail;
 
 use Illuminate\Validation\Rule;
 use Validator;
@@ -86,7 +61,8 @@ class EmployeeAttendanceController extends Controller
 
        public function create($id = null)
     {
-        $data['form_type'] = 'purc_order';
+        $data['att_id']=$id;
+        $data['form_type'] = 'Att';
         $data['page_data'] = [];
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
@@ -95,21 +71,37 @@ class EmployeeAttendanceController extends Controller
         $data['page_data']['pending_pr'] = TRUE;
         $data['already_exits'] = false;
         $data['permission'] = self::$menu_dtl_id.'-create';
+
         $data['employee'] =  DB::table('tbl_payr_employee')
         ->select("EMPLOYEE_ID","EMPLOYEE_NAME")
         ->get();
-        $data['type']='brv';
+
+        
 
         // dd( $data['page_data'],$data['employee']);
 
          $data['att_data'] =[];
+         $data['att_note'] = '';
+         $data['att_date'] = '';
 
-          if(isset($id)){
-             $data['att_data'] = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+        if(isset($id)){
+            $Tbl_hr_attendence=DB::table('Tbl_hr_attendence')->where('id',$id)->first();
+           
+            if(!empty($Tbl_hr_attendence)){
+                $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+                $data['att_data'] = $Tbl_hr_attendence_dtl;
+                 $data['att_no'] = $Tbl_hr_attendence->att_no;
+                 $data['att_note'] = $Tbl_hr_attendence->att_note;
+                 $data['att_date'] = $Tbl_hr_attendence->att_date;
+            }else{
+                abort('404');
+            }
            
         }else{
             // $data['permission'] = $data['stock_menu_id'].'-create';
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
+            $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
+            $data['att_no'] = $this->documentCode($max_voucher,'ATT');
         }
 
       
@@ -125,7 +117,7 @@ class EmployeeAttendanceController extends Controller
     public function store(Request $request, $id=null)
     {
 
-        dd($request->all(), $id);
+        // dd($request->all(), $id);
 
         // $validator = Validator::make($request->all(), [
         //     'name' => 'required|max:100'
@@ -136,27 +128,26 @@ class EmployeeAttendanceController extends Controller
         // }
   
         $data=[];
-            // if(isset($id)){
-            //     $employee = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
-            // }else{
-                 $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+            if(isset($id)){
+                $employee = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
 
-                $data=[
-                        'id'=>$p_id, 
-                        'emp_id'=>$request->employee_select, 
-                        'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($request->att_date)), 
-                        'attendance_type'=>$request->type_select, 
-                        'shift_id'=>1
+                  $data=[
+                        'att_date'=>date('Y-m-d',strtotime($request->date)),
+                        'att_note'=> $request->att_note, 
+                        // 'att_no'=> $request->att_no, 
+                        'business_id'=>auth()->user()->business_id,
+                        'company_id'=>auth()->user()->company_id,
+                        'branch_id'=>auth()->user()->branch_id,
+                        'updated_at' => now(),
                     ];
 
-                $Employee = DB::table('Tbl_hr_attendence_dtl')
-                ->insert([  $data ]);
+                       
+                $Employee = DB::table('Tbl_hr_attendence')
+                ->where('id',$id)
+                ->update([  $data ]);
 
-                $array=$request->pd;
+                 $array=$request->pd;
                 foreach($array as $arr){
-
-                    // dd($arr);
 
                     $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
@@ -166,26 +157,65 @@ class EmployeeAttendanceController extends Controller
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
                         'attendance_time'=> date('Y-m-d H:i',strtotime($arr['att_date'])), 
                         'attendance_type'=>$arr['type_select'], 
-                        'shift_id'=>1
+                        'shift_id'=>1,
+                        'att_id'=>$id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+
                     ];
 
-                    $Employee = DB::table('Tbl_hr_attendence_dtl')
-                    ->insert([  $data ]);
-
-
-
+                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert([  $data ]);
                 }
-            // }
+
+            }else{
+                $p_id= DB::table('Tbl_hr_attendence')->max('id') +1;
+
+                $data=[
+                        'id'=>$p_id, 
+                        'att_date'=>date('Y-m-d',strtotime($request->date)),
+                        'att_note'=> $request->att_note, 
+                        'att_no'=> $request->att_no, 
+                        'business_id'=>auth()->user()->business_id,
+                        'company_id'=>auth()->user()->company_id,
+                        'branch_id'=>auth()->user()->branch_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+
+                $id = DB::table('Tbl_hr_attendence')
+                ->insertGetId([  $data ]);
+
+                $array=$request->pd;
+                foreach($array as $arr){
+
+                    $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+
+                    $data=[
+                        'id'=>$p_id, 
+                        'emp_id'=>$arr['employee_select'], 
+                        'attendance_date'=>date('Y-m-d',strtotime($request->date)),
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['att_date'])), 
+                        'attendance_type'=>$arr['type_select'], 
+                        'shift_id'=>1,
+                        'att_id'=>$id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+
+                    ];
+
+                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert([  $data ]);
+                }
+            }
        
-        // if(isset($id)){
-        //     $data = array_merge($data, Utilities::returnJsonEditForm());
-        //     $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
-        //     return $this->jsonSuccessResponse($data, trans('message.update'), 200);
-        // }else{
-        //     $data = array_merge($data, Utilities::returnJsonNewForm());
-        //     $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$form_id;
-        //     return $this->jsonSuccessResponse($data, trans('message.create'), 200);
-        // }  
+        if(isset($id)){
+            $data = array_merge($data, Utilities::returnJsonEditForm());
+            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+        }else{
+            $data = array_merge($data, Utilities::returnJsonNewForm());
+            $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$id;
+            return $this->jsonSuccessResponse($data, trans('message.create'), 200);
+        }  
     }
 
     /**
