@@ -324,6 +324,7 @@
                 'message':'Select Employee',
                 'require':true,
                 'readonly':true,
+                'type':'select'
 
             },
             {
@@ -332,6 +333,7 @@
                 'message':'Select Type',
                 'require':true,
                 'readonly':true,
+                'type':'select'
 
             }, {
                 'id':'attendance_time',
