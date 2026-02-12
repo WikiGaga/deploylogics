@@ -108,10 +108,10 @@ class ApiHomeController extends ApiController
         //     ], 401);
         // }
 
-         $Employee = DB::table('tbl_payr_employee as e')
-      ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
-        ->where('e.employee_id', $employee_id)
-        ->first();
+    //      $Employee = DB::table('tbl_payr_employee as e')
+    //   ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
+    //     ->where('e.employee_id', $employee_id)
+    //     ->first();
 
         $employee_id = $request->input('employee_id');
 
@@ -132,6 +132,7 @@ class ApiHomeController extends ApiController
         }
 
         $Employee->id = (int) $Employee->id;
+        $Employee->employee_img = "images/employee/$Employee->employee_img";
  
         // 3. Return the user data as a JSON response
         return response()->json([
@@ -162,7 +163,7 @@ class ApiHomeController extends ApiController
         foreach($Employees as $Employee){
 
             $Employee->id = (int) $Employee->id;
-
+            $Employee->employee_img = "images/employee/$Employee->employee_img";
         }
 
     //    dd($Employee);
@@ -223,13 +224,13 @@ class ApiHomeController extends ApiController
             'Data' => $Employee,
         ], 200); // Use 200 OK HTTP status
     }
-   public function update_employee(Request $request)
+   public function update_employee_face(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
              'emp_id'    => 'required',
-             'employee_img'    => 'required',
-             'embeded_code'    => 'required',
+             'attendance_image'    => 'required',
+             'image_embeded_code'    => 'required',
              
         ]);
 
@@ -247,7 +248,6 @@ class ApiHomeController extends ApiController
         ->where('employee_id', $employee_id)
         ->first();
 
-        // dd($Employee,DB::table('tbl_payr_employee')->get());
 
         if (empty($Employee)) {
             return response()->json([
@@ -256,23 +256,23 @@ class ApiHomeController extends ApiController
             ], 404); // Use 404 Not Found HTTP status
         }
 
-        $employee_img=NULL;
-        if($request->hasFile('employee_img'))
+        $attendance_image=NULL;
+        if($request->hasFile('attendance_image'))
         {
-            $folder = 'images/employee/';
+            $folder = 'images/employee_face/';
             if (! File::exists($folder)) {
                 File::makeDirectory($folder, 0775, true,true);
             }
-            $image = $request->file('employee_img');
+            $image = $request->file('attendance_image');
             $filename = time() . '.' . $image->getClientOriginalExtension();
             $path = public_path($folder . $filename);
             Image::make($image->getRealPath())->save($path);
-            $employee_img = isset($filename)?$filename:'';
+            $attendance_image = isset($filename)?$filename:'';
         }
 
         
 
-        $data=['employee_img'=>$employee_img, 'embeded_code'=>$request->embeded_code,'REGISTER_STATUS'=>'inactive'];
+        $data=['attendance_image'=>$attendance_image, 'image_embeded_code'=>$request->image_embeded_code,'REGISTER_STATUS'=>1];
 
         // dd($data);
 
