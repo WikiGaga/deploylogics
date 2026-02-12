@@ -90,9 +90,10 @@ class EmployeeAttendanceController extends Controller
             if(!empty($Tbl_hr_attendence)){
                 $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
                 $data['att_data'] = $Tbl_hr_attendence_dtl;
-                 $data['att_no'] = $Tbl_hr_attendence->att_no;
-                 $data['att_note'] = $Tbl_hr_attendence->att_note;
-                 $data['att_date'] = $Tbl_hr_attendence->att_date;
+                $data['att_no'] = $Tbl_hr_attendence->att_no;
+                $data['att_note'] = $Tbl_hr_attendence->att_note;
+                $data['att_date'] = $Tbl_hr_attendence->att_date;
+                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
             }else{
                 abort('404');
             }
@@ -129,7 +130,7 @@ class EmployeeAttendanceController extends Controller
   
         $data=[];
             if(isset($id)){
-                $employee = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
+                $employee = TblHrEmployeeAttendance::where('id',$id)->first();
 
                   $data=[
                         'att_date'=>date('Y-m-d',strtotime($request->date)),
@@ -144,7 +145,9 @@ class EmployeeAttendanceController extends Controller
                        
                 $Employee = DB::table('Tbl_hr_attendence')
                 ->where('id',$id)
-                ->update([  $data ]);
+                ->update(  $data );
+
+                $Employee = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->delete();
 
                  $array=$request->pd;
                 foreach($array as $arr){
@@ -155,7 +158,7 @@ class EmployeeAttendanceController extends Controller
                         'id'=>$p_id, 
                         'emp_id'=>$arr['employee_select'], 
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['att_date'])), 
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
                         'attendance_type'=>$arr['type_select'], 
                         'shift_id'=>1,
                         'att_id'=>$id,
@@ -183,7 +186,7 @@ class EmployeeAttendanceController extends Controller
                     ];
 
                 $id = DB::table('Tbl_hr_attendence')
-                ->insertGetId([  $data ]);
+                ->insertGetId( $data );
 
                 $array=$request->pd;
                 foreach($array as $arr){
@@ -194,7 +197,7 @@ class EmployeeAttendanceController extends Controller
                         'id'=>$p_id, 
                         'emp_id'=>$arr['employee_select'], 
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['att_date'])), 
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
                         'attendance_type'=>$arr['type_select'], 
                         'shift_id'=>1,
                         'att_id'=>$id,
@@ -263,8 +266,9 @@ class EmployeeAttendanceController extends Controller
         $data = [];
         DB::beginTransaction();
         try{
-            $employee =TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
+            $employee =TblHrEmployeeAttendance::where('id',$id)->first();
             $employee->delete();
+            DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->delete();
         }
         catch (QueryException $e) {
             DB::rollback();

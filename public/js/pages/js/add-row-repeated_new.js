@@ -263,6 +263,7 @@ function dataDelete() {
     });
 }
 function updateKeys(){
+    console.log('updateKeys');
     var body_length = $('.erp_form__grid_body').length;
     for(var z=0;z<body_length;z++){
         var current_body = $($('.erp_form__grid_body')[z]);
@@ -295,6 +296,7 @@ function updateKeys(){
             td.find('input[type="text"]').each(function(){
                 var data_id = $(this).attr('data-id');
                 $(this).attr('name',nameArr+'['+j+']['+data_id+']');
+               
             });
             td.find('input[type="radio"]').each(function(){
                 var data_id = $(this).attr('data-id');
@@ -345,6 +347,7 @@ function datePicker(){
  *  init functions
  */
 function dataDeleteInit(){
+     console.log('dataDeleteInit');
     updateKeys();
     if (typeof allCalcFunc !== 'undefined'){
         allCalcFunc();
@@ -360,6 +363,8 @@ function dataDeleteInit(){
     }
 }
 function table_td_sortableInit(){
+     console.log('table_td_sortableInit');
+
     updateKeys();
 }
 function addDataInit(){
@@ -419,6 +424,8 @@ function addDataInit(){
     }
 }
 function erpInit(){
+     console.log('erpInit');
+
     addData();
     updateKeys();
     dataDelete();

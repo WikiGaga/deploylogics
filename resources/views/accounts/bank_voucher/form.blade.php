@@ -8,6 +8,8 @@
 
      $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->orderBy('name')->get();
 
+    //  dd($data['page_data']);
+
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             if($case == 'new'){
                 $voucher_no = $data['voucher_no'];

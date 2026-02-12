@@ -9,7 +9,7 @@
 
    
             $employees = $data['employee'];
-
+//   dd($data['page_data']);
 
             $id = $data['att_id'];
             $att_no = $data['att_no'];
@@ -143,8 +143,8 @@
                                             <th cope="col">
                                                 <div class="erp_form__grid_th_title">Date</div>
                                                 <div class="erp_form__grid_th_input">
-                                                    <input type="text"  id="att_date" name="att_date" class="form-control erp-form-control-sm moveIndex c-date-p kt_datepicker_33" readonly
-                                                    value="{{ isset($date) ? $date : '' }}" id="kt_datepicker_33" autofocus />
+                                                    <input type="text"  id="attendance_time" name="attendance_time" class="form-control erp-form-control-sm moveIndex c-date-p kt_datepicker_33" readonly
+                                                    value="{{ isset($date) ? $date : '' }}" autofocus />
                                                 </div>
                                             </th>
 
@@ -168,7 +168,7 @@
                                                     <input readonly type="hidden" name="pd[{{ $loop->iteration }}][cheque_book_id]" data-id="cheque_book_id" value=""  class="cheque_book_id form-control erp-form-control-sm">
                                                 </td>
                                                <td>
-                                                    <select id="pd_uom" class="pd_uom form-control erp-form-control-sm">
+                                                    <select data-id="employee_select" name="pd[{{$loop->iteration}}][employee_select]" class=" form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
                                                            @foreach ($employees as $employee)
                                                                     <option value="{{ $employee->employee_id }}" {{$rec->emp_id == $employee->employee_id?'selected':''}} >{{ $employee->employee_name }}</option>
@@ -177,16 +177,17 @@
                                                 </td>
 
                                                 <td>
-                                                    <select id="pd_uom" class="pd_uom form-control erp-form-control-sm">
+                                                    <select data-id="type_select" name="pd[{{$loop->iteration}}][type_select]" class=" form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
                                                         <option value="Check-In" {{$rec->attendance_type == 'Check-In'?'selected':''}}>Check-In</option>
                                                         <option value="Check-Out" {{$rec->attendance_type == 'Check-Out'?'selected':''}}>Check-Out</option>
                                                     </select> 
                                                 </td>
-
-                                                <input type="text" name="po_date" class="form-control erp-form-control-sm kt_datepicker_33" readonly
-                                                    value="{{ isset($date) ? $date : '' }}" id="kt_datepicker_33"  />
-
+                                                <td>
+                                                <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
+                                                    value="{{ $rec->attendance_time }}"   />
+                                                    
+                                                </td>
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
                                                         <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
@@ -308,7 +309,7 @@
             minuteStep: 5      // Optional: interval between minutes
         }); 
 
-        $('.kt_datepicker_33').datetimepicker('setDate', new Date());
+        $('#attendance_time').datetimepicker('setDate', new Date());
 
         var accountsHelpUrl = "{{url('/common/inline-help/accountsHelp')}}";
         var chequebookHelpUrl = "{{url('/common/help-open/chequebookHelp')}}";
@@ -319,8 +320,8 @@
 
             {
                 'id':'employee_select',
-                'fieldClass':'Select Employee',
-                'message':'',
+                'fieldClass':'',
+                'message':'Select Employee',
                 'require':true,
                 'readonly':true,
 
@@ -328,14 +329,14 @@
             {
                 'id':'type_select',
                 'fieldClass':'Select Type',
-                'message':'',
+                'message':'Select Type',
                 'require':true,
                 'readonly':true,
 
             }, {
-                'id':'att_date',
-                'fieldClass':'Date is Required',
-                'message':'',
+                'id':'attendance_time',
+                'fieldClass':'',
+                'message':'Date is Required',
                 'require':true,
                 'readonly':true,
 
