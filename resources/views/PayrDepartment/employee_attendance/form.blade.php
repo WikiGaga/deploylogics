@@ -9,8 +9,6 @@
 
    
             $employees = $data['employee'];
-//   dd($data['page_data']);
-
             $id = $data['att_id'];
             $att_no = $data['att_no'];
             $form_type = $data['form_type'];
@@ -19,8 +17,7 @@
 
             if(empty($id)){
                 $date =  date('d-m-Y');
-            }
-            else{
+            }else{
                 $date = date('d-m-Y', strtotime($data['att_date']));
             }
 
@@ -106,11 +103,8 @@
                                             <div class="erp_form__grid_th_title">{{ __('message.sr') }}</div>
                                             <div class="erp_form__grid_th_input">
                                                 <input id="sr_no" readonly type="text" class="sr_no form-control erp-form-control-sm">
-                                                <input readonly id="account_id" type="hidden" class="account_id form-control erp-form-control-sm">
-                                                <input readonly id="budget_id" type="hidden" class="budget_id form-control erp-form-control-sm">
-                                                <input readonly id="invoice_id" type="hidden" class="invoice_id form-control erp-form-control-sm">
-                                                <input readonly id="budget_branch_id" type="hidden" class="budget_branch_id form-control erp-form-control-sm">
-                                                <input readonly id="cheque_book_id" type="hidden" class="cheque_book_id form-control erp-form-control-sm">
+                                                <!-- <input readonly id="budget_branch_id" type="hidden" class="budget_branch_id form-control erp-form-control-sm"> -->
+                                                <!-- <input readonly id="cheque_book_id" type="hidden" class="cheque_book_id form-control erp-form-control-sm"> -->
                                             </div>
                                         </th>
                                         <th scope="col">
@@ -165,7 +159,7 @@
                                             <tr>
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{$loop->iteration}}" name="pd[{{$loop->iteration}}][sr_no]"  class="form-control erp-form-control-sm handle" readonly>
-                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][cheque_book_id]" data-id="cheque_book_id" value=""  class="cheque_book_id form-control erp-form-control-sm">
+                                                    <!-- <input readonly type="hidden" name="pd[{{ $loop->iteration }}][cheque_book_id]" data-id="cheque_book_id" value=""  class="cheque_book_id form-control erp-form-control-sm"> -->
                                                 </td>
                                                <td>
                                                     <select data-id="employee_select" name="pd[{{$loop->iteration}}][employee_select]" class=" form-control erp-form-control-sm">

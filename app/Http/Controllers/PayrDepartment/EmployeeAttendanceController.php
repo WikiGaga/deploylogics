@@ -36,29 +36,6 @@ class EmployeeAttendanceController extends Controller
     public static $page_title = 'Employee Attendance';
     public static $redirect_url = 'Employee-Attendance';
     public static $menu_dtl_id='85';
-    //  public function create($id = null)
-    // {
-    //     $data['page_data'] = [];
-    //     $data['page_data']['title'] = self::$page_title;
-    //     $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
-    //     $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
-    //     if(isset($id)){
-    //         if(TblHrEmployeeAttendance::where('employee_type_id','LIKE',$id)->exists()){
-    //             $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
-    //             $data['permission'] = self::$menu_dtl_id.'-edit';
-    //             $data['id'] = $id;
-    //             $data['current'] = TblHrEmployeeAttendance::where('employee_type_id',$id)->first();
-    //         }else{
-    //             abort('404');
-    //         }
-    //     }else{
-    //         $data['permission'] = self::$menu_dtl_id.'-create';
-    //         $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
-    //     }
-        
-    //     return view('PayrDepartment.employee_attendance.form',compact('data'));
-    // }
-
        public function create($id = null)
     {
         $data['att_id']=$id;
@@ -76,9 +53,6 @@ class EmployeeAttendanceController extends Controller
         ->select("EMPLOYEE_ID","EMPLOYEE_NAME")
         ->get();
 
-        
-
-        // dd( $data['page_data'],$data['employee']);
 
          $data['att_data'] =[];
          $data['att_note'] = '';
@@ -117,17 +91,6 @@ class EmployeeAttendanceController extends Controller
      */
     public function store(Request $request, $id=null)
     {
-
-        // dd($request->all(), $id);
-
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required|max:100'
-        // ]);
-        // if ($validator->fails()) {
-        //     $data['validator_errors'] = $validator->errors();
-        //     return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
-        // }
-  
         $data=[];
             if(isset($id)){
                 $employee = TblHrEmployeeAttendance::where('id',$id)->first();
@@ -185,7 +148,7 @@ class EmployeeAttendanceController extends Controller
                         'updated_at' => now()
                     ];
 
-                $id = DB::table('Tbl_hr_attendence')
+                $att_id = DB::table('Tbl_hr_attendence')
                 ->insertGetId( $data );
 
                 $array=$request->pd;
@@ -200,7 +163,7 @@ class EmployeeAttendanceController extends Controller
                         'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
                         'attendance_type'=>$arr['type_select'], 
                         'shift_id'=>1,
-                        'att_id'=>$id,
+                        'att_id'=>$att_id,
                         'created_at' => now(),
                         'updated_at' => now()
 
@@ -212,11 +175,11 @@ class EmployeeAttendanceController extends Controller
        
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
-            $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$id;
+            $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$att_id;
             return $this->jsonSuccessResponse($data, trans('message.create'), 200);
         }  
     }
