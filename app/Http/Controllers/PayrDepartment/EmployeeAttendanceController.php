@@ -130,14 +130,14 @@ class EmployeeAttendanceController extends Controller
 
                     ];
 
-                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert([  $data ]);
+                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert( $data );
                 }
 
             }else{
-                $p_id= DB::table('Tbl_hr_attendence')->max('id') +1;
+                $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
 
                 $data=[
-                        'id'=>$p_id, 
+                        'id'=>$att_id, 
                         'att_date'=>date('Y-m-d',strtotime($request->date)),
                         'att_note'=> $request->att_note, 
                         'att_no'=> $request->att_no, 
@@ -149,7 +149,7 @@ class EmployeeAttendanceController extends Controller
                     ];
 
                 $att_id = DB::table('Tbl_hr_attendence')
-                ->insertGetId( $data );
+                ->insert( $data );
 
                 $array=$request->pd;
                 foreach($array as $arr){
@@ -169,7 +169,7 @@ class EmployeeAttendanceController extends Controller
 
                     ];
 
-                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert([  $data ]);
+                    $Employee = DB::table('Tbl_hr_attendence_dtl')->insert(  $data );
                 }
             }
        
