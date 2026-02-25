@@ -606,7 +606,7 @@ class Utilities
         return ucwords($res);
     }
 
-    public static function amountToWords(float $amount, string $currency = 'omani rial', string $subunit = 'baisa'): string
+    public static function amountToWords(float $amount, string $currency = 'Omani Rial', string $subunit = 'Baisa'): string
     {
         if (!is_numeric($amount)) {
             return 'Invalid amount';
