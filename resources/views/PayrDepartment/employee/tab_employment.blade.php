@@ -231,6 +231,11 @@
                             <option value="{{$sponsorship->sponsorship_id}}" {{ $sponsorship->sponsorship_id == $sponsorship_type_id ? 'selected' : '' }}>{{ucfirst(strtolower($sponsorship->sponsorship_name))}}</option>
                         @endforeach
                     </select>
+                      <select id="type" class="form-control" >
+                        <option value="morning">Morning</option>
+                        <option value="night">Night</option>
+                        <option value="leave">Leave</option>
+                    </select>
                 </div>
             </div>
         </div>

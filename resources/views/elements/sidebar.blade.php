@@ -166,6 +166,18 @@
                     @endphp
                     @endif
                 @endforeach
+                <!-- <li class="kt-menu__item getSubMenu" aria-haspopup="true">
+                    <a href="{{action('PayrDepartment\EmployeeShiftController@m_roster')}}" class="kt-menu__link">
+                        <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
+                        <span class="kt-menu__link-text">Roster Manul</span>
+                    </a>
+                </li> -->
+                <li class="kt-menu__item getSubMenu" aria-haspopup="true">
+                    <a href="{{action('PayrDepartment\EmployeeShiftController@roster')}}" class="kt-menu__link">
+                        <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
+                        <span class="kt-menu__link-text">Roster</span>
+                    </a>
+                </li>
                 {{--<li class="kt-menu__item  kt-menu__item--submenu" aria-haspopup="true" data-ktmenu-submenu-toggle="hover">
                     <a href="javascript:;" class="kt-menu__link kt-menu__toggle">
                             <span class="kt-menu__link-icon c-menu-icon">

@@ -854,6 +854,23 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','PayrDepartment\EmployeeAttendanceController@destroy');
     });
 
+
+    Route::get('/m_employees','PayrDepartment\EmployeeShiftController@m_employees');
+    Route::get('/m_roster','PayrDepartment\EmployeeShiftController@m_roster');
+    Route::get('/m_shifts','PayrDepartment\EmployeeShiftController@m_get');
+    Route::post('/m_shifts','PayrDepartment\EmployeeShiftController@m_store');
+    Route::put('/m_shifts/{id}','PayrDepartment\EmployeeShiftController@m_update');
+    Route::delete('/m_shifts/{id}','PayrDepartment\EmployeeShiftController@m_delete');
+
+    Route::get('/employees','PayrDepartment\EmployeeShiftController@employees');
+    Route::get('/roster','PayrDepartment\EmployeeShiftController@roster');
+    Route::get('/shifts','PayrDepartment\EmployeeShiftController@get');
+    Route::post('/shifts','PayrDepartment\EmployeeShiftController@store');
+    Route::post('/shifts/bulk-store','PayrDepartment\EmployeeShiftController@bulkStore');
+    Route::put('/shifts/{id}','PayrDepartment\EmployeeShiftController@update');
+    Route::delete('/shifts/{id}','PayrDepartment\EmployeeShiftController@delete');
+    
+
     Route::prefix('retirement-type')->group(function(){
         Route::get('form/{id?}','PayrDepartment\RetirementTypeController@create');
         Route::post('form/{id?}','PayrDepartment\RetirementTypeController@store');
@@ -1612,11 +1629,6 @@ Route::group(['middleware' => ['auth']], function () {
      Route::prefix('Cheque_Templete')->group(function () {
         Route::get('form',[ChequeController::class, 'create']);
         Route::get('form/{id}', [ChequeController::class, 'design']);
-  
-        // Cheque_Templete/form/6
-        // cheque/template/design/5
-
-   
     });
 //     Route::get('/cheque/templates', [ChequeController::class, 'index']);
 // Route::get('/cheque/template/create', [ChequeController::class, 'create']);

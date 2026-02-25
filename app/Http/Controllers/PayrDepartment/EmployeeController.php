@@ -98,6 +98,7 @@ class EmployeeController extends Controller
         $data['document_types'] = TblHrDocuments::where($this->currentBusinessCompanyBranch)->where('document_entry_status',1)->orderBy('document_name')->get();
         $data['language'] = TblHrLanguage::where($this->currentBusinessCompanyBranch)->where('language_entry_status',1)->orderBy('language_name')->get();
         $data['department'] = TblHrDepartment::where($this->currentBusinessCompanyBranch)->where('department_entry_status',1)->orderBy('department_name')->get();
+        // $data['department'] = TblHrDepartment::where('department_entry_status',1)->orderBy('department_name')->get();
         $data['employee_type'] = TblHrEmployeeType::where($this->currentBusinessCompanyBranch)->where('employee_type_entry_status',1)->orderBy('employee_type_name')->get();
         $data['sponsorship'] = TblHrSponsorShip::where($this->currentBusinessCompanyBranch)->where('sponsorship_entry_status',1)->orderBy('sponsorship_name')->get();
         $data['bank'] = TblDefiBank::where($this->currentBusinessCompanyBranch)->where('bank_entry_status',1)->orderBy('bank_name')->get();

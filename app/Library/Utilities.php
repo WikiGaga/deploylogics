@@ -606,6 +606,73 @@ class Utilities
         return ucwords($res);
     }
 
+    public static function amountToWords(float $amount, string $currency = 'Rupees', string $subunit = 'Paisa'): string
+    {
+        if (!is_numeric($amount)) {
+            return 'Invalid amount';
+        }
+
+        $isNegative = $amount < 0;
+        $amount = abs($amount);
+        
+        $whole = (int) $amount;
+        $fraction = (int) round(($amount - $whole) * 100);
+        
+        $words = [];
+        
+        if ($isNegative) {
+            $words[] = 'Negative';
+        }
+        
+        if ($whole === 0 && $fraction === 0) {
+            return 'Zero ' . $currency . ' Only';
+        }
+        
+        if ($whole > 0) {
+            $words[] = self::numberToWords($whole) . ' ' . $currency;
+        }
+        
+        if ($fraction > 0) {
+            $words[] = self::numberToWords($fraction) . ' ' . $subunit;
+        }
+        
+        return implode(' and ', $words) . ' Only';
+    }
+
+    private static function numberToWords(int $number): string
+    {
+        $units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        $teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        $tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        $scales = ['', 'Thousand', 'Million', 'Billion', 'Trillion'];
+
+        if ($number === 0) return 'Zero';
+        if ($number < 10) return $units[$number];
+        if ($number < 20) return $teens[$number - 10];
+        if ($number < 100) return $tens[(int)($number / 10)] . ($number % 10 ? '-' . $units[$number % 10] : '');
+        if ($number < 1000) return $units[(int)($number / 100)] . ' Hundred' . ($number % 100 ? ' and ' . self::numberToWords($number % 100) : '');
+
+        // Handle larger numbers by chunks of 3 digits
+        $chunks = [];
+        while ($number > 0) {
+            $chunks[] = $number % 1000;
+            $number = (int)($number / 1000);
+        }
+
+        $words = [];
+        for ($i = count($chunks) - 1; $i >= 0; $i--) {
+            if ($chunks[$i] > 0) {
+                $chunkWords = self::numberToWords($chunks[$i]);
+                if ($i > 0) {
+                    $chunkWords .= ' ' . $scales[$i];
+                }
+                $words[] = $chunkWords;
+            }
+        }
+
+        return implode(', ', $words);
+    }
+
     public static function convert_base64_to_image( $base64_code, $path, $image_name = null )
     {
         if ( !empty($base64_code) && !empty($path) ) {

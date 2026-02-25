@@ -1,0 +1,675 @@
+#loadingimg {
+    display: none;
+    height: 50px;
+    position: relative;
+    left: 45%;
+    float: left;
+    top: -15px;
+}
+
+.dateText {
+    color: #429800;
+}
+
+.addShiftPlus {
+    float: left;
+    width: 100%;
+    color: green;
+    cursor: pointer;
+    display: none;
+    position: relative;
+    top: 10px;
+    left: 10px;
+    text-align: center;
+}
+
+td.addShift:hover .addShiftPlus {
+    display: block;
+}
+
+.fc-timeline-event .fc-content {
+    text-align: center;
+}
+
+span.fc-title {
+    display: block;
+}
+
+.fc-timeline .fc-body .fc-scroller {
+    height: auto !important;
+    max-height: calc(100vh - 310px) !important;
+    transition: all 0.5s ease;
+}
+
+#previous_week_costs_div,
+#previous_week_costs_add {
+    transition: all 0.5s ease;
+    background: #e2e0e0;
+}
+
+.fc button {
+    padding: 6px 12px !important;
+}
+
+.fc th,
+.fc td {
+    font-size: 12px;
+}
+
+#checkPublishedShiftsAlert {
+    padding: 5px 15px;
+    margin-bottom: 0;
+}
+
+.datepicker table tr td.disabled,
+.datepicker table tr td.disabled:hover {
+    cursor: not-allowed !important;
+}
+
+.datepicker table tr td.today.disabled,
+.datepicker table tr td.today.disabled:hover {
+    background: transparent !important;
+    color: #999 !important;
+}
+
+.bootstrap-datetimepicker-widget table td.today:before {
+    border-bottom-color: transparent !important;
+}
+
+#calendar thead tr,
+#previous_week_costs_div .input-group-addon:first-child {
+    background-color: #949494;
+    color: white;
+}
+
+#calendar thead a.fc-cell-text {
+    color: white;
+}
+
+#calendar thead th {
+    font-weight: 300;
+}
+
+#calendar .fc-widget-content .fc-cell-content span.fc-cell-text {
+    white-space: break-spaces;
+    float: left;
+}
+
+.totalStaffPerDay {
+    margin-bottom: 5px;
+}
+
+.duplicateShift,
+.editShift,
+.deleteShift,
+.duplicateEvent,
+.dummyEvent,
+.editEvent,
+.deleteEvent {
+    display: none;
+}
+
+.fc-event:hover .fc-content .dummyShift {
+    height: 28px;
+    display: block;
+}
+
+.fc-event {
+    display: block;
+    text-align: center;
+    /* height: 25px; */
+    height: auto;
+    padding: 5px;
+    margin: 5px !important;
+    opacity: 1;
+}
+
+.ui-dialog-title {
+    font-size: 12px;
+}
+
+.select2-container .select2-selection--single {
+    height: 34px !important;
+}
+
+.tooltipster-sidetip .tooltipster-content {
+    padding: 5px 0px;
+}
+
+button.fc-button.fc-state-default.fc-state-active,
+button.fc-today-button {
+    background: #429800;
+    color: white;
+}
+
+.ui-dialog-titlebar.ui-corner-all.ui-widget-header.ui-helper-clearfix.ui-draggable-handle {
+    background: darkgray;
+}
+
+#tooltipData {
+    padding: 10px;
+}
+
+.box {
+    border: 1px solid #e9e9ea;
+    padding: 10px !important;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background: white;
+}
+
+
+/* .box:hover {
+  box-shadow: 2px 2px 15px 0px rgba(0, 0, 0, 0.5);
+} */
+
+.middleLeftDiv .col-xs-6 {
+    padding: 0;
+}
+
+.tooltip,
+.tooltip2 {
+    border-bottom: 0;
+}
+
+.modal-footer {
+    border-top: 0;
+}
+
+.submitButton {
+    float: right;
+    margin-right: 5px;
+}
+
+.addNewShiftDiv {
+    float: right;
+}
+
+.shifts_store_box_line {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.shifts_store_box {
+    border: 1px solid #c6c6ca;
+    padding: 25px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    background: white;
+}
+
+.fc-toolbar h3 {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.employeeTotalHours {
+    font-weight: 700;
+    margin-top: 5px;
+    float: left;
+}
+
+a[data-goto] {
+    color: #000000;
+}
+
+a[data-goto]:hover {
+    text-decoration: none;
+}
+
+.fc button {
+    height: 34px !important;
+}
+
+#no_data,
+#weekDate {
+    font-size: 15px;
+}
+
+#close_previous_week_costs_div,
+#close_costs_div {
+    float: right;
+    cursor: pointer;
+}
+
+button.fc-copyMonth-button,
+button.fc-copyMonth-button:hover,
+button.fc-copyWeek-button,
+button.fc-copyWeek-button:hover {
+    background-color: indigo;
+    border-color: indigo;
+}
+
+button.fc-publishEvent-button,
+button.fc-publishEvent-button:hover,
+button.fc-publishEvent-button:active,
+button.fc-publishEvent-button:focus,
+button.fc-exportWeek-button,
+button.fc-exportWeek-button:hover,
+button.fc-exportWeek-button:active,
+button.fc-exportWeek-button:focus {
+    background-color: #429800;
+    border-color: #429800;
+    outline: none;
+}
+
+button.fc-ExportEvents-button,
+button.fc-ExportEvents-button:hover,
+button.fc-ExportEvents-button:active,
+button.fc-ExportEvents-button:focus,
+button.fc-publishRota-button,
+button.fc-publishRota-button:hover,
+button.fc-publishRota-button:active,
+button.fc-publishRota-button:focus {
+    background-color: #d9534f;
+    border-color: #d43f3a;
+    outline: none;
+}
+
+button.fc-clearMonth-button,
+button.fc-clearMonth-button:hover,
+button.fc-clearMonth-button:active,
+button.fc-clearMonth-button:focus,
+button.fc-clearWeek-button,
+button.fc-clearWeek-button:hover,
+button.fc-clearWeek-button:active,
+button.fc-clearWeek-button:focus {
+    background-color: #d9534f;
+    border-color: #d43f3a;
+    outline: none;
+}
+
+button.fc-replace-button,
+button.fc-replace-button:hover,
+button.fc-replace-button:active,
+button.fc-replace-button:focus {
+    background-color: #5bc0de;
+    border-color: #46b8da;
+    outline: none;
+}
+
+button.fc-swap-button,
+button.fc-swap-button:hover,
+button.fc-swap-button:active,
+button.fc-swap-button:focus {
+    background-color: #ec971f;
+    border-color: #d58512;
+    outline: none;
+}
+
+#filter-section .form-control {
+    padding: 5px;
+}
+
+.fc .fc-toolbar>*>* {
+    margin-left: 5px !important;
+}
+
+button.ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-close {
+    text-indent: -9999px;
+}
+
+.tooltipevent {
+    width: 270px;
+    height: 95px;
+    background: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    z-index: 99999;
+    padding: 10px;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 5px 0 rgba(152, 146, 146, 0.5);
+}
+
+a.fc-time-grid-event.fc-v-event.fc-event.fc-start.fc-end.fc-draggable.fc-resizable {
+    float: left;
+    width: 80px !important;
+}
+
+
+/* Sales & Buys Data */
+
+.rightDivLower {
+    margin-top: 25px;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td,
+th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 0 0 0 4px;
+}
+
+table#ShiftTooltip td,
+table#ShiftTooltip th {
+    border: none;
+}
+
+table#previous_week_costs_add td,
+table#previous_week_costs_add th,
+table#last_year_week_costs_add td,
+table#last_year_week_costs_add th,
+table#DateDiffTable td,
+table#DateDiffTable th,
+table#staff_data_add td,
+table#staff_data_add th {
+    border: none;
+    font-size: 12px;
+}
+
+.addNewData {
+    border: 1px solid #e9e9ea;
+    border-radius: 4px;
+    background: #f1f1f1;
+    margin: 0 0 20px 0;
+    padding: 15px;
+}
+
+input.tabledit-input {
+    width: 100px !important;
+}
+
+input#created_date,
+input#start_week,
+input#end_week {
+    width: 171px !important;
+    display: inline-block !important;
+}
+
+#staff_data_table td {
+    padding: 7px;
+}
+
+#staff_data_table td .btn {
+    padding: 0px 5px;
+}
+
+#staff_data_table {
+    padding: 0;
+}
+
+tbody:hover td {
+    opacity: 1;
+}
+
+
+/*.tooltipster-arrow {
+  display: none;
+}*/
+
+
+/* Date Time Picker */
+
+table#previous_week_costs_add tbody:hover td,
+table#last_year_week_costs_add tbody:hover td,
+table#previous_week_costs_add tbody:hover tr:hover td,
+table#last_year_week_costs_add tbody:hover tr:hover td,
+input#start_time~.bootstrap-datetimepicker-widget .timepicker table tbody:hover td,
+input#start_time~.bootstrap-datetimepicker-widget .timepicker table tbody:hover tr:hover td,
+input#end_time~.bootstrap-datetimepicker-widget .timepicker table tbody:hover td,
+input#end_time~.bootstrap-datetimepicker-widget .timepicker table tbody:hover tr:hover td,
+input.start_timeTime~.bootstrap-datetimepicker-widget .timepicker table tbody:hover td,
+input.start_timeTime~.bootstrap-datetimepicker-widget .timepicker table tbody:hover tr:hover td,
+input.end_timeTime~.bootstrap-datetimepicker-widget .timepicker table tbody:hover td,
+input.end_timeTime~.bootstrap-datetimepicker-widget .timepicker table tbody:hover tr:hover td {
+    opacity: 1;
+}
+
+input#start_time~.bootstrap-datetimepicker-widget .timepicker table td,
+input#start_time~.bootstrap-datetimepicker-widget .timepicker table th,
+input#end_time~.bootstrap-datetimepicker-widget .timepicker table td,
+input#end_time~.bootstrap-datetimepicker-widget .timepicker table th,
+input.start_timeTime~.bootstrap-datetimepicker-widget .timepicker table td,
+input.start_timeTime~.bootstrap-datetimepicker-widget .timepicker table th,
+input.end_timeTime~.bootstrap-datetimepicker-widget .timepicker table td,
+input.end_timeTime~.bootstrap-datetimepicker-widget .timepicker table th {
+    border: none;
+    border-radius: 0;
+    padding: 0px !important;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.today:hover {
+    background: #eee;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.active.today {
+    background: #04c;
+    background-image: -webkit-linear-gradient(top, #08c, #04c);
+    color: white;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.today.disabled,
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.today {
+    background: transparent;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table td.today:before {
+    border: none;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.old,
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.new {
+    color: black;
+}
+
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.disabled,
+input#start_week~.bootstrap-datetimepicker-widget .datepicker table tr td.disabled:hover {
+    color: #999;
+    cursor: not-allowed;
+}
+
+/*****/
+
+#previous_week_costs_div table#previous_week_costs_add input {
+    min-width: 65px !important;
+}
+
+.pc_icons {
+    width: 35px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    color: #555;
+    text-align: center;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.fc-customWeek-view .fc-time-area .fc-rows td.fc-widget-content {
+    position: relative;
+}
+
+.fc-timelineDay-view .fc-time-area .fc-rows td.fc-widget-content {
+    position: relative;
+}
+
+.hoverAbleTable {
+    position: absolute;
+    top: 0px;
+}
+
+.hoverAbleTable td {
+    border: 0px !important;
+    cursor: pointer;
+    position: relative;
+}
+
+.hoverAbleTable td p {
+    color: transparent;
+    transition: all ease-in 300ms;
+    font-size: 10px;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.hoverAbleTable td p:hover {
+    color: #000000;
+    cursor: pointer;
+}
+
+.hoverAbleTable td p i {
+    position: absolute;
+    bottom: 3px;
+}
+
+.tooltop-data,
+table#ShiftTooltip td {
+    padding: 5px;
+}
+
+.tooltop-data span {
+    line-height: 20px;
+}
+
+.tooltipster-box {
+    flex: 1 0 auto;
+}
+
+.modal-content button.close {
+    right: 10px;
+}
+
+.modal {
+    text-align: center;
+    padding: 0 !important;
+}
+
+.modal:before {
+    content: "";
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -4px;
+}
+
+.modal-dialog {
+    display: inline-block;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.fc-event,
+.fc-event-dot {
+    border: none;
+}
+
+.tippy-tooltip {
+    font-size: 12px !important;
+}
+
+p.add-shift-tip svg {
+    position: absolute;
+    bottom: 5px;
+}
+
+
+/* Heat Map */
+
+#heatMapCalendar tr {
+    background-color: white;
+}
+
+#heatMapCalendar .fc-time-grid-event .fc-time,
+#heatMapCalendar hr.fc-divider.fc-widget-header {
+    display: none;
+}
+
+#heatMapCalendar .fc-event {
+    width: 100%;
+    padding: 0;
+    border-radius: 0;
+    left: 0% !important;
+    margin: 0 !important;
+}
+
+#heatMapCalendar.fc-ltr .fc-time-grid .fc-event-container {
+    margin: 0 !important;
+}
+
+#heatMapCalendar .fc-time-grid .fc-slats td:nth-child(2),
+#heatMapCalendar .fc-content-skeleton td {
+    border: 0;
+}
+
+.fc-event .fc-bg {
+    opacity: 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+input:checked+.slider {
+    background-color: #2196f3;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.fc-time-area col {
+    min-width: 100px !important;
+}
+
+
+/* Rounded sliders */
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
