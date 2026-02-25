@@ -368,7 +368,7 @@
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
                                                         <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
-                                                        <button type="button" class="btn btn-warning gridBtn print_cheque" data-date="{{$mode_date}}" data-name="{{$data->accounts->chart_name ?? ''}}" data-amount="{{$credit}}"><i class="la la-print"></i></button>
+                                                        <button type="button" class="btn btn-warning gridBtn print_cheque" data-date="{{$mode_date}}" data-name="{{$data->accounts->chart_name ?? ''}}" data-amount="{{number_format($credit,3)}}"><i class="la la-print"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -801,7 +801,7 @@
             parts = total_amount.split('.');
             amount = parts[0];
             amount_partision = parts[1];
-            console.log(amount,amount_partision);
+            console.log(total_amount,parts,amount,amount_partision);
 
              $('#cheque_date').val(date);
              $('#cheque_title').val(name);

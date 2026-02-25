@@ -154,15 +154,13 @@ public function printCheque(Request $request)
         $inputs['date'] = preg_replace('/[^0-9]/', '/', $inputs['date']);
     }
 
+    $inputs['amount_partision']=substr(str_pad($inputs['amount_partision'], 3, '0'),0, 3);
     $total=$inputs['amount'].".".$inputs['amount_partision'];
     $inputs['amount']=$inputs['amount'].".".$inputs['amount_partision'];
     $inputs['amount_partision']='';
-    // $inputs['amount_partision']=".".$inputs['amount_partision'];
-    // $total=13231.32;
 
-    
-    $inputs['amount_words'] = \App\Library\Utilities::amountToWords($total,'Reyal');
-    // dd($inputs);
+    $inputs['amount_words'] = \App\Library\Utilities::amountToWords($total);
+
     return view('check.print_pdf', compact('template', 'fields','inputs'));
 
     $pdf = PDF::loadView('check.print_pdf', [

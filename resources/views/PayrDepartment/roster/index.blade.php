@@ -1,33 +1,27 @@
 @extends('layouts.layout')
 {{--@section('title', 'Page Title')--}}
 @section('pageCSS')
-    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
- 
-@endsection
 
-@section('content')
-   <style>
-                /* Fix the event container */
+    <style>
         .fc-timeline-event {
             padding: 2px 4px !important;
             border: none !important;
             display: flex !important;
-            align-items: center !important; /* Centers text vertically */
+            align-items: center !important;
             justify-content: center !important;
             text-align: center;
         }
-
-        /* Ensure the title container allows for multiple lines */
         .fc-content {
             line-height: 1.2 !important;
-            white-space: normal !important; /* Allows text to wrap if box is narrow */
+            white-space: normal !important;
         }
-
-        /* Fix the dots/icons if they are pushing text away */
-        .fc-day-grid-event .fc-content:before, .fc-event-dot {
-            display: none !important; /* Removes that white dot if you don't want it */
-        }
+        .shift-title { font-weight: bold; font-size: 11px; }
+        .shift-time { font-size: 10px; }
     </style>
+@endsection
+
+@section('content')
+  
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
         if($case == 'new'){
@@ -180,16 +174,22 @@
 @endsection
 
 @section('pageJS')
+    <script src="{{ asset('assets/plugins/fullcalendar/fullcalendar.js') }}"></script>
+    <script src="{{ asset('assets/plugins/scheduler/scheduler.js') }}"></script>
+    {{-- Add SweetAlert2 for better confirmations --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection
 @section('customJS')
-  
 
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/plugins/fullcalendar/fullcalendar.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/plugins/fullcalendar/fullcalendar.print.css') }}" media="print" />
     <link rel="stylesheet" href="{{ asset('assets/plugins/scheduler/scheduler.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/plugins/fullcalendar/shiftSchedule.css') }}?v={{ filemtime(public_path('assets/plugins/fullcalendar/shiftSchedule.css')) }}" />
-    <script src="{{ asset('assets/plugins/fullcalendar/fullcalendar.js') }}"></script>
-    <script src="{{ asset('assets/plugins/scheduler/scheduler.js') }}"></script>
+    
+  
+
+  
     
 <script>
 
@@ -199,253 +199,301 @@
         }
     });
        
-    $(document).ready(function() {
-        $('#filterForm').validate(); 
+ $(document).ready(function() {
+    // CSRF Setup
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
+        }
+    });
 
-        // 2. Initialize Select2
-        $('.kt-select2').select2();
+    // Initialize validation
+    $('#filterForm').validate({
+        ignore: [],
+        errorClass: 'text-danger'
+    });
 
-        $('.filter_emp').on('change', function() {
-            $('#calendar').fullCalendar('refetchResources');
+    // Select2 init
+    $('.kt-select2').select2({
+        placeholder: "Select an option",
+        allowClear: true
+    });
 
-            // SAFE VALIDATION CHECK
-            // We check if the validator exists for this form before calling .valid()
-            if ($(this).closest('form').data('validator')) {
-                $(this).valid();
-            }
-        });
-
-        $.validator.setDefaults({
-            ignore: [] // This tells the plugin to validate hidden Select2 elements
-        });
-
-        $('#calendar').fullCalendar({
-            timezone: 'local',
-            nextDayThreshold: '00:00:01', //extend box after this time
-            firstDay: 0, // fist day of week
-
-            schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
-            header: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'customWeek,timelineMonth'
-            },
-            // Fix for arrows (using standard text if icons fail)
-            buttonText: {
-                prev: '<',
-                next: '>'
-            },
-            defaultView: 'customWeek',
+    // Filter change handler
+    $('.filter_emp').on('change', function() {
+        $('#calendar').fullCalendar('refetchResources');
+        $('#calendar').fullCalendar('refetchEvents');
         
-            views: {
-                customWeek: {
-                    type: 'timeline',
-                    duration: { weeks: 1 },
-                    slotDuration: { days: 1 },
-                    // INCREASE THIS: default is usually 25, try 45 or 50
-                    eventHeight: 50, 
-                    buttonText: 'Week'
-                }
-            },
-            resourceAreaWidth: '15%',
-            resourceColumns: [{ labelText: 'Employees', field: 'title' }],
-            // resources: {
-            //     url: '/employees',
-            //     type: 'GET',
-            //     data: function() {
-            //         return {
-            //             branch_id: $('#branch').val(), 
-            //             department_id: $('#department').val()
-            //         };
-            //     }
-            // },
-            events: '/shifts',
+        const validator = $(this).closest('form').data('validator');
+        if (validator) $(this).valid();
+    });
 
-            selectable: true,
-            editable: true,
-            eventDurationEditable: false, // Prevents dragging to 4 days
-
-            resources: function(callback) {
-                $.ajax({
-                    url: '/employees',
-                    type: 'GET',
-                    dataType: 'json',
-                    data: {
-                        branch_id: $('#branch').val(),
-                        department_id: $('#department').val()
-                    },
-                    success: function(response) {
-                        // response must be an array of resource objects
-                        callback(response);
-                    },
-                    error: function() {
-                        console.error("Could not load resources.");
-                    }
-                });
-            },
-
-            // Use dayClick for single clicks on the grid
-            dayClick: function(date, jsEvent, view, resource) {
-                
-                if (!resource) {
-                    console.log("No resource (employee) found for this row.");
-                    return;
-                }
-
-                let shiftType = $('#type').val();
-                let dateStr = date.format('YYYY-MM-DD');
-                let startTime, endTime, endDateStr;
-                endDateStr = dateStr;
-
-                // Logic for times
-                if (shiftType === 'morning') {
-                    startTime = '08:00:00';
-                    endTime = '16:00:00';
-                } else if (shiftType === 'night') {
-                    startTime = '22:00:00';
-                    endTime = '06:00:00';
-                    endDateStr = date.clone().add(1, 'days').format('YYYY-MM-DD');
-                } else {
-                    startTime = '00:00:00';
-                    endTime = '23:59:59';
-                }
-
-                $.ajax({
-                    url: '/shifts',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        employee_id: resource.id,
-                        shift_type: shiftType,
-                        start: dateStr + ' ' + startTime,
-                        end: endDateStr + ' ' + endTime
-                    },
-                    success: function(response) {
-                        $('#calendar').fullCalendar('refetchEvents');
-                    },
-                    error: function(xhr) {
-                        alert("Error: " + xhr.status + " Check console.");
-                    }
-                });
-            },
-            
-
-            eventRender: function(event, element) {
-                // Clear the default content and structure it with a smaller font
-                element.find('.fc-content').html(
-                    '<div style="font-weight:bold; font-size: 11px;">' + event.title + '</div>' +
-                    '<div style="font-size: 10px;">(' + moment(event.start).format('h:mm A')+'<br> '+ moment(event.end).format('h:mm A') + ')</div>'
-                );
-            },
-            //     // Existing eventDrop, eventResize, and eventClick logic...
-            eventDrop: function(event) {
-
-                $.ajax({
-                    url: '/shifts/' + event.id,
-                    type: 'PUT',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        id: event.id,
-                        start: event.start.format(),
-                        end: event.end ? event.end.format() : event.start.format()
-                    },
-                    success: function() {
-                        $('#calendar').fullCalendar('refetchEvents');
-                    }
-                });
-
-            },
-            
-            eventClick: function(event) {
-                // Fill the modal with existing shift data
-                $('#edit_event_id').val(event.id);
-                $('#edit_type').val(event.shift_type); // Ensure your event object has shift_type
-                $('#edit_start_time').val(event.start.format('HH:mm'));
-                $('#edit_end_time').val(event.end ? event.end.format('HH:mm') : '');
-                
-                $('#editShiftModal').modal('show');
-            },
-            
-        });
-
-        $('#btnUpdateShift').click(function() {
-            let id = $('#edit_event_id').val();
-            let startTime = $('#edit_start_time').val();
-            let endTime = $('#edit_end_time').val();
-            let type = $('#edit_type').val();
-
-            // Get the original date from the calendar event to keep the date same
-            let event = $('#calendar').fullCalendar('clientEvents', id)[0];
-            let dateStr = event.start.format('YYYY-MM-DD');
-
+    // Initialize Calendar
+    const $calendar = $('#calendar');
+    
+    $calendar.fullCalendar({
+        timezone: 'local',
+        nextDayThreshold: '00:00:01',
+        firstDay: 0,
+        schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+        
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'customWeek,timelineMonth'
+        },
+        
+        buttonText: {
+            prev: '‹',
+            next: '›',
+            today: 'Today'
+        },
+        
+        defaultView: 'customWeek',
+        
+        views: {
+            customWeek: {
+                type: 'timeline',
+                duration: { weeks: 1 },
+                slotDuration: { days: 1 },
+                eventHeight: 50,
+                buttonText: 'Week'
+            }
+        },
+        
+        resourceAreaWidth: '15%',
+        resourceColumns: [{ 
+            labelText: 'Employees', 
+            field: 'title',
+            width: '100%'
+        }],
+        
+        // Resources with error handling
+        resources: function(callback) {
             $.ajax({
-                url: '/shifts/' + id,
-                type: 'PUT',
+                url: '/employees',
+                type: 'GET',
+                dataType: 'json',
                 data: {
-                    _token: '{{ csrf_token() }}',
-                    shift_type: type,
-                    start: dateStr + ' ' + startTime,
-                    end: dateStr + ' ' + endTime
+                    branch_id: $('#branch').val(),
+                    department_id: $('#department').val()
                 },
-                success: function() {
-                    $('#editShiftModal').modal('hide');
-                    $('#calendar').fullCalendar('refetchEvents');
+                success: callback,
+                error: function(xhr) {
+                    toastr.error('Failed to load employees');
+                    callback([]);
                 }
             });
-        });
+        },
+        
+        events: {
+            url: '/shifts',
+            data: function() {
+                return {
+                    branch_id: $('#branch').val(),
+                    department_id: $('#department').val()
+                };
+            },
+            error: function() {
+                toastr.error('Failed to load shifts');
+            }
+        },
+        
+        selectable: true,
+        editable: true,
+        eventDurationEditable: false,
+        
+        // ADDED: Handle resize
+        eventResize: function(event, delta, revertFunc) {
+            updateShift(event, revertFunc);
+        },
+        
+        // ADDED: Better drop handling
+        eventDrop: function(event, delta, revertFunc) {
+            updateShift(event, revertFunc);
+        },
+        
+        dayClick: function(date, jsEvent, view, resource) {
+            if (!resource) return;
+            
+            createShift(resource.id, date);
+        },
+        
+        eventClick: function(event) {
+            openEditModal(event);
+        },
+        
+        eventRender: function(event, element) {
+            const start = moment(event.start).format('h:mm A');
+            const end = moment(event.end).format('h:mm A');
+            
+            element.find('.fc-content').html(`
+                <div class="shift-title">${event.title}</div>
+                <div class="shift-time">${start} - ${end}</div>
+            `);
+        }
+    });
 
-        // 2. DELETE SHIFT (Moved from eventClick to here)
-        $('#btnDeleteShift').click(function() {
-            let id = $('#edit_event_id').val();
-            if(confirm("Are you sure you want to delete this shift?")) {
-                $.ajax({
-                    url: '/shifts/' + id,
-                    type: 'DELETE',
-                    data: { _token: '{{ csrf_token() }}' },
-                    success: function() {
-                        $('#editShiftModal').modal('hide');
-                        $('#calendar').fullCalendar('refetchEvents');
-                    }
-                });
+    // Helper functions
+    function createShift(employeeId, date) {
+        const shiftType = $('#type').val();
+        const dateStr = date.format('YYYY-MM-DD');
+        
+        const configs = {
+            morning: { start: '08:00:00', end: '16:00:00', addDay: 0 },
+            night: { start: '22:00:00', end: '06:00:00', addDay: 1 },
+            leave: { start: '00:00:00', end: '23:59:59', addDay: 0 }
+        };
+        
+        const cfg = configs[shiftType];
+        const endDate = date.clone().add(cfg.addDay, 'days');
+        
+        $.ajax({
+            url: '/shifts',
+            type: 'POST',
+            data: {
+                employee_id: employeeId,
+                shift_type: shiftType,
+                start: `${dateStr} ${cfg.start}`,
+                end: `${endDate.format('YYYY-MM-DD')} ${cfg.end}`
+            },
+            success: () => {
+                $calendar.fullCalendar('refetchEvents');
+                toastr.success('Shift created');
+            },
+            error: (xhr) => {
+                toastr.error(xhr.responseJSON?.message || 'Error creating shift');
             }
         });
+    }
 
-        $('#btnSubmitBulk').click(function() {
-            let resources = $('#calendar').fullCalendar('getResources');
-            let employeeIds = resources.map(r => r.id);
-            
-            // Get checked days (0 for Sunday, 6 for Saturday)
-            let selectedDays = [];
-            $('.off-days:checked').each(function() {
-                selectedDays.push($(this).val());
-            });
-
-            if (selectedDays.length === 0) {
-                alert("Please select at least one day of the week.");
-                return;
+    function updateShift(event, revertFunc) {
+        $.ajax({
+            url: `/shifts/${event.id}`,
+            type: 'PUT',
+            data: {
+                start: event.start.format(),
+                end: event.end ? event.end.format() : event.start.format()
+            },
+            success: () => {
+                toastr.success('Shift updated');
+            },
+            error: () => {
+                revertFunc();
+                toastr.error('Update failed');
             }
+        });
+    }
 
-            $.ajax({
-                url: '/shifts/bulk-store',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    employee_ids: employeeIds,
-                    start_date: $('#bulk_start').val(),
-                    end_date: $('#bulk_end').val(),
-                    selected_days: selectedDays, // Array of days
-                    shift_type: $('#bulk_type').val()
-                },
-                success: function(response) {
-                    $('#bulkOffModal').modal('hide');
-                    $('#calendar').fullCalendar('refetchEvents');
-                    alert("Process Completed!");
-                }
-            });
+    function openEditModal(event) {
+        $('#edit_event_id').val(event.id);
+        $('#edit_start_time').val(event.start.format('HH:mm'));
+        $('#edit_end_time').val(event.end ? event.end.format('HH:mm') : '');
+        
+        // Store original date
+        $('#editShiftModal').data('originalDate', event.start.format('YYYY-MM-DD'));
+        $('#editShiftModal').modal('show');
+    }
+
+    // Update handler
+    $('#btnUpdateShift').click(function() {
+        const id = $('#edit_event_id').val();
+        const dateStr = $('#editShiftModal').data('originalDate');
+        const startTime = $('#edit_start_time').val();
+        const endTime = $('#edit_end_time').val();
+        
+        $.ajax({
+            url: `/shifts/${id}`,
+            type: 'PUT',
+            data: {
+                start: `${dateStr} ${startTime}`,
+                end: `${dateStr} ${endTime}`
+            },
+            success: () => {
+                $('#editShiftModal').modal('hide');
+                $calendar.fullCalendar('refetchEvents');
+                toastr.success('Shift updated');
+            },
+            error: () => toastr.error('Update failed')
         });
     });
- 
-       
+
+    // Delete handler
+    $('#btnDeleteShift').click(function() {
+        const id = $('#edit_event_id').val();
+        
+        Swal.fire({
+            title: 'Delete shift?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/shifts/${id}`,
+                    type: 'DELETE',
+                    success: () => {
+                        $('#editShiftModal').modal('hide');
+                        $calendar.fullCalendar('refetchEvents');
+                        toastr.success('Shift deleted');
+                    }
+                });
+            }
+        });
+    });
+
+    // Bulk handler with validation
+    $('#btnSubmitBulk').click(function() {
+        const resources = $calendar.fullCalendar('getResources');
+        if (!resources.length) {
+            toastr.error('No employees loaded');
+            return;
+        }
+
+        const employeeIds = resources.map(r => r.id);
+        const selectedDays = $('.off-days:checked').map(function() {
+            return parseInt(this.value);
+        }).get();
+
+        if (!selectedDays.length) {
+            toastr.error('Select at least one day');
+            return;
+        }
+
+        const startDate = $('#bulk_start').val();
+        const endDate = $('#bulk_end').val();
+        
+        if (!startDate || !endDate) {
+            toastr.error('Select date range');
+            return;
+        }
+
+        $(this).prop('disabled', true).text('Processing...');
+
+        $.ajax({
+            url: '/shifts/bulk-store',
+            type: 'POST',
+            data: {
+                employee_ids: employeeIds,
+                start_date: startDate,
+                end_date: endDate,
+                selected_days: selectedDays,
+                shift_type: $('#bulk_type').val()
+            },
+            success: (response) => {
+                $('#bulkOffModal').modal('hide');
+                $calendar.fullCalendar('refetchEvents');
+                toastr.success(response.message);
+            },
+            error: (xhr) => {
+                toastr.error(xhr.responseJSON?.message || 'Bulk operation failed');
+            },
+            complete: () => {
+                $(this).prop('disabled', false).text('Apply Changes');
+            }
+        });
+    });
+});  
 
 </script>
     

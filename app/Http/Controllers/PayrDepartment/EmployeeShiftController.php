@@ -62,102 +62,210 @@ public function employees(Request $request)
     return response()->json($employees);
 }
 
-
 public function bulkStore(Request $request)
 {
-    $startDate = Carbon::parse($request->start_date);
-    $endDate = Carbon::parse($request->end_date);
-    $selectedDays = $request->selected_days; // e.g. [0, 6] for weekends
+    $validated = $request->validate([
+        'employee_ids' => 'required|array',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'selected_days' => 'required|array',
+        'shift_type' => 'required|in:morning,night,leave'
+    ]);
 
-    $period = CarbonPeriod::create($startDate, $endDate);
+    $startDate = Carbon::parse($validated['start_date']);
+    $endDate = Carbon::parse($validated['end_date']);
+    $selectedDays = array_map('intval', $validated['selected_days']);
 
-    // Set times based on type
     $times = [
-        'morning' => ['start' => '08:00:00', 'end' => '16:00:00'],
-        'night'   => ['start' => '22:00:00', 'end' => '06:00:00'],
-        'leave'   => ['start' => '00:00:00', 'end' => '23:59:59'],
+        'morning' => ['start' => '08:00:00', 'end' => '16:00:00', 'next_day' => false],
+        'night'   => ['start' => '22:00:00', 'end' => '06:00:00', 'next_day' => true],
+        'leave'   => ['start' => '00:00:00', 'end' => '23:59:59', 'next_day' => false],
     ];
 
-    $type = $request->shift_type;
-    $sTime = $times[$type]['start'];
-    $eTime = $times[$type]['end'];
+    $type = $validated['shift_type'];
+    $config = $times[$type];
+    $insertData = [];
 
-    foreach ($request->employee_ids as $empId) {
-        foreach ($period as $date) {
-            // Only create shift if current date matches a selected checkbox day
-            if (!in_array($date->dayOfWeek, $selectedDays)) {
+    foreach ($validated['employee_ids'] as $empId) {
+        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
+            // FIXED: Removed the "!" - now checks if day IS selected
+            if (in_array($date->dayOfWeek, $selectedDays)) {
                 
-                $fullStart = $date->format('Y-m-d') . ' ' . $sTime;
+                $start = $date->copy()->setTimeFromTimeString($config['start']);
+                $end = $date->copy()->setTimeFromTimeString($config['end']);
                 
-                // For Night Shift, end date is the next morning
-                $endLocalDate = ($type == 'night') ? $date->copy()->addDay() : $date;
-                $fullEnd = $endLocalDate->format('Y-m-d') . ' ' . $eTime;
+                if ($config['next_day']) {
+                    $end->addDay();
+                }
 
-                $p_id= DB::table('tbl_payr_shift')->max('shift_id') +1;
-
-                $data=[
-                    'shift_id' => $p_id,
-                    'shift_user_id'=>$empId,
-                    'shift_start_time'=> "$fullStart",
-                    'shift_close_time'=>"$fullEnd",
-                    'shift_name'=>$type,
+                $insertData[] = [
+                    'shift_user_id' => $empId,
+                    'shift_start_time' => $start,
+                    'shift_close_time' => $end,
+                    'shift_name' => $type,
                     'created_at' => now(),
                     'updated_at' => now()
                 ];
-
-                // dd($date->dayOfWeek, $selectedDays,$data);
-
-                $id = DB::table('tbl_payr_shift')->insertGetId($data, 'shift_id');
             }
         }
     }
 
-    return response()->json(['message' => 'Bulk shifts updated!']);
+    // Batch insert for performance
+    if (!empty($insertData)) {
+        DB::table('tbl_payr_shift')->insert($insertData);
+    }
+
+    return response()->json([
+        'message' => count($insertData) . ' shifts created successfully',
+        'count' => count($insertData)
+    ]);
 }
 
-    public function get(Request $request)
+public function get(Request $request)
 {
-    $start = $request->start;
-    $end   = $request->end;
+    $request->validate([
+        'start' => 'nullable|date',
+        'end' => 'nullable|date'
+    ]);
+
+    
+    $colors = [
+        'morning' => '#2ecc71',
+        'night' => '#3498db',
+        'leave' => '#e74c3c'
+    ];
 
     $query = DB::table('tbl_payr_shift as shifts')
-        ->join('tbl_payr_employee as employees','employees.employee_id','=','shifts.shift_user_id')
+        ->join('tbl_payr_employee as employees', 'employees.employee_id', '=', 'shifts.shift_user_id')
         ->select(
             'shifts.shift_id as id',
             'shifts.shift_start_time as start',
             'shifts.shift_close_time as end',
-            'shifts.shift_user_id as resourceId',
-            'shifts.shift_user_id',
-            'shifts.shift_name'
+            'shifts.shift_user_id as resourceid',
+            'shifts.shift_name',
+            'shifts.shift_name as shift_type' // Added for eventClick
         );
 
-    // Only filter if FullCalendar sends dates
-    if ($start && $end) {
-        $query->whereBetween('shifts.shift_start_time', [$start, $end]);
+    if ($request->filled(['start', 'end'])) {
+        $query->whereBetween('shifts.shift_start_time', [$request->start, $request->end]);
     }
 
-    $shifts = $query->get();
+        $shifts = $query->get()->map(function ($s) use ($colors) {
 
-    return response()->json(
-        $shifts->map(function($s){
+        $shiftName = strtolower($s->shift_name); // Fix case issue
 
-            $colors=[
-                'morning'=>'#2ecc71',
-                'night'=>'#3498db',
-                'leave'=>'#e74c3c'
-            ];
+        // dd($s->shift_name,);
 
-            return [
-                'id' => (string)$s->id,
-                'resourceId' => (string)$s->shift_user_id,
-                'title' => ucfirst($s->shift_name),
-                'start' => $s->start,
-                'end' => $s->end,
-                'color' => $colors[$s->shift_name] ?? '#95a5a6'
-            ];
-        })
-    );
+        return [
+            'id'         => (string) $s->id,
+            'resourceId' => (string) $s->resourceid,
+            'title'      => ucfirst($shiftName),
+            'start'      => $s->start,
+            'end'        => $s->end,
+            'shift_type' => $shiftName,
+            'color'      => $colors[$shiftName] ?? '#95a5a6',
+            'editable'   => $shiftName !== 'leave'
+        ];
+    });
+
+
+    return response()->json($shifts);
 }
+// public function bulkStore(Request $request)
+// {
+//     $startDate = Carbon::parse($request->start_date);
+//     $endDate = Carbon::parse($request->end_date);
+//     $selectedDays = $request->selected_days; // e.g. [0, 6] for weekends
+
+//     $period = CarbonPeriod::create($startDate, $endDate);
+
+//     // Set times based on type
+//     $times = [
+//         'morning' => ['start' => '08:00:00', 'end' => '16:00:00'],
+//         'night'   => ['start' => '22:00:00', 'end' => '06:00:00'],
+//         'leave'   => ['start' => '00:00:00', 'end' => '23:59:59'],
+//     ];
+
+//     $type = $request->shift_type;
+//     $sTime = $times[$type]['start'];
+//     $eTime = $times[$type]['end'];
+
+//     foreach ($request->employee_ids as $empId) {
+//         foreach ($period as $date) {
+//             // Only create shift if current date matches a selected checkbox day
+//             if (!in_array($date->dayOfWeek, $selectedDays)) {
+                
+//                 $fullStart = $date->format('Y-m-d') . ' ' . $sTime;
+                
+//                 // For Night Shift, end date is the next morning
+//                 $endLocalDate = ($type == 'night') ? $date->copy()->addDay() : $date;
+//                 $fullEnd = $endLocalDate->format('Y-m-d') . ' ' . $eTime;
+
+//                 $p_id= DB::table('tbl_payr_shift')->max('shift_id') +1;
+
+//                 $data=[
+//                     'shift_id' => $p_id,
+//                     'shift_user_id'=>$empId,
+//                     'shift_start_time'=> "$fullStart",
+//                     'shift_close_time'=>"$fullEnd",
+//                     'shift_name'=>$type,
+//                     'created_at' => now(),
+//                     'updated_at' => now()
+//                 ];
+
+//                 // dd($date->dayOfWeek, $selectedDays,$data);
+
+//                 $id = DB::table('tbl_payr_shift')->insertGetId($data, 'shift_id');
+//             }
+//         }
+//     }
+
+//     return response()->json(['message' => 'Bulk shifts updated!']);
+// }
+
+//     public function get(Request $request)
+// {
+//     $start = $request->start;
+//     $end   = $request->end;
+
+//     $query = DB::table('tbl_payr_shift as shifts')
+//         ->join('tbl_payr_employee as employees','employees.employee_id','=','shifts.shift_user_id')
+//         ->select(
+//             'shifts.shift_id as id',
+//             'shifts.shift_start_time as start',
+//             'shifts.shift_close_time as end',
+//             'shifts.shift_user_id as resourceId',
+//             'shifts.shift_user_id',
+//             'shifts.shift_name'
+//         );
+
+//     // Only filter if FullCalendar sends dates
+//     if ($start && $end) {
+//         $query->whereBetween('shifts.shift_start_time', [$start, $end]);
+//     }
+
+//     $shifts = $query->get();
+
+//     return response()->json(
+//         $shifts->map(function($s){
+
+//             $colors=[
+//                 'morning'=>'#2ecc71',
+//                 'night'=>'#3498db',
+//                 'leave'=>'#e74c3c'
+//             ];
+
+//             return [
+//                 'id' => (string)$s->id,
+//                 'resourceId' => (string)$s->shift_user_id,
+//                 'title' => ucfirst($s->shift_name),
+//                 'start' => $s->start,
+//                 'end' => $s->end,
+//                 'color' => $colors[$s->shift_name] ?? '#95a5a6'
+//             ];
+//         })
+//     );
+// }
 
 
     public function store(Request $r){
