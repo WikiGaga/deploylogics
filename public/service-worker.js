@@ -14,7 +14,7 @@ self.addEventListener('push', function (event) {
     const title = data.title || 'Notification';
     const options = {
         body: data.body || '',
-        icon: data.icon || '/images/icons/notification.png',
+        icon: data.icon || '/images/malek-al-pizza.png',
         data: data.data || {}
     };
 
