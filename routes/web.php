@@ -10,6 +10,10 @@ use App\Models\TblPurcProductBarcode;
 use Illuminate\Support\Facades\Auth;
 // routes/web.php
 use App\Http\Controllers\ChequeController;
+use App\Http\Controllers\Purchase\GRNController;
+use App\Models\TblPurcGrn;
+use App\Notifications\GlobalNotification;
+use Illuminate\Support\Facades\Notification;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +30,15 @@ Route::get('/test-pusher', function () {
     //   dd(config('broadcasting.connections.pusher'));
     event(new \App\Events\PusherEvent('Hello from Laravel!'));
     return 'event sent';
+});
+
+Route::get('/test-notification', function () {
+    $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
+    $model = get_class(new TblPurcGrn());
+    
+    Notification::send($user, new GlobalNotification($model, 'This is a test notification message', 'https://example.com'));
+
+    return 'Notification sent';
 });
 
 // Route::get('/cheque-designer/{layout}', [ChequeController::class, 'designer'])->name('cheque.designer');
@@ -1378,6 +1391,13 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('store','Development\FlowCriteriaController@store');
             Route::post('update/{id}','Development\FlowCriteriaController@update');
             Route::get('menu-data/{formtable}','Development\FlowCriteriaController@getAjaxData');
+        });
+
+        Route::prefix('notification-settings')->group(function () {
+            Route::get('form/{id?}','Development\NotificationSettingsController@index');
+            Route::post('store','Development\NotificationSettingsController@store');
+            Route::post('update/{id}','Development\NotificationSettingsController@update');
+            Route::get('menu-data/{formtable}','Development\NotificationSettingsController@getAjaxData');
         });
 
         Route::prefix('formdisplay')->group(function () {
