@@ -112,7 +112,7 @@ class GlobalNotification extends Notification
             // ->renotify()
             // ->requireInteraction()
             // ->tag()
-            ->vibrate();
+            ->vibrate(1);
     }
 
     /**
