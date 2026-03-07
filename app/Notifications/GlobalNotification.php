@@ -55,20 +55,20 @@ class GlobalNotification extends Notification
         $channels[] = WebPushChannel::class;
         $channels[] = 'broadcast';
 
-        if ($setting->mail_status === 'active' && !empty($notifiable->email)) {
-            $channels[] = 'mail';
-        }
+        // if ($setting->mail_status === 'active' && !empty($notifiable->email)) {
+        //     $channels[] = 'mail';
+        // }
 
         // For old Laravel you may use "nexmo"
         // For newer Laravel the official channel name is "vonage"
-        if ($setting->sms_status === 'active' && !empty($notifiable->phone)) {
-            $channels[] = 'vonage';
-        }
+        // if ($setting->sms_status === 'active' && !empty($notifiable->phone)) {
+        //     $channels[] = 'vonage';
+        // }
 
         // Custom channel classes
-        if ($setting->whatsapp_status === 'active' && !empty($notifiable->phone)) {
-            $channels[] = '';
-        }
+        // if ($setting->whatsapp_status === 'active' && !empty($notifiable->phone)) {
+        //     $channels[] = '';
+        // }
 
         return $channels;
     }
