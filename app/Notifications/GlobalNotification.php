@@ -18,6 +18,7 @@ class GlobalNotification extends Notification
     public $title;
     public $message;
     public $url;
+    public $data;
 
 
     /**
@@ -25,12 +26,13 @@ class GlobalNotification extends Notification
      *
      * @return void
      */
-    public function __construct($model, $title, $message, $url = '')
+    public function __construct($model, $title, $message, $url = '', $data = [])
     {
         $this->model = $model;
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;
+        $this->data = $data;
     }
 
     /**
@@ -50,13 +52,11 @@ class GlobalNotification extends Notification
 
         $channels = [];
         $channels[] = 'database';
+        $channels[] = WebPushChannel::class;
+        $channels[] = 'broadcast';
 
         if ($setting->mail_status === 'active' && !empty($notifiable->email)) {
             $channels[] = 'mail';
-        }
-
-        if ($setting->broadcast_status === 'active') {
-            $channels[] = 'broadcast';
         }
 
         // For old Laravel you may use "nexmo"
@@ -69,10 +69,6 @@ class GlobalNotification extends Notification
         if ($setting->whatsapp_status === 'active' && !empty($notifiable->phone)) {
             $channels[] = '';
         }
-
-        // if ($setting->webpush_status === 'active') {
-            $channels[] = WebPushChannel::class;
-        // }
 
         return $channels;
     }
@@ -103,9 +99,9 @@ class GlobalNotification extends Notification
     public function toWebPush($notifiable, $notification)
     {
         return (new WebPushMessage)
-            ->title($this->title)
+            ->title('Approved!')
             ->icon('/approved-icon.png')
-            ->body($this->message)
+            ->body('Your account was approved!')
             ->action('View account', 'view_account')
             ->options(['TTL' => 1000]);
             // ->data(['id' => $notification->id])
@@ -132,5 +128,21 @@ class GlobalNotification extends Notification
             'message' => $this->message,
             'url' => $this->url
         ];
+    }
+
+    /**
+    * Get the broadcastable representation of the notification.
+    *
+    * @param  mixed  $notifiable
+    * @return BroadcastMessage
+    */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'title' => $this->title,
+            'message' => $this->message,
+            'url' => $this->url,
+            'data' => $this->data
+        ]);
     }
 }

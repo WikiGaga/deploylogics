@@ -21,7 +21,7 @@
         "intervention/image": "^2.5",
         "khaled.alshamaa/ar-php": "^6.2",
         "larasocket/larasocket-driver": "^1.0",
-        "laravel-notification-channels/webpush": "^5.1",
+        "laravel-notification-channels/webpush": "5.1.1",
         "laravel/framework": "^7.0",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^2.0",
