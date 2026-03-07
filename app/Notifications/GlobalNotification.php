@@ -43,12 +43,12 @@ class GlobalNotification extends Notification
      */
     public function via($notifiable)
     {
-         $setting = TblNotificationSetting::where('key', $this->model)->first();
+        // $setting = TblNotificationSetting::where('key', $this->model)->first();
 
-        if (! $setting) {
-            // default fallback
-            return ['database'];
-        }
+        // if (! $setting) {
+        //     // default fallback
+        //     return ['database'];
+        // }
 
         $channels = [];
         $channels[] = 'database';
