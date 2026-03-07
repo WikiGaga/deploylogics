@@ -99,11 +99,11 @@ class GlobalNotification extends Notification
     public function toWebPush($notifiable, $notification)
     {
         return (new WebPushMessage)
-            ->title('Approved!')
-            ->icon('/approved-icon.png')
-            ->body('Your account was approved!')
-            ->action('View account', 'view_account')
-            ->options(['TTL' => 1000]);
+            ->title($this->title)
+            ->icon('/images/malek-al-pizza.png')
+            ->body($this->message)
+            ->action('Action', $this->url)
+            ->options(['TTL' => 1000])
             // ->data(['id' => $notification->id])
             // ->badge()
             // ->dir()
@@ -112,7 +112,7 @@ class GlobalNotification extends Notification
             // ->renotify()
             // ->requireInteraction()
             // ->tag()
-            // ->vibrate()
+            ->vibrate();
     }
 
     /**
