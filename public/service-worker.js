@@ -3,7 +3,7 @@ self.addEventListener('push', function (event) {
         return;
     }
 
-    const data = '';
+    var data = '';
     // if data is string
     if (typeof event.data === 'string') {
         data = event.data;
