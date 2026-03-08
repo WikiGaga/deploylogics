@@ -26,4 +26,7 @@ class TblAccoVoucher extends Model
         return $this->hasMany(TblAccoVoucherBillDtl::class, 'voucher_id')->orderBy('voucher_bill_sr_no');
     }
 
+    function branch(){
+        return $this->belongsTo(TblSoftBranch::class, 'branch_id');
+    }
 }
