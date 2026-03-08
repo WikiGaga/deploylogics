@@ -2525,6 +2525,12 @@ class VoucherController extends Controller
                 $data['stock_menu_id'] = '64';
                 break;
             }
+            case 'pos': {
+                $data['title'] = 'POS Sale Invoice';
+                $formUrl = 'acc.cash_deposit_print';
+                $data['stock_menu_id'] = '116';
+                break;
+            }
         }
         if(isset($id)){
             if(TblAccoVoucher::where('voucher_id','LIKE',$id)->exists()){
@@ -2533,7 +2539,7 @@ class VoucherController extends Controller
                 if($type =='brv'){
                     //Voucher Credit
                     $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                }else if($type == 'cpv' || $type =='bpv'){
+                }else if($type == 'cpv' || $type =='bpv' || $type == 'pos'){
                     $data['current'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first();
                     $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
                     // $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
