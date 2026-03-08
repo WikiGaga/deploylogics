@@ -71,7 +71,7 @@
                                             ( voucher_debit <> 0 OR  voucher_credit <> 0 ) and branch_id in(".$branch->branch_id.") ".$data['where']."
                                             and voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
                                             $whereVoucher
-                                            order by voucher_date,voucher_no,branch_id";
+                                            order by voucher_date,voucher_no";
 
                                 $VNresult = \Illuminate\Support\Facades\DB::select($VNQuery);
                                     $debit_total_unit = 0;
@@ -97,7 +97,7 @@
                                                 where voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
                                             $where and branch_id in(".$branch->branch_id.") ".$data['where']." 
                                             $whereVoucher
-                                            order by voucher_date,voucher_no,voucher_sr_no, branch_id";
+                                            order by voucher_date,voucher_no,voucher_sr_no";
                                     $result = \Illuminate\Support\Facades\DB::select($Query);
                                     $credit_total = 0;
                                     $debit_total = 0;
