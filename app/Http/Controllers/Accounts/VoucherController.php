@@ -349,7 +349,7 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_sr_no = ++$i;
                     $voucherDtl->voucher_date = $voucher_date;
                     // $voucherDtl->chart_account_id = $dtl['account_id'];
-                    $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '67192221301240';
+                    $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '13925525291919';
                     $voucherDtl->voucher_tax_status = '1';
                     $voucherDtl->budget_id = $dtl['budget_id'];
                     $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
@@ -558,7 +558,7 @@ class VoucherController extends Controller
                         $voucherDtl->voucher_sr_no = ++$i;
                         $voucherDtl->voucher_date = date('Y-m-d', strtotime($request->voucher_date));
                         // $voucherDtl->chart_account_id = $dtl['account_id'];
-                        $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '67192221301240';
+                        $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '13925525291919';
                         $voucherDtl->voucher_tax_status = '1';
                         $voucherDtl->budget_id = $dtl['budget_id'];
                         $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
