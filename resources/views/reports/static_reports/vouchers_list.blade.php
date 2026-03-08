@@ -68,7 +68,7 @@
                             </tr>
                             @php
                                 $VNQuery = "Select distinct voucher_date,voucher_no,voucher_status,voucher_type from VW_ACCO_VOUCHER_ALL where
-                                            ( voucher_debit <> 0 OR  voucher_credit <> 0 ) and branch_id in(".implode(",",$branch->branch_id).") ".$data['where']."
+                                            ( voucher_debit <> 0 OR  voucher_credit <> 0 ) and branch_id in(".$branch->branch_id.") ".$data['where']."
                                             and voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
                                             $whereVoucher
                                             order by voucher_date,voucher_no,branch_id";
@@ -95,7 +95,7 @@
 
                                     $Query = "Select voucher_id,voucher_date,voucher_no,voucher_status,voucher_type,chart_code,chart_name,voucher_descrip,voucher_debit,voucher_credit,voucher_sr_no from VW_ACCO_VOUCHER_ALL
                                                 where voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
-                                            $where and branch_id in(".implode(",",$branch->branch_id).") ".$data['where']." 
+                                            $where and branch_id in(".$branch->branch_id.") ".$data['where']." 
                                             $whereVoucher
                                             order by voucher_date,voucher_no,voucher_sr_no, branch_id";
                                     $result = \Illuminate\Support\Facades\DB::select($Query);
