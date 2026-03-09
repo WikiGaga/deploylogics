@@ -15,6 +15,7 @@
     $mode_no = $data['current']->voucher_mode_no;
     $exchange_rate = $data['current']->voucher_exchange_rate;
     $notes = $data['current']->voucher_notes;
+    $voucher_branch_name = $data['current']->branch->branch_name;
     $dtls = isset($data['dtl'])? $data['dtl'] :[];
     $voucher_user_id = $data['current']->voucher_user_id;
     $user = \App\Models\User::where('id',$voucher_user_id)->first();
@@ -34,11 +35,16 @@
                     <span class="normal normal-block">{{isset($code)?$code:''}}</span>
                 </div>
             </td>
-            <td width="33.33%"></td>
             <td width="33.33%">
                 <div>
                     <span class="heading heading-block">Document Date :</span>
                     <span class="normal normal-block">{{isset($date)?$date:''}}</span>
+                </div>
+            </td>
+            <td width="33.33%">
+                <div>
+                    <span class="heading heading-block">Document Branch :</span>
+                    <span class="normal normal-block">{{isset($voucher_branch_name)?$voucher_branch_name:''}}</span>
                 </div>
             </td>
         </tr>

@@ -349,7 +349,7 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_sr_no = ++$i;
                     $voucherDtl->voucher_date = $voucher_date;
                     // $voucherDtl->chart_account_id = $dtl['account_id'];
-                    $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '67192221301240';
+                    $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '13925525291919';
                     $voucherDtl->voucher_tax_status = '1';
                     $voucherDtl->budget_id = $dtl['budget_id'];
                     $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
@@ -558,7 +558,7 @@ class VoucherController extends Controller
                         $voucherDtl->voucher_sr_no = ++$i;
                         $voucherDtl->voucher_date = date('Y-m-d', strtotime($request->voucher_date));
                         // $voucherDtl->chart_account_id = $dtl['account_id'];
-                        $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '67192221301240';
+                        $voucherDtl->chart_account_id = DB::table('TBLG_TAX_SETTING')->where('account_id',$dtl['account_id'])->value('tax_account_id') ?? '13925525291919';
                         $voucherDtl->voucher_tax_status = '1';
                         $voucherDtl->budget_id = $dtl['budget_id'];
                         $voucherDtl->voucher_invoice_id = isset($dtl['invoice_id'])?$dtl['invoice_id']:'';
@@ -2525,19 +2525,30 @@ class VoucherController extends Controller
                 $data['stock_menu_id'] = '64';
                 break;
             }
+            case 'POS': {
+                $data['title'] = 'POS Sale Invoice';
+                $formUrl = 'acc.cash_deposit_print';
+                $data['stock_menu_id'] = '37';
+                break;
+            }
         }
+        
         if(isset($id)){
             if(TblAccoVoucher::where('voucher_id','LIKE',$id)->exists()){
-                $data['permission'] = $data['stock_menu_id'].'-print';
+                
+            // if($type != 'POS'){
+                    $data['permission'] = $data['stock_menu_id'].'-print';
+                // }
+
                 $data['current'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_sr_no','=','1')->where(Utilities::currentBCB())->first();
                 if($type =='brv'){
                     //Voucher Credit
                     $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                }else if($type == 'cpv' || $type =='bpv'){
-                    $data['current'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first();
-                    $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
+                }else if($type == 'cpv' || $type =='bpv' || $type == 'POS'){
+                    $data['current'] = TblAccoVoucher::with('accounts','branch')->where('voucher_id',$id)->where('voucher_type',$type)->first();
+                    $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->orderBy('voucher_sr_no', 'ASC')->get();
                     // $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                    // dd($data['dtl']->toArray());
+                    // dd($data['current']->toArray());
                 }else if($type == 'pve'){
                     $data['current'] = TblAccoVoucher::with('accounts')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first();
                     $data['dtl'] = TblAccoVoucher::with('accounts')->where('voucher_grid_type','debit')->where('voucher_id',$id)->where('voucher_type',$type)->orderBy('voucher_sr_no', 'asc')->where(Utilities::currentBCB())->get();

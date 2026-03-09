@@ -490,14 +490,14 @@ class POSVoucherController extends Controller
                         $data['voucher_credit'] = 0;
                         $data['voucher_sr_no'] = 1;
                         // for debit entry sum_net_total
-                        // $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+                        $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                         $data['chart_account_id'] = $payment_receive_cr;
                         $data['voucher_debit'] = 0;
                         $data['voucher_credit'] = abs($f);
                         $data['voucher_sr_no'] = 2;
                         // for Credit entry sum_net_total
-                        // $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
+                        $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
                     }
                 }
             }

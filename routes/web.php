@@ -1,15 +1,19 @@
 <?php
 
-use App\Library\Utilities;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
-use App\Jobs\TrigerAutoDemandProcedure;
+use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\Development\ImportDataController;
+use App\Http\Controllers\Purchase\GRNController;
+use App\Jobs\TrigerAutoDemandProcedure;
+use App\Library\Utilities;
+use App\Models\TblPurcGrn;
 use App\Models\TblPurcProduct;
 use App\Models\TblPurcProductBarcode;
+use App\Notifications\GlobalNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-// routes/web.php
-use App\Http\Controllers\ChequeController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +30,43 @@ Route::get('/test-pusher', function () {
     //   dd(config('broadcasting.connections.pusher'));
     event(new \App\Events\PusherEvent('Hello from Laravel!'));
     return 'event sent';
+});
+
+Route::get('/test-notification', function () {
+    $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
+    $model = get_class(new TblPurcGrn());
+    
+    Notification::send($user, new GlobalNotification($model, "GRN Created", 'This is a test notification message', 'https://example.com'));
+
+    return 'Notification sent';
+});
+
+Route::middleware('auth')->post('/push/subscribe', function (Request $request) {
+    $request->validate([
+        'endpoint' => 'required|string',
+        'keys.p256dh' => 'nullable|string',
+        'keys.auth' => 'nullable|string',
+        'contentEncoding' => 'nullable|string',
+    ]);
+
+    $request->user()->updatePushSubscription(
+        $request->endpoint,
+        $request->input('keys.p256dh'),
+        $request->input('keys.auth'),
+        $request->input('contentEncoding')
+    );
+
+    return response()->json(['success' => true]);
+});
+
+Route::middleware('auth')->post('/push/unsubscribe', function (Request $request) {
+    $request->validate([
+        'endpoint' => 'required|string',
+    ]);
+
+    $request->user()->deletePushSubscription($request->endpoint);
+
+    return response()->json(['success' => true]);
 });
 
 // Route::get('/cheque-designer/{layout}', [ChequeController::class, 'designer'])->name('cheque.designer');
@@ -1378,6 +1419,13 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('store','Development\FlowCriteriaController@store');
             Route::post('update/{id}','Development\FlowCriteriaController@update');
             Route::get('menu-data/{formtable}','Development\FlowCriteriaController@getAjaxData');
+        });
+
+        Route::prefix('notification-settings')->group(function () {
+            Route::get('form/{id?}','Development\NotificationSettingsController@index');
+            Route::post('store','Development\NotificationSettingsController@store');
+            Route::post('update/{id}','Development\NotificationSettingsController@update');
+            Route::get('menu-data/{formtable}','Development\NotificationSettingsController@getAjaxData');
         });
 
         Route::prefix('formdisplay')->group(function () {

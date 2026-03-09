@@ -69,5 +69,9 @@ return [
         'listing_group' => 'Listing Group',
         'tabular_report' => 'Tabular Report'
     ],
+    
+    "vapid_public_key" => env('VAPID_PUBLIC_KEY'),
+    "vapid_private_key" => env('VAPID_PRIVATE_KEY'),
+    "vapid_pem_file" => env('VAPID_PEM_FILE'),
 
 ];
