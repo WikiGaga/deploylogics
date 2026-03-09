@@ -44,8 +44,8 @@ public function employees(Request $request)
 {
 
     // dd($request->all());
-    $branch_id=$request->branch_id;
-    $department_id=$request->department_id;
+    $branch_id=(array) $request->branch_id;
+    $department_id=(array) $request->department_id;
     $employees = DB::table('tbl_payr_employee')
         ->select(
             "employee_id as id",
@@ -304,6 +304,7 @@ public function get(Request $request)
         DB::table('tbl_payr_shift')
             ->where('shift_id', $r->id)
             ->update([
+                'shift_user_id'    => $r->employee_id,
                 'shift_start_time' => $start,
                 'shift_close_time' => $end,
                 'updated_at' => now()

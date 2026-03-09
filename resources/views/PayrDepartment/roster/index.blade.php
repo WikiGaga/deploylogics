@@ -63,7 +63,7 @@
 
                         <div class="col-lg-3">
                             <label class="erp-col-form-label">Department :</label>
-                            <select class="form-control filter_emp kt-select2" name="department" id="department">
+                            <select class="form-control filter_emp kt-select2" multiple name="department[]" id="department">
                                 <option value="0">Select</option>
                                 @foreach($data['department'] as $department)
                                     <option value="{{$department->department_id}}">
@@ -232,7 +232,8 @@
     const $calendar = $('#calendar');
     
     $calendar.fullCalendar({
-        timezone: 'local',
+        // timezone: 'local',
+        timezone: false,
         nextDayThreshold: '00:00:01',
         firstDay: 0,
         schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
@@ -323,12 +324,23 @@
             openEditModal(event);
         },
         
+        // eventRender: function(event, element) {
+        //     const start = moment(event.start).format('h:mm A');
+        //     const end = moment(event.end).format('h:mm A');
+            
+        //     element.find('.fc-content').html(`
+        //         <div class="shift-title">${event.title}</div>
+        //         <div class="shift-time">${start} - ${end}</div>
+        //     `);
+        // }
+
         eventRender: function(event, element) {
+            // .format() without the 'Z' ensures it shows exactly what is in the DB
             const start = moment(event.start).format('h:mm A');
             const end = moment(event.end).format('h:mm A');
             
             element.find('.fc-content').html(`
-                <div class="shift-title">${event.title}</div>
+                <div class="shift-title" style="font-weight:bold;">${event.title}</div>
                 <div class="shift-time">${start} - ${end}</div>
             `);
         }
@@ -342,7 +354,7 @@
         const configs = {
             morning: { start: '08:00:00', end: '16:00:00', addDay: 0 },
             night: { start: '22:00:00', end: '06:00:00', addDay: 1 },
-            leave: { start: '00:00:00', end: '23:59:59', addDay: 0 }
+            leave: { start: '00:00:01', end: '23:59:59', addDay: 0 }
         };
         
         const cfg = configs[shiftType];
@@ -372,8 +384,10 @@
             url: `/shifts/${event.id}`,
             type: 'PUT',
             data: {
-                start: event.start.format(),
-                end: event.end ? event.end.format() : event.start.format()
+                id: event.id, // Ensure ID is passed
+                start: event.start.format('YYYY-MM-DD HH:mm:ss'),
+                end: event.end ? event.end.format('YYYY-MM-DD HH:mm:ss') : event.start.format('YYYY-MM-DD HH:mm:ss'),
+                employee_id: event.resourceId // <--- ADD THIS LINE to capture the new employee
             },
             success: () => {
                 toastr.success('Shift updated');
