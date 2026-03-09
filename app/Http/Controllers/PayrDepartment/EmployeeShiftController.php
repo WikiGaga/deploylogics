@@ -89,7 +89,7 @@ public function bulkStore(Request $request)
     foreach ($validated['employee_ids'] as $empId) {
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
             // FIXED: Removed the "!" - now checks if day IS selected
-            if (in_array($date->dayOfWeek, $selectedDays)) {
+            if (!in_array($date->dayOfWeek, $selectedDays)) {
                 
                 $start = $date->copy()->setTimeFromTimeString($config['start']);
                 $end = $date->copy()->setTimeFromTimeString($config['end']);
