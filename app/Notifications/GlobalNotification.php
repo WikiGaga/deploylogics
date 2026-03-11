@@ -93,12 +93,14 @@ class GlobalNotification extends Notification
     public function toWebPush($notifiable, $notification)
     {
         return (new WebPushMessage)
-            ->title($this->getTitle())
-            ->icon('/images/malek-al-pizza.png')
-            ->body($this->getMessage())
-            ->action('View', $this->url)
-            ->options(['TTL' => 1000])
-            ->vibrate([100, 50, 100]);
+        ->title($this->getTitle())
+        ->icon('/images/malek-al-pizza.png')
+        ->body($this->getMessage())
+        ->data([
+            'url' => url($this->url),
+        ])
+        ->options(['TTL' => 1000])
+        ->vibrate([100, 50, 100]);
     }
 
     public function toArray($notifiable)
