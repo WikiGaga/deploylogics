@@ -102,10 +102,10 @@ class NotificationSettingsController extends Controller
             $notification->title = $request->notification_title;
             $notification->message = $request->notification_message;
             $notification->key = $request->notification_form;
-            $notification->push_notification_status = $request->push_notification_status;
-            $notification->mail_status = $request->mail_status;
-            $notification->sms_status = $request->sms_status;
-            $notification->whatsapp_status = $request->whatsapp_status;
+            $notification->push_notification_status = $request->push_notification_status == 'on' ? 'active' : 'inactive';
+            $notification->mail_status = $request->mail_status == 'on' ? 'active' : 'inactive';
+            $notification->sms_status = $request->sms_status == 'on' ? 'active' : 'inactive';
+            $notification->whatsapp_status = $request->whatsapp_status == 'on' ? 'active' : 'inactive';
             $notification->whatsapp_template = $request->whatsapp_template;
             $notification->save();
 
