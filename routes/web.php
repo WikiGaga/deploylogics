@@ -36,7 +36,7 @@ Route::get('/test-notification', function () {
     $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
     $model = get_class(new TblPurcGrn());
     
-    Notification::send($user, new GlobalNotification($model, "GRN Created", 'This is a test notification message', 'https://example.com', [
+    Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', "GRN Created", 'This is a test notification message', 'https://example.com', [
         'stage_mode' => 'Published'
     ]));
 
@@ -1427,7 +1427,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('form/{id?}','Development\NotificationSettingsController@index');
             Route::post('store','Development\NotificationSettingsController@store');
             Route::put('update/{id}','Development\NotificationSettingsController@update');
-            Route::get('menu-data/{formtable}','Development\NotificationSettingsController@getAjaxData');
+            Route::delete('delete/{id}','Development\NotificationSettingsController@destroy');
         });
 
         Route::prefix('formdisplay')->group(function () {

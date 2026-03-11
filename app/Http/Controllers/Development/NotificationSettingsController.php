@@ -56,7 +56,7 @@ class NotificationSettingsController extends Controller
 
         try {
             $notification = new TblNotificationSetting();
-            // $notification->id = Utilities::uuid();
+            $notification->id = Utilities::uuid();
             $notification->title = $request->notification_title;
             $notification->message = $request->notification_message;
             $notification->key = $request->notification_form;
@@ -80,7 +80,6 @@ class NotificationSettingsController extends Controller
 
     public function update(Request $request, $id)
     {
-        dd($request->all(), $id);
         $validator = Validator::make($request->all(), [
             'notification_title' => 'required|string',
             'notification_form' => 'required|string',

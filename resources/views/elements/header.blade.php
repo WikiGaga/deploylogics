@@ -509,7 +509,7 @@
     <!-- end:: Header Topbar -->
 </div>
 <script>
-async function subscribeUserToPush(event, value) {
+async function subscribeUserToPush(value) {
     console.log('Event:', event, 'Value:', value);
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push not supported');
