@@ -36,8 +36,8 @@ Route::get('/test-notification', function () {
     $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
     $model = get_class(new TblPurcGrn());
     
-    Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', "GRN Created", 'This is a test notification message', 'https://example.com', [
-        'stage_mode' => 'Published'
+    Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', 'https://example.com', [
+        'stage' => 'Published'
     ]));
 
     return 'Notification sent';

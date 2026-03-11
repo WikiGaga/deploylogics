@@ -26,11 +26,9 @@ class GlobalNotification extends Notification
      *
      * @return void
      */
-    public function __construct($model, $title, $message, $url = '', $data = [])
+    public function __construct($model, $url, $data = [])
     {
         $this->model = $model;
-        $this->title = $title;
-        $this->message = $message;
         $this->url = $url;
         $this->data = $data;
     }
@@ -50,6 +48,9 @@ class GlobalNotification extends Notification
             return ['database'];
             $channels[] = WebPushChannel::class;
         }
+
+        $this->title = $setting->title;
+        $this->message = $setting->message;
 
         $channels = [];
         $channels[] = 'database';
@@ -146,7 +147,7 @@ class GlobalNotification extends Notification
     */
     public function toBroadcast($notifiable)
     {
-        
+
         // return new BroadcastMessage([
         //     'title' => $this->title,
         //     'message' => $this->message,
