@@ -43,21 +43,22 @@ class GlobalNotification extends Notification
      */
     public function via($notifiable)
     {
-        // $setting = TblNotificationSetting::where('key', $this->model)->first();
+        $setting = TblNotificationSetting::where('key', $this->model)->first();
 
-        // if (! $setting) {
-        //     // default fallback
-        //     return ['database'];
-        // }
+        if (! $setting) {
+            // default fallback
+            return ['database'];
+            $channels[] = WebPushChannel::class;
+        }
 
         $channels = [];
         $channels[] = 'database';
         $channels[] = WebPushChannel::class;
         $channels[] = 'broadcast';
 
-        // if ($setting->mail_status === 'active' && !empty($notifiable->email)) {
-        //     $channels[] = 'mail';
-        // }
+        if ($setting->mail_status === 'active' && !empty($notifiable->email)) {
+            // $channels[] = 'mail';
+        }
 
         // For old Laravel you may use "nexmo"
         // For newer Laravel the official channel name is "vonage"
@@ -81,23 +82,25 @@ class GlobalNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        return null;
-        // Check the Settings for the modal if the email notification is enabled or not
-        if (TblNotificationSetting::where('key', $this->model)->where('mail_status', 'active')->exists()) {
-                // $notificationSetting = TblNotificationSetting::where('model', $this->model)->where('mail_status', 'active')->first();
-                // $message = str_replace('{message}', $this->message, $notificationSetting->template);
-
-                return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url($this->url))
-                    ->line('Thank you for using our application!');
-        }else{
-            return null;
+        // Replace the Varibale in data with actual value in message
+        foreach ($this->data as $key => $value) {
+            $this->message = str_replace("{{$key}}", $value, $this->message);
         }
+
+        return (new MailMessage)
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url($this->url))
+            ->line('Thank you for using our application!');
+        
     }
 
     public function toWebPush($notifiable, $notification)
     {
+        // Replace the Varibale in data with actual value in message
+        foreach ($this->data as $key => $value) {
+            $this->message = str_replace("{{$key}}", $value, $this->message);
+        }
+
         return (new WebPushMessage)
             ->title($this->title)
             ->icon('/images/malek-al-pizza.png')
@@ -123,6 +126,11 @@ class GlobalNotification extends Notification
      */
     public function toArray($notifiable)
     {
+        // Replace the Varibale in data with actual value in message
+        foreach ($this->data as $key => $value) {
+            $this->message = str_replace("{{$key}}", $value, $this->message);
+        }
+
         return [
             'title' => $this->title,
             'message' => $this->message,
@@ -138,11 +146,12 @@ class GlobalNotification extends Notification
     */
     public function toBroadcast($notifiable)
     {
-        return new BroadcastMessage([
-            'title' => $this->title,
-            'message' => $this->message,
-            'url' => $this->url,
-            'data' => $this->data
-        ]);
+        
+        // return new BroadcastMessage([
+        //     'title' => $this->title,
+        //     'message' => $this->message,
+        //     'url' => $this->url,
+        //     'data' => $this->data
+        // ]);
     }
 }

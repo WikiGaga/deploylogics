@@ -311,6 +311,17 @@ class Utilities
         return false;
     }
 
+    public static function getTableFromModel($model)
+    {
+        if (!class_exists($model)) {
+            return false;
+        }
+
+        $instance = new $model;
+
+        return method_exists($instance, 'getTable') ? $instance->getTable() : false;
+    }
+
     public static function getClassesList($dir)
     {
         $classes = \File::allFiles($dir);

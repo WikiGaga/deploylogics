@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Library\Utilities;
 use Illuminate\Database\Eloquent\Model;
 
 class TblNotificationSetting extends Model

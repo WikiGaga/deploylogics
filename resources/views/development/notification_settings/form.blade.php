@@ -29,6 +29,12 @@
     .tab-pane.active {
         display: block;
     }
+    .toggle-style-1{    
+        background: #e6e6e6;
+        padding: 15px 6px;
+        justify-content: space-between;
+        border-radius: 5px;
+    }
 </style>
 @endsection
 @section('content')
@@ -55,9 +61,9 @@
                         <div class="form-group row">
                             <div class="col-lg-6">
                                 <div class="row">
-                                    <label class="col-lg-12 col-form-label">Name:</label>
+                                    <label class="col-lg-12 col-form-label">Title:</label>
                                     <div class="col-lg-12">
-                                        <input type="text" name="notification_title" class="form-control form-control-sm" value="{{ isset($data['notification']) ? $data['notification']->title : '' }}" placeholder="Enter Name">
+                                        <input type="text" name="notification_title" class="form-control form-control-sm" value="{{ isset($data['notification']) ? $data['notification']->title : '' }}" placeholder="Enter Title" style="height: 38px;">
                                     </div>
                                 </div>
                             </div>
@@ -65,47 +71,49 @@
                                 <div class="row">
                                     <label class="col-lg-12 col-form-label">Select Form:</label>
                                     <div class="col-lg-12">
-                                        <div class="input-group date">
-                                            <input type="text" class="form-control" readonly value="{{ isset($data['flowCriteria']) ? date('d-m-Y', strtotime($data['flowCriteria']->menu_flow_criteria_apply_at)) : date('d-m-Y') }}" name="menu_flow_criteria_apply_at" id="kt_datepicker_3" />
-                                            <div class="input-group-append">
-										<span class="input-group-text">
-											<i class="la la-calendar"></i>
-										</span>
-                                            </div>
-                                        </div>
+                                        <select value="{{ old('notification_form', isset($data['notification']) ? $data['notification']->key : '') }}" name="notification_form" class="moveIndex form-control erp-form-control-sm kt-select2">
+                                            <option value="">Select Form</option>
+                                            @foreach($data['listings'] as $form)
+                                                <option value="{{ $form->listing_studio_table_name }}"
+                                                    {{ old('notification_form', $data['notification']->key ?? '') == $form->listing_studio_table_name ? 'selected' : '' }}>
+                                                    {{ $form->listing_studio_title }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="form-group row">
                             <div class="col-lg-12">
                                 <div class="row">
                                     <div class="col-lg-3 col-form-label">
-                                        <label class="rtl-toggle" title="Toggle Right-to-Left Layout">
+                                        <label class="rtl-toggle toggle-style-1" title="Toggle Right-to-Left Layout">
                                             <span class="rtl-label">Push Notification</span>
-                                            <input type="checkbox" id="rtlToggle" onchange="toggleRTL(this.checked)" autocomplete="off">
+                                            <input type="checkbox" id="push_notification_status" name="push_notification_status" {{ isset($data['notification']) && $data['notification']->push_notification_status == 'active'  ? 'checked' : '' }} autocomplete="off">
                                             <span class="rtl-slider"></span>
                                         </label>
                                     </div>
                                     <div class="col-lg-3 col-form-label">
-                                        <label class="rtl-toggle" title="Toggle Right-to-Left Layout">
+                                        <label class="rtl-toggle toggle-style-1" title="Toggle Right-to-Left Layout">
                                             <span class="rtl-label">Email</span>
-                                            <input type="checkbox" id="rtlToggle" onchange="toggleRTL(this.checked)" autocomplete="off">
+                                            <input type="checkbox" id="mail_status" name="mail_status" {{ isset($data['notification']) && $data['notification']->mail_status == 'active'  ? 'checked' : '' }} autocomplete="off">
                                             <span class="rtl-slider"></span>
                                         </label>
                                     </div>
                                     <div class="col-lg-3 col-form-label">
-                                        <label class="rtl-toggle" title="Toggle Right-to-Left Layout">
+                                        <label class="rtl-toggle toggle-style-1" title="Toggle Right-to-Left Layout">
                                             <span class="rtl-label">Whatsapp</span>
-                                            <input type="checkbox" id="rtlToggle" onchange="toggleRTL(this.checked)" autocomplete="off">
+                                            <input type="checkbox" id="whatsapp_status" name="whatsapp_status" {{ isset($data['notification']) && $data['notification']->whatsapp_status == 'active'  ? 'checked' : '' }} autocomplete="off">
                                             <span class="rtl-slider"></span>
                                         </label>
                                     </div>
                                     <div class="col-lg-3 col-form-label">
                                     
-                                        <label class="rtl-toggle" title="Toggle Right-to-Left Layout">
+                                        <label class="rtl-toggle toggle-style-1" title="Toggle Right-to-Left Layout">
                                             <span class="rtl-label">SMS</span>
-                                            <input type="checkbox" id="rtlToggle" onchange="toggleRTL(this.checked)" autocomplete="off">
+                                            <input type="checkbox" id="sms_status" name="sms_status" {{ isset($data['notification']) && $data['notification']->sms_status == 'active' ? 'checked' : '' }} autocomplete="off">
                                             <span class="rtl-slider"></span>
                                         </label>
                                     </div>
@@ -117,7 +125,7 @@
                                 <div class="row">
                                     <label class="col-lg-12 col-form-label">Whatsapp Template Name:</label>
                                     <div class="col-lg-12">
-                                        <input type="text" name="whatsapp_template" class="form-control form-control-sm" placeholder="Enter Whatsapp Template Name"></input>
+                                        <input type="text" name="whatsapp_template" value="{{ old('whatsapp_template', isset($data['notification']) ? $data['notification']->whatsapp_template : '') }}" class="form-control form-control-sm" placeholder="Enter Whatsapp Template Name"></input>
                                     </div>
                                 </div>
                             </div>
@@ -133,6 +141,18 @@
                             </div>
                         </div>
                         {{-- end row--}}
+                    </div>
+
+                    <div>
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                     </div>
                     <div class="kt-portlet__foot">
                         <div class="kt-form__actions">
@@ -169,15 +189,27 @@
                         @foreach ($data['notification_settings'] as $setting)
                             <tr>
                                 <td>{{ $setting->title }}</td>
-                                <td>App\\Models\\GRN</td>
-                                <td>You have a notification from the GRN</td>
+                                <td>{{ $setting->key }}</td>
+                                <td>{{ $setting->message->message ?? '' }}</td>
                                 <td>
-                                    <span class="badge bg-success text-white p-2 rounded-full">Enable</span>
+                                    <span class="badge {{ $setting->push_notification_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">
+                                        {{ $setting->push_notification_status == 'active' ? 'Enable' : 'Inactivate' }}
+                                    </span>
                                 </td>
-                                <td><span class="badge bg-success text-white p-2 rounded-full">Enable</span></td>
-                                <td><span class="badge bg-success text-white p-2 rounded-full">Enable</span></td>
-                                <td><span class="badge bg-success text-white p-2 rounded-full">Enable</span></td>
-                                <td><button class="btn btn-sm btn-primary open_notification" data-url="{{ action('Development\NotificationSettingsController@index', $setting->id) }}">Edit</button></td>
+                                <td><span class="badge {{ $setting->mail_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">{{ $setting->mail_status == 'active' ? 'Enable' : 'Inactive' }}</span></td>
+                                <td>
+                                    <span class="badge {{ $setting->whatsapp_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">
+                                        {{ $setting->whatsapp_status == 'active' ? 'Enable' : 'Inactive' }}
+                                    </span>
+                                    <span>
+                                        @if($setting->whatsapp_status == 'active' && $setting->whatsapp_template)
+                                            <br>
+                                            <small>Template: {{ $setting->whatsapp_template }}</small>
+                                        @endif
+                                    </span>
+                                </td>
+                                <td><span class="badge {{ $setting->sms_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">{{ $setting->sms_status == 'active' ? 'Enable' : 'Inactive' }}</span></td>
+                                <td><a class="btn btn-sm btn-primary" href="{{ action('Development\NotificationSettingsController@index', $setting->id) }}">Edit</a></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -189,97 +221,35 @@
     <!-- end:: Content -->
 @endsection
 @section('pageJS')
-    <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
+    <script>
+        $('#NotificationSettings_form').on('submit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            var url = form.attr('action');
+            var method = form.find('input[name="_method"]').val() || 'POST';
+            var data = form.serialize();
+
+            $.ajax({
+                url: url,
+                method: method,
+                data: data,
+                success: function(response) {
+                    toastr.success(response.message);
+                },
+                error: function(xhr, response) {
+                    var errorMessage = 'An error occurred. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                }
+            });
+        });
+    </script>
 @endsection
 
 @section('customJS')
-@if(isset($data['flowCriteria']))
-<script>
-    var flowCriteriaData = {!! json_encode([
-        'conditions' => $data['flowCriteria']->conditions->map(function($c) {
-            return [
-                'condition_sr_number' => $c->condition_sr_number,
-                'condition_field' => $c->condition_field,
-                'condition_operator' => $c->condition_operator,
-                'condition_value' => $c->condition_value,
-                'condition_logic_operator' => $c->condition_logic_operator
-            ];
-        })->values(),
-        'flows' => $data['flowCriteria']->flows->map(function($f) {
-            return [
-                'stg_flows_id' => $f->stg_flows_id,
-                'flow_name' => $f->flow_name,
-                'flow_order' => $f->flow_order,
-                'lead_time_value' => $f->lead_time_value,
-                'lead_time_unit' => $f->lead_time_unit,
-                'reminder_time_minutes' => $f->reminder_time_minutes,
-                'require_all_users' => $f->require_all_users,
-                'actions' => $f->actions->map(function($a) {
-                    return ['action_name' => $a->action_name];
-                })->values(),
-                'users' => $f->users->map(function($u) {
-                    return ['user_id' => $u->user_id];
-                })->values(),
-                'designations' => $f->designations->map(function($d) {
-                    return ['designation_id' => $d->designation_id];
-                })->values(),
-                'bypasses' => $f->bypasses->map(function($b) {
-                    return [
-                        'bypass_type' => $b->bypass_type,
-                        'bypass_user_id' => $b->bypass_user_id,
-                        'bypass_designation_id' => $b->bypass_designation_id
-                    ];
-                })->values()
-            ];
-        })->values()
-    ]) !!};
-</script>
-@else
-<script>
-    var flowCriteriaData = null;
-</script>
-@endif
-<script>
-    $('.open_notification').on('click',function(e){
-        var data_url = $(this).attr('data-url');
-        openModal(data_url);
-    });
-   $(document).ready(function(){
-  $("#menu_flow_criteria_name").change(function(){
-    var formtable =  $(this).find('option:selected').attr('data-table-name');
-    if (!formtable) return;
-    $.ajax({
-            type:'GET',
-            url:'/flow-criteria/menu-data/'+ formtable,
-            success: function(response,  data){
-                //console.log(response);
-                if(data)
-                {
-                    $("#menu_flow_criteria_dtl_field").empty();
-                    $("#menu_flow_criteria_dtl_field").append('<option>Select</option>');
-                    $.each(response,function(key,value){
-                        $("#menu_flow_criteria_dtl_field").append('<option value="'+key+'">'+value+'</option>');
-                    });
-                }
-            }
-        });
-  });
 
-    $('.apply').click(function(){
-        var val = $(this).is(":checked");
-        if(val == true)
-        {
-            $(this).parents('tr').find('input').attr('disabled',false);
-        }else
-        {
-            $(this).parents('tr').find('input').attr('disabled',true);
-            $(this).attr('disabled',false);
-        }
 
-    });
-});
-
-</script>
-    <script src="{{ asset('js/pages/flowcriteria-rpeated.js') }}" type="text/javascript"></script>
 @endsection
 

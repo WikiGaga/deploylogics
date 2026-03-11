@@ -93,6 +93,14 @@
         left: 50%;
         transform: translate(-50%, -50%);
     }
+    .kt-notification__item.no-after::after{
+        display: none;
+    }
+
+    .kt-notification__item.no-after .kt-notification__item-details{
+        flex-direction: row;
+        justify-content: space-between;
+    }
 
 </style>
 
@@ -426,6 +434,22 @@
                     </div>
                 </div>
                 <div class="kt-notification">
+                    <div class="kt-notification__item no-after">
+                        <div class="kt-notification__item-icon">
+                            <i class="flaticon2-bell kt-font-success"></i>
+                        </div>
+                        <div class="kt-notification__item-details">
+                            <div class="kt-notification__item-title kt-font-bold">
+                                Enable Notifications
+                            </div>
+                            <div class="noti-switcher m-0">
+                                <label class="rtl-toggle" title="Toggle Notification Layout">
+                                    <input type="checkbox" id="notificationToggle" onchange="subscribeUserToPush(this.checked)" autocomplete="off">
+                                    <span class="rtl-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                     <a href="{{ action('Setting\PasswordController@create') }}" class="kt-notification__item">
                         <div class="kt-notification__item-icon">
                             <i class="flaticon2-calendar-3 kt-font-success"></i>
@@ -485,9 +509,35 @@
     <!-- end:: Header Topbar -->
 </div>
 <script>
-async function subscribeUserToPush() {
+async function subscribeUserToPush(event, value) {
+    console.log('Event:', event, 'Value:', value);
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push not supported');
+        return;
+    }
+
+    if(!value){
+        // Unregister service worker and unsubscribe from push
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                await subscription.unsubscribe();
+                await fetch('/push/unsubscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(subscription)
+                });
+                console.log('Unsubscribed:', subscription);
+            }
+            await registration.unregister();
+            console.log('Service Worker unregistered');
+        }
+        
+        alert('Notifications disabled');
         return;
     }
 
