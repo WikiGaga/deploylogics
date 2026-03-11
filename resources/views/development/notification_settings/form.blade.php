@@ -190,7 +190,7 @@
                             <tr>
                                 <td>{{ $setting->title }}</td>
                                 <td>{{ $setting->key }}</td>
-                                <td>{{ $setting->message->message ?? '' }}</td>
+                                <td>{{ $setting->message }}</td>
                                 <td>
                                     <span class="badge {{ $setting->push_notification_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">
                                         {{ $setting->push_notification_status == 'active' ? 'Enable' : 'Inactivate' }}
@@ -209,7 +209,12 @@
                                     </span>
                                 </td>
                                 <td><span class="badge {{ $setting->sms_status == 'active' ? 'bg-success' : 'bg-danger' }} text-white p-2 rounded-full">{{ $setting->sms_status == 'active' ? 'Enable' : 'Inactive' }}</span></td>
-                                <td><a class="btn btn-sm btn-primary" href="{{ action('Development\NotificationSettingsController@index', $setting->id) }}">Edit</a></td>
+                                <td>
+                                    <div>
+                                        <a class="btn btn-sm btn-primary" href="{{ action('Development\NotificationSettingsController@index', $setting->id) }}">Edit</a>
+                                        <a class="btn btn-sm btn-danger" id="deleteNotification" href="{{ action('Development\NotificationSettingsController@destroy', $setting->id) }}">Delete</a>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -244,6 +249,33 @@
                     toastr.error(errorMessage);
                 }
             });
+        });
+
+        $('#deleteNotification').on('click', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+
+            if (confirm('Are you sure you want to delete this notification setting?')) {
+                $.ajax({
+                    url: url,
+                    method: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        toastr.success(response.message);
+                        // Optionally, you can remove the deleted row from the table or refresh the page
+                        location.reload();
+                    },
+                    error: function(xhr, response) {
+                        var errorMessage = 'An error occurred. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        toastr.error(errorMessage);
+                    }
+                });
+            }
         });
     </script>
 @endsection
