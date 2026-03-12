@@ -444,7 +444,7 @@
                             </div>
                             <div class="noti-switcher m-0">
                                 <label class="rtl-toggle" title="Toggle Notification Layout">
-                                    <input type="checkbox" id="notificationToggle" onchange="subscribeUserToPush(this.checked)" autocomplete="off">
+                                    <input type="checkbox" id="notificationToggle" onchange="handleNotificationToggle(this)" autocomplete="off">
                                     <span class="rtl-slider"></span>
                                 </label>
                             </div>
@@ -509,72 +509,138 @@
     <!-- end:: Header Topbar -->
 </div>
 <script>
+document.addEventListener('DOMContentLoaded', async function () {
+    await syncNotificationToggleState();
+});
+
+async function handleNotificationToggle(element) {
+    const originalState = !element.checked;
+
+    element.disabled = true;
+
+    try {
+        const success = await subscribeUserToPush(element.checked);
+
+        if (!success) {
+            element.checked = originalState;
+        }
+    } catch (error) {
+        console.error('Notification toggle failed:', error);
+        element.checked = originalState;
+    } finally {
+        element.disabled = false;
+    }
+}
+
+async function syncNotificationToggleState() {
+    const toggle = document.getElementById('notificationToggle');
+
+    if (!toggle) return;
+
+    if (Notification.permission === 'denied') {
+        toggle.checked = false;
+        toggle.disabled = true;
+    }
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        toggle.checked = false;
+        toggle.disabled = true;
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.getRegistration('/service-worker.js')
+            || await navigator.serviceWorker.getRegistration();
+
+        if (!registration) {
+            toggle.checked = false;
+            return;
+        }
+
+        const subscription = await registration.pushManager.getSubscription();
+        toggle.checked = !!subscription;
+    } catch (error) {
+        console.error('Error checking subscription state:', error);
+        toggle.checked = false;
+    }
+}
+
 async function subscribeUserToPush(value) {
-    console.log('Event:', event, 'Value:', value);
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push not supported');
-        return;
+        return false;
     }
 
-    if(!value){
-        // Unregister service worker and unsubscribe from push
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                await subscription.unsubscribe();
-                await fetch('/push/unsubscribe', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(subscription)
-                });
-                console.log('Unsubscribed:', subscription);
+    try {
+        if (!value) {
+            const registration = await navigator.serviceWorker.getRegistration('/service-worker.js')
+                || await navigator.serviceWorker.getRegistration();
+
+            if (registration) {
+                const subscription = await registration.pushManager.getSubscription();
+
+                if (subscription) {
+                    await subscription.unsubscribe();
+
+                    await fetch('/push/unsubscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(subscription)
+                    });
+
+                    console.log('Unsubscribed:', subscription);
+                }
             }
-            await registration.unregister();
-            console.log('Service Worker unregistered');
+
+            alert('Notifications disabled');
+            return true;
         }
-        
-        alert('Notifications disabled');
-        return;
+
+        const permission = await Notification.requestPermission();
+
+        if (permission !== 'granted') {
+            console.log('Permission denied');
+            alert('Notifications are blocked. Please enable them in browser settings.');
+            return false;
+        }
+
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+            const vapidPublicKey = "{{ Config('constants.vapid_public_key') }}";
+
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+            });
+        }
+
+        const response = await fetch('/push/subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(subscription)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save subscription on server.');
+        }
+
+        console.log('Subscribed:', subscription);
+        alert('Notifications enabled');
+        return true;
+
+    } catch (error) {
+        console.error('Push subscription error:', error);
+        return false;
     }
-
-    const registration = await navigator.serviceWorker.register('/service-worker.js');
-
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-        console.log('Permission denied');
-        return;
-    }
-
-    console.log('After:', permission);
-
-    if (permission !== 'granted') {
-        alert('Notifications are blocked. Please enable them in browser settings.');
-        return;
-    }
-
-    alert('Notifications enabled');
-
-    const vapidPublicKey = "{{ Config('constants.vapid_public_key') }}";
-
-    const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-    });
-
-    await fetch('/push/subscribe', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify(subscription)
-    });
-
-    console.log('Subscribed:', subscription);
 }
 
 function urlBase64ToUint8Array(base64String) {
