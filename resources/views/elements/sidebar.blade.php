@@ -69,6 +69,19 @@
                     </a>
                 </li>
                 @endpermission
+                @permission(['flow-dash-view'])
+                <li class="kt-menu__item" aria-haspopup="true">
+                    <a href="/staging-dashboard" class="kt-menu__link"><span class="kt-menu__link-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                <polygon points="0 0 24 0 24 24 0 24" />
+                                <path d="M12,4 L20,8 L20,18 L12,22 L4,18 L4,8 L12,4 Z M12,6 L6,9 L6,17 L12,20 L18,17 L18,9 L12,6 Z" fill="#000000" fill-rule="nonzero"/>
+                            </g>
+                        </svg>
+                        </span><span class="kt-menu__link-text">{{ __('message.flow_dashboard') }}</span>
+                    </a>
+                </li>
+                @endpermission
                 {{--<li class="kt-menu__item  kt-menu__item--active" aria-haspopup="true">
 
                     <a href="{{action('StagingActivityController@index')}}" class="kt-menu__link "><span class="kt-menu__link-icon">

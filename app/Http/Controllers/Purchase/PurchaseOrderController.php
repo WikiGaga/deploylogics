@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasStaging;
 use App\Library\Utilities;
 use App\Models\Defi\TblDefiConstants;
 use App\Models\Defi\TblDefiTaxGroup;
@@ -33,6 +34,7 @@ use App\Models\ViewPurcProductBarcodeRate;
 use App\Models\ViewPurcPurchaseOrderListing;
 use App\Models\ViewSaleSalesInvoice;
 use App\Models\Sale\WhatsappLog;
+use App\Services\StagingService;
 use Illuminate\Http\Request;
 use Dompdf\Dompdf;
 
@@ -48,6 +50,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PurchaseOrderController extends Controller
 {
+    use HasStaging;
     public static $page_title = 'Purchase Order';
     public static $redirect_url = 'purchase-order';
     public static $menu_dtl_id = '38';
@@ -66,6 +69,9 @@ class PurchaseOrderController extends Controller
         $data['menu_dtl_id'] = self::$menu_dtl_id;
         $data['table_id'] = 'purchase_order_id';
         $data['data_url'] = action('Purchase\PurchaseOrderController@index');
+
+        $data['page_data'] = [];
+        $data['page_data']['post'] = action('Purchase\PurchaseOrderController@post');
         $data['table_columns'] = [
             "purchase_order_code" => [
                 'title' => "PO NO",
@@ -85,6 +91,10 @@ class PurchaseOrderController extends Controller
             ],
             "po_grn_status" => [
                 'title' => "Status",
+                'type' => 'string',
+            ],
+            "posted" => [
+                'title' => "Posted",
                 'type' => 'string',
             ],
             "purchase_order_delivery_date" => [
@@ -120,7 +130,9 @@ class PurchaseOrderController extends Controller
         if($request->ajax()){
             $tbl_1 = " tbl_1";
             $table = " vw_purc_purchase_order_listing $tbl_1 ";
-            $columns = "$tbl_1.purchase_order_id, $tbl_1.purchase_order_code, $tbl_1.purchase_order_entry_date, $tbl_1.supplier_name, $tbl_1.purchase_order_total_net_amount, $tbl_1.po_grn_status, $tbl_1.purchase_order_delivery_date, $tbl_1.branch_name, $tbl_1.remarks, $tbl_1.created_by, $tbl_1.created_at, $tbl_1.updated_by, $tbl_1.updated_at";
+            $columns = "$tbl_1.purchase_order_id, $tbl_1.purchase_order_code, $tbl_1.purchase_order_entry_date, $tbl_1.supplier_name, $tbl_1.purchase_order_total_net_amount, $tbl_1.po_grn_status, $tbl_1.posted, $tbl_1.purchase_order_delivery_date, $tbl_1.branch_name, $tbl_1.remarks, $tbl_1.created_by, $tbl_1.created_at, $tbl_1.updated_by, $tbl_1.updated_at";
+
+            // dd($columns);
 
             $where = " where $tbl_1.business_id = ".auth()->user()->business_id;
             $where .= " and $tbl_1.branch_id = ".auth()->user()->branch_id;
@@ -338,6 +350,13 @@ class PurchaseOrderController extends Controller
                     $data['already_exits'] = true;
                     $data['page_data']['action'] = '';
                 }
+
+                $data['page_data']['post'] = action('Purchase\PurchaseOrderController@post');
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
+
+                if(isset($data['current']->posted) && $data['current']->posted == 1){
+                    $data['page_data']['action'] = '';
+                }
             }else{
                 abort('404');
             }
@@ -368,8 +387,103 @@ class PurchaseOrderController extends Controller
             'col_code' => 'purchase_order_code',
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
+
+        $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $data['perPrefix'] = self::$menu_dtl_id;
+
         return view('purchase.purchase_order.form', compact('data'));
     }
+
+
+    public function post(Request $request)
+    {
+        $postPerm = self::$menu_dtl_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
+        }
+
+        $purchase_order_id = $request->purchase_order_id;
+        $data = [];
+        if(!empty($purchase_order_id)){
+            $row = TblPurcPurchaseOrder::where('purchase_order_id',$purchase_order_id)->where(Utilities::currentBCB())->first();
+            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Posting is handled by staging for this form.'
+                ], 422);
+            }
+            if($row){
+                $row->posted = 1;
+                $row->update();
+                $data['status'] = 'success';
+            }else{
+                $data['status'] = 'error';
+            }
+        }else{
+            $data['status'] = 'error';
+        }
+        return response()->json($data);
+    }
+
+    public function Posted(Request $request)
+    {
+        $postPerm = self::$menu_dtl_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 1;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
+        }else{
+            abort(404);
+        }
+    }
+
+
+    public function UnPosted(Request $request)
+    {
+        $unpostPerm = self::$menu_dtl_id . '-un_post_module';
+        if (!auth()->user()->isAbleTo($unpostPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 0;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);
+        }else{
+            abort(404);
+        }
+    }
+
     public function lpo()
     {
         $data = DB::table('tbl_purc_lpo')
@@ -391,7 +505,7 @@ class PurchaseOrderController extends Controller
      */
     public function store(Request $request,$id = null)
     {
-        //dd($request->toArray());
+        // dd($request->toArray());
         $data = [];
         if(isset($request->pd)){
             foreach($request->pd as $pd){
@@ -435,6 +549,11 @@ class PurchaseOrderController extends Controller
                 $po->purchase_order_code = Utilities::documentCode($doc_data);
             }
             $form_id = $po->purchase_order_id;
+
+            if(isset($id)){
+                $this->assertCanSaveWithStaging($request, self::$menu_dtl_id, $form_id, false, $po);
+            }
+
             $po->purchase_order_entry_date = date('Y-m-d', strtotime($request->po_date));;
             $po->payment_mode_id = $request->payment_terms;
             $po->purchase_order_credit_days = $request->payment_mode;
@@ -449,13 +568,13 @@ class PurchaseOrderController extends Controller
             $po->company_id = auth()->user()->company_id;
             $po->branch_id = auth()->user()->branch_id;
             $po->purchase_order_user_id = auth()->user()->id;
-            $po->save();
 
             if(isset($id)){
                 TblPurcPurchaseOrderDtl::where('purchase_order_id',$id)->where(Utilities::currentBCB())->delete();
             }
             if(isset($request->pd)){
                 $sr_no = 1;
+                $grandTotal = 0;
                 foreach($request->pd as $pd){
                     $dtl = new TblPurcPurchaseOrderDtl();
                     if(isset($pd['purchase_order_dtl_id'])){
@@ -484,6 +603,7 @@ class PurchaseOrderController extends Controller
                     $dtl->purchase_order_dtlvat_percent = $this->addNo($pd['vat_perc']);
                     $dtl->purchase_order_dtlvat_amount = $this->addNo($pd['vat_amount']);
                     $dtl->purchase_order_dtltotal_amount = $this->addNo($pd['gross_amount']);
+                    $grandTotal += (float) $dtl->purchase_order_dtltotal_amount;
                     $dtl->business_id = auth()->user()->business_id;
                     $dtl->company_id = auth()->user()->company_id;
                     $dtl->branch_id = auth()->user()->branch_id;
@@ -491,7 +611,64 @@ class PurchaseOrderController extends Controller
                     $dtl->save();
 
                 }
+                $po->purchase_order_total_net_amount = $grandTotal;
+            }else{
+                $po->purchase_order_total_net_amount = 0;
             }
+            $po->save();
+
+            $wasInStaging = isset($id) && !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+            $stagingService = new StagingService();
+            $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging(self::$menu_dtl_id, $form_id, $wasInStaging);
+
+            if(!$criteriaApplies){
+                $po->current_stg_id = null;
+                $po->staging_apply = 1;
+                $po->posted = 1;
+                $po->save();
+                \App\Models\TblStgFormLog::where('menu_dtl_id', self::$menu_dtl_id)
+                    ->where('document_id', $form_id)
+                    ->update(['posted' => 1]);
+            }else{
+                if(isset($po->posted) && (int)$po->posted === 1){
+                    $po->posted = 0;
+                }
+                if(isset($po->staging_apply) && (int)$po->staging_apply === 1){
+                    $po->staging_apply = 0;
+                }
+                if(empty($po->current_stg_id)){
+                    $flows = $stagingService->getFormFlows(self::$menu_dtl_id, null, $form_id, $wasInStaging);
+                    if(!empty($flows['all'])){
+                        $po->current_stg_id = $flows['all'][0]->stg_flows_id;
+                    }
+                }
+
+                $this->handleStaging($request, self::$menu_dtl_id, $form_id, $po, false, [
+                    'listing_view' => 'vw_purc_purchase_order_listing',
+                    'form_path' => '/purchase-order/form',
+                    'document_code_key' => 'purchase_order_code',
+                ]);
+
+                $currentFlowId = $request->input('current_flow_id');
+                $nextFlowId = $request->input('next_flow_id');
+                $actionId = $request->input('current_actions_id');
+                if ($currentFlowId !== null && $currentFlowId !== '' && $nextFlowId !== null && $nextFlowId !== '' && $actionId !== null && $actionId !== '') {
+                    $actions = $stagingService->getFormActions(self::$menu_dtl_id, $currentFlowId, $form_id, $wasInStaging);
+                    foreach ($actions as $action) {
+                        if ((string) $action->stg_actions_id === (string) $actionId) {
+                            $name = strtolower($action->stg_actions_name ?? '');
+                            $orig = strtolower($action->original_action ?? $name);
+                            if (in_array($name, ['forward'], true) || in_array($orig, ['forward'], true)) {
+                                $po->current_stg_id = $nextFlowId;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                $po->save();
+            }
+
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -503,12 +680,16 @@ class PurchaseOrderController extends Controller
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         } catch (Exception $e) {
             DB::rollback();
-            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+            $status = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 200;
+            return $this->jsonErrorResponse($data, $e->getMessage(), $status);
         }
         DB::commit();
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $isInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+            $data['redirect'] = $isInStaging
+                ? '/'.self::$redirect_url.'/form/'.$form_id
+                : $this->prefixIndexPage.self::$redirect_url;
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());

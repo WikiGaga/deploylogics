@@ -106,6 +106,7 @@ class UserManagementSystemController extends Controller
         $close_module = Permission::where('display_name','close_module')->where('menu_dtl_id',309)->first();
         $un_post_module = Permission::where('display_name','un_post_module')->where('menu_dtl_id',309)->first();
         $userChangePass = Permission::where('display_name','change_password')->where('menu_dtl_id',35)->first();
+        $data['flow_dash_permission'] = Permission::where('name','flow-dash-view')->first();
         $data['custom_modules'] = [];
         if(!empty($userChangePass) || !empty($complete_module) || !empty($close_module) || !empty($un_post_module)){
             // custom module

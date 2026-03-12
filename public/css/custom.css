@@ -205,6 +205,27 @@ table.table-erp td {
     margin-left: 15px;
 }
 
+.kt-portlet__head.has-staging {
+    flex-wrap: nowrap;
+}
+
+.kt-portlet__head.has-staging .kt-portlet__head-label {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.erp-page--actions-staging {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+}
+
 .form-group-block {
     margin-bottom: 3px;
 }

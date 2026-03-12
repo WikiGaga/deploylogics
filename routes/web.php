@@ -35,7 +35,7 @@ Route::get('/test-pusher', function () {
 Route::get('/test-notification', function () {
     $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
     $model = get_class(new TblPurcGrn());
-    
+
     Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', 'https://example.com', [
         'stage' => 'Published'
     ]));
@@ -186,6 +186,12 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('/group/{module}/{id}/form', 'StagingActivityController@create');
         });
 
+        // New staging dashboard using flow criteria
+        Route::prefix('staging-dashboard')->group(function(){
+            Route::get('/', 'StagingDashboardController@index');
+            Route::get('/{menuDtlId}', 'StagingDashboardController@moduleList');
+        });
+
         //=====================purchase=============================
 
         Route::prefix('purchasing')->group(function () {
@@ -241,6 +247,10 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('fetch-supplier-info','Purchase\PurchaseOrderController@fetchSupplierInfo');
             Route::get('generate-pdf-whatsapp/{id}','Purchase\PurchaseOrderController@generatePdfForWhatsApp');
             Route::post('whatsapp-message-sending','Purchase\PurchaseOrderController@sendWhatsappMsg');
+
+            Route::post('post','Purchase\PurchaseOrderController@post');
+            Route::post('posted','Purchase\PurchaseOrderController@Posted');
+            Route::post('unposted','Purchase\PurchaseOrderController@UnPosted');
         });
         Route::prefix('purchase-order-draft')->group(function () {
             Route::post('list-draft','Purchase\PurchaseOrderController@listDraft');
@@ -912,7 +922,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/shifts/bulk-store','PayrDepartment\EmployeeShiftController@bulkStore');
     Route::put('/shifts/{id}','PayrDepartment\EmployeeShiftController@update');
     Route::delete('/shifts/{id}','PayrDepartment\EmployeeShiftController@delete');
-    
+
 
     Route::prefix('retirement-type')->group(function(){
         Route::get('form/{id?}','PayrDepartment\RetirementTypeController@create');
@@ -1420,6 +1430,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('edit/{id}','Development\FlowCriteriaController@edit');
             Route::post('store','Development\FlowCriteriaController@store');
             Route::post('update/{id}','Development\FlowCriteriaController@update');
+            Route::post('delete/{id}','Development\FlowCriteriaController@destroy');
             Route::get('menu-data/{formtable}','Development\FlowCriteriaController@getAjaxData');
         });
 

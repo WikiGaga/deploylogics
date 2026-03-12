@@ -22,7 +22,11 @@ use Webpatser\Uuid\Uuid;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
 
@@ -67,6 +71,14 @@ class FlowCriteriaController extends Controller
                              ->orderBy('display_name')
                              ->get();
 
+        $data['page_data'] = [
+            'title'      => 'Flow Criteria',
+            'type'       => 'new',
+            'create'     => action('Development\FlowCriteriaController@create'),
+            'action'     => 'Save',
+            'path_index' => url()->previous(),
+        ];
+
         return view('development.flow_criteria.add', compact('data'));
     }
 
@@ -106,9 +118,11 @@ class FlowCriteriaController extends Controller
             $flowCriteria->menu_flow_criteria_id = $this->generateUuid();
             $flowCriteria->menu_flow_criteria_dtl_id = $this->generateReferenceId();
             $flowCriteria->menu_flow_criteria_name = $request->menu_flow_criteria_name;
+            $flowCriteria->menu_dtl_id = $request->menu_dtl_id ?: null;
             $flowCriteria->menu_flow_criteria_apply_at = date('Y-m-d', strtotime($request->menu_flow_criteria_apply_at));
-            $flowCriteria->menu_flow_criteria_status = 1;
-            $flowCriteria->menu_flow_criteria_entry_status = 1;
+            $enabled = (int) $request->get('menu_flow_criteria_status', 1);
+            $flowCriteria->menu_flow_criteria_status = $enabled;
+            $flowCriteria->menu_flow_criteria_entry_status = $enabled;
             $flowCriteria->business_id = auth()->user()->business_id;
             $flowCriteria->company_id = auth()->user()->company_id;
             $flowCriteria->branch_id = auth()->user()->branch_id;
@@ -121,6 +135,8 @@ class FlowCriteriaController extends Controller
 
             if ($request->has('flow_criteria_data')) {
                 $this->storeFlowStages($flowCriteria->menu_flow_criteria_id, $request->flow_criteria_data);
+            } else {
+                Log::warning('No flow_criteria_data in request');
             }
 
             DB::commit();
@@ -172,55 +188,83 @@ class FlowCriteriaController extends Controller
     private function storeFlowStages($criteriaId, $flowStages)
     {
         if (!is_array($flowStages)) {
+            Log::warning('storeFlowStages: flowStages is not an array', ['flowStages' => $flowStages]);
             return;
         }
 
         foreach ($flowStages as $index => $flowStage) {
-            $flow = new TblMenuFlowCriteriaFlow();
-            $flow->menu_flow_criteria_flow_id = $this->generateUuid();
-            $flow->menu_flow_criteria_id = $criteriaId;
-            $flow->stg_flows_id = $flowStage['form_flow_criteria'] ?? null;
-            $flow->flow_order = $index + 1;
-            $flow->flow_name = $this->getFlowName($flowStage['form_flow_criteria'] ?? 0);
-            $flow->lead_time_value = $flowStage['product_warranty_mode'] ?? null;
-            $flow->lead_time_unit = $this->getTimeUnit($flowStage['product_warranty_period'] ?? 0);
-            $flow->reminder_time_minutes = $flowStage['reminder_time'] ?? null;
-            $flow->require_all_users = isset($flowStage['select_user']) && $flowStage['select_user'] == 'all' ? 1 : 0;
-            $flow->save();
+            try {
+                $flow = new TblMenuFlowCriteriaFlow();
+                $flow->menu_flow_criteria_flow_id = $this->generateUuid();
+                $flow->menu_flow_criteria_id = $criteriaId;
+                $flow->stg_flows_id = $flowStage['form_flow_criteria'] ?? null;
+                $flow->flow_order = $index + 1;
+                $flow->flow_name = $this->getFlowName($flowStage['form_flow_criteria'] ?? 0);
+                $flow->lead_time_value = $flowStage['product_warranty_mode'] ?? null;
+                $flow->lead_time_unit = $this->getTimeUnit($flowStage['product_warranty_period'] ?? 0);
+                $flow->reminder_time_minutes = $flowStage['reminder_time'] ?? null;
+                $flow->require_all_users = isset($flowStage['select_user']) && $flowStage['select_user'] == 'all' ? 1 : 0;
+                $flow->save();
 
-            if (isset($flowStage['action']) && is_array($flowStage['action'])) {
-                $this->storeFlowActions($flow->menu_flow_criteria_flow_id, $flowStage['action']);
-            }
+                if (isset($flowStage['action']) && is_array($flowStage['action']) && count($flowStage['action']) > 0) {
+                    $this->storeFlowActions($flow->menu_flow_criteria_flow_id, $flowStage['action']);
+                }
 
-            if (isset($flowStage['users']) && is_array($flowStage['users'])) {
-                $this->storeFlowUsers($flow->menu_flow_criteria_flow_id, $flowStage['users']);
-            }
+                if (isset($flowStage['users'])) {
+                    if (is_array($flowStage['users']) && count($flowStage['users']) > 0) {
+                        $this->storeFlowUsers($flow->menu_flow_criteria_flow_id, $flowStage['users']);
+                    }
+                }
 
-            if (isset($flowStage['designation']) && is_array($flowStage['designation'])) {
-                $this->storeFlowDesignations($flow->menu_flow_criteria_flow_id, $flowStage['designation']);
-            }
+                if (isset($flowStage['designation'])) {
+                    if (is_array($flowStage['designation']) && count($flowStage['designation']) > 0) {
+                        $this->storeFlowDesignations($flow->menu_flow_criteria_flow_id, $flowStage['designation']);
+                    }
+                }
 
-            if (isset($flowStage['bypass_users']) && is_array($flowStage['bypass_users'])) {
-                $this->storeFlowBypass($flow->menu_flow_criteria_flow_id, $flowStage['bypass_users'], 'user');
-            }
+                if (isset($flowStage['bypass_users']) && is_array($flowStage['bypass_users']) && count($flowStage['bypass_users']) > 0) {
+                    $this->storeFlowBypass($flow->menu_flow_criteria_flow_id, $flowStage['bypass_users'], 'user');
+                }
 
-            if (isset($flowStage['bypass_designation']) && is_array($flowStage['bypass_designation'])) {
-                $this->storeFlowBypass($flow->menu_flow_criteria_flow_id, $flowStage['bypass_designation'], 'designation');
+                if (isset($flowStage['bypass_designation']) && is_array($flowStage['bypass_designation']) && count($flowStage['bypass_designation']) > 0) {
+                    $this->storeFlowBypass($flow->menu_flow_criteria_flow_id, $flowStage['bypass_designation'], 'designation');
+                }
+            } catch (\Exception $e) {
+                Log::error('Error storing flow stage ' . $index . ':', [
+                    'error' => $e->getMessage(),
+                    'flowStage' => $flowStage
+                ]);
+                throw $e;
             }
         }
     }
 
     private function storeFlowActions($flowId, $actions)
     {
-        $actionNames = ['Archive', 'New', 'Pull Back', 'Save'];
-
         foreach ($actions as $actionName) {
-            if (in_array($actionName, $actionNames)) {
+            $normalized = strtolower(trim($actionName));
+
+            $canonicalMap = [
+                'create' => 'save',
+                'edit' => 'save',
+                'save' => 'save',
+                'forward' => 'forward',
+                'post' => 'post',
+                'back' => 'back',
+                'cancel' => 'cancel',
+                'archive' => 'archive',
+                'new' => 'new',
+                'pull back' => 'pull_back',
+            ];
+
+            if (array_key_exists($normalized, $canonicalMap)) {
+                $storedName = $canonicalMap[$normalized];
+
                 $action = new TblMenuFlowCriteriaFlowAction();
                 $action->menu_flow_criteria_flow_action_id = $this->generateUuid();
                 $action->menu_flow_criteria_flow_id = $flowId;
-                $action->action_name = $actionName;
-                $action->send_notification = 0; // Default, can be enhanced later
+                $action->action_name = $storedName;
+                $action->send_notification = 0;
                 $action->save();
             }
         }
@@ -228,26 +272,56 @@ class FlowCriteriaController extends Controller
 
     private function storeFlowUsers($flowId, $userIds)
     {
+        if (!is_array($userIds)) {
+            Log::warning('storeFlowUsers: userIds is not an array', ['userIds' => $userIds]);
+            return;
+        }
+
         foreach ($userIds as $userId) {
-            if (!empty($userId)) {
-                $flowUser = new TblMenuFlowCriteriaFlowUser();
-                $flowUser->menu_flow_criteria_flow_user_id = $this->generateUuid();
-                $flowUser->menu_flow_criteria_flow_id = $flowId;
-                $flowUser->user_id = $userId;
-                $flowUser->save();
+            $userId = is_numeric($userId) ? (int)$userId : $userId;
+
+            if (!empty($userId) && $userId !== '0' && $userId !== 0) {
+                try {
+                    $flowUser = new TblMenuFlowCriteriaFlowUser();
+                    $flowUser->menu_flow_criteria_flow_user_id = $this->generateUuid();
+                    $flowUser->menu_flow_criteria_flow_id = $flowId;
+                    $flowUser->user_id = $userId;
+                    $flowUser->save();
+                } catch (\Exception $e) {
+                    Log::error('Error saving flow user:', [
+                        'flow_id' => $flowId,
+                        'user_id' => $userId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
     }
 
     private function storeFlowDesignations($flowId, $designationIds)
     {
+        if (!is_array($designationIds)) {
+            Log::warning('storeFlowDesignations: designationIds is not an array', ['designationIds' => $designationIds]);
+            return;
+        }
+
         foreach ($designationIds as $designationId) {
-            if (!empty($designationId)) {
-                $flowDesignation = new TblMenuFlowCriteriaFlowDesignation();
-                $flowDesignation->menu_flow_criteria_flow_designation_id = $this->generateUuid();
-                $flowDesignation->menu_flow_criteria_flow_id = $flowId;
-                $flowDesignation->designation_id = $designationId;
-                $flowDesignation->save();
+            $designationId = is_numeric($designationId) ? (int)$designationId : $designationId;
+
+            if (!empty($designationId) && $designationId !== '0' && $designationId !== 0) {
+                try {
+                    $flowDesignation = new TblMenuFlowCriteriaFlowDesignation();
+                    $flowDesignation->menu_flow_criteria_flow_designation_id = $this->generateUuid();
+                    $flowDesignation->menu_flow_criteria_flow_id = $flowId;
+                    $flowDesignation->designation_id = $designationId;
+                    $flowDesignation->save();
+                } catch (\Exception $e) {
+                    Log::error('Error saving flow designation:', [
+                        'flow_id' => $flowId,
+                        'designation_id' => $designationId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
     }
@@ -303,10 +377,8 @@ class FlowCriteriaController extends Controller
         $flowNames = [
             '0' => 'Select',
             '1' => 'Data Entry',
-            '2' => 'Approval',
-            '3' => 'Director Approval',
-            '4' => 'Manager Approval',
-            '5' => 'Posting'
+            '2' => 'Review',
+            '3' => 'Manager Approval',
         ];
 
         return $flowNames[$flowId] ?? 'Unknown';
@@ -326,23 +398,11 @@ class FlowCriteriaController extends Controller
         return $timeUnits[$unitId] ?? null;
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         $flowCriteria = TblMenuFlowCriteria::with([
@@ -380,6 +440,14 @@ class FlowCriteriaController extends Controller
 
         $data['flowCriteria'] = $flowCriteria;
 
+        $data['page_data'] = [
+            'title'      => 'Flow Criteria',
+            'type'       => 'edit',
+            'create'     => action('Development\FlowCriteriaController@create'),
+            'action'     => 'Update',
+            'path_index' => url()->previous(),
+        ];
+
         return view('development.flow_criteria.add', compact('data'));
     }
 
@@ -408,7 +476,11 @@ class FlowCriteriaController extends Controller
 
         try {
             $flowCriteria->menu_flow_criteria_name = $request->menu_flow_criteria_name;
+            $flowCriteria->menu_dtl_id = $request->menu_dtl_id ?: $flowCriteria->menu_dtl_id;
             $flowCriteria->menu_flow_criteria_apply_at = date('Y-m-d', strtotime($request->menu_flow_criteria_apply_at));
+            $enabled = (int) $request->get('menu_flow_criteria_status', 1);
+            $flowCriteria->menu_flow_criteria_status = $enabled;
+            $flowCriteria->menu_flow_criteria_entry_status = $enabled;
             $flowCriteria->updated_by = auth()->user()->id;
             $flowCriteria->save();
 
@@ -427,6 +499,8 @@ class FlowCriteriaController extends Controller
 
             if ($request->has('flow_criteria_data')) {
                 $this->storeFlowStages($flowCriteria->menu_flow_criteria_id, $request->flow_criteria_data);
+            } else {
+                Log::warning('No flow_criteria_data in update request');
             }
 
             DB::commit();
@@ -452,14 +526,45 @@ class FlowCriteriaController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
+        $data = [];
+        DB::beginTransaction();
+        try {
+            $flowCriteria = TblMenuFlowCriteria::where('menu_flow_criteria_id', $id)
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->first();
 
+            if (!$flowCriteria) {
+                return $this->jsonErrorResponse($data, trans('message.not_delete'), 200);
+            }
+
+            foreach ($flowCriteria->flows as $flow) {
+                $flow->actions()->delete();
+                $flow->users()->delete();
+                $flow->designations()->delete();
+                $flow->bypasses()->delete();
+            }
+            $flowCriteria->flows()->delete();
+            $flowCriteria->conditions()->delete();
+            $flowCriteria->delete();
+
+        } catch (QueryException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ValidationException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+        DB::commit();
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 }

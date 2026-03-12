@@ -49,6 +49,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 // console.log(row);
                 var key_id = row[table_id];
                 var voucher_status = row['voucher_status'];
+                var isPosted = (row.posted == 1 || row.posted == '1');
                 var dropdownLink = false;
                 var btnDropdownLink = "";
                 var btnEdit = "";
@@ -87,7 +88,13 @@ var KTDatatableRemoteAjaxDemo = function() {
                     dropdownLink = true;
                 }
                 if(btnpostView){
-                    if(casetype == 'pve' ||
+                    if(casetype == 'purchase-order'){
+                        if(!isPosted){
+                            btnPrint += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                        }
+                        btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+
+                    }else if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         casetype == 'cpv' ||
                         casetype == 'crv'||
@@ -106,7 +113,14 @@ var KTDatatableRemoteAjaxDemo = function() {
                     dropdownLink = true;
                 }
                 if(btnEditView){
-                    if(casetype == 'pve' ||
+                    if(casetype == 'purchase-order'){
+
+                        // if(!isPosted){
+                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
+                                <i class="la la-edit"></i>\
+                            </a>';
+                        // }
+                    }else if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         // casetype == 'cpv' ||
                         // casetype == 'crv'||
@@ -129,7 +143,13 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                 }
                 if(btnDelView){
-                    if(casetype == 'pve' ||
+                    if(casetype == 'purchase-order'){
+                        if(!isPosted){
+                            var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
+                                <i class="la la-trash"></i>\
+                            </button>';
+                        }
+                    }else if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         // casetype == 'cpv' ||
                         // casetype == 'crv'||
@@ -152,7 +172,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                 }
                 if(dropdownLink){
-                    var btnDropdownLink = '<div class="dropdown">'+
+                    var btnDropdownLink = '<div class="dropdown ml-1">'+
                         '<a href="javascript:;" class="btn btn-sm btn-icon btn-icon-sm btn-success" data-toggle="dropdown">'+
                         '<i class="la la-bars"></i>'+
                         '</a>'+
@@ -479,6 +499,58 @@ $('body').on('click', '#export_csv, #export_pdf', function () {
     // $form.find('input[name="export_type"]').remove(); // Ensure no duplicate fields
     // $form.append('<input type="hidden" name="export_type" value="' + exportType + '">');
     $form.trigger('submit');
+});
+
+$(document).on('click', '.POPosted', function() {
+    var purchase_order_id = $(this).attr('data-id');
+    var url = '/purchase-order/post';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { purchase_order_id: purchase_order_id },
+        success: function(response, data) {
+            if (response && response.status == 'success') {
+                toastr.success('Successfully Posted.');
+                // redraw datatable
+                location.reload();
+            } else {
+                toastr.error('Unable to Post.');
+            }
+        },
+        error: function(response, status) {
+            toastr.error('Error while posting.');
+        }
+    });
+});
+
+$(document).on('click', '.POUnPosted', function() {
+    var purchase_order_id = $(this).attr('data-id');
+    var url = '/purchase-order/unposted';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { data: [purchase_order_id] },
+        success: function(response, data) {
+            if (response && (response.status == 'success' || response.success)) {
+                toastr.success('Successfully Un-Posted.');
+                // redraw datatable
+                                location.reload();
+            } else {
+                toastr.error('Unable to Un-Post.');
+            }
+        },
+        error: function(response, status) {
+            toastr.error('Error while un-posting.');
+        }
+    });
 });
 
 $(document).on('keypress', 'input', function(e) {

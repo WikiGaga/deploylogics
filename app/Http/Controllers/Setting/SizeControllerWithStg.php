@@ -101,7 +101,7 @@ class SizeControllerWithStg extends Controller
     }
 
     public function getFormActivity($menu_dtl_id,$form_id){
-        $activity = TblStgFormLog::with('action_btn_dtl','flow_dtl')->where('menu_dtl_id',$menu_dtl_id)->where('form_id',$form_id)->orderBy('created_at','desc')->get();
+        $activity = TblStgFormLog::with('action_btn_dtl','flow_dtl')->where('menu_dtl_id',$menu_dtl_id)->where('document_id',$form_id)->orderBy('created_at','desc')->get();
         return $activity;
     }
 
@@ -258,13 +258,12 @@ class SizeControllerWithStg extends Controller
         $TblStgFormLog = TblStgFormLog::create([
             'stg_form_log_id' => Utilities::uuid(),
             'menu_dtl_id' => $menu_dtl_id,
-            'form_id' => $form_id,
+            'document_id' => $form_id,
             'stg_form_cases_id' => $StgFormCases->stg_form_cases_id,
             'user_id' => auth()->user()->id,
             'stg_flows_id' => $current_flow_id,
             'stg_actions_id' => $current_actions_id,
             'stg_form_log_entry_status' => 1,
-            'stg_form_log_user_id' => auth()->user()->id,
             'business_id' => auth()->user()->business_id,
             'company_id' => auth()->user()->company_id,
             'branch_id' => auth()->user()->branch_id,

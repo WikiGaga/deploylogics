@@ -19,6 +19,7 @@ class TblMenuFlowCriteria extends Model
         'menu_flow_criteria_id',
         'menu_flow_criteria_dtl_id',
         'menu_flow_criteria_name',
+        'menu_dtl_id',
         'menu_flow_criteria_apply_at',
         'menu_flow_criteria_status',
         'menu_flow_criteria_entry_status',
@@ -71,7 +72,8 @@ class TblMenuFlowCriteria extends Model
 
     public function scopeForForm($query, $formTableName)
     {
-        return $query->where('menu_flow_criteria_name', $formTableName);
+        $formName = strtolower(trim($formTableName));
+        return $query->whereRaw('lower(trim(menu_flow_criteria_name)) = ?', [$formName]);
     }
 
     public function scopeForBusiness($query, $businessId, $companyId, $branchId)

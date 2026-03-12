@@ -85,6 +85,7 @@ return array (
   'back' => 'Back',
   'save' => 'Save',
   'post' => 'Post',
+  'unpost' => 'Unpost',
   'send' => 'Send',
   'print' => 'Print',
   'create_new' => 'Create New',
@@ -215,6 +216,7 @@ return array (
   'shelf_label' => 'Shelf Label',
   // Sidebar Menu translations
   'dashboard' => 'Dashboard',
+  'flow_dashboard' => 'Flow Dashboard',
   'accounts' => 'Accounts',
   'purchase' => 'Purchase',
   'inventory' => 'Inventory',
@@ -261,4 +263,8 @@ return array (
   'card' => 'Card',
   'delivery' => 'Delivery',
   'takeaway' => 'Takeaway',
+  'staging_flow_required' => 'Staging flow is required.',
+  'staging_no_access' => 'You do not have access to perform this action at the current stage.',
+  'staging_save_not_allowed' => 'Save is not allowed at the current stage.',
+  'document_canceled_no_action' => 'This document is canceled. No further actions can be performed.',
 );

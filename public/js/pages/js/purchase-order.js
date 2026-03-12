@@ -50,10 +50,46 @@ var KTFormWidgets = function () {
 
             },
             submitHandler: function (form) {
+                var formData = new FormData(form);
+                var stagingFlowId = form.querySelector('input[name=current_flow_id]');
+                var stagingActionId = form.querySelector('#staging_current_actions_id');
+                var stagingActionCode = form.querySelector('#staging_action_code');
+
+                if (stagingFlowId && stagingFlowId.value) {
+                    formData.set('current_flow_id', stagingFlowId.value);
+                    var flowRemarks = form.querySelector('textarea[name=flow_remarks]');
+                    if (flowRemarks) {
+                        formData.set('flow_remarks', flowRemarks.value || '');
+                    }
+
+                    // Prefer the button that actually submitted the form
+                    var submitter = document.activeElement;
+                    var actionId = null;
+                    var actionCode = null;
+
+                    if (submitter && submitter.classList && submitter.classList.contains('staging-action-btn')) {
+                        actionId = submitter.value || submitter.getAttribute('data-staging-action-id');
+                        actionCode = submitter.getAttribute('data-staging-action-code') || '';
+                    }
+
+                    if (!actionId && stagingActionId && stagingActionId.value) {
+                        actionId = stagingActionId.value;
+                    }
+
+                    if (actionId) {
+                        formData.set('current_actions_id', actionId);
+                    }
+                    if (actionCode) {
+                        formData.set('staging_action_code', actionCode);
+                    }
+
+                    var nextFlow = form.querySelector('input[name=next_flow_id]');
+                    var prevFlow = form.querySelector('input[name=prev_flow_id]');
+                    if (nextFlow && nextFlow.value) formData.set('next_flow_id', nextFlow.value);
+                    if (prevFlow && prevFlow.value) formData.set('prev_flow_id', prevFlow.value);
+                }
                 $("form").find(":submit").prop('disabled', true);
                 $('body').addClass('pointerEventsNone');
-                //form[0].submit(); // submit the form
-                var formData = new FormData(form);
                 var ajaxValidate = 1;
                 var title_msg = '';
                 var title_text = '';
@@ -113,9 +149,11 @@ var KTFormWidgets = function () {
                     setTimeout(function () {
                         $("form").find(":submit").prop('disabled', false);
                     }, 2000);
-                    if(response.data.form == 'new'){
+                    if (response.data && response.data.redirect) {
                         window.location.href = response.data.redirect;
-                    }else{
+                    } else if (response.data && response.data.form == 'new') {
+                        window.location.href = response.data.redirect || ('/purchase-order/form/' + (response.data.id || ''));
+                    } else {
                         $('.new-row').removeClass('new-row');
                         $('body').removeClass('pointerEventsNone');
                     }

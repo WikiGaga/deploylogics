@@ -229,6 +229,14 @@
                     // columns definition
                     columns: [
                         {
+                            field: 'select',
+                            title: '<input type="checkbox" id="select-all-pos" />',
+                            sortable: false,
+                            width: 40,
+                            template: function(row) {
+                                return '<input type="checkbox" class="po-select" value="'+row.purchase_order_id+'">';
+                            },
+                        },{
                             field: 'purchase_order_code',
                             title: 'PO NO',
                         }, {
@@ -246,7 +254,18 @@
                         },{
                             field: 'po_grn_status',
                             title: 'Status',
-                        }, {
+                        },{
+                            field: 'posted',
+                            title: 'Posted',
+                            template: function(row){
+                                var isPosted = (row.posted == 1 || row.posted == '1' || row.posted === true || row.posted == 'Y' || row.posted == 'y');
+                                if(isPosted){
+                                    return '<span class="badge badge-success">Posted</span>';
+                                }
+                                return '<span class="badge badge-secondary">Not Posted</span>';
+                            }
+                        },
+ {
                             field: 'purchase_order_delivery_date',
                             title: 'Delivery Date',
                             template: function(row) {
@@ -280,7 +299,7 @@
                             field: 'Actions',
                             title: 'Actions',
                             sortable: false,
-                            width: 110,
+                            width: 200,
                             overflow: 'visible',
                             autoHide: false,
                             template: function(row) {
@@ -290,19 +309,31 @@
                                 var btnEdit = "";
                                 var btnDel = "";
                                 var btnPrint = "";
+                                var btnPost = "";
                                 if(btnPrintView){
                                     var btnPrint = '<a class="dropdown-item" href="/purchase-order/print/'+key_id+'"><i class="la la-edit"></i>Print</a>';
                                     dropdownLink = true;
                                 }
-                                if(btnEditView){
-                                    var btnEdit = '<a href="/purchase-order/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm" title="Edit">\
-                                        <i class="la la-edit"></i>\
-                                    </a>';
-                                }
-                                if(btnDelView){
-                                    var btnDel = '<button type="button" data-url="/purchase-order/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm mlr" title="Delete">\
-                                        <i class="la la-trash"></i>\
-                                    </button>';
+
+                                var isPosted = (row.posted == 1 || row.posted == '1' || row.posted === true || row.posted == 'Y' || row.posted == 'y');
+                                console.log('PO Actions render -> id:', key_id, 'posted:', row.posted, 'isPosted:', isPosted, row);
+                                if(isPosted){
+                                    // ensure edit/delete are not rendered for posted rows (defensive)
+                                    btnEdit = '';
+                                    btnDel = '';
+                                    btnPost = '<button type="button" onclick="purchaseOrderRowUnpost('+key_id+')" class="btn btn-sm btn-warning mlr" title="Unpost">Unpost</button>';
+                                }else{
+                                    if(btnEditView){
+                                        btnEdit = '<a href="/purchase-order/form/'+key_id+'" class="btn btn-sm btn-soft btn-icon btn-icon-sm" title="Edit">\
+                                            <i class="la la-edit"></i>\
+                                        </a>';
+                                    }
+                                    if(btnDelView){
+                                        btnDel = '<button type="button" data-url="/purchase-order/delete/'+key_id+'" id="del"  class="btn btn-sm btn-soft btn-icon btn-icon-sm mlr" title="Delete">\
+                                            <i class="la la-trash"></i>\
+                                        </button>';
+                                    }
+                                    btnPost = '<button type="button" onclick="purchaseOrderRowPost('+key_id+')" class="btn btn-sm btn-primary mlr" title="Post">Post</button>';
                                 }
                                 if(dropdownLink){
                                     var btnDropdownLink = '<div class="dropdown">'+
@@ -315,7 +346,7 @@
                                         '</div>';
                                 }
 
-                                return  btnEdit + btnDel + btnDropdownLink;
+                                return  btnPost + btnEdit + btnDel + btnDropdownLink;
                             },
                         }],
                 });
@@ -456,6 +487,15 @@
                     });
                     $('.grn_total_amount').html(net_amt.toLocaleString());
 
+                    // Defensive DOM-based hide: if row shows Posted badge, hide Edit/Delete buttons (covers any rendering path)
+                    $('table>tbody>tr').each(function(){
+                        var postedText = $(this).find("td[data-field='posted']>span").text().trim();
+                        if(postedText.toLowerCase() == 'posted'){
+                            $(this).find('a[title="Edit"]').hide();
+                            $(this).find('button[title="Delete"]').hide();
+                        }
+                    });
+
                 }).on('kt-datatable--on-ajax-done', function() {
                     console.log("f2");
                     $('.kt-container').css({'pointer-events':'','opacity':''});
@@ -493,6 +533,77 @@
                 }
             }
             return returnDate;
+        }
+
+        function purchaseOrderRowPost(id){
+            var url = '/purchase-order/post';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url:url,
+                data:{ purchase_order_id: id },
+                success:function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success('Successfully Posted..!');
+                        $('.kt-datatable').KTDatatable().reload();
+                    }
+                }
+            });
+        }
+
+        function purchaseOrderRowUnpost(id){
+            var url = '/purchase-order/UnPosted';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url:url,
+                data:{ data: [id] },
+                success:function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success('Successfully Un-Posted..!');
+                        $('.kt-datatable').KTDatatable().reload();
+                    }
+                }
+            });
+        }
+
+        $('body').on('change', '#select-all-pos', function(){
+            var checked = $(this).is(':checked');
+            $('.po-select').prop('checked', checked);
+        });
+
+
+        function voucher_posted(){
+            if(path_url && path_url.path == 'purchase-order'){
+                var ids = [];
+                $('.po-select:checked').each(function(){ ids.push($(this).val()); });
+                if(ids.length == 0){
+                    toastr.error('Please select at least one purchase order to post.');
+                    return;
+                }
+                $.ajax({
+                    headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                    type:'POST',
+                    url: '/purchase-order/Posted',
+                    data: { data: ids },
+                    success: function(response){
+                        if(response['status'] == 'success'){
+                            toastr.success('Successfully Posted..!');
+                            $('.kt-datatable').KTDatatable().reload();
+                        }
+                    }
+                });
+            }else{
+                if(typeof window.__default_voucher_posted === 'function'){
+                    window.__default_voucher_posted();
+                }else{
+                    alert('Post action not available on this page.');
+                }
+            }
+        }
+
+        if(typeof window.voucher_posted === 'function'){
+            window.__default_voucher_posted = window.voucher_posted;
         }
     </script>
     <script src="{{ asset('js/pages/js/data-delete.js?v=').time() }}" type="text/javascript"></script>

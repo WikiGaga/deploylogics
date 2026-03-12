@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\TblStgFormFlowProcess;
+use App\Services\StagingService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,20 +25,12 @@ class BladeServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Blade::if('stgaccess', function($stg_id,$flow_id) {
-            if(empty($stg_id) || empty($flow_id)){
+        Blade::if('stgaccess', function($formName, $flowId) {
+            if(empty($formName) || empty($flowId)){
                 return false;
             }
-            $useraccess = TblStgFormFlowProcess::where('stg_form_cases_id',$stg_id)
-                ->where('stg_flows_id',$flow_id)
-                ->where('process_id',auth()->user()->id)
-                ->where('process_type','=','App\Models\User')->first();
-            if ($useraccess) {
-                return true;
-            }else{
-                return false;
-            }
-            /*return "<?php echo {$user} ?>";*/
+            $service = new StagingService();
+            return $service->getUserAccess($formName, $flowId);
         });
         Blade::if('stgaccessUser', function($boolean) {
             return $boolean;

@@ -96,6 +96,27 @@
                                 </div>
                             </div>
                         </div>
+                        @if(!empty($data['flow_dash_permission']))
+                        <div class="row">
+                            <label class="col-lg-2 erp-col-form-label">
+                                Show Flow Dashboard:
+                            </label>
+                            <div class="col-lg-4">
+                                <div class="erp-select2">
+                                    @if(isset($data['current']))
+                                        @php $flowDash = in_array($data['flow_dash_permission']->id, $data['current']); @endphp
+                                    @endif
+                                    @php $haveFlowDash = isset($flowDash)? $flowDash :false; @endphp
+                                    <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                        <label>
+                                            <input type="checkbox" id="show_flow_dashboard" {{ $haveFlowDash == true ?"checked":""  }} value="{{ $data['flow_dash_permission']->id }}" name="permissions[]" {{ $disabled == true ?"disabled":""  }}>
+                                            <span></span>
+                                        </label>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         <div class="row">
                             @foreach($data['custom_modules'] as $custom_modules)
                             @php

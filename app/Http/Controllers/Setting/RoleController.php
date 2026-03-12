@@ -85,6 +85,8 @@ class RoleController extends Controller
             ->with('children')->where(Utilities::currentBC())->orderBy('menu_sorting')->get();
 
         $userChangePass = Permission::where('display_name','change_password')->where('menu_dtl_id',35)->first();
+        $data['dash_permission'] = Permission::where('name','dash-view')->first();
+        $data['flow_dash_permission'] = Permission::where('name','flow-dash-view')->first();
         $data['custom_modules'] = [];
         if(!empty($userChangePass)) {
             // custom module

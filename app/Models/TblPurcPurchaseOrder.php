@@ -14,7 +14,10 @@ class TblPurcPurchaseOrder extends Model
         'purchase_order_id',
         'purchase_order_code',
         'purchase_order_id',
-        'po_grn_status'
+        'po_grn_status',
+        'current_stg_id',
+        'staging_apply',
+        'posted'
     ];
     protected static function primaryKeyName() {
         return (new static)->getKeyName();

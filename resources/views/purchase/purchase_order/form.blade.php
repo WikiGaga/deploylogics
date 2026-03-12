@@ -42,11 +42,12 @@
             <input type="hidden" value='{{ $form_type }}' id="form_type">
             <input type="hidden" value='{{ $menu_id }}' id="menu_id">
             <input type="hidden" value='{{ isset($id) ? $id : '' }}' id="form_id">
+            <input type="hidden" id="purchase_order_id" name="purchase_order_id" value="{{ isset($id) ? $id : '' }}">
             @csrf
             <!-- begin:: Content -->
             <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
                 <div class="kt-portlet kt-portlet--mobile">
-                    <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+                    <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                         @include('elements.page_header', ['page_data' => $data['page_data']])
                     </div>
                     <div class="kt-portlet__body">
@@ -675,6 +676,8 @@
                 </div>
             </div>
             </div>
+
+            @include('staging_activity.auto_include')
         </form>
         <!-- end:: Content -->
     @endpermission
@@ -689,6 +692,49 @@
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
 
     <script>
+        function voucher_posted(){
+            var purchase_order_id = $('#purchase_order_id').val();
+            if(!purchase_order_id){
+                toastr.error('Purchase Order id not found');
+                return;
+            }
+            var url = '/purchase-order/post';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url: url,
+                data: { purchase_order_id: purchase_order_id },
+                success: function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success('Successfully Posted..!');
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function voucher_unposted(){
+            var purchase_order_id = $('#purchase_order_id').val();
+            if(!purchase_order_id){
+                toastr.error('Purchase Order id not found');
+                return;
+            }
+            var url = '/purchase-order/unposted';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url: url,
+                data: { data: [purchase_order_id] },
+                success: function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success(response['message'] || 'Successfully Un-Posted..!');
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+
 
         function selectComparativeQuotation() {
             $('#help_datatable_comparativeQuotationHelp').on('click', 'tbody>tr', function(e) {
