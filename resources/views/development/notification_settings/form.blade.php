@@ -29,7 +29,7 @@
     .tab-pane.active {
         display: block;
     }
-    .toggle-style-1{    
+    .toggle-style-1{
         background: #e6e6e6;
         padding: 15px 6px;
         justify-content: space-between;
@@ -84,7 +84,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-group row">
                             <div class="col-lg-12">
                                 <div class="row">
@@ -110,7 +110,7 @@
                                         </label>
                                     </div>
                                     <div class="col-lg-3 col-form-label">
-                                    
+
                                         <label class="rtl-toggle toggle-style-1" title="Toggle Right-to-Left Layout">
                                             <span class="rtl-label">SMS</span>
                                             <input type="checkbox" id="sms_status" name="sms_status" {{ isset($data['notification']) && $data['notification']->sms_status == 'active' ? 'checked' : '' }} autocomplete="off">

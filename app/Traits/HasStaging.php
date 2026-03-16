@@ -4,6 +4,8 @@ namespace App\Traits;
 
 use App\Services\StagingService;
 use App\Models\TblStgFormLog;
+use App\Models\TblNotificationSetting;
+use App\Models\TblSoftMenuDtl;
 use App\Library\Utilities;
 use App\Notifications\GlobalNotification;
 use Illuminate\Support\Facades\Log;
@@ -284,25 +286,28 @@ trait HasStaging
             }
 
             if ($notificationConfig && !empty($notificationConfig['listing_view']) && isset($notificationConfig['form_path'])) {
-                $this->sendStagingNotification(
-                    $service,
-                    $menuDtlId,
-                    $formId,
-                    $formIdForCriteria ?: $formId,
-                    $isAlreadyInStaging,
-                    $currentFlowId,
-                    $actionName,
-                    $originalAction,
-                    $flowsData,
-                    $nextFlowId,
-                    $prevFlowId,
-                    $isPostLike,
-                    $isForwardLike,
-                    $isBackLike,
-                    $isCancelLike,
-                    $notificationConfig,
-                    $model
-                );
+                $matchedNotificationSetting = $this->getNotificationSettingForMenu($menuDtlId);
+                if ($matchedNotificationSetting) {
+                    $this->sendStagingNotification(
+                        $service,
+                        $menuDtlId,
+                        $formId,
+                        $formIdForCriteria ?: $formId,
+                        $isAlreadyInStaging,
+                        $currentFlowId,
+                        $actionName,
+                        $originalAction,
+                        $flowsData,
+                        $nextFlowId,
+                        $prevFlowId,
+                        $isPostLike,
+                        $isForwardLike,
+                        $isBackLike,
+                        $isCancelLike,
+                        $notificationConfig,
+                        $model
+                    );
+                }
             }
         } elseif ($isNew) {
             $flows = $service->getFormFlows($menuDtlId, null, null);
@@ -312,25 +317,28 @@ trait HasStaging
                 $model->current_stg_id = $flows['all'][0]->stg_flows_id;
             }
             if ($notificationConfig && !empty($notificationConfig['listing_view']) && isset($notificationConfig['form_path']) && !empty($flows['all'])) {
-                $firstFlowId = $flows['all'][0]->stg_flows_id;
-                $stageName = $flows['all'][0]->stg_flows_name ?? 'Draft';
-                $users = $service->getEligibleUsers($menuDtlId, $firstFlowId, $formId, false);
-                $url = rtrim($notificationConfig['form_path'], '/') . '/' . $formId;
-                $code = isset($notificationConfig['document_code_key']) && $model
-                    ? ($model->{$notificationConfig['document_code_key']} ?? null)
-                    : null;
-                if ($users->isNotEmpty()) {
-                    try {
-                        Notification::send($users, new GlobalNotification(
-                            $notificationConfig['listing_view'],
-                            url($url),
-                            [
-                                'stage' => $stageName,
-                                'document-code' => $code,
-                            ]
-                        ));
-                    } catch (\Throwable $e) {
-                        Log::warning('Staging notification failed', ['error' => $e->getMessage()]);
+                $matchedNotificationSetting = $this->getNotificationSettingForMenu($menuDtlId);
+                if ($matchedNotificationSetting) {
+                    $firstFlowId = $flows['all'][0]->stg_flows_id;
+                    $stageName = $flows['all'][0]->stg_flows_name ?? 'Draft';
+                    $users = $service->getEligibleUsers($menuDtlId, $firstFlowId, $formId, false);
+                    $url = rtrim($notificationConfig['form_path'], '/') . '/' . $formId;
+                    $code = isset($notificationConfig['document_code_key']) && $model
+                        ? ($model->{$notificationConfig['document_code_key']} ?? null)
+                        : null;
+                    if ($users->isNotEmpty()) {
+                        try {
+                            Notification::send($users, new GlobalNotification(
+                                $notificationConfig['listing_view'],
+                                url($url),
+                                [
+                                    'stage' => $stageName,
+                                    'document-code' => $code,
+                                ]
+                            ));
+                        } catch (\Throwable $e) {
+                            Log::warning('Staging notification failed', ['error' => $e->getMessage()]);
+                        }
                     }
                 }
             }
@@ -399,5 +407,17 @@ trait HasStaging
         } catch (\Throwable $e) {
             Log::warning('Staging notification failed', ['error' => $e->getMessage()]);
         }
+    }
+
+    protected function getNotificationSettingForMenu($menuDtlId)
+    {
+        $menu = TblSoftMenuDtl::find($menuDtlId);
+        if (!$menu || empty($menu->menu_dtl_table_name)) {
+            return null;
+        }
+
+        return TblNotificationSetting::where('key', $menu->menu_dtl_table_name)
+            ->orderByDesc('created_at')
+            ->first();
     }
 }
