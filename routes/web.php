@@ -907,6 +907,19 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','PayrDepartment\EmployeeAttendanceController@destroy');
     });
 
+    Route::prefix('Employee-Roaster')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\EmployeeRoasterController@create');
+        Route::post('form/{id?}','PayrDepartment\EmployeeRoasterController@store');
+        Route::post('delete/{id}','PayrDepartment\EmployeeRoasterController@destroy');
+
+        Route::get('/employees','PayrDepartment\EmployeeRoasterController@employees');
+        Route::get('/roster','PayrDepartment\EmployeeRoasterController@roster');
+        Route::get('/shifts','PayrDepartment\EmployeeRoasterController@get');
+        Route::post('/shifts','PayrDepartment\EmployeeRoasterController@r_store');
+        Route::post('/shifts/bulk-store','PayrDepartment\EmployeeRoasterController@bulkStore');
+        Route::put('/shifts/{id}','PayrDepartment\EmployeeRoasterController@r_update');
+        Route::delete('/shifts/{id}','PayrDepartment\EmployeeRoasterController@delete');
+    });
 
     Route::get('/m_employees','PayrDepartment\EmployeeShiftController@m_employees');
     Route::get('/m_roster','PayrDepartment\EmployeeShiftController@m_roster');
@@ -1033,6 +1046,13 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','PayrDepartment\AllowanceDeductionController@destroy');
 
     });
+
+    Route::prefix('Allowance')->group(function(){
+        Route::get('form/{id?}','PayrDepartment\AllowanceController@create');
+        Route::post('form/{id?}','PayrDepartment\AllowanceController@store');
+        Route::post('delete/{id}','PayrDepartment\AllowanceController@destroy');
+    });
+
     Route::prefix('leave-policy')->group(function(){
         Route::get('form/{id?}','PayrDepartment\LeavePolicyController@create');
         Route::post('form/{id?}','PayrDepartment\LeavePolicyController@store');
