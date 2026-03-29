@@ -99,7 +99,7 @@ class UserAccountController extends Controller
      */
     public function store(Request $request, $id = null)
     {
-       //dd($request->toArray());
+    //    dd($request->toArray());
         $data = [];
         if(isset($id)){
             $validator = Validator::make($request->all(), [
@@ -108,21 +108,40 @@ class UserAccountController extends Controller
                 'user_branch' => 'required',
                 'user_type' => 'required',
                 'employee_role_id' => 'required',
+                'password' => [
+                    'required',
+                    'min:8',
+                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+                ],
+            ],
+            [
+                'password.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.',
             ]);
         }else{
             $validator = Validator::make($request->all(), [
                 'name' => 'required|max:100',
-                'password' => 'required|max:20',
-                'password_pos' => 'required|min:6|max:20',
+                'password' => [
+                    'required',
+                    'min:8',
+                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+                ],
+                'password_pos' => [
+                    'required',
+                    'min:8',
+                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+                ],
                 'email' => 'required|min:4|max:50',
                 'user_branch' => 'required',
                 'user_type' => 'required',
                 'employee_role_id' => 'required',
+            ], [
+                'password.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.',
+                'password_pos.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.',
             ]);
         }
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
-            return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
+            return $this->jsonErrorResponse($data, $validator->errors()->first(), 422);
         }
         DB::beginTransaction();
         try{

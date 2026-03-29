@@ -80,6 +80,12 @@
                                     <label class="col-lg-6 erp-col-form-label">Password:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <input type="password" name="password" class="form-control erp-form-control-sm short_text">
+                                        <small class="text-muted">
+                                            * Min 8 chars, include uppercase, number & symbol.
+                                        </small>
+                                        @error('password')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>
@@ -100,6 +106,12 @@
                                     <label class="col-lg-6 erp-col-form-label">POS Password:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <input type="password" name="password_pos" class="form-control erp-form-control-sm short_text">
+                                        <small class="text-muted">
+                                            * Min 8 chars, include uppercase, number & symbol.
+                                        </small>
+                                        @error('password_pos')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>

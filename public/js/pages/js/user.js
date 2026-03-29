@@ -20,12 +20,12 @@ var KTFormWidgets = function() {
                 password: {
                     required: true,
                     maxlength:20,
-                    minlength:6
+                    minlength:8
                 },
                 password_pos: {
                     required: true,
                     maxlength:20,
-                    minlength:4
+                    minlength:8
                 },
                 email: {
                     required: true,
@@ -72,7 +72,6 @@ var KTFormWidgets = function() {
                     contentType : false,
                     processData : false,
                     success: function(response,status) {
-                        console.log(response);
                         if(response.status == 'success'){
                             toastr.success(response.message);
                             setTimeout(function () {
