@@ -12,6 +12,11 @@ class TblPurcDemandDtl extends Model
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }
+
+    public function demand(){
+        return $this->belongsTo(TblPurcDemand::class, 'demand_id');
+    }
+
     public function dtl_product(){
         return $this->hasMany(TblPurcProduct::class,'product_id','product_id');
     }

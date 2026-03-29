@@ -243,9 +243,10 @@ class PurchaseDemandController extends Controller
         $type = 'purchase_demand';
         $data = [];
         $validator = Validator::make($request->all(), [
-            'supplier_id' => 'nullable|numeric',
+            'supplier_id' => 'required|numeric',
             'salesman' => 'nullable|numeric',
         ]);
+        
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);

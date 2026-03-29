@@ -58,17 +58,45 @@ class PurchaseDemandApproveController extends Controller
                 ->where('demand_dtl_approve_status','pending')
                 ->where('demand_dtl_entry_status',1)
                 ->get();
-            $demandQry = "select dem.DEMAND_ID,dem.DEMAND_NO,dem.DEMAND_DATE,dem.name,dem.DEMAND_NOTES,dem.branch_name from (
-                                select d.DEMAND_ID,d.DEMAND_NO,d.DEMAND_DATE,u.name,d.DEMAND_NOTES,b.branch_name,dap.sr_no
-                                from TBL_PURC_DEMAND_APPROVAL_DTL dap
-                                join TBL_PURC_DEMAND d on  d.DEMAND_ID = dap.DEMAND_ID
-                                join Users u on u.id = d.SALESMAN_ID
-                                join TBL_SOFT_BRANCH b on  b.branch_id = d.branch_id
-                                where DEMAND_APPROVAL_DTL_ID = $id
-                                group by (d.DEMAND_ID,d.DEMAND_NO,d.DEMAND_DATE,u.name,d.DEMAND_NOTES,b.branch_name,dap.sr_no)
-                                order by dap.sr_no asc
-                            ) dem
-                            group by (dem.DEMAND_ID,dem.DEMAND_NO,dem.DEMAND_DATE,dem.name,dem.DEMAND_NOTES,dem.branch_name)";
+            $demandQry = "SELECT 
+                    dem.DEMAND_ID,
+                    dem.DEMAND_NO,
+                    dem.DEMAND_DATE,
+                    dem.name,
+                    dem.DEMAND_NOTES,
+                    dem.branch_name,
+                    dem.supplier_name
+              FROM (
+                    SELECT 
+                        d.DEMAND_ID,
+                        d.DEMAND_NO,
+                        d.DEMAND_DATE,
+                        u.name,
+                        d.DEMAND_NOTES,
+                        b.branch_name,
+                        s.supplier_name,
+                        dap.sr_no
+                    FROM TBL_PURC_DEMAND_APPROVAL_DTL dap
+                    JOIN TBL_PURC_DEMAND d 
+                        ON d.DEMAND_ID = dap.DEMAND_ID
+                    JOIN Users u 
+                        ON u.id = d.SALESMAN_ID
+                    JOIN TBL_SOFT_BRANCH b 
+                        ON b.branch_id = d.branch_id
+                    LEFT JOIN tbl_purc_supplier s 
+                        ON s.supplier_id = d.supplier_id
+                    WHERE dap.DEMAND_APPROVAL_DTL_ID = $id
+                    GROUP BY 
+                        d.DEMAND_ID,
+                        d.DEMAND_NO,
+                        d.DEMAND_DATE,
+                        u.name,
+                        d.DEMAND_NOTES,
+                        b.branch_name,
+                        s.supplier_name,
+                        dap.sr_no
+                    ORDER BY dap.sr_no ASC
+              ) dem";
 
             $data['demand_list'] = DB::select($demandQry);
             //dd($data['demand_list']);
@@ -93,7 +121,7 @@ class PurchaseDemandApproveController extends Controller
     public function DemandDetails($id)
     {
         $data = TblPurcDemandDtl::
-            with(['product','barcode','uom','packing','branch'])
+            with(['demand.supplier','product','barcode','uom','packing','branch'])
             ->where('demand_id',$id)
             ->where('demand_dtl_approve_status','pending')
             ->where('demand_dtl_entry_status',1)

@@ -72,6 +72,7 @@
                                 <th>Demand Date</th>
                                 <th>Demand By</th>
                                 <th>Branch</th>
+                                <th>Supplier</th>
                                 <th>Notes</th>
                             </tr>
                             </thead>
@@ -82,6 +83,7 @@
                                     <td>{{date('d-m-Y',strtotime($demand_list->demand_date))}}</td>
                                     <td>{{$demand_list->name}}</td>
                                     <td>{{$demand_list->branch_name}}</td>
+                                    <td>{{isset($demand_list->supplier_name)?$demand_list->supplier_name:""}}</td>
                                     <td>{{$demand_list->demand_notes}}</td>
                                 </tr>
                             @endforeach
@@ -222,6 +224,7 @@
                                 <th width="10%">Product Name</th>
                                 <th width="4%">UOM</th>
                                 <th width="4%">Packing</th>
+                                <th width="4%">Supplier</th>
                                 <th width="4%">Physical Stock</th>
                                 <th width="4%">Store Stock</th>
                                 <th width="3%">Stock Match</th>
@@ -407,11 +410,13 @@
                             '    <input type="hidden" id="demand_dtl_id" data-id="demand_dtl_id" name="pd['+total_length+'][demand_dtl_id]" value="'+notNull(response[i]['demand_dtl_id'])+'" class="form-control erp-form-control-sm handle" readonly>' +
                             '    <input type="hidden" id="product_barcode_id" data-id="product_barcode_id" name="pd['+total_length+'][product_barcode_id]" value="'+notNull(response[i]['product_barcode_id'])+'" class="product_barcode_id form-control erp-form-control-sm">'+
                             '    <input type="hidden" id="notes_id" data-id="notes_id" name="pd['+total_length+'][notes_id]" value="" class="form-control erp-form-control-sm handle" readonly>' +
+                            '    <input type="hidden" id="supplier_id" data-id="supplier_id" name="pd['+total_length+'][supplier_id]" value="'+notNull(response[i]['demand']['supplier']['supplier_id'])+'" class="form-control erp-form-control-sm handle" readonly>' +
                             '</td>' +
                             '<td><input type="text" id="branch_name" name="pd['+total_length+'][branch_name]" value="'+notNull(response[i]['branch']['branch_name'])+'" title="'+notNull(response[i]['branch']['branch_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="product_name" name="pd['+total_length+'][product_name]" data-id="product_name" value="'+notNull(response[i]['product']['product_name'])+'" title="'+notNull(response[i]['product']['product_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="uom" name="pd['+total_length+'][uom_name]" value="'+notNull(response[i]['uom']['uom_name'])+'" title="'+notNull(response[i]['uom']['uom_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="packing" name="pd['+total_length+'][packing_name]" value="'+notNull(response[i]['demand_dtl_packing'])+'" title="'+notNull(response[i]['demand_dtl_packing'])+'" class="form-control erp-form-control-sm" readonly></td>' +
+                            '<td><input type="text" id="supplier_name" name="pd['+total_length+'][supplier_name]" value="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" title="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="physical_stock" name="pd['+total_length+'][physical_stock]" value="'+notNull(response[i]['demand_dtl_physical_stock'])+'" title="'+notNull(response[i]['demand_dtl_physical_stock'])+'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
                             '<td><input type="text" id="store_stock" name="pd['+total_length+'][store_stock]" value="'+notNull(response[i]['demand_dtl_store_stock'])+'" title="'+notNull(response[i]['demand_dtl_store_stock'])+'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
                             '<td><input type="text" id="stock_match" name="pd['+total_length+'][stock_match]" value="'+notNull(response[i]['demand_dtl_stock_match'])+'" title="'+notNull(response[i]['demand_dtl_stock_match'])+'" class="form-control erp-form-control-sm" readonly></td>' +
