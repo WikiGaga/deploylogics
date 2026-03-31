@@ -20,6 +20,7 @@
                 $saleman = $data['current']->salesman_id;
                 $notes = $data['current']->demand_notes;
                 $dtls = isset($data['current']->dtls)? $data['current']->dtls:[];
+                $approval_status = $data['current']->demand_approval_status;
             }
         $form_type = $data['form_type'];
     @endphp
@@ -233,6 +234,12 @@
                                         </div>
                                     </th>
                                     <th scope="col">
+                                        <div class="erp_form__grid_th_title">Notes</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <input id="pd_notes" type="text" class="notes validNumber form-control erp-form-control-sm" readonly>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
                                         <div class="erp_form__grid_th_title">Action</div>
                                         <div class="erp_form__grid_th_btn">
                                             <button type="button" id="addData" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
@@ -269,6 +276,7 @@
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_demand_qty]" data-id="pd_demand_qty" value="{{$dtl->demand_dtl_demand_quantity}}" title="{{$dtl->demand_dtl_demand_quantity}}" class="tb_moveIndex stock_amount form-control erp-form-control-sm pd_demand_qty validNumber"></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_wiplpo_stock]" data-id="pd_wiplpo_stock" value="{{$dtl->demand_dtl_wip_lpo_stock}}" title="{{$dtl->demand_dtl_wip_lpo_stock}}" class="wiplpo_stock form-control erp-form-control-sm validNumber" readonly></td>
                                             <td><input type="text" name="pd[{{$loop->iteration}}][pd_pur_ret]" data-id="pd_pur_ret" value="{{$dtl->demand_dtl_pur_ret_in_waiting}}" title="{{$dtl->demand_dtl_pur_ret_in_waiting}}" class="pur_ret form-control erp-form-control-sm validNumber" readonly></td>
+                                            <td><input type="text" name="pd[{{$loop->iteration}}][pd_notes]" data-id="pd_notes" value="{{$dtl->demand_dtl_notes}}" title="{{$dtl->demand_dtl_notes}}" class="notes form-control erp-form-control-sm validNumber" readonly></td>
                                             <td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group" aria-label="..."><button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>
                                         </tr>
                                     @endforeach

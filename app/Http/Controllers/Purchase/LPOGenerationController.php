@@ -364,7 +364,7 @@ class LPOGenerationController extends Controller
         $data = [];
 
         $data['fc_rate'] = isset($arr->tbl_purc_grn_dtl_fc_rate) ? $arr->tbl_purc_grn_dtl_fc_rate : 0;
-        $data['purc_rate'] = isset($arr->product_barcode_purchase_rate) ? $arr->product_barcode_purchase_rate : $arr->tbl_purc_grn_dtl_rate;
+        $data['purc_rate'] = isset($arr->product_barcode_purchase_rate) ? $arr->product_barcode_purchase_rate : (isset($arr->tbl_purc_grn_dtl_rate) ? $arr->tbl_purc_grn_dtl_rate : 0);
         $data['disc_per'] = isset($arr->tbl_purc_grn_dtl_disc_percent) ? $arr->tbl_purc_grn_dtl_disc_percent : 0;
         $data['vat_per'] = isset($arr->tbl_purc_grn_dtl_vat_percent) ? $arr->tbl_purc_grn_dtl_vat_percent : 0;
         $data['disc_amount'] = isset($arr->tbl_purc_grn_dtl_disc_amount) ? $arr->tbl_purc_grn_dtl_disc_amount : 0;

@@ -105,9 +105,16 @@ class PasswordController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'old_password' => 'required',
-            'new_password' => 'required',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+            ],
             'conform_password' => 'required|same:new_password'
         ]);
+
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
@@ -149,7 +156,13 @@ class PasswordController extends Controller
     {
         $data = [];
         $validator = Validator::make($request->all(), [
-            'new_password' => 'required',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+            ],
             'conform_password' => 'required|same:new_password'
         ]);
         if ($validator->fails()) {
@@ -192,13 +205,25 @@ class PasswordController extends Controller
         $data = [];
         if(!empty($request->new_password)) {
             $validator = Validator::make($request->all(), [
-                'new_password' => 'required',
+                'new_password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'confirmed',
+                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+                ],
                 'conform_password' => 'required|same:new_password'
             ]);
         }
         if(!empty($request->new_password_pos)) {
             $validator = Validator::make($request->all(), [
-                'new_password_pos' => 'required',
+                'new_password_pos' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'confirmed',
+                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+                ],
                 'conform_password_pos' => 'required|same:new_password_pos'
             ]);
         }
@@ -252,7 +277,13 @@ class PasswordController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
-            'new_password' => 'required',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+            ],
             'conform_password' => 'required|same:new_password'
         ]);
         if ($validator->fails()) {
@@ -296,8 +327,14 @@ class PasswordController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
-            'new_password' => 'required',
-            'conform_password' => 'required|same:new_password'
+            'new_password_pos' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
+            ],
+            'conform_password' => 'required|same:new_password_pos'
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();

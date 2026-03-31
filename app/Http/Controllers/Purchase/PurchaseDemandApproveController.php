@@ -74,8 +74,7 @@ class PurchaseDemandApproveController extends Controller
                         u.name,
                         d.DEMAND_NOTES,
                         b.branch_name,
-                        s.supplier_name,
-                        dap.sr_no
+                        s.supplier_name
                     FROM TBL_PURC_DEMAND_APPROVAL_DTL dap
                     JOIN TBL_PURC_DEMAND d 
                         ON d.DEMAND_ID = dap.DEMAND_ID
@@ -93,9 +92,8 @@ class PurchaseDemandApproveController extends Controller
                         u.name,
                         d.DEMAND_NOTES,
                         b.branch_name,
-                        s.supplier_name,
-                        dap.sr_no
-                    ORDER BY dap.sr_no ASC
+                        s.supplier_name
+                    ORDER BY d.DEMAND_ID ASC
               ) dem";
 
             $data['demand_list'] = DB::select($demandQry);
@@ -111,7 +109,8 @@ class PurchaseDemandApproveController extends Controller
             join users u on u.id = demand.salesman_id
             left join tbl_purc_supplier s on s.supplier_id = demand.supplier_id
             where demand.DEMAND_FORWARD_FOR_APPROVAL = 1 and demand.demand_type = 'purchase_demand'
-            and dtl.demand_dtl_approve_status = 'pending' and demand.branch_id = ". auth()->user()->branch_id ."
+            and dtl.demand_dtl_approve_status = 'pending' 
+            
             group by (s.supplier_name,demand.DEMAND_ID,demand.DEMAND_NO,demand.demand_date,demand.demand_notes,dtl.demand_dtl_approve_status,b.branch_name,u.name,demand.created_at) 
             order by demand.created_at desc");
         }

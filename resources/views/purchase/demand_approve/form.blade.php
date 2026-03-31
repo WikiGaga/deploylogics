@@ -1,4 +1,4 @@
-@extends('layouts.template')
+@extends('layouts.layout')
 @section('title', 'Purchase Demand Approve')
 
 @section('pageCSS')
@@ -90,89 +90,124 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-group-block" style="overflow: auto;">
-                        <table id="ProductDemandDtlForm" class="ErpForm table table-striped table-responsive table-bordered table-hover table-checkable no-footer dtr-inline collapsed table-resizable">
-                            <thead>
-                            <tr>
-                                <th width="5%">Sr No</th>
-                                <th width="5%">Demand No</th>
-                                <th width="8%">Branch</th>
-                                <th width="10%">Product Name</th>
-                                <th width="4%">UOM</th>
-                                <th width="4%">Packing</th>
-                                <th width="4%">Physical Stock</th>
-                                <th width="4%">Store Stock</th>
-                                <th width="4%">Stock Match</th>
-                                <th width="3%">Suggest Qty 1</th>
-                                <th width="3%">Suggest Qty 2</th>
-                                <th width="3%">Purchase Rate</th>
-                                <th width="3%">Demand Qty</th>
-                                <th width="7%">WIP LPO Stock</th>
-                                <th width="7%">Pur.Ret in Waiting</th>
-                                <th width="4%">Aprov qty</th>
-                                <th width="8%">Notes</th>
-                                <th width="8%">Remarks</th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--brand" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="radio" id="pendingAll" name="checkAllgrid" value="pending" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Pnding</div>
-                                </th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--success" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="checkbox" id="approveAll" name="checkAllgrid" value="approve" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Aprv</div>
-                                </th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--danger" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="radio" id="rejectAll" name="checkAllgrid" value="reject" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Rjct</div>
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody id="repeated_data">
-                                @if($case == 'edit')
-                                    @foreach($dtls as $dtl)
-                                        <tr id="81402121091214">
-                                            <td class="handle">
-                                                <i class="fa fa-arrows-alt-v handle"></i>
-                                                <input type="text" id="sr_no" name="pd[{{ $loop->iteration }}][sr_no]" value="{{ $loop->iteration }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="product_id" data-id="product_id" name="pd[{{ $loop->iteration }}][product_id]" value="{{ $dtl->product_id }}" class="product_id form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="uom_id" data-id="uom_id" name="pd[{{ $loop->iteration }}][uom_id]" value="{{ $dtl->uom_id }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="branch_id" data-id="branch_id" name="pd[{{ $loop->iteration }}][branch_id]" value="{{ $dtl->branch_id }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="bar_code" data-id="bar_code" name="pd[{{ $loop->iteration }}][bar_code]" value="{{ $dtl->product_barcode_barcode }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="demand_id" data-id="demand_id" name="pd[{{ $loop->iteration }}][demand_id]" value="{{ $dtl->demand_id }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="demand_dtl_id" data-id="demand_dtl_id" name="pd[{{ $loop->iteration }}][demand_dtl_id]" value="{{ $dtl->demand_dtl_id }}" class="form-control erp-form-control-sm handle" readonly="">
-                                                <input type="hidden" id="product_barcode_id" data-id="product_barcode_id" name="pd[{{ $loop->iteration }}][product_barcode_id]" value="{{ $dtl->product_barcode_id }}" class="product_barcode_id form-control erp-form-control-sm">
-                                                <input type="hidden" id="notes_id" data-id="notes_id" name="pd[{{ $loop->iteration }}][notes_id]" value="{{ $dtl->demand_approval_dtl_remarks_id }}" class="form-control erp-form-control-sm handle" readonly="">
-                                            </td>
-                                            <td><input type="text" id="demand_no" data-id="demand_no" name="pd[{{ $loop->iteration }}][demand_no]" value="{{ $dtl->demand->demand_no }}" title="{{ $dtl->demand->demand_no }}" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="branch_name" data-id="branch_name" name="pd[{{ $loop->iteration }}][branch_name]" value="{{ $dtl->branch->branch_name }}" title="{{ $dtl->branch->branch_name }}" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="product_name" data-id="product_name"  name="pd[{{ $loop->iteration }}][product_name]" value="{{ $dtl->product->product_name }}" title="{{ $dtl->product->product_name }}" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="uom" data-id="uom" name="pd[{{ $loop->iteration }}][uom_name]" value="{{ $dtl->uom->uom_name }}" title="{{ $dtl->uom->uom_name }}" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="packing_name" data-id="packing_name" name="pd[{{ $loop->iteration }}][packing_name]" value="{{ $dtl->demand_approval_dtl_packing }}" title="{{ $dtl->demand_approval_dtl_packing }}" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="physical_stock" data-id="physical_stock" name="pd[{{ $loop->iteration }}][physical_stock]" value="{{ $dtl->demand_approval_dtl_physical_stock }}" title="{{ $dtl->demand_approval_dtl_physical_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="store_stock" data-id="store_stock" name="pd[{{ $loop->iteration }}][store_stock]" value="{{ $dtl->demand_approval_dtl_store_stock }}" title="{{ $dtl->demand_approval_dtl_store_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="stock_match" data-id="stock_match" name="pd[{{ $loop->iteration }}][stock_match]" value="{{ $dtl->demand_approval_dtl_stock_match }}" title="No" class="form-control erp-form-control-sm" readonly=""></td>
-                                            <td><input type="text" id="suggest_qty_1" data-id="suggest_qty_1" name="pd[{{ $loop->iteration }}][suggest_qty_1]" value="{{ $dtl->demand_approval_dtl_suggest_quantity1 }}" title="{{ $dtl->demand_approval_dtl_suggest_quantity1 }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="suggest_qty_2" data-id="suggest_qty_2" name="pd[{{ $loop->iteration }}][suggest_qty_2]" value="{{ $dtl->demand_approval_dtl_suggest_quantity2 }}" title="{{ $dtl->demand_approval_dtl_suggest_quantity2 }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="purchase_rate" data-id="purchase_rate" name="pd[{{ $loop->iteration }}][purchase_rate]" value="{{ number_format($dtl->product_barcode_purchase_rate,3) }}" title="{{ number_format($dtl->product_barcode_purchase_rate,3) }}" class="form-control erp-form-control-sm purchase-rate validNumber validOnlyFloatNumber" readonly=""></td>
-                                            <td><input type="text" id="demand_qty" data-id="demand_qty" name="pd[{{ $loop->iteration }}][demand_qty]" value="{{ $dtl->demand_approval_dtl_demand_qty }}" title="{{ $dtl->demand_approval_dtl_demand_qty }}" class="form-control erp-form-control-sm demand-qty validNumber validOnlyFloatNumber" readonly=""></td>
-                                            <td><input type="text" id="wiplpo_stock" data-id="wiplpo_stock" name="pd[{{ $loop->iteration }}][wiplpo_stock]" value="{{ $dtl->demand_approval_dtl_wip_lpo_stock }}" title="{{ $dtl->demand_approval_dtl_wip_lpo_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="pur_ret" data-id="pur_ret" name="pd[{{ $loop->iteration }}][pur_ret]" value="{{ $dtl->demand_approval_dtl_pur_ret_in_waiting }}" title="{{ $dtl->demand_approval_dtl_pur_ret_in_waiting }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
-                                            <td><input type="text" id="approve_qty" data-id="approve_qty" name="pd[{{ $loop->iteration }}][approve_qty]" value="{{ $dtl->demand_approval_dtl_approve_qty }}" title="{{ $dtl->demand_approval_dtl_approve_qty }}" class="moveIndex form-control erp-form-control-sm approv-qty validNumber validOnlyFloatNumber"></td>
-                                            <td><input type="text" id="remarks" data-id="remarks" name="pd[{{ $loop->iteration }}][remarks]" value="{{ $dtl->demand_approval_dtl_notes }}" class="moveIndex form-control erp-form-control-sm"></td>
-                                            <td><input type="text" id="notes" data-id="notes" data-url="{{ url('common/help-open/RejectReasonHelp') }}" name="pd[{{ $loop->iteration }}][notes]" value="{{ $dtl->demand_approval_dtl_remarks }}" class="open_js_modal moveIndex OnlyEnterAllow form-control erp-form-control-sm" readonly=""></td>
-                                            <td class="text-center"><label class="kt-radio kt-radio--brand"><input type="radio" id="pending" value="pending" @if($dtl->demand_approval_dtl_approve_status == 'pending') checked @endif  name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
-                                            <td class="text-center"><label class="kt-radio kt-radio--success"><input type="radio" id="approve" value="approved" @if($dtl->demand_approval_dtl_approve_status == 'approved') checked @endif name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
-                                            <td class="text-center"><label class="kt-radio kt-radio--danger"><input type="radio" id="reject" value="reject" @if($dtl->demand_approval_dtl_approve_status == 'reject') checked @endif name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            </tbody>
-                        </table>
+
+                    <div class="row">
+                        <div class="col-lg-12 text-right">
+                            <div class="data_entry_header">
+                                <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> fields hide</div>
+                                <div class="dropdown dropdown-inline">
+                                    <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 15px; border: 0;">
+                                        <i class="flaticon-more" style="color: #666666;"></i>
+                                    </button>
+                                    @php
+                                        $headings = ['Sr No','Demand No','Branch','Product Name','UOM','Packing','Physical Stock','Store Stock','Stock Match','Suggest Qty 1','Suggest Qty 2','Purchase Rate','Demand Qty','WIP LPO Stock','Pur.Ret in Waiting','Aprov qty','Notes','Remarks'];
+                                    @endphp
+                                    <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
+                                        @foreach($headings as $key=>$heading)
+                                            <li>
+                                                <label>
+                                                    <input value="{{$key}}" type="checkbox" checked> {{$heading}}
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                <div class="kt-user-page-setting" style="display: inline-block">
+                                    <button type="button" style="width: 30px;height: 30px;" title="Setting Save" data-toggle="tooltip" class="btn btn-brand btn-elevate btn-circle btn-icon" id="pageUserSettingSave">
+                                        <i class="la la-floppy-o"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-block">
+                        <div class="erp_form___block">
+                            <div class="table-scroll form_input__block">
+                                <table id="ProductDemandDtlForm" class="table erp_form__grid erp_form__grid_th_resize table-resizable dtr-inline">
+                                    <thead  class="erp_form__grid_header">
+                                    <tr>
+                                        <th width="5%" scope="col">Sr No</th>
+                                        <th width="5%" scope="col">Demand No</th>
+                                        <th width="8%" scope="col">Branch</th>
+                                        <th width="10%" scope="col">Product Name</th>
+                                        <th width="4%" scope="col">UOM</th>
+                                        <th width="4%" scope="col">Packing</th>
+                                        <th width="4%" scope="col">Physical Stock</th>
+                                        <th width="4%" scope="col">Store Stock</th>
+                                        <th width="4%" scope="col">Stock Match</th>
+                                        <th width="3%" scope="col">Suggest Qty 1</th>
+                                        <th width="3%" scope="col">Suggest Qty 2</th>
+                                        <th width="3%" scope="col">Purchase Rate</th>
+                                        <th width="3%" scope="col">Demand Qty</th>
+                                        <th width="7%" scope="col">WIP LPO Stock</th>
+                                        <th width="7%" scope="col">Pur.Ret in Waiting</th>
+                                        <th width="4%" scope="col">Aprov qty</th>
+                                        <th width="8%" scope="col">Notes</th>
+                                        <th width="8%" scope="col">Remarks</th>
+                                        <th width="3%" scope="col">
+                                            <label class="kt-radio kt-radio--brand" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="radio" id="pendingAll" name="checkAllgrid" value="pending" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Pnding</div>
+                                        </th>
+                                        <th width="3%">
+                                            <label class="kt-radio kt-radio--success" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="checkbox" id="approveAll" name="checkAllgrid" value="approve" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Aprv</div>
+                                        </th>
+                                        <th width="3%">
+                                            <label class="kt-radio kt-radio--danger" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="radio" id="rejectAll" name="checkAllgrid" value="reject" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Rjct</div>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="repeated_data" class="erp_form__grid_body">
+                                        @if($case == 'edit')
+                                            @foreach($dtls as $dtl)
+                                                <tr id="81402121091214">
+                                                    <td class="handle">
+                                                        <i class="fa fa-arrows-alt-v handle"></i>
+                                                        <input type="text" id="sr_no" name="pd[{{ $loop->iteration }}][sr_no]" value="{{ $loop->iteration }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="product_id" data-id="product_id" name="pd[{{ $loop->iteration }}][product_id]" value="{{ $dtl->product_id }}" class="product_id form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="uom_id" data-id="uom_id" name="pd[{{ $loop->iteration }}][uom_id]" value="{{ $dtl->uom_id }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="branch_id" data-id="branch_id" name="pd[{{ $loop->iteration }}][branch_id]" value="{{ $dtl->branch_id }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="bar_code" data-id="bar_code" name="pd[{{ $loop->iteration }}][bar_code]" value="{{ $dtl->product_barcode_barcode }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="demand_id" data-id="demand_id" name="pd[{{ $loop->iteration }}][demand_id]" value="{{ $dtl->demand_id }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="demand_dtl_id" data-id="demand_dtl_id" name="pd[{{ $loop->iteration }}][demand_dtl_id]" value="{{ $dtl->demand_dtl_id }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                        <input type="hidden" id="product_barcode_id" data-id="product_barcode_id" name="pd[{{ $loop->iteration }}][product_barcode_id]" value="{{ $dtl->product_barcode_id }}" class="product_barcode_id form-control erp-form-control-sm">
+                                                        <input type="hidden" id="notes_id" data-id="notes_id" name="pd[{{ $loop->iteration }}][notes_id]" value="{{ $dtl->demand_approval_dtl_remarks_id }}" class="form-control erp-form-control-sm handle" readonly="">
+                                                    </td>
+                                                    <td><input type="text" id="demand_no" data-id="demand_no" name="pd[{{ $loop->iteration }}][demand_no]" value="{{ $dtl->demand->demand_no }}" title="{{ $dtl->demand->demand_no }}" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="branch_name" data-id="branch_name" name="pd[{{ $loop->iteration }}][branch_name]" value="{{ $dtl->branch->branch_name }}" title="{{ $dtl->branch->branch_name }}" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="product_name" data-id="product_name"  name="pd[{{ $loop->iteration }}][product_name]" value="{{ $dtl->product->product_name }}" title="{{ $dtl->product->product_name }}" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="uom" data-id="uom" name="pd[{{ $loop->iteration }}][uom_name]" value="{{ $dtl->uom->uom_name }}" title="{{ $dtl->uom->uom_name }}" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="packing_name" data-id="packing_name" name="pd[{{ $loop->iteration }}][packing_name]" value="{{ $dtl->demand_approval_dtl_packing }}" title="{{ $dtl->demand_approval_dtl_packing }}" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="physical_stock" data-id="physical_stock" name="pd[{{ $loop->iteration }}][physical_stock]" value="{{ $dtl->demand_approval_dtl_physical_stock }}" title="{{ $dtl->demand_approval_dtl_physical_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="store_stock" data-id="store_stock" name="pd[{{ $loop->iteration }}][store_stock]" value="{{ $dtl->demand_approval_dtl_store_stock }}" title="{{ $dtl->demand_approval_dtl_store_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="stock_match" data-id="stock_match" name="pd[{{ $loop->iteration }}][stock_match]" value="{{ $dtl->demand_approval_dtl_stock_match }}" title="No" class="form-control erp-form-control-sm" readonly=""></td>
+                                                    <td><input type="text" id="suggest_qty_1" data-id="suggest_qty_1" name="pd[{{ $loop->iteration }}][suggest_qty_1]" value="{{ $dtl->demand_approval_dtl_suggest_quantity1 }}" title="{{ $dtl->demand_approval_dtl_suggest_quantity1 }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="suggest_qty_2" data-id="suggest_qty_2" name="pd[{{ $loop->iteration }}][suggest_qty_2]" value="{{ $dtl->demand_approval_dtl_suggest_quantity2 }}" title="{{ $dtl->demand_approval_dtl_suggest_quantity2 }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="purchase_rate" data-id="purchase_rate" name="pd[{{ $loop->iteration }}][purchase_rate]" value="{{ number_format($dtl->product_barcode_purchase_rate,3) }}" title="{{ number_format($dtl->product_barcode_purchase_rate,3) }}" class="form-control erp-form-control-sm purchase-rate validNumber validOnlyFloatNumber" readonly=""></td>
+                                                    <td><input type="text" id="demand_qty" data-id="demand_qty" name="pd[{{ $loop->iteration }}][demand_qty]" value="{{ $dtl->demand_approval_dtl_demand_qty }}" title="{{ $dtl->demand_approval_dtl_demand_qty }}" class="form-control erp-form-control-sm demand-qty validNumber validOnlyFloatNumber" readonly=""></td>
+                                                    <td><input type="text" id="wiplpo_stock" data-id="wiplpo_stock" name="pd[{{ $loop->iteration }}][wiplpo_stock]" value="{{ $dtl->demand_approval_dtl_wip_lpo_stock }}" title="{{ $dtl->demand_approval_dtl_wip_lpo_stock }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="pur_ret" data-id="pur_ret" name="pd[{{ $loop->iteration }}][pur_ret]" value="{{ $dtl->demand_approval_dtl_pur_ret_in_waiting }}" title="{{ $dtl->demand_approval_dtl_pur_ret_in_waiting }}" class="form-control erp-form-control-sm validNumber" readonly=""></td>
+                                                    <td><input type="text" id="approve_qty" data-id="approve_qty" name="pd[{{ $loop->iteration }}][approve_qty]" value="{{ $dtl->demand_approval_dtl_approve_qty }}" title="{{ $dtl->demand_approval_dtl_approve_qty }}" class="moveIndex form-control erp-form-control-sm approv-qty validNumber validOnlyFloatNumber"></td>
+                                                    <td><input type="text" id="remarks" data-id="remarks" name="pd[{{ $loop->iteration }}][remarks]" value="{{ $dtl->demand_approval_dtl_notes }}" class="moveIndex form-control erp-form-control-sm"></td>
+                                                    <td><input type="text" id="notes" data-id="notes" data-url="{{ url('common/help-open/RejectReasonHelp') }}" name="pd[{{ $loop->iteration }}][notes]" value="{{ $dtl->demand_approval_dtl_remarks }}" class="open_js_modal moveIndex OnlyEnterAllow form-control erp-form-control-sm" readonly=""></td>
+                                                    <td class="text-center"><label class="kt-radio kt-radio--brand"><input type="radio" id="pending" value="pending" @if($dtl->demand_approval_dtl_approve_status == 'pending') checked @endif  name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
+                                                    <td class="text-center"><label class="kt-radio kt-radio--success"><input type="radio" id="approve" value="approved" @if($dtl->demand_approval_dtl_approve_status == 'approved') checked @endif name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
+                                                    <td class="text-center"><label class="kt-radio kt-radio--danger"><input type="radio" id="reject" value="reject" @if($dtl->demand_approval_dtl_approve_status == 'reject') checked @endif name="pd[{{ $loop->iteration }}][action]" onclick="return false;"><span></span></label></td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     @else
                     <div class="form-group-block" style="max-height:300px;overflow: auto;">
@@ -214,53 +249,57 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-group-block" style="overflow: auto;">
-                        <table id="ProductDemandDtlForm" class="ErpForm table table-striped table-responsive table-bordered table-hover table-checkable no-footer dtr-inline collapsed table-resizable">
-                            <thead>
-                            <tr>
-                                <th width="5%">Sr No</th>
-                                {{--<th width="5%">Product Id</th>--}}
-                                <th width="8%">Branch</th>
-                                <th width="10%">Product Name</th>
-                                <th width="4%">UOM</th>
-                                <th width="4%">Packing</th>
-                                <th width="4%">Supplier</th>
-                                <th width="4%">Physical Stock</th>
-                                <th width="4%">Store Stock</th>
-                                <th width="3%">Stock Match</th>
-                                <th width="3%">Suggest Qty 1</th>
-                                <th width="3%">Suggest Qty 2</th>
-                                <th width="3%">Purchase Rate</th>
-                                <th width="3%">Demand Qty</th>
-                                <th width="7%">WIP LPO Stock</th>
-                                <th width="7%">Pur.Ret in Waiting</th>
-                                <th width="4%">Aprov qty</th>
-                                <th width="8%">Notes</th>
-                                <th width="8%">Remarks</th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--brand" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="radio" id="pendingAll" name="checkAllgrid" value="pending" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Pnding</div>
-                                </th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--success" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="checkbox" id="approveAll" name="checkAllgrid" value="approve" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Aprv</div>
-                                </th>
-                                <th width="3%">
-                                    <label class="kt-radio kt-radio--danger" style="padding-left: 17px; top: -5px;">
-                                        <input style="left:0;" type="radio" id="rejectAll" name="checkAllgrid" value="reject" disabled>
-                                        <span></span>
-                                    </label> <div class="noselect">Rjct</div>
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody id="repeated_data">
+                    <div class="form-group-block">
+                        <div class="erp_form___block">
+                            <div class="table-scroll form_input__block">
+                                <table id="ProductDemandDtlForm" class="table erp_form__grid erp_form__grid_th_resize table-resizable dtr-inline">
+                                    <thead class="erp_form__grid_header">
+                                    <tr>
+                                        <th width="5%" scope="col">Sr No</th>
+                                        {{--<th width="5%">Product Id</th>--}}
+                                        <th width="8%" scope="col">Branch</th>
+                                        <th width="10%" scope="col">Product Name</th>
+                                        <th width="4%" scope="col">UOM</th>
+                                        <th width="4%" scope="col">Packing</th>
+                                        <th width="4%" scope="col">Supplier</th>
+                                        <th width="4%" scope="col">Physical Stock</th>
+                                        <th width="4%" scope="col">Store Stock</th>
+                                        <th width="3%" scope="col">Stock Match</th>
+                                        <th width="3%" scope="col">Suggest Qty 1</th>
+                                        <th width="3%" scope="col">Suggest Qty 2</th>
+                                        <th width="3%" scope="col">Purchase Rate</th>
+                                        <th width="3%" scope="col">Demand Qty</th>
+                                        <th width="7%" scope="col">WIP LPO Stock</th>
+                                        <th width="7%" scope="col">Pur.Ret in Waiting</th>
+                                        <th width="4%" scope="col">Aprov qty</th>
+                                        <th width="8%" scope="col">Notes</th>
+                                        <th width="8%" scope="col">Remarks</th>
+                                        <th width="3%" scope="col">
+                                            <label class="kt-radio kt-radio--brand" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="radio" id="pendingAll" name="checkAllgrid" value="pending" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Pnding</div>
+                                        </th>
+                                        <th width="3%">
+                                            <label class="kt-radio kt-radio--success" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="checkbox" id="approveAll" name="checkAllgrid" value="approve" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Aprv</div>
+                                        </th>
+                                        <th width="3%">
+                                            <label class="kt-radio kt-radio--danger" style="padding-left: 17px; top: -5px;">
+                                                <input style="left:0;" type="radio" id="rejectAll" name="checkAllgrid" value="reject" disabled>
+                                                <span></span>
+                                            </label> <div class="noselect">Rjct</div>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="repeated_data">
 
-                            </tbody>
-                        </table>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     @endif
                     <div class="form-group row">
