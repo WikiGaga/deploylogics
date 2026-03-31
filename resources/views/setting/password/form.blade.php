@@ -99,12 +99,14 @@
                                 <label class="col-lg-2 erp-col-form-label">New Password: <span class="required">*</span></label>
                                 <div class="col-lg-4">
                                     <input type="password" id="new_password" name="new_password" class="form-control erp-form-control-sm">
+                                    <small>* Min 8 chars, include a mix of uppercase letters, lowercase letters, numbers & symbols.</small>
                                 </div>
                             </div>
                             <div class="form-group-block row">
                                 <label class="col-lg-2 erp-col-form-label">Confirm Password: <span class="required">*</span></label>
                                 <div class="col-lg-4">
                                     <input type="password" id="conform_password" name="conform_password" class="form-control erp-form-control-sm">
+                                    <small>* Passwords must match.</small>
                                 </div>
                             </div>
                         </div>
