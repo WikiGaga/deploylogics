@@ -56,7 +56,7 @@ class StockController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($type,$id = null)
+    public function create(Request $request, $type, $id = null)
     {
         /*
          * Opening Stock = OS
@@ -150,12 +150,38 @@ class StockController extends Controller
         $data['page_data']['path_index'] = $this->prefixIndexPage.'stock/'.$type;
         $data['page_data']['create'] = '/stock/'.$type.$this->prefixCreatePage;
         if(isset($id)){
-            if(TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $baseQuery = TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = $data['stock_menu_id'].'-edit';
                 $data['id'] = $id;
-                $data['current'] = TblInveStock::with('stock_dtls','product','barcode','supplier','formulation')->where(Utilities::currentBCB())->where('stock_id',$id)->where('stock_code_type',$data['stock_code_type'])->first();
-                $data['current_audit'] = TblInveStock::with('audit_stock_dtls','product','barcode')->where(Utilities::currentBCB())->where('stock_id',$id)->where('stock_code_type',$data['stock_code_type'])->first();
+                $currentQuery = TblInveStock::with('stock_dtls','product','barcode','supplier','formulation')
+                    ->where(Utilities::currentBC())
+                    ->where('stock_id',$id)
+                    ->where('stock_code_type',$data['stock_code_type']);
+                $auditQuery = TblInveStock::with('audit_stock_dtls','product','barcode')
+                    ->where(Utilities::currentBC())
+                    ->where('stock_id',$id)
+                    ->where('stock_code_type',$data['stock_code_type']);
+                if(!$allowCrossBranchView){
+                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                    $auditQuery = $auditQuery->where('branch_id', auth()->user()->branch_id);
+                }
+                $data['current'] = $currentQuery->first();
+                $data['current_audit'] = $auditQuery->first();
+                if(empty($data['current'])){
+                    abort('404');
+                }
+
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+                }else{
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
 
                // dd($data['current']->toArray());
                 $data['display_location'] = ViewInveDisplayLocation::where('branch_id',auth()->user()->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();

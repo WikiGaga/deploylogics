@@ -27,7 +27,7 @@
             $length = 0;
             $currencySymbol = 'OMR';
         }
-        if ($case == 'edit') {
+        if ($case == 'edit' || $case == 'view') {
             $expense_dtls = isset($data['current']->grn_expense) ? $data['current']->grn_expense : [];
             $length = count($expense_dtls);
             $currencySymbol = $data['current']->currency->currency_symbol ?? 'OMR';

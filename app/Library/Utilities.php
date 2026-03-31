@@ -281,6 +281,14 @@ class Utilities
         return $optional_branch;
     }
 
+    public static function getRoleBranches($roleId)
+    {
+        return DB::table('tbl_soft_role_branch')
+            ->where('role_id', $roleId)
+            ->pluck('branch_id')
+            ->toArray();
+    }
+
     /**
      * UOMList
      *

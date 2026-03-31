@@ -202,7 +202,7 @@
                                                     @foreach($data['pivot_optional_branch'] as $optional_branch)
                                                         @php  array_push($col,$optional_branch->branch_id); @endphp
                                                     @endforeach
-                                                    <select class="form-control kt-select2 erp-form-control-sm tag-select2" multiple name="optional_branches[]">
+                                                    <select class="form-control kt-select2 erp-form-control-sm tag-select2" id="optional_branches_select" multiple name="optional_branches[]">
                                                         <option value="">Select</option>
                                                         @foreach($data['branches'] as $branch)
                                                             <option value="{{$branch->branch_id}}" {{ (in_array($branch->branch_id, $col)) ? 'selected' : '' }}>{{$branch->branch_name}}</option>
@@ -555,6 +555,7 @@
     <script src="{{ asset('js/pages/js/user.js') }}" type="text/javascript"></script>
 
 <script>
+var roleOptionalBranchesMap = @json($data['role_optional_branches_map'] ?? []);
 
 $(document).ready(function(){
     verification_type();
@@ -577,7 +578,38 @@ $(document).ready(function(){
         }else{
             $('.customer_block').hide();
         }
-    })
+    });
+
+    function applyRoleOptionalBranchesFromMap(){
+        var roleId = $('#employee_role_id').val();
+        var $opt = $('#optional_branches_select');
+        if(!roleId){
+            $opt.val(null).trigger('change');
+            return;
+        }
+        var branchIds = roleOptionalBranchesMap[roleId];
+        if(!branchIds || !branchIds.length){
+            $opt.val(null).trigger('change');
+            return;
+        }
+        var defaultBranch = $('#kt_select2_1').val();
+        var filtered = branchIds.filter(function(id){
+            return String(id) !== String(defaultBranch);
+        });
+        $opt.val(filtered.map(String)).trigger('change');
+    }
+
+    $('#employee_role_id').on('change', function(){
+        applyRoleOptionalBranchesFromMap();
+    });
+
+    $('#kt_select2_1').on('change', function(){
+        var def = $(this).val();
+        var $opt = $('#optional_branches_select');
+        var vals = $opt.val() || [];
+        vals = vals.filter(function(id){ return String(id) !== String(def); });
+        $opt.val(vals.length ? vals : null).trigger('change');
+    });
 
 });
 </script>

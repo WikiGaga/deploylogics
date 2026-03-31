@@ -49,7 +49,7 @@ class SaleReturnController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($id = null)
+    public function create(Request $request, $id = null)
     {
         $x = parse_url($_SERVER['REQUEST_URI']);
         $type = explode('/',$x['path']);
@@ -75,11 +75,21 @@ class SaleReturnController extends Controller
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.$data['form_type'];
         if(isset($id)){
-            if(TblSaleSales::where('sales_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $baseQuery = TblSaleSales::where('sales_id','LIKE',$id)->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = $data['invoice_menu_id'].'-edit';
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $qry = TblSaleSales::with('dtls','customer_view','expense','SO')->where(Utilities::currentBCB())->where('sales_id',$id);
+                $qry = TblSaleSales::with('dtls','customer_view','expense','SO')
+                    ->where(Utilities::currentBC())
+                    ->where('sales_id',$id);
+                if(!$allowCrossBranchView){
+                    $qry = $qry->where('branch_id', auth()->user()->branch_id);
+                }
                 if($data['form_type'] == 'sale-return'){
                     $qry = $qry->where('sales_type','SR')->first();
                 }
@@ -87,6 +97,14 @@ class SaleReturnController extends Controller
                     $qry = $qry->where('sales_type','RPOS')->first();
                 }
                 $data['current'] = $qry;
+                if(empty($data['current'])){
+                    abort('404');
+                }
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+                }else{
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
                 if($data['form_type'] == 'pos-sales-return'){
                     if(empty($data['current']->sales_sales_man)){
                         $data['pos_user'] = User::where('id',$data['current']->sales_user_id)->first();

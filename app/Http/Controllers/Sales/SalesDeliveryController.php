@@ -44,17 +44,36 @@ class SalesDeliveryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($id = null)
+    public function create(Request $request, $id = null)
     {
         $data['page_data'] = [];
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
         if(isset($id)){
-            if(TblSaleSalesDelivery::where('sales_delivery_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $baseQuery = TblSaleSalesDelivery::where('sales_delivery_id','LIKE',$id)->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = self::$menu_dtl_id.'-edit';
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = TblSaleSalesDelivery::with('dtls','customer','SO','sales_contract','sales_invoice')->where('sales_delivery_id',$id)->where(Utilities::currentBCB())->first();
+                $currentQuery = TblSaleSalesDelivery::with('dtls','customer','SO','sales_contract','sales_invoice')
+                    ->where('sales_delivery_id',$id)
+                    ->where(Utilities::currentBC());
+                if(!$allowCrossBranchView){
+                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                }
+                $data['current'] = $currentQuery->first();
+                if(empty($data['current'])){
+                    abort('404');
+                }
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+                }else{
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
                 $data['document_code'] = $data['current']->sales_delivery_code;
                 $data['page_data']['print'] = '/'.self::$redirect_url.'/print/'.$id;
             }

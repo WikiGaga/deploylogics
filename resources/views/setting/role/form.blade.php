@@ -54,6 +54,23 @@
                                 <textarea name="description" id="description" class="form-control erp-form-control-sm" rows="2">{{$description}}</textarea>
                             </div>
                         </div>
+                        <div class="form-group-block row">
+                            <label class="col-lg-3 erp-col-form-label">Optional Branches:</label>
+                            <div class="col-lg-6">
+                                <div class="erp-select2">
+                                    @php
+                                        $role_branches = isset($data['role_branches']) ? $data['role_branches'] : [];
+                                    @endphp
+                                    <select class="form-control kt-select2 erp-form-control-sm tag-select2" multiple name="role_branches[]">
+                                        <option value="">Select</option>
+                                        @foreach($data['branches'] as $branch)
+                                            <option value="{{$branch->branch_id}}" {{ in_array($branch->branch_id, $role_branches) ? 'selected' : '' }}>{{$branch->branch_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <small class="form-text text-muted">Optional branches for this role.</small>
+                            </div>
+                        </div>
 
                         <hr>
                         <div class="form-group-block row">

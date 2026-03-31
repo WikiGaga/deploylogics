@@ -50,7 +50,7 @@ class PurchaseReturnController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($id = null)
+    public function create(Request $request, $id = null)
     {
         $data['page_data'] = [];
         $data['form_type'] = 'purc_return';
@@ -59,12 +59,33 @@ class PurchaseReturnController extends Controller
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
         $data['page_data']['pending_pr'] = TRUE;
         if(isset($id)){
-            if(TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->exists()){
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $baseQuery = TblPurcGrn::where('grn_id',$id)->where('grn_type','PR')->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = self::$menu_dtl_id.'-edit';
                 $data['id'] = $id;
 
-                $data['current'] = TblPurcGrn::with('grn_dtl','supplier','PO','grn_expense','refPurcReturn')->where('grn_id',$id)->where('grn_type','PR')->where(Utilities::currentBCB())->first();
+                $currentQuery = TblPurcGrn::with('grn_dtl','supplier','PO','grn_expense','refPurcReturn')
+                    ->where('grn_id',$id)
+                    ->where('grn_type','PR')
+                    ->where(Utilities::currentBC());
+                if(!$allowCrossBranchView){
+                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                }
+                $data['current'] = $currentQuery->first();
+                if(empty($data['current'])){
+                    abort('404');
+                }
+
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+                }else{
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
                 $data['grn_code'] = $data['current']->grn_code;
                 $data['page_data']['print'] = '/'.self::$redirect_url.'/print/'.$id;
             }else{

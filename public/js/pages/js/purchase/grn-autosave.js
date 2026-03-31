@@ -74,7 +74,9 @@ const GRNFormAutoSave = {
             timestamp: new Date().toISOString(),
             headerFields: {},
             gridRows: [],
-            select2Values: {}
+            select2Values: {},
+            gridBodyHtml: '',
+            version: 2
         };
 
         try {
@@ -106,6 +108,7 @@ const GRNFormAutoSave = {
 
             const $gridRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
             const totalRows = $gridRows.length;
+            formData.gridBodyHtml = this.getGridBodyHtmlSnapshot();
 
             if (totalRows > 0) {
                 $gridRows.each(function(index) {
@@ -192,23 +195,34 @@ const GRNFormAutoSave = {
         self.isRestoring = true;
 
         try {
-            for (const identifier in formData.headerFields) {
-                const value = formData.headerFields[identifier];
-                const $field = $('[name="' + identifier + '"]').first();
-
-                if ($field.length === 0) {
-                    const $fieldById = $('#' + identifier);
-                    if ($fieldById.length) {
-                        self.setFieldValue($fieldById, value);
+            if (formData && formData.headerFields) {
+                for (const identifier in formData.headerFields) {
+                    if (!Object.prototype.hasOwnProperty.call(formData.headerFields, identifier)) {
+                        continue;
                     }
-                } else {
-                    self.setFieldValue($field, value);
+
+                    const value = formData.headerFields[identifier];
+                    const $field = $('[name="' + identifier + '"]').first();
+
+                    if ($field.length === 0) {
+                        const $fieldById = $('#' + identifier);
+                        if ($fieldById.length) {
+                            self.setFieldValue($fieldById, value);
+                        }
+                    } else {
+                        self.setFieldValue($field, value);
+                    }
                 }
             }
 
-            if (formData.gridRows && formData.gridRows.length > 0) {
+            const restoredFromHtml = self.restoreGridFromHtml(formData.gridBodyHtml || '');
+            if (!restoredFromHtml && formData.gridRows && formData.gridRows.length > 0) {
                 self.restoreGridRows(formData.gridRows);
+            } else {
+                self.postGridRestore();
             }
+
+            self.lateRestore(formData);
 
             setTimeout(function() {
                 self.isRestoring = false;
@@ -216,9 +230,78 @@ const GRNFormAutoSave = {
             }, 3000);
         } catch (e) {
             console.error('Error restoring form data:', e);
-            toastr.error('Error restoring form data');
+            self.restoreGridFromHtml((formData && formData.gridBodyHtml) ? formData.gridBodyHtml : '');
+            self.postGridRestore();
+            self.lateRestore(formData);
             self.isRestoring = false;
         }
+    },
+
+    lateRestore: function(formData) {
+        const self = this;
+        if (!formData || !formData.headerFields) {
+            return;
+        }
+
+        setTimeout(function() {
+            if (Object.prototype.hasOwnProperty.call(formData.headerFields, 'grn_notes')) {
+                const $notes = $('#grn_notes');
+                if ($notes.length) {
+                    self.setFieldValue($notes, formData.headerFields.grn_notes);
+                }
+            }
+        }, 1200);
+    },
+
+    getGridBodyHtmlSnapshot: function() {
+        const $gridBody = $('.erp_form__grid_body');
+        if (!$gridBody.length) {
+            return '';
+        }
+
+        const $clone = $gridBody.clone();
+        $clone.find('tr').removeClass('new-row');
+        return $clone.html();
+    },
+
+    restoreGridFromHtml: function(gridBodyHtml) {
+        if (!gridBodyHtml || typeof gridBodyHtml !== 'string' || !gridBodyHtml.trim()) {
+            return false;
+        }
+
+        const $gridBody = $('.erp_form__grid_body');
+        if (!$gridBody.length) {
+            return false;
+        }
+
+        try {
+            $gridBody.html(gridBodyHtml);
+            return $gridBody.find('tr').length > 0;
+        } catch (e) {
+            console.error('Error restoring grid HTML snapshot:', e);
+            return false;
+        }
+    },
+
+    postGridRestore: function() {
+        setTimeout(function() {
+            if ($.fn.inputmask && $('.date_inputmask').length) {
+                $('.date_inputmask').inputmask('99-99-9999', {
+                    mask: '99-99-9999',
+                    placeholder: 'dd-mm-yyyy'
+                });
+            }
+
+            if (typeof addDataInit === 'function') {
+                addDataInit();
+            } else if (typeof updateKeys === 'function') {
+                updateKeys();
+            }
+
+            if (typeof allGridTotal === 'function') {
+                allGridTotal();
+            }
+        }, 200);
     },
 
     setFieldValue: function($field, value) {
@@ -328,12 +411,7 @@ const GRNFormAutoSave = {
             });
 
             console.log('Grid restoration complete. Total fields restored:', totalFieldsRestored);
-
-            if (typeof allGridTotal === 'function') {
-                setTimeout(function() {
-                    allGridTotal();
-                }, 500);
-            }
+            self.postGridRestore();
         }
 
         setTimeout(attemptRestore, 1500);
@@ -378,38 +456,80 @@ const GRNFormAutoSave = {
 
         const rowHtml = `
             <tr>
-                <th scope="row" style="padding:0">
-                    <div class="erp_form__grid_th_input">
-                        <input type="text" readonly name="pd[${rowNum}][sr_no]" value="${rowNum}" class="sr_no form-control erp-form-control-sm">
-                        <input type="hidden" name="pd[${rowNum}][product_id]" value="" class="product_id form-control erp-form-control-sm">
-                        <input type="hidden" name="pd[${rowNum}][product_barcode_id]" value="" class="product_barcode_id form-control erp-form-control-sm">
-                        <input type="hidden" name="pd[${rowNum}][uom_id]" value="" class="uom_id form-control erp-form-control-sm">
-                        <input type="hidden" name="pd[${rowNum}][grn_supplier_id]" value="" class="grn_supplier_id form-control erp-form-control-sm">
-                        <input type="hidden" name="pd[${rowNum}][grn_dtl_po_rate]" value="" class="grn_dtl_po_rate form-control erp-form-control-sm">
-                    </div>
-                </th>
-                <td><input type="text" name="pd[${rowNum}][pd_barcode]" value="" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm"></td>
-                <td><input type="text" readonly name="pd[${rowNum}][product_name]" value="" class="product_name form-control erp-form-control-sm"></td>
-                <td><select name="pd[${rowNum}][pd_uom]" class="pd_uom tb_moveIndex form-control erp-form-control-sm"><option value="">Select</option></select></td>
-                <td><input type="text" readonly name="pd[${rowNum}][pd_packing]" value="" class="pd_packing form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][sup_barcode]" value="" class="sup_barcode tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][quantity]" data-id="quantity" value="" class="tblGridCal_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][foc_qty]" data-id="foc_qty" value="" class="tblGridCal_foc_qty validNumber validOnlyNumber tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][sale_rate]" value="" class="tblGridSale_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][fc_rate]" value="" class="fc_rate tb_moveIndex validNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][rate]" data-id="rate" value="" class="tblGridCal_rate tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][amount]" data-id="amount" value="" class="tblGridCal_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][dis_perc]" value="" class="tblGridCal_discount_perc tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][dis_amount]" value="" class="tblGridCal_discount_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][vat_perc]" value="" class="tblGridCal_vat_perc validNumber tb_moveIndex validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][vat_amount]" value="" class="tblGridCal_vat_amount tb_moveIndex validNumber validOnlyFloatNumber form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][batch_no]" value="" class="tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][production_date]" value="" class="date_inputmask tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][expiry_date]" value="" class="date_inputmask tb_moveIndex form-control erp-form-control-sm"></td>
-                <td><input type="text" name="pd[${rowNum}][gross_amount]" data-id="gross_amount" value="" readonly class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm"></td>
+                <td class="handle">
+                    <i class="fa fa-arrows-alt-v handle"></i>
+                    <input type="text" value="${rowNum}" name="pd[${rowNum}][sr_no]" title="${rowNum}" class="form-control erp-form-control-sm handle sr_no" readonly>
+                    <input type="hidden" name="pd[${rowNum}][product_id]" data-id="product_id" value="" class="product_id form-control erp-form-control-sm handle" readonly>
+                    <input type="hidden" name="pd[${rowNum}][uom_id]" data-id="uom_id" value="" class="uom_id form-control erp-form-control-sm handle" readonly>
+                    <input type="hidden" name="pd[${rowNum}][product_barcode_id]" data-id="product_barcode_id" value="" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
+                    <input type="hidden" name="pd[${rowNum}][grn_supplier_id]" data-id="grn_supplier_id" value="" class="grn_supplier_id form-control erp-form-control-sm" readonly>
+                    <input type="hidden" name="pd[${rowNum}][grn_dtl_po_rate]" data-id="grn_dtl_po_rate" value="" class="grn_dtl_po_rate form-control erp-form-control-sm" readonly>
+                </td>
                 <td>
-                    <div class="erp_form__grid_th_btn">
-                        <button type="button" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-danger btn-sm del_row">
+                    <input type="text" name="pd[${rowNum}][pd_barcode]" data-id="pd_barcode" value="" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][product_name]" data-id="product_name" value="" class="product_name form-control erp-form-control-sm" readonly>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][product_arabic_name]" data-id="product_arabic_name" value="" class="product_arabic_name form-control erp-form-control-sm" readonly>
+                </td>
+                <td>
+                    <select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd[${rowNum}][pd_uom]">
+                        <option value="">Select</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][pd_packing]" data-id="pd_packing" value="" class="pd_packing form-control erp-form-control-sm" readonly>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][grn_supplier_barcode]" data-id="grn_supplier_barcode" value="" class="sup_barcode tb_moveIndex form-control erp-form-control-sm" readonly>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][quantity]" data-id="quantity" value="" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][foc_qty]" data-id="foc_qty" value="" class="tblGridCal_foc_qty tb_moveIndex form-control erp-form-control-sm validNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][sale_rate]" data-id="sale_rate" value="" class="tblGridSale_rate tb_moveIndex form-control erp-form-control-sm validNumber" readonly>
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][fc_rate]" data-id="fc_rate" value="" class="fc_rate tb_moveIndex form-control erp-form-control-sm validNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][rate]" data-id="rate" value="" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][amount]" data-id="amount" value="" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][dis_perc]" data-id="dis_perc" value="" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][dis_amount]" data-id="dis_amount" value="" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][vat_perc]" data-id="vat_perc" value="" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][vat_amount]" data-id="vat_amount" value="" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][batch_no]" data-id="batch_no" value="" class="tb_moveIndex form-control erp-form-control-sm">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][production_date]" data-id="production_date" value="" class="date_inputmask tb_moveIndex form-control form-control-sm">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][expiry_date]" data-id="expiry_date" value="" class="date_inputmask tb_moveIndex form-control form-control-sm">
+                </td>
+                <td>
+                    <input type="text" name="pd[${rowNum}][gross_amount]" data-id="gross_amount" value="" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber">
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-danger gridBtn delData">
                             <i class="la la-trash"></i>
                         </button>
                     </div>
@@ -653,7 +773,8 @@ const GRNFormAutoSave = {
                 timestamp: formData.timestamp,
                 size: new Blob([savedData]).size,
                 headerFieldsCount: Object.keys(formData.headerFields || {}).length,
-                gridRowsCount: (formData.gridRows || []).length
+                gridRowsCount: (formData.gridRows || []).length,
+                hasGridHtmlSnapshot: !!(formData.gridBodyHtml && formData.gridBodyHtml.trim())
             };
         } catch (e) {
             return null;

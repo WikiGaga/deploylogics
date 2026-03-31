@@ -32,11 +32,9 @@ var KTFormWidgets = function() {
 
             },
             submitHandler: function (form) {
-                $("form").find(":submit").prop('disabled', true);
-                //form[0].submit(); // submit the form
+                var $form = $(form);
+                $form.find(":submit").prop('disabled', true);
                 var formData = new FormData(form);
-                var el = this.submitButton;
-                formData.append('action', el.getAttribute('data-id'));
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -49,24 +47,24 @@ var KTFormWidgets = function() {
                     contentType : false,
                     processData : false,
                     success: function(response,status) {
-                        console.log(response);
                         if(response.status == 'success'){
-                            setTimeout(function () {
-                                $("form").find(":submit").prop('disabled', false);
-                            }, 2000);
                             toastr.success(response.message);
+                            setTimeout(function () {
+                                $form.find(":submit").prop('disabled', false);
+                            }, 2000);
                             window.location.href = response.data.redirect;
                         }else{
                             toastr.error(response.message);
                             setTimeout(function () {
-                                $("form").find(":submit").prop('disabled', false);
+                                $form.find(":submit").prop('disabled', false);
                             }, 2000);
                         }
                     },
-                    error: function(response,status) {
-                        toastr.error(response.responseJSON.message);
+                    error: function(xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : (xhr.statusText || 'Request failed');
+                        toastr.error(msg);
                         setTimeout(function () {
-                            $("form").find(":submit").prop('disabled', false);
+                            $form.find(":submit").prop('disabled', false);
                         }, 2000);
                     },
                 });

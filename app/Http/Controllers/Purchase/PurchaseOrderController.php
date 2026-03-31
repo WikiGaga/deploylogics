@@ -318,7 +318,7 @@ class PurchaseOrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($id = null)
+    public function create(Request $request, $id = null)
     {
         $data['form_type'] = 'purc_order';
         $data['page_data'] = [];
@@ -329,11 +329,30 @@ class PurchaseOrderController extends Controller
         $data['page_data']['pending_pr'] = TRUE;
         $data['already_exits'] = false;
         if(isset($id)){
-            if(TblPurcPurchaseOrder::where('purchase_order_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $baseQuery = TblPurcPurchaseOrder::where('purchase_order_id','LIKE',$id)->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = self::$menu_dtl_id.'-edit';
                 $data['id'] = $id;
-                $data['current'] = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')->where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                $currentQuery = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')
+                    ->where('purchase_order_id',$id)
+                    ->where(Utilities::currentBC());
+                if(!$allowCrossBranchView){
+                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                }
+                $data['current'] = $currentQuery->first();
+                if(empty($data['current'])){
+                    abort('404');
+                }
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+                }else{
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
                     /*
                     * Add All Possible UOM Of The Product -- Required For Purchase Auto Demand
                     * We want to change the UOM of the Product Comming from Purchase Auto Demand

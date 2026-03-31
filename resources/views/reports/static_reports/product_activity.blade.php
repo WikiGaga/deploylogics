@@ -88,12 +88,13 @@
                         <tr class="sticky-header">
                             <th class="text-center" width="10%">Document Date</th>
                             <th class="text-center" width="10%">Document Type</th>
+                            <th class="text-center" width="12%">Branch Name</th>
                             <th class="text-center" width="10%">Document Code</th>
                             <th class="text-center" width="20%">Remarks</th>
                             <th class="text-center">Inputs</th>
-                            {{--<th class="text-center">Price</th>--}}
+                            <th class="text-center">In Rate</th>
                             <th class="text-center">Outputs</th>
-                            {{--<th class="text-center">Price</th>--}}
+                            <th class="text-center">Out Rate</th>
                             <th class="text-center">Balance</th>
                             {{--<th class="text-center">Price</th>--}}
                             {{--<th class="text-center">Expire Date</th>--}}
@@ -228,17 +229,31 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                    $dt .= "AND STOCK.SALES_STORE_ID in( '".implode("','",$data['store'])."') ";
                                }
                                 if(isset($data['month_wise']) && $data['month_wise']){
-                                    $query = "SELECT PRODUCT_NAME, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                    $query = "SELECT PRODUCT_NAME, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                             SELECT PROD.PRODUCT_NAME , STOCK.STOCK_EXPIRY,
-                                            STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,  STOCK.DOCUMENT_CODE ,
+                                            STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
+                                            STOCK.DOCUMENT_CODE ,
                                             NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
-                                            DOCUMENT_ACT_RATE  IN_RATE ,
+                                            CASE
+                                                WHEN UPPER(STOCK.DOCUMENT_TYPE) = 'GRN' THEN NVL((
+                                                    SELECT MAX(DTL.TBL_PURC_GRN_DTL_RATE)
+                                                    FROM TBL_PURC_GRN_DTL DTL
+                                                    WHERE DTL.GRN_ID = STOCK.DOCUMENT_ID
+                                                      AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                                      AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
+                                                      AND DTL.COMPANY_ID = STOCK.COMPANY_ID
+                                                      AND DTL.BRANCH_ID = STOCK.BRANCH_ID
+                                                ), 0)
+                                                ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
+                                            END IN_RATE ,
                                             STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                            NVL(STOCK.DOCUMENT_RATE, 0)  OUT_RATE ,
+                                            NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0))  OUT_RATE ,
                                             NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                             STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID , SORTING_ID
-                                            FROM  VW_PURC_STOCK_DTL  STOCK  , VW_PURC_PRODUCT PROD
-                                            WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                            FROM  VW_PURC_STOCK_DTL  STOCK
+                                            INNER JOIN VW_PURC_PRODUCT PROD ON STOCK.PRODUCT_ID = PROD.PRODUCT_ID
+                                            LEFT JOIN TBL_SOFT_BRANCH BR ON BR.BRANCH_ID = STOCK.BRANCH_ID
+                                            WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                 $date_field2
                                                 $dt
                                                 AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
@@ -249,17 +264,34 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 union all
                                                 SELECT
                                                     PROD.PRODUCT_NAME ,MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
-                                                    MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,  MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
+                                                    MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,
+                                                    MAX(BR.BRANCH_NAME) BRANCH_NAME ,
+                                                    MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
                                                     SUM(NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0)) QTY_IN  ,
-                                                    MAX(DOCUMENT_ACT_RATE)  IN_RATE ,
+                                                    MAX(
+                                                        CASE
+                                                            WHEN UPPER(STOCK.DOCUMENT_TYPE) = 'GRN' THEN NVL((
+                                                                SELECT MAX(DTL.TBL_PURC_GRN_DTL_RATE)
+                                                                FROM TBL_PURC_GRN_DTL DTL
+                                                                WHERE DTL.GRN_ID = MAX(STOCK.DOCUMENT_ID)
+                                                                  AND DTL.PRODUCT_ID = MAX(STOCK.PRODUCT_ID)
+                                                                  AND DTL.BUSINESS_ID = MAX(STOCK.BUSINESS_ID)
+                                                                  AND DTL.COMPANY_ID = MAX(STOCK.COMPANY_ID)
+                                                                  AND DTL.BRANCH_ID = MAX(STOCK.BRANCH_ID)
+                                                            ), 0)
+                                                            ELSE NVL(MAX(STOCK.STOCK_RATE), NVL(MAX(DOCUMENT_ACT_RATE), 0))
+                                                        END
+                                                    )  IN_RATE ,
                                                     SUM(STOCK.QTY_OUT  +   BONUS_QTY_OUT)   QTY_OUT,
-                                                    MAX(NVL(STOCK.DOCUMENT_RATE, 0))  OUT_RATE ,
+                                                    MAX(NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0)))  OUT_RATE ,
                                                     MAX(NVL(STOCK.DOCUMENT_RATE, 0)) BAL_RATE ,
                                                     SUM(STOCK.BONUS_QTY_IN) BONUS_QTY_IN ,   MAX(STOCK.TRANSFER_FROM_BRANCH_ID) TRANSFER_FROM_BRANCH_ID , MAX(STOCK.TRANSFER_TO_BRANCH_ID) TRANSFER_TO_BRANCH_ID ,
                                                     MAX(SORTING_ID ) SORTING_ID
                                                 FROM
-                                                    VW_PURC_STOCK_DTL  STOCK  , VW_PURC_PRODUCT PROD
-                                                WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                                    VW_PURC_STOCK_DTL  STOCK
+                                                INNER JOIN VW_PURC_PRODUCT PROD ON STOCK.PRODUCT_ID = PROD.PRODUCT_ID
+                                                LEFT JOIN TBL_SOFT_BRANCH BR ON BR.BRANCH_ID = STOCK.BRANCH_ID
+                                                WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                     $date_field2
                                                     $dt
                                                     AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
@@ -276,6 +308,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 USAGE.USAGE_DATE DOCUMENT_DATE ,
                                                 USAGE.ID DOCUMENT_ID,
                                                 'USAGE' DOCUMENT_TYPE ,
+                                                BRU.BRANCH_NAME ,
                                                 'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
                                                 0 QTY_IN  ,
                                                 0 IN_RATE ,
@@ -287,8 +320,10 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 NULL TRANSFER_TO_BRANCH_ID,
                                                 999999 SORTING_ID
                                             FROM
-                                                ORDER_RECIPE_USAGES USAGE, VW_PURC_PRODUCT PROD
-                                            WHERE USAGE.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                                ORDER_RECIPE_USAGES USAGE
+                                            INNER JOIN VW_PURC_PRODUCT PROD ON USAGE.PRODUCT_ID = PROD.PRODUCT_ID
+                                            LEFT JOIN TBL_SOFT_BRANCH BRU ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
+                                            WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                 $usage_date_field
                                                 AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
 
@@ -296,20 +331,34 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
 
                                 }else{
-                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                         SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME ,  '' PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
-                                        STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,  STOCK.DOCUMENT_CODE ,
+                                        STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
+                                        STOCK.DOCUMENT_CODE ,
                                         NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
-                                        DOCUMENT_ACT_RATE  IN_RATE ,
+                                        CASE
+                                            WHEN UPPER(STOCK.DOCUMENT_TYPE) = 'GRN' THEN NVL((
+                                                SELECT MAX(DTL.TBL_PURC_GRN_DTL_RATE)
+                                                FROM TBL_PURC_GRN_DTL DTL
+                                                WHERE DTL.GRN_ID = STOCK.DOCUMENT_ID
+                                                  AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                                  AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
+                                                  AND DTL.COMPANY_ID = STOCK.COMPANY_ID
+                                                  AND DTL.BRANCH_ID = STOCK.BRANCH_ID
+                                            ), 0)
+                                            ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
+                                        END IN_RATE ,
                                         STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                        NVL(STOCK.DOCUMENT_RATE, 0)  OUT_RATE ,
+                                        NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0))  OUT_RATE ,
                                         NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                         STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID,
                                         NVL(STOCK.SORTING_ID, 0) SORTING_ID
                                     FROM
-                                        VW_PURC_STOCK_DTL  STOCK  , VW_PURC_PRODUCT PROD
-                                    WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                        VW_PURC_STOCK_DTL  STOCK
+                                    INNER JOIN VW_PURC_PRODUCT PROD ON STOCK.PRODUCT_ID = PROD.PRODUCT_ID
+                                    LEFT JOIN TBL_SOFT_BRANCH BR ON BR.BRANCH_ID = STOCK.BRANCH_ID
+                                    WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                         $date_field2
                                         $dt
                                         AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
@@ -324,6 +373,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         USAGE.USAGE_DATE DOCUMENT_DATE ,
                                         USAGE.ID DOCUMENT_ID,
                                         'USAGE' DOCUMENT_TYPE ,
+                                        BRU.BRANCH_NAME ,
                                         'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
                                         0 QTY_IN  ,
                                         0 IN_RATE ,
@@ -335,8 +385,10 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         NULL TRANSFER_TO_BRANCH_ID,
                                         999999 SORTING_ID
                                     FROM
-                                        ORDER_RECIPE_USAGES USAGE, VW_PURC_PRODUCT PROD
-                                    WHERE USAGE.PRODUCT_ID = PROD.PRODUCT_ID   AND  PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                        ORDER_RECIPE_USAGES USAGE
+                                    INNER JOIN VW_PURC_PRODUCT PROD ON USAGE.PRODUCT_ID = PROD.PRODUCT_ID
+                                    LEFT JOIN TBL_SOFT_BRANCH BRU ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
+                                    WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                         $usage_date_field
                                         AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
                                     ) STOCK_RESULT
@@ -355,7 +407,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                         @endphp
                         <tr>
                             <td class="text-center">{{date('d-m-Y',strtotime($from_date))}}</td>
-                            <td colspan="3"> - - - - Opening Stock - - - - </td>
+                            <td colspan="4"> - - - - Opening Stock - - - - </td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center">{{number_format($store_stock,3)}}</td>
@@ -402,6 +456,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <tr class="{{isset($row->document_type)? strtolower(strtoupper($row->document_type)):''}}" style="background: {{$bg}};">
                                 <td class="text-center">{{date('d-m-Y', strtotime($row->document_date))}}</td>
                                 <td class="text-center">{{isset($row->document_type)? $row->document_type:''}}</td>
+                                <td class="text-center">{{isset($row->branch_name)? $row->branch_name:''}}</td>
                                 <td class="text-center"><span class="generate_report" data-id="{{$row->document_id}}" data-type="{{$row->document_type}}">{{isset($row->document_code)? $row->document_code:''}}</span></td>
                                 <td style="font-size: 12px;">
                                     @if($row->bonus_qty_in != null && abs($row->bonus_qty_in) != 0)
@@ -421,20 +476,20 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     @endif
                                 </td>
                                 <td class="text-center">{{$qty_in==0?"":number_format($qty_in,3)}}</td>
-                                {{--<td class="text-center">{{$InRate==0?"":number_format($InRate,3)}}</td>--}}
+                                <td class="text-center">{{$InRate==0?"":number_format($InRate,3)}}</td>
                                 <td class="text-center">{{$qty_out==0?"":number_format($qty_out,3)}}</td>
-                                {{--<td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>--}}
+                                <td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>
                                 <td class="text-center">{{number_format($BalQty,3)}}</td>
                                 {{--<td class="text-center">{{number_format($BalPrice,3)}}</td>--}}
                                 {{--<td class="text-center">{{$expire_date}}</td>--}}
                            </tr>
                         @endforeach
                         <tr class="grand_total">
-                            <td colspan="4" class="rep-font-bold">Total:</td>
+                            <td colspan="5" class="rep-font-bold">Total:</td>
                             <td class="text-center rep-font-bold">{{number_format($totInQty,3)}}</td>
-                            {{--<td class="text-right rep-font-bold"></td>--}}
+                            <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($totOutQty,3)}}</td>
-                            {{--<td class="text-right rep-font-bold"></td>--}}
+                            <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($BalQty,3)}}</td>
                             {{--<td class="text-right rep-font-bold"></td>--}}
                             {{--<td class="text-right rep-font-bold"></td>--}}

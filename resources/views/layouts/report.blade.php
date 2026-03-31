@@ -258,35 +258,36 @@
         var id = $(this).data('id');
         var type = $(this).data('type');
         var path = '';
+        var viewParam = '?view=1';
 
         // accounts
         var accountsTypeList = ['crv','cpv','brv','bpv','jv','obv','lv'];
         if(accountsTypeList.includes(type)) {
-            path = '/accounts/'+type+'/form/'+id;
+            path = '/accounts/'+type+'/form/'+id+viewParam;
         }
 
         // purchase
-        if(type == 'GRN' || type == 'GRNM'){path = '/grn/form/'+id;}
-        if(type == 'PR'){path = '/purchase-return/form/'+id;}
-        if(type == 'PO'){path = '/purchase-order/form/'+id;}
+        if(type == 'GRN' || type == 'GRNM'){path = '/grn/form/'+id+viewParam;}
+        if(type == 'PR'){path = '/purchase-return/form/'+id+viewParam;}
+        if(type == 'PO'){path = '/purchase-order/form/'+id+viewParam;}
         // sale
-        if(type == 'SI'){path = '/sales-invoice/form/'+id;}
-        if(type == 'SR'){path = '/sale-return/form/'+id;}
-        if(type == 'POS'){path = '/pos-sales-invoice/form/'+id;}
-        if(type == 'RPOS'){path = '/pos-sales-return/form/'+id;}
-        if(type == 'SD'){path = '/sales-delivery/form/'+id;}
-        if(type == 'LFS'){path = '/sales-fee/form/'+id;}
-        if(type == 'RI'){path = '/rebate-invoice/form/'+id;}
-        if(type == 'DRF'){path = '/display-rent-fee/form/'+id;}
+        if(type == 'SI'){path = '/sales-invoice/form/'+id+viewParam;}
+        if(type == 'SR'){path = '/sale-return/form/'+id+viewParam;}
+        if(type == 'POS'){path = '/pos-sales-invoice/form/'+id+viewParam;}
+        if(type == 'RPOS'){path = '/pos-sales-return/form/'+id+viewParam;}
+        if(type == 'SD'){path = '/sales-delivery/form/'+id+viewParam;}
+        if(type == 'LFS'){path = '/sales-fee/form/'+id+viewParam;}
+        if(type == 'RI'){path = '/rebate-invoice/form/'+id+viewParam;}
+        if(type == 'DRF'){path = '/display-rent-fee/form/'+id+viewParam;}
         // stock inventory
-        if(type == 'OS'){path = '/stock/opening-stock/form/'+id;}
-        if(type == 'EI'){path = '/stock/expired-items/form/'+id;}
-        if(type == 'ST'){path = '/stock/stock-transfer/form/'+id;}
-        if(type == 'STR'){path = '/stock/stock-receiving/form/'+id;}
-        if(type == 'SA'){path = '/stock/stock-adjustment/form/'+id;}
-        if(type == 'SP'){path = '/stock/sample-items/form/'+id;}
-        if(type == 'DI'){path = '/stock/damaged-items/form/'+id;}
-        if(type == 'IST'){path = '/stock/internal-stock-transfer/form/'+id;}
+        if(type == 'OS'){path = '/stock/opening-stock/form/'+id+viewParam;}
+        if(type == 'EI'){path = '/stock/expired-items/form/'+id+viewParam;}
+        if(type == 'ST'){path = '/stock/stock-transfer/form/'+id+viewParam;}
+        if(type == 'STR'){path = '/stock/stock-receiving/form/'+id+viewParam;}
+        if(type == 'SA'){path = '/stock/stock-adjustment/form/'+id+viewParam;}
+        if(type == 'SP'){path = '/stock/sample-items/form/'+id+viewParam;}
+        if(type == 'DI'){path = '/stock/damaged-items/form/'+id+viewParam;}
+        if(type == 'IST'){path = '/stock/internal-stock-transfer/form/'+id+viewParam;}
 
         if(path != ''){
             window.open(path, "_blank");
