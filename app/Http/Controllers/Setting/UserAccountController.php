@@ -120,15 +120,8 @@ class UserAccountController extends Controller
                 'user_branch' => 'required',
                 'user_type' => 'required',
                 'employee_role_id' => 'required',
-                'password' => [
-                    'required',
-                    'min:8',
-                    'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
-                ],
-            ],
-            [
-                'password.regex' => 'Password must contain at least one uppercase letter, one number, and one special character.',
-            ]);
+            ]
+            );
         }else{
             $validator = Validator::make($request->all(), [
                 'name' => 'required|max:100',
