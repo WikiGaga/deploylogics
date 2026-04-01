@@ -2756,7 +2756,7 @@ class UserReportsController extends Controller
         $token = (string) $request->query('token', '');
         $data = $this->getReportRunFromSession($token) ?? Session::get('data');
         if (empty($data) || empty($data['qry'])) {
-            // abort(404, 'Report session not found.');
+            abort(404, 'Report session not found.');
         }
 
         // Backward compatibility for blades/helpers expecting Session::get('data')
