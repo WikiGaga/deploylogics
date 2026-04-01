@@ -109,7 +109,6 @@ class PasswordController extends Controller
                 'required',
                 'string',
                 'min:8',
-                'confirmed',
                 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
             ],
             'conform_password' => 'required|same:new_password'
@@ -160,7 +159,6 @@ class PasswordController extends Controller
                 'required',
                 'string',
                 'min:8',
-                'confirmed',
                 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
             ],
             'conform_password' => 'required|same:new_password'
@@ -209,7 +207,6 @@ class PasswordController extends Controller
                     'required',
                     'string',
                     'min:8',
-                    'confirmed',
                     'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
                 ],
                 'conform_password' => 'required|same:new_password'
@@ -281,7 +278,6 @@ class PasswordController extends Controller
                 'required',
                 'string',
                 'min:8',
-                'confirmed',
                 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[\W_]).+$/'
             ],
             'conform_password' => 'required|same:new_password'
