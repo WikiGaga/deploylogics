@@ -43,6 +43,7 @@ use App\Models\TblPurcProductBarcode;
 use App\Models\ViewPurcPurchaseOrder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use App\Models\ViewAccoChartAccountHelp;
 use App\Models\TblSoftReportStaticCriteria;
 use Illuminate\Validation\ValidationException;
@@ -54,6 +55,34 @@ class UserReportsController extends Controller
 {
     public static $page_title = 'Reporting';
     //public static $redirect_url = 'user-report';
+
+    private function storeReportRunInSession(array $data): string
+    {
+        $token = (string) Str::uuid();
+
+        $runs = (array) Session::get('report_runs', []);
+        $runs[$token] = $data;
+
+        // Prevent unbounded session growth
+        $maxRuns = 25;
+        if (count($runs) > $maxRuns) {
+            $runs = array_slice($runs, -$maxRuns, null, true);
+        }
+
+        Session::put('report_runs', $runs);
+
+        return $token;
+    }
+
+    private function getReportRunFromSession(?string $token): ?array
+    {
+        if (empty($token)) {
+            return null;
+        }
+        $runs = (array) Session::get('report_runs', []);
+        $run = $runs[$token] ?? null;
+        return is_array($run) ? $run : null;
+    }
 
     /**
      * Display a listing of the resource.
@@ -921,8 +950,9 @@ class UserReportsController extends Controller
 
             $data['qry'] = str_replace(array("\n","\r\n","\r"), ' ', $qry);
 
+            $token = $this->storeReportRunInSession($data);
             session(['data' => $data]);
-            $dataJs['url'] = route( 'reports.view_report');
+            $dataJs['url'] = route('reports.view_report', ['token' => $token]);
 
         }catch (QueryException $e) {
             DB::rollback();
@@ -2416,8 +2446,9 @@ class UserReportsController extends Controller
 
             $data['list'] = $list;
 
+            $token = $this->storeReportRunInSession($data);
             session(['data' => $data]);
-            $dataJs['url'] = route( 'reports.view_report');
+            $dataJs['url'] = route('reports.view_report', ['token' => $token]);
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -2561,11 +2592,25 @@ class UserReportsController extends Controller
     }
 
     public function ViewReport(){
-        $data = Session::get('data');
+        $token = (string) request('token', '');
+        $data = $this->getReportRunFromSession($token) ?? Session::get('data');
+        if (empty($data) || !is_array($data)) {
+            abort(404, 'Report session not found.');
+        }
+
+        // Backward compatibility: existing blades read Session::get('data')
+        Session::put('data', $data);
 
         $requestedFileType = request('form_file_type');
         if (!empty($requestedFileType)) {
             $data['form_file_type'] = $requestedFileType;
+            if (!empty($token)) {
+                $runs = (array) Session::get('report_runs', []);
+                if (isset($runs[$token]) && is_array($runs[$token])) {
+                    $runs[$token] = $data;
+                    Session::put('report_runs', $runs);
+                }
+            }
             Session::put('data', $data);
         }
         /***
@@ -2708,10 +2753,14 @@ class UserReportsController extends Controller
 
     public function export(Request $request)
     {
-        $data = Session::get('data');
+        $token = (string) $request->query('token', '');
+        $data = $this->getReportRunFromSession($token) ?? Session::get('data');
         if (empty($data) || empty($data['qry'])) {
             abort(404, 'Report session not found.');
         }
+
+        // Backward compatibility for blades/helpers expecting Session::get('data')
+        Session::put('data', $data);
 
         $type = strtolower((string)$request->query('type', 'csv'));
         $baseQuery = $data['qry'];
@@ -2789,7 +2838,19 @@ class UserReportsController extends Controller
 
             $data['form_file_type'] = 'pdf';
             Session::put('data', $data);
-            return redirect()->route('reports.view_report', ['form_file_type' => 'pdf', 'limit' => 'All', 'page' => 1]);
+            if (!empty($token)) {
+                $runs = (array) Session::get('report_runs', []);
+                if (isset($runs[$token]) && is_array($runs[$token])) {
+                    $runs[$token] = $data;
+                    Session::put('report_runs', $runs);
+                }
+            }
+            return redirect()->route('reports.view_report', [
+                'token' => $token,
+                'form_file_type' => 'pdf',
+                'limit' => 'All',
+                'page' => 1
+            ]);
         }
 
         @set_time_limit(0);

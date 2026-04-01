@@ -312,7 +312,12 @@
         var exportType = ($(this).data('export') || '').toString().toLowerCase();
         if (!exportType) return false;
 
-        window.open("{{ route('reports.export') }}?type=" + encodeURIComponent(exportType), '_blank');
+        var token = "{{ (string) request('token', '') }}";
+        var url = "{{ route('reports.export') }}?type=" + encodeURIComponent(exportType);
+        if (token) {
+            url += "&token=" + encodeURIComponent(token);
+        }
+        window.open(url, '_blank');
         return false;
     });
 </script>
