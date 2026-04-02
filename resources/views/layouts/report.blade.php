@@ -317,7 +317,23 @@
         if (token) {
             url += "&token=" + encodeURIComponent(token);
         }
-        window.open(url, '_blank');
+
+        if (exportType === 'pdf') {
+            window.open(url, '_blank');
+            return false;
+        }
+
+        var iframeId = 'reportExportFrame';
+        var $existing = $('#' + iframeId);
+        if ($existing.length) {
+            $existing.remove();
+        }
+        var $iframe = $('<iframe>', {
+            id: iframeId,
+            src: url,
+            style: 'display:none;'
+        });
+        $('body').append($iframe);
         return false;
     });
 </script>

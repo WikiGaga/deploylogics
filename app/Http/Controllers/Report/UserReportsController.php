@@ -2755,18 +2755,49 @@ class UserReportsController extends Controller
     {
         $token = (string) $request->query('token', '');
         $data = $this->getReportRunFromSession($token) ?? Session::get('data');
-        if (empty($data) || empty($data['qry'])) {
+        if (empty($data) || !is_array($data)) {
             abort(404, 'Report session not found.');
         }
 
-        // Backward compatibility for blades/helpers expecting Session::get('data')
         Session::put('data', $data);
 
         $type = strtolower((string)$request->query('type', 'csv'));
-        $baseQuery = $data['qry'];
+        $baseQuery = (string)($data['qry'] ?? '');
 
-        $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
-        $total = (int)(DB::select($sqlCount)[0]->total ?? 0);
+        if (empty($baseQuery) && $type !== 'pdf') {
+            $key = (string)($data['key'] ?? '');
+            $list = $data['list'] ?? null;
+            $inventory_stock_keys = ['opening_stock','stock_transfer','stock_adjustment','stock_receiving','expired_items','sample_items','damaged_items',];
+            if (!empty($key) && in_array($key, $inventory_stock_keys, true) && is_array($list)) {
+                if ($type === 'csv') {
+                    return $this->exportInventoryGroupingCsv($key, $list);
+                }
+                return $this->exportInventoryGrouping($key, $list);
+            }
+
+            $data['form_file_type'] = 'xls';
+            Session::put('data', $data);
+            if (!empty($token)) {
+                $runs = (array) Session::get('report_runs', []);
+                if (isset($runs[$token]) && is_array($runs[$token])) {
+                    $runs[$token] = $data;
+                    Session::put('report_runs', $runs);
+                }
+            }
+
+            return redirect()->route('reports.view_report', [
+                'token' => $token,
+                'form_file_type' => 'xls',
+                'limit' => 'All',
+                'page' => 1
+            ]);
+        }
+
+        $total = 0;
+        if (!empty($baseQuery)) {
+            $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
+            $total = (int)(DB::select($sqlCount)[0]->total ?? 0);
+        }
 
         if ($type === 'xlsx' || $type === 'xls') {
             $maxXlsxRows = 50000;
@@ -3103,6 +3134,40 @@ class UserReportsController extends Controller
     }
     public function exportInventoryGrouping($key,$list)
     {
+        [$fieldsKeys, $rows] = $this->getInventoryGroupingExportRows($key, $list);
+        return Excel::download(new \App\Exports\BladeExport($rows,$fieldsKeys), 'report.xlsx');
+    }
+
+    public function exportInventoryGroupingCsv($key, $list)
+    {
+        [$fieldsKeys, $rows] = $this->getInventoryGroupingExportRows($key, $list);
+
+        $fileName = 'report_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+            'Cache-Control' => 'no-store, no-cache',
+        ];
+
+        return response()->streamDownload(function () use ($rows, $fieldsKeys) {
+            $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
+
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, $fieldsKeys);
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+
+            fclose($out);
+        }, $fileName, $headers);
+    }
+
+    private function getInventoryGroupingExportRows($key, $list): array
+    {
         $fieldsKeys = [];
         $fieldsKeys[] = 'Store';
         if($key == 'stock_transfer'){
@@ -3204,7 +3269,7 @@ class UserReportsController extends Controller
                 }
             }
         }
-        return Excel::download(new BladeExport($data,$fieldsKeys), 'report.xlsx');
+        return [$fieldsKeys, $data];
     }
 
     public function getReportData(Request $request)

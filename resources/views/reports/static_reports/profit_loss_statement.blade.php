@@ -682,10 +682,56 @@ $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purch
     @if(isset($data['form_file_type']) && $data['form_file_type'] == 'xls')
         <script>
             $(document).ready(function() {
-                $("#rep_sale_invoice_datatable").table2excel({
-                    // exclude: ".noExport",
-                    filename: "report.xls",
+                var $blocks = $("#kt_portlet_table .kt-portlet__body .row-block");
+                if (!$blocks.length) return;
+
+                var $tmp = $('<table id="pl_export_table" class="table table-bordered"></table>');
+                var maxCols = 6;
+
+                $blocks.each(function () {
+                    var $block = $(this);
+                    var headingText = ($block.find("span.acc_heading").first().text() || "").trim();
+                    var $table = $block.find("table").first();
+                    if (!$table.length) return;
+
+                    if (headingText) {
+                        $tmp.append(
+                            $("<tr></tr>").append(
+                                $('<td colspan="' + maxCols + '"></td>').text(headingText)
+                            )
+                        );
+                    }
+
+                    var $rows = $table.find("tr").clone();
+                    if (!$rows.length) return;
+
+                    var firstRowHasTh = $rows.first().find("th").length > 0;
+                    if (firstRowHasTh) {
+                        $tmp.append($rows.first());
+                        $rows = $rows.slice(1);
+                    }
+
+                    $rows.each(function () {
+                        var $r = $(this);
+                        var cellCount = $r.children("td,th").length;
+                        if (cellCount > 0 && cellCount < maxCols) {
+                            for (var i = cellCount; i < maxCols; i++) {
+                                $r.append("<td></td>");
+                            }
+                        }
+                        $tmp.append($r);
+                    });
+
+                    $tmp.append(
+                        $("<tr></tr>").append(
+                            $('<td colspan="' + maxCols + '"></td>').html("&nbsp;")
+                        )
+                    );
                 });
+
+                $("body").append($tmp.css({ position: "absolute", left: "-10000px", top: "-10000px" }));
+                $("#pl_export_table").table2excel({ filename: "report.xls" });
+                setTimeout(function () { $("#pl_export_table").remove(); }, 1000);
             });
         </script>
     @endif
