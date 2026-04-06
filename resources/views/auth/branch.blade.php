@@ -3,13 +3,13 @@
 
 @section('content')
     <!--begin::Signin-->
-    <div class="login-form login-signin">
+    <div class="login-form login-signin bg-white" style="padding: 2rem; border-radius: 10px;">
         <!--begin::Form-->
         <form class="form" method="POST" action="{{ action('HomeController@branchStore' ) }}" novalidate="novalidate" id="kt_branch_form">
         @csrf
         <!--begin::Title-->
             <div class="pb-13 pt-lg-0 pt-5">
-                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg">Welcome to Malek al Pizza ERP</h3>
+                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg text-center">Welcome to Malek al Pizza ERP</h3>
             </div>
             <!--begin::Title-->
 
