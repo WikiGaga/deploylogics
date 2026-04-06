@@ -8,6 +8,22 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    private static function oracleRowValue($row, string $lowerName)
+    {
+        if ($row === null) {
+            return 0;
+        }
+        $upperName = strtoupper($lowerName);
+        if (isset($row->{$lowerName})) {
+            return $row->{$lowerName};
+        }
+        if (isset($row->{$upperName})) {
+            return $row->{$upperName};
+        }
+
+        return 0;
+    }
+
     public function saleDashboard(Request $request)
     {
         $data = [];
@@ -124,7 +140,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['today_net_sales'] = $result->today_net_sale ?? 0;
+        $data['today_net_sales'] = self::oracleRowValue($result, 'today_net_sale');
 
         $q = "SELECT NVL(SUM(NET_SALES), 0) AS week_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -135,7 +151,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['week_net_sales'] = $result->week_net_sale ?? 0;
+        $data['week_net_sales'] = self::oracleRowValue($result, 'week_net_sale');
 
         $q = "SELECT NVL(SUM(NET_SALES), 0) AS month_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -146,7 +162,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['month_net_sales'] = $result->month_net_sale ?? 0;
+        $data['month_net_sales'] = self::oracleRowValue($result, 'month_net_sale');
 
         $q = "SELECT NVL(SUM(NET_SALES), 0) AS year_net_sale
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -157,7 +173,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['year_net_sales'] = $result->year_net_sale ?? 0;
+        $data['year_net_sales'] = self::oracleRowValue($result, 'year_net_sale');
 
         $q = "SELECT COUNT(DISTINCT ID) AS today_orders
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -167,7 +183,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['today_orders'] = $result->today_orders ?? 0;
+        $data['today_orders'] = self::oracleRowValue($result, 'today_orders');
 
         $q = "SELECT
                 CASE
@@ -182,7 +198,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['avg_bill'] = $result->avg_bill ?? 0;
+        $data['avg_bill'] = self::oracleRowValue($result, 'avg_bill');
 
         $q = "SELECT NVL(SUM(NET_SALES), 0) AS unpaid_bills
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -192,7 +208,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['unpaid_bills'] = $result->unpaid_bills ?? 0;
+        $data['unpaid_bills'] = self::oracleRowValue($result, 'unpaid_bills');
 
         $q = "SELECT NVL(SUM(TOTAL_DISCOUNTS), 0) AS total_discounts
               FROM VW_REST_SUMMARY_ORDER_WISE
@@ -202,7 +218,7 @@ class DashboardController extends Controller
               AND UPPER(ORDER_STATUS) <> 'CANCELED'
               " . $branchFilter;
         $result = DB::selectOne($q);
-        $data['total_discounts'] = $result->total_discounts ?? 0;
+        $data['total_discounts'] = self::oracleRowValue($result, 'total_discounts');
 
         $view['view'] = view('dashboard.restaurant',compact('data'))->render();
 
