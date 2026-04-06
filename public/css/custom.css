@@ -1330,7 +1330,7 @@ div#customer_branch_id-error {
 
 .kt-header-mobile__logo>a,
 .kt-aside__brand .kt-aside__brand-logo-erp>a {
-    display: flex;
+    display: flex !important;
     justify-content: flex-begin;
     color: #fff;
     display: inline-block;
@@ -1348,7 +1348,7 @@ div#customer_branch_id-error {
     display: flex;
     justify-content: flex-begin;
     width: 50px;
-    height: 50px;
+    /* height: 50px; */
     display: inline-block;
     float: left;
 }
