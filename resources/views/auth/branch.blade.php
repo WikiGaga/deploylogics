@@ -9,7 +9,7 @@
         @csrf
         <!--begin::Title-->
             <div class="pb-13 pt-lg-0 pt-5">
-                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg text-center">Welcome to Malek al Pizza ERP</h3>
+                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg text-center">Welcome to <br/> Malek Al-Pizza ERP</h3>
             </div>
             <!--begin::Title-->
 
