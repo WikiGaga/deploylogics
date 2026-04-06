@@ -36,12 +36,7 @@ class StagingService
         $formName = trim($formName);
 
         $criteriaQuery = TblMenuFlowCriteria::with(['flows.actions', 'flows.users', 'flows.designations', 'conditions'])
-            ->active()
-            ->forBusiness(
-                auth()->user()->business_id,
-                auth()->user()->company_id,
-                auth()->user()->branch_id
-            );
+            ->active();
 
         if (is_numeric($formNameOrMenuDtlId)) {
             $criteriaQuery->where(function ($q) use ($formNameOrMenuDtlId, $formName) {
@@ -396,9 +391,6 @@ class StagingService
                         $rq->whereIn('roles.id', $designationIds);
                     });
             });
-            foreach (Utilities::currentBCB() as $condition) {
-                $query->where($condition[0], $condition[1]);
-            }
             $designationUserIds = $query->pluck('id')->toArray();
             $userIds = array_merge($userIds, $designationUserIds);
         }
@@ -409,12 +401,7 @@ class StagingService
             return collect([]);
         }
 
-        $query = User::whereIn('id', $userIds);
-        foreach (Utilities::currentBCB() as $condition) {
-            $query->where($condition[0], $condition[1]);
-        }
-
-        return $query->get();
+        return User::whereIn('id', $userIds)->get();
     }
 
     public function hasStaging($formNameOrMenuDtlId, $formId = null)

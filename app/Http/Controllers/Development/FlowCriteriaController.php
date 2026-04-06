@@ -57,17 +57,11 @@ class FlowCriteriaController extends Controller
         $data['length']   = count($data['action']);
         $data['warranty_period'] = TblPurcWarrentyPeriod::where('warrenty_period_entry_status',1)->get();
 
-        $data['users'] = User::where('business_id', auth()->user()->business_id)
-                             ->where('company_id', auth()->user()->company_id)
-                             ->where('branch_id', auth()->user()->branch_id)
-                             ->select('id', 'name', 'email')
+        $data['users'] = User::select('id', 'name', 'email')
                              ->orderBy('name')
                              ->get();
 
-        $data['roles'] = Role::where('business_id', auth()->user()->business_id)
-                             ->where('company_id', auth()->user()->company_id)
-                             ->where('branch_id', auth()->user()->branch_id)
-                             ->select('id', 'name', 'display_name')
+        $data['roles'] = Role::select('id', 'name', 'display_name')
                              ->orderBy('display_name')
                              ->get();
 
@@ -355,10 +349,7 @@ class FlowCriteriaController extends Controller
     {
         $prefix = 'FC';
 
-        $lastRecord = TblMenuFlowCriteria::where('business_id', auth()->user()->business_id)
-            ->where('company_id', auth()->user()->company_id)
-            ->where('branch_id', auth()->user()->branch_id)
-            ->where('menu_flow_criteria_dtl_id', 'LIKE', $prefix . '-%')
+        $lastRecord = TblMenuFlowCriteria::where('menu_flow_criteria_dtl_id', 'LIKE', $prefix . '-%')
             ->orderBy('menu_flow_criteria_dtl_id', 'DESC')
             ->first();
 
@@ -412,9 +403,6 @@ class FlowCriteriaController extends Controller
             'flows.designations',
             'flows.bypasses'
         ])->where('menu_flow_criteria_id', $id)
-          ->where('business_id', auth()->user()->business_id)
-          ->where('company_id', auth()->user()->company_id)
-          ->where('branch_id', auth()->user()->branch_id)
           ->firstOrFail();
 
         $data['menu'] = TblSoftMenuDtl::all();
@@ -424,17 +412,11 @@ class FlowCriteriaController extends Controller
         $data['length'] = count($data['action']);
         $data['warranty_period'] = TblPurcWarrentyPeriod::where('warrenty_period_entry_status',1)->get();
 
-        $data['users'] = User::where('business_id', auth()->user()->business_id)
-                             ->where('company_id', auth()->user()->company_id)
-                             ->where('branch_id', auth()->user()->branch_id)
-                             ->select('id', 'name', 'email')
+        $data['users'] = User::select('id', 'name', 'email')
                              ->orderBy('name')
                              ->get();
 
-        $data['roles'] = Role::where('business_id', auth()->user()->business_id)
-                             ->where('company_id', auth()->user()->company_id)
-                             ->where('branch_id', auth()->user()->branch_id)
-                             ->select('id', 'name', 'display_name')
+        $data['roles'] = Role::select('id', 'name', 'display_name')
                              ->orderBy('display_name')
                              ->get();
 
@@ -467,9 +449,6 @@ class FlowCriteriaController extends Controller
         }
 
         $flowCriteria = TblMenuFlowCriteria::where('menu_flow_criteria_id', $id)
-            ->where('business_id', auth()->user()->business_id)
-            ->where('company_id', auth()->user()->company_id)
-            ->where('branch_id', auth()->user()->branch_id)
             ->firstOrFail();
 
         DB::beginTransaction();
@@ -532,9 +511,6 @@ class FlowCriteriaController extends Controller
         DB::beginTransaction();
         try {
             $flowCriteria = TblMenuFlowCriteria::where('menu_flow_criteria_id', $id)
-                ->where('business_id', auth()->user()->business_id)
-                ->where('company_id', auth()->user()->company_id)
-                ->where('branch_id', auth()->user()->branch_id)
                 ->first();
 
             if (!$flowCriteria) {
