@@ -91,7 +91,6 @@ class StagingComposer
                 $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
                     ->where('menu_dtl_id', $menuDtlId)
                     ->where('document_id', $formId)
-                    ->where(\App\Library\Utilities::currentBCB())
                     ->orderBy('created_at', 'desc')
                     ->get();
                 $view->with('staging_activity', $activity);
@@ -100,7 +99,6 @@ class StagingComposer
             $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
                 ->where('menu_dtl_id', $menuDtlId)
                 ->where('document_id', $formId)
-                ->where(\App\Library\Utilities::currentBCB())
                 ->orderBy('created_at', 'desc')
                 ->get();
             if ($activity->isNotEmpty()) {

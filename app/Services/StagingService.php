@@ -10,7 +10,6 @@ use App\Models\TblMenuFlowCriteriaFlowDesignation;
 use App\Models\TblSoftMenuDtl;
 use App\Models\User;
 use App\Models\Role;
-use App\Library\Utilities;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -179,9 +178,6 @@ class StagingService
         $query = DB::table($formTableName);
         if ($primaryKey !== null && $formId !== null) {
             $query->where($primaryKey, $formId);
-        }
-        foreach (Utilities::currentBCB() as $condition) {
-            $query->where($condition[0], $condition[1]);
         }
 
         $result = $query->whereRaw($whereClause, $bindings)->exists();
@@ -438,10 +434,6 @@ class StagingService
             ->where('posted', 0)
             ->where('staging_apply', 0);
 
-        foreach (Utilities::currentBCB() as $condition) {
-            $documents->where($condition[0], $condition[1]);
-        }
-
         return $documents->get();
     }
 
@@ -459,10 +451,6 @@ class StagingService
                 ->where('current_stg_id', $flow->stg_flows_id)
                 ->where('posted', 0)
                 ->where('staging_apply', 0);
-
-            foreach (Utilities::currentBCB() as $condition) {
-                $count->where($condition[0], $condition[1]);
-            }
 
             $counts[$flow->stg_flows_id] = $count->count();
         }

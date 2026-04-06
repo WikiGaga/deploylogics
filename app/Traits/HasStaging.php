@@ -51,7 +51,6 @@ trait HasStaging
         return TblStgFormLog::with('action_btn_dtl', 'flow_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
             ->where('menu_dtl_id', $menuDtlId)
             ->where('document_id', $formId)
-            ->where(Utilities::currentBCB())
             ->orderBy('created_at', 'desc')
             ->get();
     }

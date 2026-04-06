@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Services\StagingService;
 use App\Models\TblSoftMenu;
 use App\Models\TblSoftMenuDtl;
-use App\Library\Utilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -84,7 +83,6 @@ class StagingDashboardController extends Controller
 
         $menuIds = array_keys($flowsMenuDtlByMenu);
         $data['menu'] = TblSoftMenu::whereIn('menu_id', $menuIds)
-            ->where(Utilities::currentBC())
             ->orderBy('menu_sorting')
             ->get();
 
@@ -103,10 +101,6 @@ class StagingDashboardController extends Controller
                 ->where('current_stg_id', $flowId)
                 ->where('posted', 0)
                 ->where('staging_apply', 0);
-
-            foreach (Utilities::currentBCB() as $condition) {
-                $query->where($condition[0], $condition[1]);
-            }
 
             return $query->count();
         } catch (\Exception $e) {
