@@ -32,6 +32,9 @@
                 </div>
             </div>
             <div class="kt-portlet__body">
+                <div class="alert alert-info font-weight-bold" role="alert" style="margin-bottom: 1.25rem;">
+                    Mush Login from relevant branch to view its document.
+                </div>
                 @foreach($data['flows'] as $flow)
                     <div class="form-group row" style="background: #eff0ff">
                         <div class="erp-col-form-label col-lg-12">

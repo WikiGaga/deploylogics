@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\StagingService;
+use App\Models\TblSoftBranch;
 use App\Models\TblSoftMenu;
 use App\Models\TblSoftMenuDtl;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -133,6 +135,21 @@ class StagingDashboardController extends Controller
         ];
     }
 
+    protected function branchNameForDocument($branchId, Collection $branchNames): string
+    {
+        if ($branchId === null || $branchId === '') {
+            return '—';
+        }
+        $resolved = $branchNames->get($branchId)
+            ?? $branchNames->get((string) $branchId)
+            ?? $branchNames->get((int) $branchId);
+        if ($resolved !== null) {
+            return $resolved;
+        }
+
+        return (string) $branchId;
+    }
+
     /**
      * Show module list for a specific form
      */
@@ -148,9 +165,10 @@ class StagingDashboardController extends Controller
         $pk = $config['pk'];
 
         $flows = $this->stagingService->getFormFlows($menuDtlId, null, null);
+        $branchNames = TblSoftBranch::query()->pluck('branch_name', 'branch_id');
         $flowsMenuDtl = [
-            'cols' => $config['cols'],
-            'titles' => $config['titles'],
+            'cols' => array_merge(['_branch_display'], $config['cols']),
+            'titles' => array_merge(['Branch'], $config['titles']),
         ];
 
         foreach ($flows['all'] as $flow) {
@@ -166,6 +184,8 @@ class StagingDashboardController extends Controller
                 foreach ($documents as $doc) {
                     $arr = is_array($doc) ? $doc : (array) $doc;
                     $row = [];
+                    $branchId = $arr['branch_id'] ?? $arr['BRANCH_ID'] ?? null;
+                    $row['_branch_display'] = $this->branchNameForDocument($branchId, $branchNames);
                     foreach ($config['cols'] as $col) {
                         $row[$col] = $arr[$col] ?? $arr[strtoupper($col)] ?? '';
                     }
