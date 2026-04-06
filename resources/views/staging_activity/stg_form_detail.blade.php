@@ -33,7 +33,7 @@
             </div>
             <div class="kt-portlet__body">
                 <div class="alert alert-info font-weight-bold" role="alert" style="margin-bottom: 1.25rem;">
-                    Mush Login from relevant branch to view its document.
+                    Mush Login from relevant branch to view its document. If branch not listed, please contact administrator.
                 </div>
                 @foreach($data['flows'] as $flow)
                     <div class="form-group row" style="background: #eff0ff">
