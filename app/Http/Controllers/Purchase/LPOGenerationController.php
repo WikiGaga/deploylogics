@@ -89,6 +89,7 @@ class LPOGenerationController extends Controller
                 ->where('demand_approval_dtl_entry_status',1)
                 ->orderBy('sr_no' , 'asc')
                 ->get();
+                dd($data['all']);
             foreach ($data['all'] as $item) {
                 if(!isset($item->supplier_id)){
                     $rateData = TblPurcProductBarcodePurchRate::where('product_barcode_barcode', $item->product_barcode_barcode)
@@ -362,6 +363,7 @@ class LPOGenerationController extends Controller
 
     public function filterData($arr){
         $data = [];
+
 
         $data['fc_rate'] = isset($arr->tbl_purc_grn_dtl_fc_rate) ? $arr->tbl_purc_grn_dtl_fc_rate : 0;
         $data['purc_rate'] = isset($arr->product_barcode_purchase_rate) ? $arr->product_barcode_purchase_rate : (isset($arr->tbl_purc_grn_dtl_rate) ? $arr->tbl_purc_grn_dtl_rate : 0);

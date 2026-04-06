@@ -99,6 +99,7 @@ return array (
   'send_via_whatsapp' => 'Click Here to Send via Whatsapp!',
   'toggle_rtl' => 'Toggle Right-to-Left Layout',
   'product' => 'Product',
+  'product_foc_supplier' => 'Product FOC Supplier',
   'product_short_name' => 'Product Short Name',
   'local_name' => 'Local Name',
   'local_short_name' => 'Local Short Name',

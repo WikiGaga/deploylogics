@@ -37,6 +37,7 @@ use App\Models\TblPurcProductFOC;
 use App\Models\TblPurcProductItemTag;
 use App\Models\TblPurcProductLife;
 use App\Models\TblPurcProductSpecificationTag;
+use App\Models\TblPurcProductSupplier;
 use App\Models\TblPurcProductType;
 use App\Models\TblPurcPurchaseOrderDtl;
 use App\Models\TblPurcRateCategory;
@@ -159,6 +160,7 @@ class ProductCardController extends Controller
         $data['weight'] = TblDefiWeight::where('weight_entry_status',1)->where(Utilities::currentBC())->get();
         $data['tax_group'] = TblDefiTaxGroup::where('tax_group_entry_status',1)->where(Utilities::currentBC())->get();
         $data['gst_clac'] = TblDefiGSTCalculation::where('gst_calculation_entry_status',1)->where(Utilities::currentBC())->get();
+        $data['purchase_supplier'] = TblPurcProductSupplier::with('supplier')->where('product_id','LIKE',$id)->orderBy('id')->get();
         $arr = [
             'biz_type' => 'business',
             'code' => $data['document_code'],
@@ -184,6 +186,7 @@ class ProductCardController extends Controller
             'product_name' => 'required|max:100',
             'product_control_group' => 'required|not_in:0',
             'product_item_type' => 'required|not_in:0',
+            'purchase_supplier.*.supplier_id' => 'required_with:purchase_supplier.*.branch_id|not_in:0',
         ],[
             'product_name.required' => 'Product Name is required',
             'product_name.max' => 'Product Name max length 100',
@@ -191,6 +194,8 @@ class ProductCardController extends Controller
             'product_control_group.not_in' => 'Product group is required',
             'product_item_type.required' => 'Product type is required',
             'product_item_type.not_in' => 'Product type is required',
+            'purchase_supplier.*.supplier_id.required_with' => 'Supplier are required for the branches',
+            'purchase_supplier.*.supplier_id.not_in' => 'Supplier is required when branch is selected',
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
@@ -201,6 +206,8 @@ class ProductCardController extends Controller
             }
             return $this->jsonErrorResponse($data, $msg, 200);
         }
+
+        // dd($request->toArray());
 
         $referer = Utilities::getReferer($request,$id);
         if($referer == $this->page_view){
@@ -529,6 +536,21 @@ class ProductCardController extends Controller
                     $key_barcode_data = $key_barcode_data + 1;
                 } // end loop barcode insert and update
             }
+
+            if(isset($product_supplier)){
+                TblPurcProductSupplier::where('product_id',$form_id)->where(Utilities::currentBC())->delete();
+                foreach ($product_supplier as $supplier){
+                    if(!empty($supplier['supplier_id']) && !empty($supplier['branch_id'])) {
+                        TblPurcProductSupplier::create([
+                            'id' => Utilities::uuid(),
+                            'product_id' => $form_id,
+                            'supplier_id' => $supplier['supplier_id'],
+                            'branch_id' => $supplier['branch_id'],
+                        ]);
+                    }
+                }
+            }
+
             $form_data = TblPurcProduct::with('product_life','specification_tags','item_tags','product_foc','product_barcode')->where('product_id',$form_id)->where(Utilities::currentBC())->first()->toArray();
             $log = [
                 'menu_dtl_id' => self::$menu_dtl_id,

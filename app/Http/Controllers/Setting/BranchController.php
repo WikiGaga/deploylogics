@@ -85,11 +85,12 @@ class BranchController extends Controller
      */
     public function store(Request $request, $id = null)
     {
+        // dd($request->file('branch_profile'));
         $data = [];
         $validator = Validator::make($request->all(), [
             'branch_name' => 'required|max:50',
             'branch_short_name' => 'required|max:20',
-            'branch_email' => 'required|max:50'
+            'branch_email' => 'required|max:50',
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
@@ -128,13 +129,18 @@ class BranchController extends Controller
             $branch->branch_land_line_no = $request->branch_land_line_no;
             $branch->branch_fax = $request->branch_fax;
 
-            if($request->hasFile('branch_profile'))
-            {
+
+            if ($request->hasFile('branch_profile')) {
                 $image = $request->file('branch_profile');
                 $filename = time() . '.' . $image->getClientOriginalExtension();
-                $path = public_path('/images/' . $filename);
-                Image::make($image->getRealPath())->resize(200, 200)->save($path);
-                $branch->branch_logo = isset($filename)?$filename:'';
+
+                $path = public_path('images/' . $filename);
+
+                Image::make($image->getRealPath())
+                    ->resize(200, 200)
+                    ->save($path);
+
+                $branch->branch_logo = $filename;
             }
 
             $branch->branch_address = $request->branch_address;

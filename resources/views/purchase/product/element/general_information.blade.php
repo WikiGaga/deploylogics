@@ -388,6 +388,13 @@
 <div class="row form-group-block">
     <div class="col-lg-12">
         <label><b>{{ __('message.product_supplier') }}:</b></label>
+        @include('purchase.product.element.purchase_supplier')
+    </div>
+</div>
+
+<div class="row form-group-block">
+    <div class="col-lg-12">
+        <label><b>{{ __('message.product_foc_supplier') }}:</b></label>
         @include('purchase.product.element.purchase_foc')
     </div>
 </div>

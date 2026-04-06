@@ -2,13 +2,14 @@
 @section('title', 'Login')
 @section('content')
     <!--begin::Signin-->
-    <div class="login-form login-signin">
+    <div class="login-form login-signin bg-white" style="padding: 2rem; border-radius: 10px;">
         <!--begin::Form-->
         <form class="form" method="POST" action="{{ route('login') }}" novalidate="novalidate" id="kt_login_signin_form">
         @csrf
         <!--begin::Title-->
-            <div class="pb-13 pt-lg-0 pt-5">
-                <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg">Welcome to Deploy ERP</h3>
+            <div class="pb-4 pt-lg-0 pt-5 text-center">
+                <img src="{{ asset('images/malek-al-pizza.png') }}" class="max-h-70px mb-5" alt=""/>
+                {{-- <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg text-center">Login</h3> --}}
                 {{--<span class="text-muted font-weight-bold font-size-h4">New Here? <a href="javascript:;" id="kt_login_signup" class="text-primary font-weight-bolder">Create an Account</a></span>--}}
             </div>
             <!--begin::Title-->

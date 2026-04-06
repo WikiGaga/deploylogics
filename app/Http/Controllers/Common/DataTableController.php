@@ -455,6 +455,7 @@ class DataTableController extends Controller
                 "demand_approval_dtl_code" => "Code",
                 "demand_approval_dtl_approve_status" => "Status",
                 "demand_codes" => "Demand Codes",
+                "branch_names" => "Branch Names"
             ];
         }
         if ($helpType == "pendingPR") {
@@ -653,7 +654,8 @@ class DataTableController extends Controller
             $keyid = 'demand_approval_dtl_id';
             $where = 'where ';
             $where .= " business_id = " . auth()->user()->business_id;
-            $where .= " and branch_id = " . auth()->user()->branch_id;
+            // $where .= " and branch_id = " . auth()->user()->branch_id;
+            $where .= " and demand_approval_dtl_approve_status = 'approved'";
             $columns = "demand_approval_dtl_id,demand_approval_dtl_code,demand_approval_dtl_approve_status,demand_approval_dtl_date";
             if (!empty($str)) {
                 $str = strtoupper($str);
@@ -678,22 +680,34 @@ class DataTableController extends Controller
 
             foreach ($lists as $list) {
                 $demand_approval_dtl_id = $list->demand_approval_dtl_id;
-                $qry = "select dap.demand_approval_dtl_date,d.DEMAND_NO
+                $qry = "select dap.demand_approval_dtl_date, d.DEMAND_NO, b.branch_short_name
                         from tbl_purc_demand_approval_dtl dap
                         join tbl_purc_demand d on d.DEMAND_ID = dap.DEMAND_ID
+                        join tbl_soft_branch b on b.branch_id = dap.branch_id
                         where dap.demand_approval_dtl_id = $demand_approval_dtl_id
-                        GROUP BY(dap.demand_approval_dtl_date,d.DEMAND_NO)
-                        order by dap.demand_approval_dtl_date desc,d.DEMAND_NO asc FETCH FIRST 50 ROWS ONLY";
+                        GROUP BY dap.demand_approval_dtl_date, d.DEMAND_NO, b.branch_short_name
+                        order by dap.demand_approval_dtl_date desc, d.DEMAND_NO asc
+                        FETCH FIRST 50 ROWS ONLY";
+
                 $notes = DB::select($qry);
+
                 $demand_codes = "";
+                $branch_names = "";
+
                 $last = count($notes) - 1;
+
                 foreach ($notes as $k => $note) {
                     $demand_codes .= $note->demand_no;
+                    $branch_names .= $note->branch_short_name;
+
                     if ($last != $k) {
                         $demand_codes .= ", ";
+                        $branch_names .= ", ";
                     }
                 }
+
                 $list->demand_codes = $demand_codes;
+                $list->branch_names = $branch_names;
                 $data['list'][] = $list;
             }
         }

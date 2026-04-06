@@ -102,7 +102,7 @@
                         <div class="kt-grid__item kt-grid__item--fluid kt-wizard-v1__wrapper">
 
                             <!--begin: Form Wizard Form-->
-                            <form class="kt-form" id="kt_form" method="post" action="{{ action('Setting\BranchController@store', isset($id)?$id:"") }}">
+                            <form class="kt-form" id="kt_form" enctype="multipart/form-data" method="post" action="{{ action('Setting\BranchController@store', isset($id)?$id:"") }}">
                                 @csrf
                                 <!--begin: Form Wizard Step 1-->
                                     <div class="kt-wizard-v1__content" data-ktwizard-type="step-content" data-ktwizard-state="current">
