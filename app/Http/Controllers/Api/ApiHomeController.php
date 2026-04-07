@@ -289,6 +289,89 @@ class ApiHomeController extends ApiController
     }
 
 
+    public function add_attendance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'emp_id'          => 'required',
+            'attendance_time' => 'required',
+            'attendance_type' => 'required', // e.g., 'Check-In' or 'Check-Out'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Wrap in a transaction to ensure data integrity
+        return DB::transaction(function () use ($request) {
+            
+            $employee_id = $request->input('emp_id');
+            $att_date = date('Y-m-d', strtotime($request->attendance_time));
+            $att_full_time = date('Y-m-d H:i:s', strtotime($request->attendance_time));
+
+            // 1. Verify Employee exists
+            $employee = DB::table('tbl_payr_employee')
+                ->where('employee_id', $employee_id)
+                ->first();
+
+            if (!$employee) {
+                return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
+            }
+
+            //  dd($request->all(), $att_date);
+            // 2. Check if the Main Attendance Header exists for this date
+            // Fixed the syntax error from ->?id to a safe check
+            $attendance_header = DB::table('Tbl_hr_attendence')
+                ->where('att_date', $att_date)
+                ->first();
+
+                // dd($attendance_header);
+
+            if (!$attendance_header) {
+                // Create Header if it doesn't exist
+                // Using insertGetId is better than max() + 1
+                $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
+
+                DB::table('Tbl_hr_attendence')->insert([
+                    'id' => $att_id,
+                    'att_date'    => $att_date,
+                    'business_id' => $employee->business_id,
+                    'company_id'  => $employee->company_id,
+                    'branch_id'   => $employee->branch_id,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            } else {
+                $att_id = $attendance_header->id;
+            }
+
+            $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+            // 3. Insert into Attendance Detail
+            $detail_data = [
+                'id'=>$p_id, 
+                'emp_id'          => $employee_id,
+                'attendance_date' => $att_date,
+                'attendance_time' => $att_full_time,
+                'attendance_type' => $request->attendance_type,
+                'shift_id'        => 1,
+                'att_id'          => $att_id,
+                'created_at'      => now(),
+                'updated_at'      => now()
+            ];
+
+            DB::table('Tbl_hr_attendence_dtl')->insert($detail_data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance logged successfully.',
+                'type'    => $request->attendance_type,
+                'time'    => $att_full_time
+            ], 200);
+        });
+    }
     /**
      * Display a listing of the resource.
      *
