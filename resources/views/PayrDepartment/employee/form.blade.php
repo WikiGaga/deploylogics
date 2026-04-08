@@ -161,6 +161,7 @@
                             @include('PayrDepartment.employee.tab_termination')
                         </div>{{-- Termination --}}
                         <div class="tab-pane" id="salary_details" role="tabpanel">
+                             @include('PayrDepartment.employee.tab_salary')
                         </div>{{-- Salary Details--}}
                         <div class="tab-pane" id="educational_detail" role="tabpanel">
                             @include('PayrDepartment.employee.tab_educational')

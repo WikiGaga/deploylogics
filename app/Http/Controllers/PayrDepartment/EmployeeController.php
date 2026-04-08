@@ -81,6 +81,8 @@ class EmployeeController extends Controller
                 $data['current'] = TblHrEmployee::with('language','educational','employment','insurance','bank','experience')->where('employee_id',$id)->first();
                 $data['local_cities'] = $this->CityCurrent($data['current']->employee_local_country_id,true);
                 $data['permanent_cities'] = $this->CityCurrent($data['current']->employee_permanent_country_id,true);
+                $data['employee_allowance'] = DB::table('Tbl_hr_employee_allowance')->where('employee_id',$id)->get();
+
             }else{
                 abort('404');
             }
@@ -109,10 +111,13 @@ class EmployeeController extends Controller
         $data['termination_type'] = config('constants.termination.type');
         $data['termination_status'] = config('constants.termination.status');
         $data['blood_group'] = config('constants.blood_group');
+        $data['allowance'] = DB::table('tbl_hr_allowance')->where($this->currentBusinessCompanyBranch)->get();
+        $data['employee_allowance'] = [];
 
         $data['form_type'] = 'employee';
         $data['menu_id'] = self::$menu_dtl_id;
         // dd($data['gender'],$this->currentBusinessCompanyBranch);
+        
         return view('PayrDepartment.employee.form',compact('data'));
     }
 
