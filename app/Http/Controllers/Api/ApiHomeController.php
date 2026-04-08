@@ -224,71 +224,160 @@ class ApiHomeController extends ApiController
             'Data' => $Employee,
         ], 200); // Use 200 OK HTTP status
     }
-   public function update_employee_face(Request $request)
-    {
+//    public function update_employee_face(Request $request)
+//     {
 
-        $validator = Validator::make($request->all(), [
-             'emp_id'    => 'required',
-             'attendance_image'    => 'required',
-             'image_embeded_code'    => 'required',
+//         $validator = Validator::make($request->all(), [
+//              'emp_id'    => 'required',
+//              'attendance_image'    => 'required',
+//              'image_embeded_code'    => 'required',
              
+//         ]);
+
+//         if ($validator->fails()) {
+//             return response()->json([
+//                 'status' => false,
+//                 'message' => 'Validation error',
+//                 'errors' => $validator->errors()
+//             ], 422);
+//         }
+
+//         $employee_id = $request->input('emp_id');
+
+//         $Employee = DB::table('tbl_payr_employee')
+//         ->where('employee_id', $employee_id)
+//         ->first();
+
+
+//         if (empty($Employee)) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Employee not found.',
+//             ], 404); // Use 404 Not Found HTTP status
+//         }
+
+//         $attendance_image=NULL;
+//         if($request->hasFile('attendance_image'))
+//         {
+//             $folder = 'images/employee_face/';
+//             if (! File::exists($folder)) {
+//                 File::makeDirectory($folder, 0775, true,true);
+//             }
+//             $image = $request->file('attendance_image');
+//             $filename = time() . '.' . $image->getClientOriginalExtension();
+//             $path = public_path($folder . $filename);
+//             Image::make($image->getRealPath())->save($path);
+//             $attendance_image = isset($filename)?$filename:'';
+//         }
+
+        
+
+//         $data=['attendance_image'=>$attendance_image, 'image_embeded_code'=>$request->image_embeded_code,'REGISTER_STATUS'=>1];
+
+//         // dd($data);
+
+//         $Employee = DB::table('tbl_payr_employee')
+//          ->where('employee_id', $employee_id)
+//         ->UPDATE(  $data );
+
+//         // 3. Return the user data as a JSON response
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'User data update successfully.',
+//             'Data' => $Employee,
+//         ], 200); // Use 200 OK HTTP status
+//     }
+
+
+    public function update_employee_face(Request $request)
+    {
+        // 1. Validation
+        $validator = Validator::make($request->all(), [
+            'emp_id'             => 'required',
+            'attendance_image'   => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            'image_embeded_code' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
         $employee_id = $request->input('emp_id');
 
-        $Employee = DB::table('tbl_payr_employee')
-        ->where('employee_id', $employee_id)
-        ->first();
+        // 2. Check if Employee exists
+        $employee = DB::table('tbl_payr_employee')
+            ->where('employee_id', $employee_id)
+            ->first();
 
-
-        if (empty($Employee)) {
+        if (!$employee) {
             return response()->json([
                 'success' => false,
                 'message' => 'Employee not found.',
-            ], 404); // Use 404 Not Found HTTP status
+            ], 404);
         }
 
-        $attendance_image=NULL;
-        if($request->hasFile('attendance_image'))
-        {
-            $folder = 'images/employee_face/';
-            if (! File::exists($folder)) {
-                File::makeDirectory($folder, 0775, true,true);
+        $attendance_image = null;
+
+        // 3. Handle File Upload
+        if ($request->hasFile('attendance_image')) {
+            try {
+                $image = $request->file('attendance_image');
+                $folder = 'images/employee_face';
+                $destinationPath = public_path($folder);
+
+                // Create directory if it doesn't exist
+                if (!File::exists($destinationPath)) {
+                    File::makeDirectory($destinationPath, 0777, true, true);
+                }
+
+                $filename = time() . '_' . $employee_id . '.' . $image->getClientOriginalExtension();
+
+                // Use native move() instead of Intervention Image to bypass permission locks
+                $image->move($destinationPath, $filename);
+                
+                $attendance_image = $filename;
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File upload failed: ' . $e->getMessage(),
+                ], 500);
             }
-            $image = $request->file('attendance_image');
-            $filename = time() . '.' . $image->getClientOriginalExtension();
-            $path = public_path($folder . $filename);
-            Image::make($image->getRealPath())->save($path);
-            $attendance_image = isset($filename)?$filename:'';
         }
 
-        
+        // 4. Update Database
+        $data = [
+            'attendance_image'   => $attendance_image, 
+            'image_embeded_code' => $request->image_embeded_code,
+            'REGISTER_STATUS'    => 1,
+            'updated_at'         => now()
+        ];
 
-        $data=['attendance_image'=>$attendance_image, 'image_embeded_code'=>$request->image_embeded_code,'REGISTER_STATUS'=>1];
+        try {
+            DB::table('tbl_payr_employee')
+                ->where('employee_id', $employee_id)
+                ->update($data);
 
-        // dd($data);
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee face updated successfully.',
+                'data'    => [
+                    'image_name' => $attendance_image,
+                    'emp_id'     => $employee_id
+                ]
+            ], 200);
 
-        $Employee = DB::table('tbl_payr_employee')
-         ->where('employee_id', $employee_id)
-        ->UPDATE(  $data );
-
-        // 3. Return the user data as a JSON response
-        return response()->json([
-            'success' => true,
-            'message' => 'User data update successfully.',
-            'Data' => $Employee,
-        ], 200); // Use 200 OK HTTP status
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Database update failed: ' . $e->getMessage(),
+            ], 500);
+        }
     }
-
-
     public function add_attendance(Request $request)
     {
         $validator = Validator::make($request->all(), [
