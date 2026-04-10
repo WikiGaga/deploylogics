@@ -186,16 +186,13 @@ class ProductCardController extends Controller
             'product_name' => 'required|max:100',
             'product_control_group' => 'required|not_in:0',
             'product_item_type' => 'required|not_in:0',
-            'purchase_supplier.*.supplier_id' => 'required_with:purchase_supplier.*.branch_id|not_in:0',
         ],[
             'product_name.required' => 'Product Name is required',
             'product_name.max' => 'Product Name max length 100',
             'product_control_group.required' => 'Product group is required',
             'product_control_group.not_in' => 'Product group is required',
             'product_item_type.required' => 'Product type is required',
-            'product_item_type.not_in' => 'Product type is required',
-            'purchase_supplier.*.supplier_id.required_with' => 'Supplier are required for the branches',
-            'purchase_supplier.*.supplier_id.not_in' => 'Supplier is required when branch is selected',
+            'product_item_type.not_in' => 'Product type is required'
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
