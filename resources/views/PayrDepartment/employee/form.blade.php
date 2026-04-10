@@ -239,6 +239,13 @@
                 }
             }
         });
+        $('#registerSwitch').on('change', function() {
+            if($(this).is(':checked')) {
+                $(this).next('label').text('Registered');
+            } else {
+                $(this).next('label').text('Not Registered');
+            }
+        });
         $(document).on('change','.religion,.designation,.grade',function(e){
             e.preventDefault();
             var formData = {

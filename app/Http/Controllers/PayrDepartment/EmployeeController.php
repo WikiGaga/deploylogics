@@ -129,7 +129,7 @@ class EmployeeController extends Controller
      */
     public function store(Request $request,$id = null)
     {
-       // dd($request->toArray());
+    //    dd($request->toArray());
         $data = [];
         $validator = Validator::make($request->all(), [
             'employee_name' => 'required|max:100'
@@ -151,6 +151,7 @@ class EmployeeController extends Controller
             $employee->employee_name = $request->employee_name;
             $employee->employee_arabic_name = $request->employee_arabic_name;
             $employee->employee_fh_name = $request->employee_fh_name;
+            $employee->register_status = $request->register_status;
             $employee->employee_date = isset($request->employee_date) ? date('Y-m-d', strtotime($request->employee_date)) : date('Y-m-d' , time());
             if($request->hasFile('employee_img'))
             {
