@@ -77,7 +77,7 @@
                         
       <tr class="form-row-repeater">
         <td>
-          <select name="type[]" class="type-select" required>
+          <select name="type[]" class="type-select" > <!-- //required -->
             <option value="">Select Type</option>
             @foreach($data['allowance'] as $allowance)
             <option value="{{ $allowance->name }}" data-type="{{ $allowance->type }}">{{ $allowance->name }}</option>

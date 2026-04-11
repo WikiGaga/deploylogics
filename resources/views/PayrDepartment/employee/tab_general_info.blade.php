@@ -18,6 +18,7 @@
         $id_no = $current->employee_id_no;
         $cpr_no = $current->employee_cpr_no;
         $eobi_no = $current->employee_eobi_no;
+        $register_status = $current->register_status;
         $language_id = 0;
     }
 @endphp
@@ -175,4 +176,29 @@
             </div>
         </div>
     </div>
+    <div class="col-lg-6">
+        <div class="row">
+            <label class="col-lg-6 erp-col-form-label" for="register_status">Registration Status</label>
+            <div class="col-lg-6">
+                <div class="custom-control custom-switch">
+                <input type="hidden" name="register" value="0">
+        
+                <input type="checkbox" 
+                    name="register" 
+                    class="custom-control-input" 
+                    id="registerSwitch" 
+                    value="1" 
+                    {{ $register_status == 1 ? 'checked' : '' }}>
+                
+                <label class="custom-control-label" for="registerSwitch">
+                    {{ $register_status == 1 ? 'Registered' : 'Not Registered' }}
+                </label>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>{{-- /row --}}
+
+    
+{{-- /row --}}
+
