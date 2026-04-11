@@ -133,6 +133,7 @@
                             <th></th>
                             <th></th>
                             <th></th>
+                            <th></th>
                             <th>...::: ( OPENING BALANCE ) :::...</th>
                             <th></th>
                             @if($data['al_ref_acc_toggle'] == 1) <th></th> @endif
