@@ -96,7 +96,7 @@
             <div class="row row-block">
                 <div class="col-lg-12">
                     @php
-                        $colspan = 5;
+                        $colspan = 6;
                     @endphp
                     <table width="100%" id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                         <thead>
@@ -105,6 +105,7 @@
                                 <th style="width: 100px;">Date</th>
                                 <th style="width: 125px;">Voucher No#</th>
                                 <th style="width: 125px;">Vendor / Reference</th>
+                                <th style="width: 125px;">Entered By</th>
                                 <th>Description</th>
                                 @if($data['al_ref_acc_toggle'] == 1)
                                     @php $colspan += 1; @endphp
@@ -252,6 +253,7 @@
                                 <td style="color:{{$color}}">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$list->voucher_date))))}}</td>
                                 <td><span style="color:{{$color}}" class="generate_report" data-id="{{$print_id}}" data-type="{{$list->voucher_type}}">{{$list->voucher_no}}</span></td>
                                 <td style="color:{{$color}}">{{ $vendor_name }} <br> {{$list->contra_chart_name}}</td>
+                                <td style="color:{{$color}}">{{ $list->user_name }}</td>
                                 <td style="color:{{$color}}">{{ trim($list->voucher_descrip) }} {{ trim($list->voucher_notes) }}</td>
                                 @if($data['al_ref_acc_toggle'] == 1) <td style="color:{{$color}}">{{$list->chart_name_ref_account}}</td> @endif
                                 @if($data['al_vat_amount_toggle'] == 1) <td class="text-right" style="color:{{$color}}">{{($list->vat_amount == null)?"":number_format($list->vat_amount,3)}}</td> @endif
