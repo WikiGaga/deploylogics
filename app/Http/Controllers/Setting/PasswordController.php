@@ -120,8 +120,8 @@ class PasswordController extends Controller
         }
         DB::beginTransaction();
         try{
-            $user = User::where('id',$id)->where('user_type','erp')->where('user_entry_status',1)->where(Utilities::currentBC())->first();
-            if(!Hash::check($request->old_password,$user->password)){
+            $user = User::where('id',$id)->where(Utilities::currentBC())->first();
+            if(!Hash::check($request->old_password,$user->new_password)){
                 return $this->returnjsonerror("Old Password Not Correct ",201);
             }
             $user->password = Hash::make($request->new_password);
