@@ -38,6 +38,7 @@ class TblPurcProduct extends Model
         return $this->belongsTo(ViewPurcGroupItem::class,'group_item_id')->select(['group_item_id','group_item_name_string']);
     }
     public function supplier(){
-        return $this->belongsTo(TblPurcSupplier::class , 'supplier_id');
+        return $this->belongsTo(TblPurcProductSupplier::class , 'supplier_id');
+        // ->where('branch_id', auth()->user()->branch_id);
     }
 }

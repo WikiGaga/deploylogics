@@ -161,6 +161,7 @@ class ProductCardController extends Controller
         $data['tax_group'] = TblDefiTaxGroup::where('tax_group_entry_status',1)->where(Utilities::currentBC())->get();
         $data['gst_clac'] = TblDefiGSTCalculation::where('gst_calculation_entry_status',1)->where(Utilities::currentBC())->get();
         $data['purchase_supplier'] = TblPurcProductSupplier::with('supplier')->where('product_id','LIKE',$id)->orderBy('id')->get();
+        // dd($data['purchase_supplier']);
         $arr = [
             'biz_type' => 'business',
             'code' => $data['document_code'],
@@ -534,9 +535,9 @@ class ProductCardController extends Controller
                 } // end loop barcode insert and update
             }
 
-            if(isset($product_supplier)){
-                TblPurcProductSupplier::where('product_id',$form_id)->where(Utilities::currentBC())->delete();
-                foreach ($product_supplier as $supplier){
+            if(isset($request->purchase_supplier)){
+                TblPurcProductSupplier::where('product_id',$form_id)->delete();
+                foreach ($request->purchase_supplier as $supplier){
                     if(!empty($supplier['supplier_id']) && !empty($supplier['branch_id'])) {
                         TblPurcProductSupplier::create([
                             'id' => Utilities::uuid(),
