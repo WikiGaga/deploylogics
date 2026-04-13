@@ -26,16 +26,62 @@
 
     <script>
     (function() {
-        $(document).on('click', '.stg-action-disabled', function(e) {
+        document.addEventListener('click', function(e) {
+            var el = e.target && e.target.closest && e.target.closest('.stg-action-disabled');
+            if (!el) return;
             e.preventDefault();
-            var msg = $(this).data('stg-not-allowed') || 'Not allowed';
+            var msg = el.getAttribute('data-stg-not-allowed') || 'Not allowed';
             if (window.toastr && typeof window.toastr.error === 'function') {
                 window.toastr.error(msg);
             } else {
                 alert(msg);
             }
-            return false;
+        }, true);
+
+        function formHasStagingActions(form) {
+            return form && form.querySelector && form.querySelector('.staging-action-btn');
+        }
+
+        function markDirtyIfStagingForm(form) {
+            if (formHasStagingActions(form)) {
+                form.setAttribute('data-staging-dirty', '1');
+            }
+        }
+
+        function markStagingFormDirty(ev) {
+            var t = ev.target;
+            if (!t || !t.closest) return;
+            if (ev.type === 'keyup' && t.tagName && !/^(INPUT|TEXTAREA|SELECT)$/i.test(t.tagName)) return;
+            var form = t.closest('form');
+            markDirtyIfStagingForm(form);
+        }
+
+        document.addEventListener('change', markStagingFormDirty, true);
+        document.addEventListener('change', markStagingFormDirty, false);
+        document.addEventListener('input', markStagingFormDirty, true);
+        document.addEventListener('keyup', markStagingFormDirty, true);
+
+        window.addEventListener('load', function() {
+            if (!window.jQuery) return;
+            var $ = window.jQuery;
+            function formFromSelect(el) {
+                if (!el) return null;
+                return el.form || (el.closest && el.closest('form'));
+            }
+            $(document).on('change', 'select', function() {
+                markDirtyIfStagingForm(formFromSelect(this));
+            });
+            $(document).on('select2:select select2:clear select2:unselect', 'select', function() {
+                markDirtyIfStagingForm(formFromSelect(this));
+            });
         });
+
+        document.addEventListener('mousedown', function(ev) {
+            var btn = ev.target && ev.target.closest && ev.target.closest('.staging-action-btn');
+            if (!btn || !btn.form) return;
+            var code = (btn.getAttribute('data-staging-action-code') || '').toLowerCase();
+            btn.form.setAttribute('data-staging-last-action-code', code);
+        }, true);
     })();
     </script>
 @endif

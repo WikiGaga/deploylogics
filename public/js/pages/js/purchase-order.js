@@ -50,8 +50,34 @@ var KTFormWidgets = function () {
 
             },
             submitHandler: function (form) {
-                var formData = new FormData(form);
                 var stagingFlowId = form.querySelector('input[name=current_flow_id]');
+                function stagingUserCanSave(frm) {
+                    var buttons = frm.querySelectorAll('.staging-action-btn[data-staging-action-code]');
+                    for (var i = 0; i < buttons.length; i++) {
+                        var c = (buttons[i].getAttribute('data-staging-action-code') || '').toLowerCase();
+                        if (c === 'save' || c === 'create' || c === 'edit') return true;
+                    }
+                    return false;
+                }
+                function stagingActionCodeForSubmit(frm) {
+                    var el = document.activeElement;
+                    if (el && el.classList && el.classList.contains('staging-action-btn')) {
+                        return (el.getAttribute('data-staging-action-code') || '').toLowerCase();
+                    }
+                    return (frm.getAttribute('data-staging-last-action-code') || '').toLowerCase();
+                }
+                var stagingCode = stagingActionCodeForSubmit(form);
+                var warnCodes = ['forward', 'post', 'back', 'cancel'];
+                var needStagingDiscardWarn = stagingFlowId && stagingFlowId.value && warnCodes.indexOf(stagingCode) !== -1
+                    && !stagingUserCanSave(form) && form.getAttribute('data-staging-dirty') === '1';
+                if (needStagingDiscardWarn) {
+                    if (!window.confirm('Changes will not be saved. Do you want to continue?')) {
+                        return;
+                    }
+                    form.removeAttribute('data-staging-dirty');
+                }
+
+                var formData = new FormData(form);
                 var stagingActionId = form.querySelector('#staging_current_actions_id');
                 var stagingActionCode = form.querySelector('#staging_action_code');
 

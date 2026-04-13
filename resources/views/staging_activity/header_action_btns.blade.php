@@ -3,6 +3,18 @@
     $currentFlowId = isset($staging_data['flows']['current']) && is_object($staging_data['flows']['current'])
         ? $staging_data['flows']['current']->stg_flows_id
         : null;
+
+    $flowsAll = $staging_data['flows']['all'] ?? [];
+    $firstFlowId = null;
+    if (!empty($flowsAll)) {
+        $first = $flowsAll[0] ?? null;
+        $firstFlowId = is_object($first) && isset($first->stg_flows_id) ? $first->stg_flows_id : (is_numeric($first) ? $first : null);
+    }
+
+    $currentFlowName = null;
+    if (isset($staging_data['flows']['current']) && is_object($staging_data['flows']['current']) && isset($staging_data['flows']['current']->stg_flows_name)) {
+        $currentFlowName = $staging_data['flows']['current']->stg_flows_name;
+    }
     $actions = $staging_data['actions'] ?? [];
     $userHasAccess = (bool) ($staging_data['user_access'] ?? false);
 
@@ -123,8 +135,14 @@
                 <i class="la la-check-circle"></i> Posted
             </span>
         @elseif(!$isCanceled && !$isPosted && !$isCompleted)
-            <span class="btn btn-sm btn-success" style="cursor: default; pointer-events: none;">
-                <i class="la la-spinner"></i> In Progress
+            @php
+                $isDraft = !isset($id) || ($currentFlowId !== null && $firstFlowId !== null && (string)$currentFlowId === (string)$firstFlowId);
+                $statusLabel = $isDraft ? 'Draft' : ($currentFlowName ?: 'In Review');
+                $statusClass = $isDraft ? 'btn-info' : 'btn-warning';
+                $statusIcon = $isDraft ? 'la la-file-alt' : 'la la-stream';
+            @endphp
+            <span class="btn btn-sm {{ $statusClass }}" style="cursor: default; pointer-events: none;">
+                <i class="{{ $statusIcon }}"></i> {{ $statusLabel }}
             </span>
         @endif
         @include('staging_activity.breadcrumb')

@@ -163,7 +163,7 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Yajra\Oci8\Oci8ServiceProvider::class,
-        // App\Providers\MenuServiceProvider::class,
+        App\Providers\MenuServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
         /*

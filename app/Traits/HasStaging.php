@@ -344,6 +344,76 @@ trait HasStaging
         }
     }
 
+    protected function resolveRequestedStagingActionCode($request, $menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging = false): string
+    {
+        $requestedCode = strtolower(trim((string) $request->input('staging_action_code', '')));
+        if ($requestedCode !== '') {
+            return $requestedCode;
+        }
+
+        $requestedActionId = $request->input('current_actions_id');
+        if ($requestedActionId !== null) {
+            $requestedActionId = trim((string) $requestedActionId);
+        }
+        if ($requestedActionId === '') {
+            return '';
+        }
+
+        $service = $this->getStagingService();
+        $actions = $service->getFormActions($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+        foreach ($actions as $action) {
+            if ((string) ($action->stg_actions_id ?? '') === (string) $requestedActionId) {
+                $name = strtolower((string) ($action->stg_actions_name ?? ''));
+                $orig = strtolower((string) ($action->original_action ?? $name));
+                return $orig !== '' ? $orig : $name;
+            }
+        }
+
+        return '';
+    }
+
+    protected function stagingUserHasSaveLikeAction($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging = false): bool
+    {
+        $service = $this->getStagingService();
+        $actions = $service->getFormActions($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+        foreach ($actions as $action) {
+            $name = strtolower((string) ($action->stg_actions_name ?? ''));
+            $orig = strtolower((string) ($action->original_action ?? $name));
+            if (in_array($name, ['save', 'create', 'edit'], true) || in_array($orig, ['save', 'create', 'edit'], true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function stagingShouldPersistFormChanges($request, $menuDtlId, $formId, $model = null): bool
+    {
+        $currentFlowId = $request->input('current_flow_id');
+        if ($currentFlowId !== null) {
+            $currentFlowId = trim((string) $currentFlowId);
+        }
+
+        if (empty($currentFlowId) || empty($formId)) {
+            return true;
+        }
+
+        $isAlreadyInStaging = $model && !empty($model->current_stg_id) && (int)($model->posted ?? 0) === 0;
+        $actionCode = $this->resolveRequestedStagingActionCode($request, $menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+        if ($actionCode === '') {
+            return true;
+        }
+
+        if (in_array($actionCode, ['save', 'create', 'edit'], true)) {
+            return true;
+        }
+
+        if (!in_array($actionCode, ['forward', 'back', 'post', 'cancel'], true)) {
+            return true;
+        }
+
+        return $this->stagingUserHasSaveLikeAction($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+    }
+
     protected function sendStagingNotification(
         $service,
         $menuDtlId,

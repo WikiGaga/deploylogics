@@ -573,6 +573,29 @@ class PurchaseOrderController extends Controller
                 $this->assertCanSaveWithStaging($request, self::$menu_dtl_id, $form_id, false, $po);
             }
 
+            if (isset($id) && !$this->stagingShouldPersistFormChanges($request, self::$menu_dtl_id, $form_id, $po)) {
+                $wasInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+                $stagingService = new StagingService();
+                $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging(self::$menu_dtl_id, $form_id, $wasInStaging);
+
+                if ($criteriaApplies) {
+                    $this->handleStaging($request, self::$menu_dtl_id, $form_id, $po, false, [
+                        'listing_view' => 'vw_purc_purchase_order_listing',
+                        'form_path' => '/purchase-order/form',
+                        'document_code_key' => 'purchase_order_code',
+                    ]);
+                    $po->save();
+                }
+                DB::commit();
+
+                $data = array_merge($data, Utilities::returnJsonEditForm());
+                $isInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+                $data['redirect'] = $isInStaging
+                    ? '/'.self::$redirect_url.'/form/'.$form_id
+                    : $this->prefixIndexPage.self::$redirect_url;
+                return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+            }
+
             $po->purchase_order_entry_date = date('Y-m-d', strtotime($request->po_date));;
             $po->payment_mode_id = $request->payment_terms;
             $po->purchase_order_credit_days = $request->payment_mode;

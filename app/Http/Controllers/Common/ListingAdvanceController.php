@@ -240,24 +240,52 @@ class ListingAdvanceController extends Controller
     public function getTableColumns($table_name,$listing){
         $Dimension = TblSoftListingStudioDimension::where('listing_studio_id',$listing->listing_studio_id)->orderby('sr_no')->get();
         $DimensionJoin = TblSoftListingStudioJoinTable::where('listing_studio_id',$listing->listing_studio_id)->get();
+        $columnTypeMap = $this->getColumnTypeMap($table_name);
         $data = [];
         for($i=0;$i<count($Dimension);$i++){
             $data[$Dimension[$i]['listing_studio_dimension_column_name']]['title'] = $Dimension[$i]['listing_studio_dimension_column_title'];
-            $data[$Dimension[$i]['listing_studio_dimension_column_name']]['type'] = self::getDateType($table_name,$Dimension[$i]['listing_studio_dimension_column_name']);
+            $data[$Dimension[$i]['listing_studio_dimension_column_name']]['type'] = $this->resolveColumnType($columnTypeMap, $Dimension[$i]['listing_studio_dimension_column_name']);
         }
 
         for($i=0;$i<count($DimensionJoin);$i++){
             $data[$DimensionJoin[$i]['listing_studio_join_table_column_name']]['title'] = $DimensionJoin[$i]['listing_studio_join_table_column_title'];
-            $data[$DimensionJoin[$i]['listing_studio_join_table_column_name']]['type'] = self::getDateType($table_name,$DimensionJoin[$i]['listing_studio_join_table_column_name']);
+            $data[$DimensionJoin[$i]['listing_studio_join_table_column_name']]['type'] = $this->resolveColumnType($columnTypeMap, $DimensionJoin[$i]['listing_studio_join_table_column_name']);
         }
         if(isset($listing_studio_query->metricTitles) && !empty($listing_studio_query->metricTitles)){
             $metricTitles = explode(',', $listing_studio_query->metricTitles);;
             for($i=0;$i<count($metricTitles);$i++){
                 $data[strtolower($metricTitles[$i])]['title'] = ucfirst($metricTitles[$i]);
-                $data[strtolower($metricTitles[$i])]['type'] = self::getDateType($table_name,strtolower($metricTitles[$i]));
+                $data[strtolower($metricTitles[$i])]['type'] = $this->resolveColumnType($columnTypeMap, strtolower($metricTitles[$i]));
             }
         }
         return $data;
+    }
+
+    private function getColumnTypeMap($table_name): array
+    {
+        return ViewAllColumnData::query()
+            ->select(['column_name', 'data_type'])
+            ->where(DB::raw('lower(table_name)'), $this->strLower($table_name))
+            ->get()
+            ->mapWithKeys(function ($row) {
+                return [strtolower((string) $row->column_name) => strtolower((string) $row->data_type)];
+            })
+            ->all();
+    }
+
+    private function resolveColumnType(array $columnTypeMap, string $columnName): string
+    {
+        $name = strtolower($columnName);
+        if (in_array($name, ['created_at', 'updated_at'], true)) {
+            return 'datetime';
+        }
+
+        $dataType = $columnTypeMap[$name] ?? null;
+        if ($dataType === 'date' || $dataType === 'datetime' || $dataType === 'timestamp') {
+            return 'datetime';
+        }
+
+        return 'string';
     }
 
     public function getGlobalFilters($request,$data,$tbl_1_alias)
