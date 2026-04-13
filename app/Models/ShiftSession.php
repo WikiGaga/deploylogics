@@ -15,6 +15,10 @@ class ShiftSession extends Model
     protected $primaryKey = 'session_id';
     public $incrementing = false;
 
+    protected static function primaryKeyName() {
+        return (new static)->getKeyName();
+    }
+    
     protected $fillable = [
         'session_id',
         'shift_id',
