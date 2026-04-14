@@ -1102,7 +1102,7 @@ class UserReportsController extends Controller
             $data['voucher_types_selection']  = isset($request->voucher_types_selection)?$request->voucher_types_selection:"";
 
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
-                'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','grn_list',
+                'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
                 'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
@@ -1583,6 +1583,61 @@ class UserReportsController extends Controller
                         return $this->jsonErrorResponse($data, 'Must select Chart Code', 422);
                     }
 
+                }
+
+                if($data['report_case'] == 'general_ledger') {
+                    $data['key'] = 'general_ledger';
+                    $data['page_title'] = 'General Ledger';
+                    $data['voucher_types'] = $voucher_types;
+                    $data['opening_bal_toggle'] = isset($request->accounting_ledger_ob_toggle)?1:0;
+                    $data['al_ref_acc_toggle'] = isset($request->al_ref_acc_toggle)?1:0;
+                    $data['al_vat_amount_toggle'] = isset($request->al_vat_amount_toggle)?1:0;
+                    $data['currency'] = TblDefiCurrency::select('currency_symbol')->where('currency_default',1)->where('business_id',auth()->user()->business_id)->first();
+                    $data['date'] = date('Y-m-d',(strtotime ( '-1 day' , strtotime ($from_date) ) ));
+                    if($date_time_wise == 1){
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_from));
+                        $data['time_to'] = date('Y-m-d H:i', strtotime($date_to));
+                    }else{
+                        $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
+                        $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
+                    }
+                    $data['date_time_wise'] = $date_time_wise;
+
+                    if (isset($chart_account_multiple) && count($chart_account_multiple) > 0) {
+                        $data['chart_account'] = TblAccCoa::whereIn('chart_account_id', $chart_account_multiple)->get();
+                        $chart_account_ids = [];
+                        foreach ($data['chart_account'] as $value) {
+                            array_push($chart_account_ids , $value->chart_account_id);
+                        }
+                        $data['chart_account_ids'] = $chart_account_ids;
+                        $paras = [
+                            'chart_account_id' => $chart_account_ids,
+                            'voucher_date' => $from_date,
+                            'branch_ids' => $data['branch_ids'],
+                        ];
+                        if($data['voucher_mode_date'] == 1){
+                            $data['opening_balance'] = CoreFunc::acco_dispatch_opening_bal($paras);
+                        }else{
+                            $data['opening_balance'] = CoreFunc::acco_opening_bal($paras);
+                        }
+                    } else {
+                        $data['chart_account'] = TblAccCoa::where(Utilities::currentBC())->get();
+                        $chart_account_ids = [];
+                        foreach ($data['chart_account'] as $value) {
+                            array_push($chart_account_ids , $value->chart_account_id);
+                        }
+                        $data['chart_account_ids'] = $chart_account_ids;
+                        $paras = [
+                            'chart_account_id' => $chart_account_ids,
+                            'voucher_date' => $from_date,
+                            'branch_ids' => $data['branch_ids'],
+                        ];
+                        if($data['voucher_mode_date'] == 1){
+                            $data['opening_balance'] = CoreFunc::acco_dispatch_opening_bal($paras);
+                        }else{
+                            $data['opening_balance'] = CoreFunc::acco_opening_bal($paras);
+                        }
+                    }
                 }
 
                 if($data['report_case'] == 'temp_accounting_ledger') {
@@ -2651,7 +2706,7 @@ class UserReportsController extends Controller
              *  General Report
              ********/
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
-                'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','grn_list',
+                'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
                 'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',

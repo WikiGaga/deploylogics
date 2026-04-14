@@ -346,7 +346,7 @@
                                             <div class="col-lg-3">
                                                 <label class="erp-col-form-label">Select Date Range:</label>
                                             </div>
-                                            @if($data['case_name'] == 'accounting_ledger')
+                                            @if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'general_ledger')
                                                 @php $date_from = '01-01-'.date('Y'); @endphp
                                             @else
                                                 @php $date_from = $data['date_from']; @endphp
@@ -840,7 +840,7 @@
                                             <div class="col-lg-3">
                                                 <label class="erp-col-form-label">Voucher Type Multiple:</label>
                                             </div>
-                                            @if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'temp_accounting_ledger')
+                                            @if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'temp_accounting_ledger' || $data['case_name'] == 'general_ledger')
                                                 <div class="col-lg-3">
                                                     <div class="erp-select2">
                                                         <select class="form-control erp-form-control-sm" name="voucher_types_selection">

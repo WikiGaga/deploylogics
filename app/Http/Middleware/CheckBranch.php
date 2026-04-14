@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Library\Utilities;
 use Closure;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class CheckBranch
 {
@@ -27,6 +28,10 @@ class CheckBranch
             if(!session()->has('user_branch')){
                 return redirect()->action('HomeController@branchCreate');
             }
+        }
+
+        if(session()->has('user_branch') && Auth::check()){
+            Auth::user()->branch_id = session('user_branch');
         }
 
         return $next($request);

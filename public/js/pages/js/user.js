@@ -80,7 +80,7 @@ var KTFormWidgets = function() {
                             if(response.data.form == 'new'){
                                 window.location.href = response.data.redirect;
                             }else{
-                                $('.new-row').removeClass('new-row');
+                                window.location.href = window.location.href;
                             }
                         }else{
                             toastr.error(response.message);
