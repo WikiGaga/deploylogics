@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Validator;
 use Exception;
+use App\Library\Utilities;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -34,7 +35,7 @@ class ShiftSessionsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($id)
+    public function create($id=null)
     {   
         $data['page_data'] = [];
         $data['page_data']['title'] = self::$page_title;
@@ -44,10 +45,59 @@ class ShiftSessionsController extends Controller
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
         $data['permission'] = self::$menu_dtl_id.'-create';
 
-        $data['current'] = ShiftSession::with('branch')->where('session_id', $id)->first();
+        // $id=603521645;
 
+        if(isset($id)){
+        $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+        $data['current'] = ShiftSession::with('branch')->where('session_id', $id)->first();
+        }else{
+            $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
+             $data['current'] = [];
+        }
 
         return view('sales.shift_sessions.form', compact('data'));
+
+        //  $data['att_id']=$id;
+        // $data['form_type'] = 'Att';
+        // $data['page_data'] = [];
+        // $data['page_data']['title'] = self::$page_title;
+        // $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
+        // $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
+        // $data['menu_id'] = self::$menu_dtl_id;
+        // $data['page_data']['pending_pr'] = TRUE;
+        // $data['already_exits'] = false;
+        // $data['permission'] = self::$menu_dtl_id.'-create';
+
+        // $data['employee'] =  DB::table('tbl_payr_employee')
+        // ->select("EMPLOYEE_ID","EMPLOYEE_NAME")
+        // ->get();
+
+
+        //  $data['att_data'] =[];
+        //  $data['att_note'] = '';
+        //  $data['att_date'] = '';
+
+        // if(isset($id)){
+        //     $Tbl_hr_attendence=DB::table('Tbl_hr_attendence')->where('id',$id)->first();
+           
+        //     if(!empty($Tbl_hr_attendence)){
+        //         $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+        //         $data['att_data'] = $Tbl_hr_attendence_dtl;
+        //         $data['att_no'] = $Tbl_hr_attendence->att_no;
+        //         $data['att_note'] = $Tbl_hr_attendence->att_note;
+        //         $data['att_date'] = $Tbl_hr_attendence->att_date;
+        //         $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+        //     }else{
+        //         abort('404');
+        //     }
+           
+        // }else{
+        //     // $data['permission'] = $data['stock_menu_id'].'-create';
+        //     $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
+        //     $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
+        //     $data['att_no'] = $this->documentCode($max_voucher,'ATT');
+        // }
+
     }
 
     /**

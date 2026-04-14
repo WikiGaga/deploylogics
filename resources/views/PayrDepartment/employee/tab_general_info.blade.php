@@ -6,6 +6,7 @@
         $nationality_id = 0;
         $religion_id = 0;
         $language_id = 0;
+         $register_status =0;
     }
     if($case == 'edit'){
         $gender_id = $current->gender_id;

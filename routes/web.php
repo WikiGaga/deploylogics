@@ -1682,8 +1682,8 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     Route::prefix('shift_sessions')->group(function () {
-        Route::get('form/{id}','Sales\ShiftSessionsController@create');
-        Route::post('form/{id}','Sales\ShiftSessionsController@store')->name('shift_sessions');
+        Route::get('form/{id?}','Sales\ShiftSessionsController@create');
+        Route::post('form/{id?}','Sales\ShiftSessionsController@store')->name('shift_sessions');
         Route::get('print/{id}','Sales\ShiftSessionsController@print')->name('prints.sale_invoice_thermal_print.blade');
         Route::post('delete/{id}','Sales\ShiftSessionsController@destroy');
 
