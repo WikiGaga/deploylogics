@@ -423,8 +423,9 @@ class ApiHomeController extends ApiController
                 // Create Header if it doesn't exist
                 // Using insertGetId is better than max() + 1
                 $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
-                 $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
-            $att_no = $this->documentCode($max_voucher,'ATT');
+                //  $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
+                $max_voucher = TblHrEmployeeAttendance::max('att_no');
+                $att_no = $this->documentCode($max_voucher,'ATT');
 
                 DB::table('Tbl_hr_attendence')->insert([
                     'id' => $att_id,

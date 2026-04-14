@@ -91,6 +91,32 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'oracle_live' => [
+            'driver'   => 'oracle',
+            'host'     => env('LIVE_DB_HOST'),
+            'hostname' => env('LIVE_DB_HOST'), // Adding this fixes the index error
+            'port'     => env('LIVE_DB_PORT'),
+            'database' => env('LIVE_DB_DATABASE'),
+            'service_name' => env('LIVE_DB_SERVICE_NAME'),
+            'username' => env('LIVE_DB_USERNAME'),
+            'password' => env('LIVE_DB_PASSWORD'),
+            'charset'  => 'AL32UTF8',
+            'prefix'   => '',
+        ],
+
+        'oracle_local' => [
+            'driver'   => 'oracle',
+            'host'     => env('LOCAL_DB_HOST'),
+            'hostname' => env('LOCAL_DB_HOST'), // Adding this fixes the index error
+            'port'     => env('LOCAL_DB_PORT'),
+            'database' => env('LOCAL_DB_DATABASE'),
+            'service_name' => env('LOCAL_DB_SERVICE_NAME'),
+            'username' => env('LOCAL_DB_USERNAME'),
+            'password' => env('LOCAL_DB_PASSWORD'),
+            'charset'  => 'AL32UTF8',
+            'prefix'   => '',
+        ],
+
     ],
 
     /*

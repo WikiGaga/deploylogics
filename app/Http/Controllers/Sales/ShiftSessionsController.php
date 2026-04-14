@@ -7,6 +7,10 @@ use App\Models\ShiftSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Validator;
+use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ShiftSessionsController extends Controller
 {
@@ -37,6 +41,8 @@ class ShiftSessionsController extends Controller
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
         $data['permission'] = self::$menu_dtl_id.'-edit';
         $data['page_data']['type'] = 'edit';
+        $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
+        $data['permission'] = self::$menu_dtl_id.'-create';
 
         $data['current'] = ShiftSession::with('branch')->where('session_id', $id)->first();
 
@@ -126,6 +132,27 @@ class ShiftSessionsController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // dd($id);
+
+         $data = [];
+        DB::beginTransaction();
+        try{
+            ShiftSession::where('session_id',$id)->delete();
+        }
+        catch (QueryException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ValidationException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+        DB::commit();
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 }

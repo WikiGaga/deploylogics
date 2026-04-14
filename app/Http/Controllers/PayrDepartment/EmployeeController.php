@@ -151,14 +151,14 @@ class EmployeeController extends Controller
             $employee->employee_name = $request->employee_name;
             $employee->employee_arabic_name = $request->employee_arabic_name;
             $employee->employee_fh_name = $request->employee_fh_name;
-            $employee->register_status = $request->register_status;
+            // $employee->register_status = $request->register_status;
 
             
-            // if($request->register_status==0){
-            //     $employee->register_status = $request->register_status;
-            //     $employee->attendance_image = '';
-            //     $employee->image_embeded_code = '';
-            // }
+            if($request->register_status==0){
+                $employee->register_status = $request->register_status;
+                $employee->attendance_image = '';
+                $employee->image_embeded_code = '';
+            }
             
             $employee->employee_date = isset($request->employee_date) ? date('Y-m-d', strtotime($request->employee_date)) : date('Y-m-d' , time());
             if($request->hasFile('employee_img'))
