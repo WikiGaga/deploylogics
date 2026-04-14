@@ -1,0 +1,169 @@
+@extends('layouts.layout')
+@section('title', 'Shift Session Form')
+
+@section('pageCSS')
+    <style>
+        input[disabled] {
+            background-color: #e9ecef !important;
+            opacity: 1;
+        }
+    </style>
+@endsection
+
+@section('content')
+    <!--begin::Form-->
+    @php
+            $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            if($case == 'new'){
+                
+            }
+            if($case == 'edit'){
+                $id = $data['current']->session_id;
+                $code = $data['current']->session_no;
+            }
+        $form_type = 'shift_sessions';
+    @endphp
+    @permission($data['permission'])
+    <form id="shift_sessions_form" class="kt-form" method="post" action="{{ action('Sales\ShiftSessionsController@store', isset($id)?$id:"") }}">
+    <input type="hidden" value='{{$form_type}}' id="form_type" name="form_type">
+    @csrf
+    <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
+        <div class="kt-portlet kt-portlet--mobile">
+            <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+                @include('elements.page_header',['page_data' => $data['page_data']])
+            </div>
+            <div class="kt-portlet__body">
+                <div class="row form-group-block">
+                    <div class="col-lg-4">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="erp-page--title">
+                                    Session # {{isset($code)?$code:"-"}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group-block">
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Session Start Date:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" readonly disabled name="session_date" class="moveIndex form-control erp-form-control-sm c-date-p" readonly value="{{isset($data['current']->start_date)?$data['current']->start_date:""}}" autofocus/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <i class="la la-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Session Branch:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" readonly disabled name="session_branch" class="moveIndex form-control erp-form-control-sm c-date-p" readonly value="{{isset($data['current']->branch->branch_name)?$data['current']->branch->branch_name:""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Opening Cash:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" name="opening_cash" class="moveIndex form-control erp-form-control-sm c-date-p" value="{{isset($data['current']->opening_cash)?$data['current']->opening_cash:""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Closing Cash:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" name="closing_cash" class="moveIndex form-control erp-form-control-sm c-date-p" value="{{isset($data['current']->closing_cash)?$data['current']->closing_cash:""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Opening Visa:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" name="opening_visa" class="moveIndex form-control erp-form-control-sm c-date-p" value="{{isset($data['current']->opening_visa)?$data['current']->opening_visa:""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Closing Visa:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" name="closing_visa" class="moveIndex form-control erp-form-control-sm c-date-p" value="{{isset($data['current']->closing_visa)?$data['current']->closing_visa:""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Session End At:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" readonly disabled name="session_end_date" class="moveIndex form-control erp-form-control-sm c-date-p" readonly value="{{isset($data['current']->end_date)?$data['current']->end_date:""}}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <i class="la la-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Session Status:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="text" readonly disabled name="session_status" class="moveIndex form-control erp-form-control-sm c-date-p" readonly value="{{isset($data['current']->session_status) ? ($data['current']->session_status == 'close' ? "Closed" : "Open") : ""}}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 mt-2">
+                        <div class="row">
+                            <div class="col-lg-12 text-right">
+                                <button 
+                                    type="submit"
+                                    @if(!isset($data['current']->session_status) || $data['current']->session_status == 'open') disabled @endif
+                                    id="shift_session_submit"
+                                    class="btn btn-success btn-sm"
+                                >
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+                <!--end::Form-->
+    @endpermission
+@endsection
+@section('pageJS')
+    <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
+@endsection
+
+@section('customJS')
+    <script src="{{ asset('js/pages/js/sale/shift_sessions.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>>
+    <script src="{{ asset('js/jquery-ui.js') }}"></script>
+@endsection
