@@ -364,7 +364,7 @@
         $(document).on('input paste change', '#food_id', function() {
             var foodId = $(this);
             if (foodId.val() && foodId.val().trim() != '') {
-                foodId.prop('readonly', true);
+                // foodId.prop('readonly', true);
             }
         });
 
