@@ -242,8 +242,10 @@
         $('#registerSwitch').on('change', function() {
             if($(this).is(':checked')) {
                 $(this).next('label').text('Registered');
+                $(this).val(1);
             } else {
                 $(this).next('label').text('Not Registered');
+                $(this).val(0);
             }
         });
         $(document).on('change','.religion,.designation,.grade',function(e){

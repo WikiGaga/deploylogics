@@ -406,7 +406,7 @@ class ApiHomeController extends ApiController
                 ->where('employee_id', $employee_id)
                 ->first();
 
-            if (!$employee) {
+            if (empty($employee)) {
                 return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
             }
 

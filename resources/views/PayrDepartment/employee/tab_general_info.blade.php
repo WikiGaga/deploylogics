@@ -182,13 +182,13 @@
             <label class="col-lg-6 erp-col-form-label" for="register_status">Registration Status</label>
             <div class="col-lg-6">
                 <div class="custom-control custom-switch">
-                <input type="hidden" name="register" value="0">
+                <!-- <input type="hidden" name="register" value="0"> -->
         
                 <input type="checkbox" 
                     name="register" 
                     class="custom-control-input" 
                     id="registerSwitch" 
-                    value="1" 
+                    value="{{ $register_status }}" 
                     {{ $register_status == 1 ? 'checked' : '' }}>
                 
                 <label class="custom-control-label" for="registerSwitch">

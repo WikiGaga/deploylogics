@@ -154,10 +154,10 @@ class EmployeeController extends Controller
             // $employee->register_status = $request->register_status;
 
             
-            if($request->register_status==0){
-                $employee->register_status = $request->register_status;
-                $employee->attendance_image = '';
-                $employee->image_embeded_code = '';
+            if($request->register==0){
+                $employee->register_status = 0;
+                $employee->attendance_image = null;
+                $employee->image_embeded_code = null;
             }
             
             $employee->employee_date = isset($request->employee_date) ? date('Y-m-d', strtotime($request->employee_date)) : date('Y-m-d' , time());
