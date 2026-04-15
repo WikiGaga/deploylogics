@@ -410,14 +410,11 @@ class ApiHomeController extends ApiController
                 return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
             }
 
-            //  dd($request->all(), $att_date);
             // 2. Check if the Main Attendance Header exists for this date
             // Fixed the syntax error from ->?id to a safe check
             $attendance_header = DB::table('Tbl_hr_attendence')
                 ->where('att_date', $att_date)
                 ->first();
-
-                // dd($attendance_header);
 
             if (!$attendance_header) {
                 // Create Header if it doesn't exist

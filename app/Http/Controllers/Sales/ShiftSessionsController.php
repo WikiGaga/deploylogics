@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShiftSession;
+use App\Models\TblSoftBranch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Validator;
@@ -47,12 +48,19 @@ class ShiftSessionsController extends Controller
 
         // $id=603521645;
 
+        $data['branch'] = TblSoftBranch::get();
+
+          
+
         if(isset($id)){
         $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
         $data['current'] = ShiftSession::with('branch')->where('session_id', $id)->first();
         }else{
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
-             $data['current'] = [];
+            $data['current'] = [];
+
+            $session_no = ShiftSession::where(Utilities::currentBCB())->where('session_no','like',"Web-%")->max('session_no');
+            $data['session_no'] = $this->documentCode($session_no,'Web');
         }
 
         return view('sales.shift_sessions.form', compact('data'));
@@ -94,8 +102,8 @@ class ShiftSessionsController extends Controller
         // }else{
         //     // $data['permission'] = $data['stock_menu_id'].'-create';
         //     $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
-        //     $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
-        //     $data['att_no'] = $this->documentCode($max_voucher,'ATT');
+            // $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
+            // $data['att_no'] = $this->documentCode($max_voucher,'ATT');
         // }
 
     }
@@ -106,8 +114,9 @@ class ShiftSessionsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request, $id)
+    public function store(Request $request, $id=null)
     {
+        // dd($request->all(), $id);
         $validator = Validator::make($request->all(), [
             'opening_cash' => 'required|numeric',
             'opening_visa' => 'required|numeric',
@@ -119,24 +128,48 @@ class ShiftSessionsController extends Controller
             return $this->jsonErrorResponse($validator->errors(), 'Validation failed. Please check the input data.', 422);
         }
 
-        DB::beginTransaction();
-        try {
+        // DB::beginTransaction();
+        // try {
 
-            $shiftSession = ShiftSession::find($id);
-            $shiftSession->opening_cash = $request->opening_cash ?? 0; // Set opening cash to 0 if it's null
-            $shiftSession->closing_cash = $request->closing_cash;
-            $shiftSession->opening_visa = $request->opening_visa ?? 0; // Set opening visa to 0 if it's null
-            $shiftSession->closing_visa = $request->closing_visa;
-            $shiftSession->save();
+            if(isset($id)){
+                $shiftSession = ShiftSession::find($id);
+                $shiftSession->opening_cash = $request->opening_cash ?? 0; // Set opening cash to 0 if it's null
+                $shiftSession->closing_cash = $request->closing_cash;
+                $shiftSession->opening_visa = $request->opening_visa ?? 0; // Set opening visa to 0 if it's null
+                $shiftSession->closing_visa = $request->closing_visa;
+                $shiftSession->save();
 
-            DB::commit();
+            }else{
+
+                $shiftSession = new ShiftSession();
+                $shiftSession->opening_cash = $request->opening_cash ?? 0; // Set opening cash to 0 if it's null
+                $shiftSession->closing_cash = $request->closing_cash;
+                $shiftSession->opening_visa = $request->opening_visa ?? 0; // Set opening visa to 0 if it's null
+                $shiftSession->closing_visa = $request->closing_visa;
+                $shiftSession->start_date = $request->session_date;
+                $shiftSession->end_date = $request->session_end_date;
+                $shiftSession->session_status = $request->session_status;
+                $shiftSession->branch_id = $request->session_branch;
+                $shiftSession->company_id = ShiftSession::where('branch_id', $request->session_branch)->first()->company_id;
+                $shiftSession->business_id = ShiftSession::where('branch_id', $request->session_branch)->first()->business_id;
+                
+                $shiftSession->user_id = auth()->user()->id;
+                $shiftSession->session_id = Utilities::uuid();
+                
+                $shiftSession->save();
+
+            }
+
             
-            return $this->jsonSuccessResponse([],'Shift session updated successfully.');
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->jsonErrorResponse([], 'An error occurred while updating the shift session. Please try again.', 500);
-        }
+        //     DB::commit();
+            
+        //     return $this->jsonSuccessResponse([],'Shift session updated successfully.');
+
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+        //     return $this->jsonErrorResponse([], 'An error occurred while updating the shift session. Please try again.', 500);
+        // }
         
     }
 
