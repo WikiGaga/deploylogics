@@ -38,9 +38,86 @@ class ImportDataController extends Controller
         $collection = collect($sorted);
         $data['table_list'] = $collection->sortBy('table_name');
 
+        // $tables = DB::connection('oracle_live')
+        //     ->table('user_tables')
+        //     ->select('table_name')
+        //     ->get();
+
         return view('development.import_data.form' , compact('data'));
     }
+    
 
+    // public function dumpTable(Request $request)
+    // {
+    //     // dd('f',$request->all());
+    //     $tableName = $request->table_name;
+
+    //     // 1. Clear the local table first
+    //     DB::connection('oracle_local')->table($tableName)->truncate();
+
+    //     // 2. Pull from Live and Push to Local
+    //     // Start with table(), THEN orderBy(), THEN chunk()
+    //     // $a= DB::connection('oracle_live')
+    //     //     ->table($tableName)->get();
+    //     // dd($a);
+    //           DB::connection('oracle_live')
+    //             ->table($tableName)
+    //             ->orderBy(DB::connection('oracle_live')->getSchemaBuilder()->getColumnListing($tableName)[0])
+    //             ->chunk(100, function ($rows) use ($tableName) {
+    //                 $data = [];
+    //                 foreach ($rows as $row) {
+    //                     $array = (array) $row;
+                        
+    //                     // REMOVE the virtual Row Number column added by the Oracle driver
+    //                     unset($array['rn']); 
+    //                     unset($array['RN']); // Check for both cases
+                        
+    //                     $data[] = $array;
+    //                 }
+                    
+    //                 // Now the insert will work because the columns match your table exactly
+    //                 DB::connection('oracle_local')->table($tableName)->insert($data);
+    //             });
+
+    //     return back()->with('success', "Data for $tableName dumped successfully!");
+    // }
+
+     public function dumpTable(Request $request)
+    {
+        $tableName = $request->table_name;
+        $liveConn = DB::connection('oracle_live');
+        $localConn = DB::connection('oracle_local');
+
+        // Start Transaction on Local DB
+        $localConn->beginTransaction();
+
+        try {
+            // 1. Truncate local table
+            $localConn->table($tableName)->truncate();
+
+            // 2. Fetch from Live
+            $liveConn->table($tableName)
+                ->orderBy($liveConn->getSchemaBuilder()->getColumnListing($tableName)[0])
+                ->chunk(100, function ($rows) use ($tableName, $localConn) {
+                    $data = [];
+                    foreach ($rows as $row) {
+                        $array = (array) $row;
+                        unset($array['rn'], $array['RN']); // Remove virtual row columns
+                        $data[] = $array;
+                    }
+                    $localConn->table($tableName)->insert($data);
+                });
+
+            // If we reached here, everything is good. Save changes.
+            $localConn->commit();
+            return back()->with('success', "Table $tableName dumped successfully!");
+
+        } catch (\Exception $e) {
+            // Something went wrong. Undo the truncate and the partial inserts!
+            $localConn->rollBack();
+            return back()->with('error', "Error: " . $e->getMessage());
+        }
+    }
     public function getModelName($table)
     {
         return Str::studly(Str::singular($table)).'()';

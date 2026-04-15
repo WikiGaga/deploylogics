@@ -1550,6 +1550,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('selected-csv' , [ImportDataController::class , 'getCsvOnSelect'])->name('selected');
             Route::post('store/{id?}' , [ImportDataController::class , 'store'])->name('store');
             Route::post('get-primary-key' , [ImportDataController::class , 'getPrimaryKey'])->name('primarykey');
+            Route::post('dump/data' , [ImportDataController::class , 'dumpTable'])->name('dump.data');
         });
 
         // Import Excel Data
@@ -1681,9 +1682,11 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     Route::prefix('shift_sessions')->group(function () {
-        Route::get('form/{id}','Sales\ShiftSessionsController@create');
-        Route::post('form/{id}','Sales\ShiftSessionsController@store')->name('shift_sessions');
+        Route::get('form/{id?}','Sales\ShiftSessionsController@create');
+        Route::post('form/{id?}','Sales\ShiftSessionsController@store')->name('shift_sessions');
         Route::get('print/{id}','Sales\ShiftSessionsController@print')->name('prints.sale_invoice_thermal_print.blade');
+        Route::post('delete/{id}','Sales\ShiftSessionsController@destroy');
+
     });
 
     // Rent Module Routes

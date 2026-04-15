@@ -105,7 +105,7 @@
         </div>
     </div>
 @endif
-@if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'temp_accounting_ledger')
+@if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'temp_accounting_ledger' || $data['case_name'] == 'general_ledger')
     <div class="row form-group-block">
         <div class="col-lg-3">
             <div class="row">
