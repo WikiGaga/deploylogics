@@ -48,7 +48,7 @@
                 (SUM(NVL(v.voucher_credit,0) - NVL(v.voucher_debit,0)) / 5 * 100) VAT_SALE
             FROM tbl_acco_voucher v
             JOIN tbl_acco_chart_account ca
-                ON ca.chart_sccount_id = v.chart_sccount_id
+                ON ca.chart_account_id = v.chart_account_id
             WHERE ca.chart_code LIKE '7-01-01%'
               AND (v.voucher_date between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
               $and_where_bcb_v
