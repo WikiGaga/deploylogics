@@ -280,9 +280,6 @@ class HomeController extends Controller
         }
         DB::beginTransaction();
         try {
-            $user = User::where('id', auth()->user()->id)->where('user_type','erp')->where('user_entry_status',1)->where(Utilities::currentBC())->first();
-            $user->branch_id = $request->branches;
-            $user->save();
             session(['user_branch' => $request->branches]);
         }catch (QueryException $e) {
             DB::rollback();

@@ -415,7 +415,7 @@
         // //   enabledTransports: ['ws', 'wss', 'xhr_streaming', 'xhr_polling']
         // enabledTransports: ['ws', 'wss']
         // });
-  
+
         // var channel = pusher.subscribe('my-channel');
         // channel.bind('my-event', function(data) {
         //     // if(data.message =='unpaid'){
@@ -423,9 +423,9 @@
         //             alert('Event received!');
         //     // }
         //     console.log('vvvvvvvvvvvvvvvv',data,data.message);
-            
+
         // });
-       
+
 
 
 

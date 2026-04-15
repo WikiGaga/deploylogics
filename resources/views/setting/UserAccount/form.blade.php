@@ -195,7 +195,15 @@
                                 <div class="form-group-block row">
                                     <div class="col-lg-12">
                                         <div class="row">
-                                            <label class="col-lg-6 erp-col-form-label">Optional Branches:</label>
+                                            <label class="col-lg-6 erp-col-form-label">
+                                                Optional Branches:
+                                                <span class="ml-2" style="font-weight: normal;">
+                                                    <label class="kt-checkbox kt-checkbox--brand mb-0">
+                                                        <input type="checkbox" id="optional_branches_select_all"> Select all
+                                                        <span></span>
+                                                    </label>
+                                                </span>
+                                            </label>
                                             <div class="col-lg-6">
                                                 <div class="erp-select2">
                                                     @php $col = []; @endphp
@@ -585,11 +593,13 @@ $(document).ready(function(){
         var $opt = $('#optional_branches_select');
         if(!roleId){
             $opt.val(null).trigger('change');
+            refreshOptionalBranchesSelectAllState();
             return;
         }
         var branchIds = roleOptionalBranchesMap[roleId];
         if(!branchIds || !branchIds.length){
             $opt.val(null).trigger('change');
+            refreshOptionalBranchesSelectAllState();
             return;
         }
         var defaultBranch = $('#kt_select2_1').val();
@@ -597,6 +607,26 @@ $(document).ready(function(){
             return String(id) !== String(defaultBranch);
         });
         $opt.val(filtered.map(String)).trigger('change');
+        refreshOptionalBranchesSelectAllState();
+    }
+
+    function getAllOptionalBranchIdsExcludingDefault(){
+        var defaultBranch = $('#kt_select2_1').val();
+        var all = [];
+        $('#optional_branches_select option').each(function(){
+            var val = $(this).attr('value');
+            if(!val){ return; }
+            if(String(val) === String(defaultBranch)){ return; }
+            all.push(String(val));
+        });
+        return all;
+    }
+
+    function refreshOptionalBranchesSelectAllState(){
+        var all = getAllOptionalBranchIdsExcludingDefault();
+        var selected = ($('#optional_branches_select').val() || []).map(String);
+        var isAllSelected = all.length > 0 && all.every(function(id){ return selected.indexOf(String(id)) !== -1; });
+        $('#optional_branches_select_all').prop('checked', isAllSelected);
     }
 
     $('#employee_role_id').on('change', function(){
@@ -609,8 +639,24 @@ $(document).ready(function(){
         var vals = $opt.val() || [];
         vals = vals.filter(function(id){ return String(id) !== String(def); });
         $opt.val(vals.length ? vals : null).trigger('change');
+        refreshOptionalBranchesSelectAllState();
     });
 
+    $('#optional_branches_select_all').on('change', function(){
+        var $opt = $('#optional_branches_select');
+        if($(this).is(':checked')){
+            $opt.val(getAllOptionalBranchIdsExcludingDefault()).trigger('change');
+        }else{
+            $opt.val(null).trigger('change');
+        }
+        refreshOptionalBranchesSelectAllState();
+    });
+
+    $('#optional_branches_select').on('change', function(){
+        refreshOptionalBranchesSelectAllState();
+    });
+
+    refreshOptionalBranchesSelectAllState();
 });
 </script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
