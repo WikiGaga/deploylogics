@@ -17,7 +17,7 @@
                 $type = $data['type'];
                 $voucher_bill = [];
             }
-            if($case == 'edit'){
+            if($case == 'edit' || $case == 'view'){
                 $type = $data['type'];
                 $id = $data['current']->voucher_id;
                 $voucher_no= $data['current']->voucher_no;

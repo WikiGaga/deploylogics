@@ -12,7 +12,7 @@
         $date =  date('d-m-Y');
         $voucher_bill = [];
     }
-    if($case == 'edit'){
+    if($case == 'edit' || $case == 'view'){
         $id = $data['current']->voucher_id;
         $voucher_no = $data['current']->voucher_no;
         $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->voucher_date))));

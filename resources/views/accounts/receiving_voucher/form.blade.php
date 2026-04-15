@@ -86,7 +86,7 @@
             $on_account_voucher = 0;
             $voucher_bills = [];
         }
-        if($case == 'edit'){
+        if($case == 'edit' || $case == 'view'){
             $id = $data['current']->voucher_id;
             $voucher_no = $data['current']->voucher_no;
             $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->voucher_date))));
@@ -125,7 +125,7 @@
         <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
         <input type="hidden" name="voucher_no" value="{{$voucher_no}}">
         <input type="hidden" id="voucher_id" value='{{$id}}' >
-        @if($case == 'edit')
+        @if($case == 'edit' || $case == 'view')
             <input type="hidden" id="form_id" value='{{$id}}' >
             <input type="hidden" id="menu_id" value="{{$data['stock_menu_id']}}">
         @endif

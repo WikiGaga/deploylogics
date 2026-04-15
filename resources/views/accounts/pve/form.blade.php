@@ -24,7 +24,7 @@
                 $payment_modes = $data['payment_mode'];
                 $date =  date('d-m-Y');
                 $is_deduction = 0;
-            }elseif($case == 'edit'){
+            }elseif($case == 'edit' || $case == 'view'){
                 $id = $data['current']->voucher_id;
                 $voucher_no= $data['current']->voucher_no;
                 $payment_modes = $data['payment_mode'];
@@ -55,7 +55,7 @@
     <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
     <input type="hidden" name="voucher_no" value="{{$voucher_no}}">
     <input type="hidden" id="voucher_id" value='{{$id}}' >
-    @if($case == 'edit')
+    @if($case == 'edit' || $case == 'view')
         <input type="hidden" id="form_id" value='{{$id}}' >
         <input type="hidden" id="menu_id" value="{{$data['stock_menu_id']}}">
     @endif

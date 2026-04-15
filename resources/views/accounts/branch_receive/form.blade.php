@@ -85,7 +85,7 @@
         $on_account_voucher = 0;
         $voucher_bills = [];
     }
-    if($case == 'edit'){
+    if($case == 'edit' || $case == 'view'){
         $id = $data['current']->voucher_id;
         $voucher_no = $data['current']->voucher_no;
         $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->voucher_date))));
@@ -161,7 +161,7 @@
                                 <div class="erp-select2">
                                     <select class="form-control erp-form-control-sm moveIndex kt-select2 currency" id="currency_id" name="currency_id">
                                         <option value="">Select</option>
-                                        @if($case == 'edit')
+                                        @if($case == 'edit' || $case == 'view')
                                             @php $currency_id = isset($currency_id)?$currency_id:''@endphp
                                             @foreach($data['currency'] as $currency)
                                                 <option value="{{$currency->currency_id}}" {{$currency->currency_id==$currency_id?'selected':''}}>{{$currency->currency_name}}</option>
@@ -227,7 +227,7 @@
                                         </tr>
                                         </thead>
                                         <tbody class="erp_form__grid_body">
-                                        @if($case == 'edit')
+                                        @if($case == 'edit' || $case == 'view')
                                             @foreach($voucher_bills as $bill)
                                                 @php
                                                     $bi = $loop->iteration;

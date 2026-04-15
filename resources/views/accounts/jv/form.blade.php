@@ -29,6 +29,14 @@
                 $exchange_rate = $data['current']->voucher_exchange_rate;
                 $notes = $data['current']->voucher_notes;
                 $dtls = isset($data['dtl'])? $data['dtl'] :[];
+            }elseif($case == 'view'){
+                $id = $data['current']->voucher_id;
+                $voucher_no= $data['current']->voucher_no;
+                $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->voucher_date))));
+                $currency_id = $data['current']->currency_id;
+                $exchange_rate = $data['current']->voucher_exchange_rate;
+                $notes = $data['current']->voucher_notes;
+                $dtls = isset($data['dtl'])? $data['dtl'] :[];
             }
             $type = $data['type'];
             $form_type = $type;
@@ -46,7 +54,7 @@
         <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
         <input type="hidden" name="voucher_no" value="{{$voucher_no}}">
         <input type="hidden" id="voucher_id" value='{{$id}}' >
-        @if($case == 'edit')
+        @if($case == 'edit' || $case == 'view')
             <input type="hidden" id="form_id" value='{{$id}}' >
             <input type="hidden" id="menu_id" value="{{$data['stock_menu_id']}}">
         @endif
