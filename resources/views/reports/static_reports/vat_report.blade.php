@@ -26,17 +26,35 @@
         $company_id = auth()->user()->company_id;
         $and_where_bcb = " and branch_id in (".implode(",",$data['branch_ids']).") AND business_id = ".auth()->user()->business_id." AND company_id =".auth()->user()->company_id;
 
-        $qry_domestic_taxable_supplies = "SELECT SUM(GROSS_AMT)  GROSS_AMT ,  SUM( VAT_AMOUNT)  VAT_AMOUNT ,  ( SUM(VAT_AMOUNT) / sum(GROSS_AMT)) * 100 VAT_PER,  (SUM( VAT_AMOUNT) / 5 * 100 ) VAT_SALE FROM
-                                        (
-                                        select sum(SALES_DTL_TOTAL_AMOUNT) GROSS_AMT ,  SUM( SALES_DTL_VAT_AMOUNT) VAT_AMOUNT  , ( SUM(SALES_DTL_VAT_AMOUNT) / sum(SALES_DTL_TOTAL_AMOUNT)) * 100 VAT_PER
-                                        from VW_SALE_SALES_INVOICE WHERE
-                                         SALES_DTL_VAT_PER > 0 and (SALES_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
-                                        union all
-                                        SELECT sum(STOCK_DTL_AMOUNT) GROSS_AMT ,  SUM(STOCK_DTL_VAT_AMOUNT) VAT_AMT , ( SUM(STOCK_DTL_VAT_AMOUNT) / sum(STOCK_DTL_AMOUNT)) * 100   FROM VW_INVE_STOCK
-                                        WHERE   STOCK_CODE_TYPE = 'st' AND STOCK_DTL_VAT_PERCENT > 0
-                                        and (STOCK_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
-                                        ) gaga";
+        // Old query
+//        $qry_domestic_taxable_supplies = "SELECT SUM(GROSS_AMT)  GROSS_AMT ,  SUM( VAT_AMOUNT)  VAT_AMOUNT ,  ( SUM(VAT_AMOUNT) / sum(GROSS_AMT)) * 100 VAT_PER,  (SUM( VAT_AMOUNT) / 5 * 100 ) VAT_SALE FROM
+//                                        (
+//                                        select sum(SALES_DTL_TOTAL_AMOUNT) GROSS_AMT ,  SUM( SALES_DTL_VAT_AMOUNT) VAT_AMOUNT  , ( SUM(SALES_DTL_VAT_AMOUNT) / sum(SALES_DTL_TOTAL_AMOUNT)) * 100 VAT_PER
+//                                        from VW_SALE_SALES_INVOICE WHERE
+//                                         SALES_DTL_VAT_PER > 0 and (SALES_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
+//                                        union all
+//                                        SELECT sum(STOCK_DTL_AMOUNT) GROSS_AMT ,  SUM(STOCK_DTL_VAT_AMOUNT) VAT_AMT , ( SUM(STOCK_DTL_VAT_AMOUNT) / sum(STOCK_DTL_AMOUNT)) * 100   FROM VW_INVE_STOCK
+//                                        WHERE   STOCK_CODE_TYPE = 'st' AND STOCK_DTL_VAT_PERCENT > 0
+//                                        and (STOCK_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
+//                                        ) gaga";
+//        $domestic_taxable_supplies = \Illuminate\Support\Facades\DB::selectOne($qry_domestic_taxable_supplies);
+
+        $and_where_bcb_v = " and v.branch_id in (".implode(",",$data['branch_ids']).") AND v.business_id = ".auth()->user()->business_id." AND v.company_id =".auth()->user()->company_id;
+        $qry_domestic_taxable_supplies = "
+            SELECT
+                (SUM(NVL(v.voucher_credit,0) - NVL(v.voucher_debit,0)) / 5 * 100) GROSS_AMT,
+                SUM(NVL(v.voucher_credit,0) - NVL(v.voucher_debit,0)) VAT_AMOUNT,
+                5 VAT_PER,
+                (SUM(NVL(v.voucher_credit,0) - NVL(v.voucher_debit,0)) / 5 * 100) VAT_SALE
+            FROM tbl_acco_voucher v
+            JOIN tbl_acco_chart_account ca
+                ON ca.chart_sccount_id = v.chart_sccount_id
+            WHERE ca.chart_code LIKE '7-01-01%'
+              AND (v.voucher_date between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
+              $and_where_bcb_v
+        ";
         $domestic_taxable_supplies = \Illuminate\Support\Facades\DB::selectOne($qry_domestic_taxable_supplies);
+        $domestic_taxable_supplies->vat_amount = ((float)($domestic_taxable_supplies->vat_sale ?? 0)) * 0.05;
 
         $qry_domestic_zero_rated_supplies = "SELECT SUM(GROSS_AMT)  GROSS_AMT ,  SUM( VAT_AMOUNT)  VAT_AMOUNT ,  ( SUM(VAT_AMOUNT) / sum(GROSS_AMT)) * 100 VAT_PER FROM
                                         ( select sum(SALES_DTL_TOTAL_AMOUNT) GROSS_AMT ,  0 VAT_AMOUNT  , ( SUM(SALES_DTL_VAT_AMOUNT) / sum(SALES_DTL_TOTAL_AMOUNT)) * 100
@@ -134,7 +152,7 @@
                                     <td>1a</td>
                                     <td class="rep-font">Supplies of goods / services taxed at 5%</td>
                                     <td class="text-right">{{number_format($domestic_taxable_supplies->vat_sale,3)}}</td>
-                                    <td class="text-right">{{number_format($domestic_taxable_supplies->vat_amount,3)}}</td>
+                                    <td class="text-right">{{number_format(((float)$domestic_taxable_supplies->vat_sale * 0.05),3)}}</td>
                                 </tr>
                                 <tr>
                                     <td>1b</td>
@@ -196,7 +214,7 @@
                                 </tr>
                                 @php
                                     $total_supplies_gross_amt =  (float)$domestic_taxable_supplies->gross_amt + (float)$domestic_zero_rated_supplies->gross_amt;
-                                    $total_supplies_vat_amount =  (float)$domestic_taxable_supplies->vat_amount + (float)$domestic_zero_rated_supplies->vat_amount;
+                                    $total_supplies_vat_amount =  ((float)$domestic_taxable_supplies->vat_sale * 0.05) + (float)$domestic_zero_rated_supplies->vat_amount;
                                 @endphp
 
                             </table>

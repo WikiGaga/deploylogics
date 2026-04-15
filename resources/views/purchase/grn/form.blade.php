@@ -23,9 +23,9 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : '';
+        $length = 0;
+        $currencySymbol = 'OMR';
         if ($case == 'new') {
-            $length = 0;
-            $currencySymbol = 'OMR';
         }
         if ($case == 'edit' || $case == 'view') {
             $expense_dtls = isset($data['current']->grn_expense) ? $data['current']->grn_expense : [];

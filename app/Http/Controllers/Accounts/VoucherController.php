@@ -143,17 +143,66 @@ class VoucherController extends Controller
         $data['page_data']['path_index'] = $this->prefixIndexPage.'accounts/'.$type;
         $data['page_data']['create'] = '/accounts/'.$type.$this->prefixCreatePage;
         if(isset($id)){
-            if(TblAccoVoucher::where('voucher_id','LIKE',$id)->where(Utilities::currentBCB())->exists()){
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
+            $allowCrossBranchView = (string) request()->query('view') === '1';
+            $baseQuery = TblAccoVoucher::where('voucher_id','LIKE',$id)
+                ->where('voucher_type', $type)
+                ->where(Utilities::currentBC());
+            $exists = $allowCrossBranchView
+                ? $baseQuery->exists()
+                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+
+            if($exists){
                 $data['permission'] = $data['stock_menu_id'].'-edit';
                 $data['id'] = $id;
-                $data['current'] = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_sr_no','=','1')->where(Utilities::currentBCB())->first();
-                if($type == 'crv' || $type =='brv' || $type =='lfv'){
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_credit','!=','0')->where('voucher_tax_status','!=',1)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
-                }else if($type == 'cpv' || $type =='bpv'){
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where('voucher_debit','!=','0')->where('VOUCHER_TAX_STATUS','!=','1')->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
+                $currentQuery = TblAccoVoucher::where('voucher_id',$id)
+                    ->where('voucher_type',$type)
+                    ->where('voucher_sr_no','=','1')
+                    ->where(Utilities::currentBC());
+                if(!$allowCrossBranchView){
+                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                }
+                $data['current'] = $currentQuery->first();
+                if(empty($data['current'])){
+                    abort('404');
+                }
+
+                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
-                    $data['dtl'] = TblAccoVoucher::with('accounts','voucher_bill')->where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->orderBy('voucher_sr_no', 'ASC')->get();
+                    $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+                }
+
+                if($type == 'crv' || $type =='brv' || $type =='lfv'){
+                    $dtlQuery = TblAccoVoucher::with('accounts','voucher_bill')
+                        ->where('voucher_id',$id)
+                        ->where('voucher_type',$type)
+                        ->where('voucher_credit','!=','0')
+                        ->where('voucher_tax_status','!=',1)
+                        ->where(Utilities::currentBC());
+                    if(!$allowCrossBranchView){
+                        $dtlQuery = $dtlQuery->where('branch_id', auth()->user()->branch_id);
+                    }
+                    $data['dtl'] = $dtlQuery->orderBy('voucher_sr_no', 'ASC')->get();
+                }else if($type == 'cpv' || $type =='bpv'){
+                    $dtlQuery = TblAccoVoucher::with('accounts','voucher_bill')
+                        ->where('voucher_id',$id)
+                        ->where('voucher_type',$type)
+                        ->where('voucher_debit','!=','0')
+                        ->where('VOUCHER_TAX_STATUS','!=','1')
+                        ->where(Utilities::currentBC());
+                    if(!$allowCrossBranchView){
+                        $dtlQuery = $dtlQuery->where('branch_id', auth()->user()->branch_id);
+                    }
+                    $data['dtl'] = $dtlQuery->orderBy('voucher_sr_no', 'ASC')->get();
+                }else{
+                    $dtlQuery = TblAccoVoucher::with('accounts','voucher_bill')
+                        ->where('voucher_id',$id)
+                        ->where('voucher_type',$type)
+                        ->where(Utilities::currentBC());
+                    if(!$allowCrossBranchView){
+                        $dtlQuery = $dtlQuery->where('branch_id', auth()->user()->branch_id);
+                    }
+                    $data['dtl'] = $dtlQuery->orderBy('voucher_sr_no', 'ASC')->get();
                 }
                 $data['voucher_no'] = $data['current']->voucher_no;
                 $data['page_data']['print'] = '/accounts/'.$type.'/print/'.$id;

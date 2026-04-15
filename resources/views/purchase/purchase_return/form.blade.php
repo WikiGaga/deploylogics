@@ -7,12 +7,13 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+        $currencySymbol = 'OMR';
+        $exchange_rate = '';
         if($case == 'new'){
             $length = 0;
             // $menu_id = $data['menu_id'];
-            $currencySymbol = 'OMR';
         }
-        if($case == 'edit'){
+        if($case == 'edit' || $case == 'view'){
             // $menu_id = $data['menu_id'];
             $expense_dtls = isset($data['current']->grn_expense)? $data['current']->grn_expense :[];
             $length = count($expense_dtls);
