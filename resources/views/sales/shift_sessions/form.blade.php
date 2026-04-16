@@ -16,11 +16,11 @@
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             $branch = $data['branch'];
             
-            $readonly='';
+            $readonly='required';
 
 
             if($case == 'new'){
-                $readonly='';
+                $readonly='required';
                 $code = $data['session_no'];
                 
             }
@@ -58,6 +58,7 @@
                             <label class="col-lg-12 erp-col-form-label">Session Start Date:</label>
                             <div class="col-lg-12">
                                 <div class="input-group date">
+                                    <input type="hidden"  name="session_date" class="session_no" value="{{$code}}"/>
                                     <input type="text" {{$readonly}} name="session_date" class="moveIndex form-control erp-form-control-sm c-date-p kt_datepicker_33" value="{{isset($data['current']->start_date)?$data['current']->start_date:""}}" autofocus/>
                                     <div class="input-group-append">
                                         <span class="input-group-text">

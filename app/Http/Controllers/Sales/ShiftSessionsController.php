@@ -128,8 +128,8 @@ class ShiftSessionsController extends Controller
             return $this->jsonErrorResponse($validator->errors(), 'Validation failed. Please check the input data.', 422);
         }
 
-        // DB::beginTransaction();
-        // try {
+        DB::beginTransaction();
+        try {
 
             if(isset($id)){
                 $shiftSession = ShiftSession::find($id);
@@ -149,9 +149,10 @@ class ShiftSessionsController extends Controller
                 $shiftSession->start_date = $request->session_date;
                 $shiftSession->end_date = $request->session_end_date;
                 $shiftSession->session_status = $request->session_status;
+                $shiftSession->session_no = $request->session_no;
                 $shiftSession->branch_id = $request->session_branch;
-                $shiftSession->company_id = ShiftSession::where('branch_id', $request->session_branch)->first()->company_id;
-                $shiftSession->business_id = ShiftSession::where('branch_id', $request->session_branch)->first()->business_id;
+                $shiftSession->company_id = TblSoftBranch::where('branch_id', $request->session_branch)->first()->company_id;
+                $shiftSession->business_id = TblSoftBranch::where('branch_id', $request->session_branch)->first()->business_id;
                 
                 $shiftSession->user_id = auth()->user()->id;
                 $shiftSession->session_id = Utilities::uuid();
@@ -162,14 +163,14 @@ class ShiftSessionsController extends Controller
 
             
 
-        //     DB::commit();
+            DB::commit();
             
-        //     return $this->jsonSuccessResponse([],'Shift session updated successfully.');
+            return $this->jsonSuccessResponse([],'Shift session updated successfully.');
 
-        // } catch (\Exception $e) {
-        //     DB::rollBack();
-        //     return $this->jsonErrorResponse([], 'An error occurred while updating the shift session. Please try again.', 500);
-        // }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse([], 'An error occurred while updating the shift session. Please try again.', 500);
+        }
         
     }
 

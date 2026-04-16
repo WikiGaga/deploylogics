@@ -73,7 +73,7 @@
                                                 <i class="la la-minus-circle"></i>
                                             </span>
                                         </div>
-                                        <input type="text" value="{{isset($supplier_name)?$supplier_name:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','supplierHelp')}}" id="supplier_name" name="supplier_name" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
+                                        <input type="text" value="{{isset($supplier_name)?$supplier_name:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','supplierHelp')}}" id="supplier_name" name="supplier_name" class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                         <input type="hidden" id="supplier_id" name="supplier_id" value="{{isset($supplier_id)?$supplier_id:''}}"/>
                                         <div class="input-group-append">
                                             <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
@@ -162,7 +162,7 @@
                                             </button>
                                         </div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
                                         </div>
                                     </th>
                                     <th scope="col">
@@ -379,7 +379,7 @@
 
             {
                 'id':'pd_barcode',
-                'fieldClass':'pd_barcode tb_moveIndex open_inline__help',
+                'fieldClass':'pd_barcode tb_moveIndex on_click_event open_inline__help',
                 'message':'Enter Barcode',
                 'require':true,
                 'readonly':true

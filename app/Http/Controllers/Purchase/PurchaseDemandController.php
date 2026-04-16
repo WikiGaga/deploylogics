@@ -243,7 +243,7 @@ class PurchaseDemandController extends Controller
         $type = 'purchase_demand';
         $data = [];
         $validator = Validator::make($request->all(), [
-            'supplier_id' => 'required|numeric',
+            // 'supplier_id' => 'required|numeric',
             'salesman' => 'nullable|numeric',
         ]);
         
