@@ -138,6 +138,9 @@ class EmployeeController extends Controller
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
         }
+        if($request->register==1){
+         return $this->jsonErrorResponse([], 'You Did not Register Employee Face from Web', 401);
+        }
         DB::beginTransaction();
         try{
             if(isset($id)){
