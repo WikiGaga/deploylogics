@@ -119,6 +119,12 @@ class StagingDashboardController extends Controller
                 'cols' => ['purchase_order_code', 'purchase_order_entry_date'],
                 'titles' => ['PO NO', 'Date'],
             ],
+            354 => [
+                'path' => '/shift_sessions/form/',
+                'pk' => 'session_id',
+                'cols' => ['session_no', 'session_id'],
+                'titles' => ['Session no', 'ID'],
+            ],
         ];
 
         if (isset($configs[$menuDtlId])) {

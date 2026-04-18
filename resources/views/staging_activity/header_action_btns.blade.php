@@ -42,8 +42,7 @@
             type="button"
             class="btn btn-sm btn-success stg-action-disabled"
             title="Update"
-            data-stg-not-allowed="{{ __('message.staging_no_access') }}"
-            onclick="(function(el){var msg=el.getAttribute('data-stg-not-allowed')||'Not allowed';if(window.toastr&&typeof window.toastr.error==='function'){window.toastr.error(msg);}else{alert(msg);}})(this); return false;">
+            data-stg-not-allowed="{{ __('message.staging_no_access') }}">
             Update
         </button>
     @endif
@@ -116,8 +115,7 @@
                     type="button"
                     class="btn btn-sm {{$btnClass}} stg-action-disabled"
                     title="{{$finalLabel}}"
-                    data-stg-not-allowed="{{ __('message.staging_no_access') }}"
-                    onclick="(function(el){var msg=el.getAttribute('data-stg-not-allowed')||'Not allowed';if(window.toastr&&typeof window.toastr.error==='function'){window.toastr.error(msg);}else{alert(msg);}})(this); return false;">
+                    data-stg-not-allowed="{{ __('message.staging_no_access') }}">
                     {{$finalLabel}}
                 </button>
             @endif

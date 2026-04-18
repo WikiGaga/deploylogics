@@ -15,14 +15,14 @@
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
             $branch = $data['branch'];
-            
+
             $readonly='required';
 
 
             if($case == 'new'){
                 $readonly='required';
                 $code = $data['session_no'];
-                
+                $selected_branch_for_new = $data['selected_session_branch_id'] ?? (auth()->user()->branch_id ?? null);
             }
             if($case == 'edit'){
                 $id = $data['current']->session_id;
@@ -34,10 +34,12 @@
     @permission($data['permission'])
     <form id="shift_sessions_form" class="kt-form" method="post" action="{{ action('Sales\ShiftSessionsController@store', isset($id)?$id:"") }}">
     <input type="hidden" value='{{$form_type}}' id="form_type" name="form_type">
+    <input type="hidden" value='{{ $data['menu_dtl_id'] ?? $data['menu_id'] ?? '' }}' id="menu_id" name="menu_id">
+    <input type="hidden" value='{{ isset($id) ? $id : '' }}' id="form_id" name="form_id">
     @csrf
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
         <div class="kt-portlet kt-portlet--mobile">
-            <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+            <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                 @include('elements.page_header',['page_data' => $data['page_data']])
             </div>
             <div class="kt-portlet__body">
@@ -52,23 +54,12 @@
                         </div>
                     </div>
                 </div>
+                @if($case == 'new')
+                <div class="alert alert-info font-weight-bold" role="alert" style="margin-bottom: 1.25rem;">
+                    Changing Session Branch will cause page refresh and update the session number according to the latest in that branch.
+                </div>
+                @endif
                 <div class="row form-group-block">
-                    <div class="col-lg-6">
-                        <div class="row">
-                            <label class="col-lg-12 erp-col-form-label">Session Start Date:</label>
-                            <div class="col-lg-12">
-                                <div class="input-group date">
-                                    <input type="hidden"  name="session_date" class="session_no" value="{{$code}}"/>
-                                    <input type="text" {{$readonly}} name="session_date" class="moveIndex form-control erp-form-control-sm c-date-p kt_datepicker_33" value="{{isset($data['current']->start_date)?$data['current']->start_date:""}}" autofocus/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">
-                                            <i class="la la-calendar"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="col-lg-6">
                         <div class="row">
                             <label class="col-lg-12 erp-col-form-label">Session Branch:</label>
@@ -76,17 +67,34 @@
                                 <div class="input-group date">
                                     @if($case == 'edit')
                                         <input type="text" {{$readonly}} name="session_branch" class="moveIndex form-control erp-form-control-sm c-date-p" value="{{isset($data['current']->branch->branch_name)?$data['current']->branch->branch_name:""}}"/>
-                                
+
                                     @else
-                                        <select id="" name="session_branch" class="form-control erp-form-control-sm">
+                                        <select id="session_branch_select" name="session_branch" class="form-control erp-form-control-sm">
                                             <option value="">{{ __('message.select') }}</option>
                                             @foreach ($branch as $b)
-                                                    <option value="{{ $b->branch_id }}" >
+                                                    <option value="{{ $b->branch_id }}" {{ ($case == 'new' && isset($selected_branch_for_new) && (string) $b->branch_id === (string) $selected_branch_for_new) ? 'selected' : '' }}>
                                                         {{ $b->branch_name }}</option>
                                             @endforeach
                                         </select>
-                                    
+
                                     @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <label class="col-lg-12 erp-col-form-label">Session Start Date:</label>
+                            <div class="col-lg-12">
+                                <div class="input-group date">
+                                    <input type="hidden" name="session_no" class="session_no" value="{{$code}}"/>
+                                    <input type="text" {{$readonly}} name="session_date" class="moveIndex form-control erp-form-control-sm c-date-p kt_datepicker_33" value="{{isset($data['current']->start_date)?$data['current']->start_date:""}}" autofocus/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <i class="la la-calendar"></i>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -158,7 +166,6 @@
                                         <select id="" name="session_status" class="form-control erp-form-control-sm">
                                             <option value="close" >close</option>
                                             <option value="open" >open</option>
-                                            @end
                                         </select>
 
                                     @endif
@@ -169,7 +176,7 @@
                     <div class="col-lg-12 mt-2">
                         <div class="row">
                             <div class="col-lg-12 text-right">
-                                <!-- <button 
+                                <!-- <button
                                     type="submit"
                                     @if(!isset($data['current']->session_status) || $data['current']->session_status == 'open') disabled @endif
                                     id="shift_session_submit"
@@ -184,6 +191,7 @@
             </div>
         </div>
     </div>
+    @include('staging_activity.auto_include')
     </form>
                 <!--end::Form-->
     @endpermission
@@ -194,9 +202,77 @@
 
 @section('customJS')
     <script src="{{ asset('js/pages/js/sale/shift_sessions.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>>
+    <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
+        function voucher_posted() {
+            var session_id = $('#form_id').val();
+            if (!session_id) {
+                toastr.error('Session id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/shift_sessions/post',
+                dataType: 'json',
+                data: { session_id: session_id },
+                success: function (response) {
+                    if (response && response.status == 'success') {
+                        toastr.success('Successfully Posted..!');
+                        location.reload();
+                        return;
+                    }
+                    var msg = (response && response.message) ? response.message : 'Unable to post.';
+                    toastr.error(msg);
+                },
+                error: function (xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to post.';
+                    toastr.error(msg);
+                }
+            });
+        }
+
+        function voucher_unposted() {
+            var session_id = $('#form_id').val();
+            if (!session_id) {
+                toastr.error('Session id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/shift_sessions/unposted',
+                dataType: 'json',
+                data: { data: [session_id] },
+                success: function (response) {
+                    if (response && (response.status == 'success' || response.success)) {
+                        toastr.success(response.message || 'Successfully Un-Posted..!');
+                        location.reload();
+                        return;
+                    }
+                    var msg = (response && response.message) ? response.message : 'Unable to un-post.';
+                    toastr.error(msg);
+                },
+                error: function (xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to un-post.';
+                    toastr.error(msg);
+                }
+            });
+        }
+
+        @if(isset($case) && $case == 'new')
+        $(document).on('change', '#session_branch_select', function () {
+            var v = $(this).val();
+            var url = new URL(window.location.href);
+            if (!v) {
+                url.searchParams.delete('session_branch');
+            } else {
+                url.searchParams.set('session_branch', v);
+            }
+            window.location.href = url.toString();
+        });
+        @endif
         var arrows;
         if (KTUtil.isRTL()) {
             arrows = {
@@ -217,13 +293,13 @@
             pickerPosition: 'bottom-left',
             todayHighlight: true,
             templates: arrows,
-            
+
             // Updated Format: dd-mm-yyyy followed by hours:minutes
             // 'hh' is 12-hour, 'HH' is 24-hour. 'ii' is minutes.
-            format: "dd-mm-yyyy HH:ii", 
-            
+            format: "dd-mm-yyyy HH:ii",
+
             showMeridian: true, // Set to true for AM/PM support
             minuteStep: 5      // Optional: interval between minutes
-        }); 
+        });
     </script>
 @endsection
