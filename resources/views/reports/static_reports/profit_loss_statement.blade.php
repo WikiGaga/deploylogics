@@ -506,7 +506,7 @@ $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purch
                             <td class="text-right">{{number_format($cogs_closing_stock,3)}}</td>
                         </tr>
                         <tr class="grand_total">
-                            <td class="rep-font-bold">Net Stock:</td>
+                            <td class="rep-font-bold">Net COGS:</td>
                             <td class="text-right rep-font-bold">{{number_format($cogs_net_stock,3)}}</td>
                         </tr>
                         @php
