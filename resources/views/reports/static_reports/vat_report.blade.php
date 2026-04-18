@@ -53,6 +53,7 @@
               AND (v.voucher_date between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
               $and_where_bcb_v
         ";
+        
         $domestic_taxable_supplies = \Illuminate\Support\Facades\DB::selectOne($qry_domestic_taxable_supplies);
         $domestic_taxable_supplies->vat_amount = ((float)($domestic_taxable_supplies->vat_sale ?? 0)) * 0.05;
 
@@ -151,8 +152,8 @@
                                 <tr>
                                     <td>1a</td>
                                     <td class="rep-font">Supplies of goods / services taxed at 5%</td>
-                                    <td class="text-right">{{number_format($domestic_taxable_supplies->vat_sale,3)}}</td>
-                                    <td class="text-right">{{number_format(((float)$domestic_taxable_supplies->vat_sale * 0.05),3)}}</td>
+                                    <td class="text-right">{{number_format($domestic_taxable_supplies->vat_amount,3)}}</td>
+                                    <td class="text-right">{{number_format(((float)$domestic_taxable_supplies->vat_amount * 0.05),3)}}</td>
                                 </tr>
                                 <tr>
                                     <td>1b</td>
