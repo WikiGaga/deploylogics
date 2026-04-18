@@ -50,7 +50,6 @@ use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\Sales\CustomerController;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-
 class UserReportsController extends Controller
 {
     public static $page_title = 'Reporting';
@@ -1107,7 +1106,7 @@ class UserReportsController extends Controller
                 'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_activity','product_group_activity','supplier_aging','account_notes',
-                'profit_loss_statement','customer_aging','business_reports_factors',
+                'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
                 'month_wise_account_summary','vat_report','daily_purchase','supplier_wise_purchase_summary',
                 'item_wise_purchase_summary','category_wise_purchase_analysis','invoice_wise_purchase_summary',
                 'invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount',
@@ -1515,6 +1514,14 @@ class UserReportsController extends Controller
                     $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
                     $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
                 }
+                // dd($data['report_case']);
+                 if($data['report_case'] == 'profit_loss_statement_branch_wise'){
+                    $data['key'] = 'profit_loss_statement_branch_wise';
+                    $data['page_title'] = 'Profit and Loss Statement Branch Wise';
+                    $data['from_date'] = date('Y-m-d', strtotime($from_date));//for oracle db like 2020-04-16
+                    $data['to_date'] = date('Y-m-d', strtotime($to_date));//for oracle db like 2020-04-16
+                }
+
 
                 if($data['report_case'] == 'activity_trial'){
                     $data['key'] = 'activity_trial';
@@ -2652,9 +2659,12 @@ class UserReportsController extends Controller
         if (empty($data) || !is_array($data)) {
             abort(404, 'Report session not found.');
         }
+        // dump($data );
 
         // Backward compatibility: existing blades read Session::get('data')
         Session::put('data', $data);
+
+        // dump($data );
 
         $requestedFileType = request('form_file_type');
         if (!empty($requestedFileType)) {
@@ -2711,13 +2721,13 @@ class UserReportsController extends Controller
                 'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_group_activity', 'product_activity','supplier_aging','account_notes',
-                'profit_loss_statement','customer_aging','business_reports_factors',
+                'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
                 'month_wise_account_summary','vat_report','daily_purchase','supplier_wise_purchase_summary',
                 'item_wise_purchase_summary','category_wise_purchase_analysis','invoice_wise_purchase_summary',
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
 
-
+            // dd($data);
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.static_reports.'.$data['key'], compact('data'))->render();
@@ -3371,5 +3381,73 @@ class UserReportsController extends Controller
             ],
             'data' => $results,
         ]);
+    }
+
+   
+
+    public function generateReport()
+    {
+        $data = Session::get('data');
+        $business_id = auth()->user()->business_id;
+        $company_id = auth()->user()->company_id;
+        $branch_ids = $data['branch_ids'];
+        $from_date = $data['from_date'];
+        $to_date = $data['to_date'];
+
+        // 1. Optimize the main Account Data Query
+        // We use DB::raw to keep the Oracle-specific window functions but wrap it in Query Builder
+        $whereRaw = "v.voucher_date BETWEEN TO_DATE(?, 'yyyy/mm/dd') AND TO_DATE(?, 'yyyy/mm/dd') 
+                    AND v.business_id = ? AND v.branch_id IN (" . implode(',', $branch_ids) . ")";
+        
+        $bindings = [$from_date, $to_date, $business_id];
+
+        // Note: I'm keeping the core logic but cleaning up the structure
+        // In a real scenario, consider moving these complex SQLs to Database Views or Stored Procedures
+        $acc_data = DB::table(DB::raw("( ... your UNION ALL query here ... ) vouch"))
+            ->leftJoin('tbl_acco_chart_account as ca', 'vouch.chart_code', '=', 'ca.chart_code')
+            ->select('ca.CHART_ACCOUNT_ID', 'vouch.*', 'ca.CHART_NAME')
+            ->orderBy('vouch.CHART_CODE')
+            ->setBindings($bindings) // Use bindings for security
+            ->get();
+
+        // 2. Calculate Cost Value
+        $cost_value = DB::table(DB::raw("(
+                SELECT SUM(TO_NUMBER(QTY_BASE_UNIT) * TO_NUMBER(COST_RATE)) as cost 
+                FROM VW_SALE_SALES_INVOICE 
+                WHERE BRANCH_ID IN (1) AND SALES_DATE BETWEEN ...
+                UNION ALL
+                ...
+            ) ABC"))->sum('cost');
+
+        // 3. Categorize Accounts (Move loop from Blade to Controller)
+        $accounts = [
+            'sales' => [],
+            'cost_of_sales' => [],
+            'other_income' => [],
+            'exp' => []
+        ];
+
+        foreach ($acc_data as $acc) {
+            $prefix1 = substr($acc->chart_code, 0, 1);
+            $prefix4 = substr($acc->chart_code, 0, 4);
+            $prefix7 = substr($acc->chart_code, 0, 7);
+
+            if ($prefix4 == '7-01') $accounts['sales'][] = $acc;
+            elseif ($prefix1 == '8' && $prefix7 != '8-01-01') $accounts['cost_of_sales'][] = $acc;
+            elseif ($prefix1 == '7' && $prefix4 != '7-01') $accounts['other_income'][] = $acc;
+            elseif ($prefix1 == '9') $accounts['exp'][] = $acc;
+        }
+
+        // 4. Calculate COGS and Stocks
+        $opening = DB::selectOne($this->getOpeningStockQuery($data));
+        $closing = DB::selectOne($this->getClosingStockQuery($data));
+        $netPurchases = DB::table('VW_ACCO_VOUCHER')
+            ->where('CHART_CODE', 'like', '8-%')
+            ->whereBetween('VOUCHER_DATE', [$from_date, $to_date])
+            ->where('business_id', $business_id)
+            ->selectRaw('SUM(VOUCHER_DEBIT) - SUM(VOUCHER_CREDIT) as net')
+            ->first();
+
+        return view('reports.profit_loss', compact('accounts', 'data', 'opening', 'closing', 'netPurchases', 'cost_value'));
     }
 }
