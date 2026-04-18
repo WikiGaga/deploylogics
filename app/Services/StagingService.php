@@ -56,8 +56,14 @@ class StagingService
 
             $menu = TblSoftMenuDtl::where('menu_dtl_name', $formName)->first();
             $tableName = $menu ? $menu->menu_dtl_table_name : null;
+            $menuDtlIdForPk = is_numeric($formNameOrMenuDtlId)
+                ? (string) $formNameOrMenuDtlId
+                : ($menu ? (string) $menu->menu_dtl_id : null);
+            $configuredDocumentPk = $menuDtlIdForPk
+                ? config('staging.document_primary_keys_by_menu.' . $menuDtlIdForPk)
+                : null;
 
-            if ($tableName && !$this->evaluateCriteriaConditions($criteria, $tableName, $formId)) {
+            if ($tableName && !$this->evaluateCriteriaConditions($criteria, $tableName, $formId, $configuredDocumentPk)) {
                 return null;
             }
         }
@@ -65,7 +71,7 @@ class StagingService
         return $criteria;
     }
 
-    public function evaluateCriteriaConditions($criteria, $formTableName, $formId)
+    public function evaluateCriteriaConditions($criteria, $formTableName, $formId, $configuredPrimaryKey = null)
     {
         $conditions = $criteria->conditions;
 
@@ -123,6 +129,22 @@ class StagingService
             return true;
         }
 
+        $primaryKey = null;
+        if ($configuredPrimaryKey !== null && $configuredPrimaryKey !== '') {
+            foreach ($columns as $col) {
+                if (strtolower($col) === strtolower($configuredPrimaryKey)) {
+                    $primaryKey = $col;
+                    break;
+                }
+            }
+            if ($primaryKey === null) {
+                return false;
+            }
+            $query = DB::table($formTableName);
+            $query->where($primaryKey, $formId);
+            return $query->whereRaw($whereClause, $bindings)->exists();
+        }
+
         $rawSegments = explode('_', strtolower($formTableName));
 
         $segments = $rawSegments;
@@ -173,6 +195,10 @@ class StagingService
                     break 2;
                 }
             }
+        }
+
+        if ($primaryKey === null && $formId !== null) {
+            return false;
         }
 
         $query = DB::table($formTableName);
