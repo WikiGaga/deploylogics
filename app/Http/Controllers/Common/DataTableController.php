@@ -864,6 +864,7 @@ class DataTableController extends Controller
 
     public function inlineHelpOpen(Request $request, $helpType, $str = null)
     {   
+        // dd($request->all(), $helpType, $str);
         $data['case'] = $helpType;
         if (isset($request['query']['generalSearch']) && !empty($request['query']['generalSearch'])) {
             $str = $request['query']['generalSearch'];
@@ -880,7 +881,7 @@ class DataTableController extends Controller
         }
         if (isset($request->unique_id)) {
             $unique_id = $request->unique_id;
-        }
+        } 
         if ($helpType == 'supplierHelp') {
             $data['show_name'] = 'supplier_name';
             $data['hideKeys'] = ['supplier_id'];
@@ -1758,6 +1759,7 @@ class DataTableController extends Controller
             ];
             return response()->json($result);
         } else {
+            // dd(compact('data'));
             $search= $request->val ?? null;
             // return $this->jsonSuccessResponse($data, "", 200);
             return Response::json(['body' => View::make('common.inline-help', compact('data','search'))->render()]);

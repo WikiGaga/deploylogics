@@ -368,7 +368,7 @@
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
                                                         <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
-                                                        <button type="button" class="btn btn-warning gridBtn print_cheque" data-date="{{$mode_date}}" data-name="{{$data->accounts->chart_name ?? ''}}" data-amount="{{number_format($credit,3)}}"><i class="la la-print"></i></button>
+                                                        <button type="button" class="btn btn-warning gridBtn print_cheque" data-date="{{$mode_date}}" data-code="{{$data->accounts->chart_code ?? ''}}" data-name="{{$data->accounts->chart_name ?? ''}}" data-amount="{{number_format($credit,3)}}"><i class="la la-print"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -551,19 +551,18 @@
     </form>
                 <!--end::Form-->
     @endpermission
-
      <div class="modal" id="print_cheque_modal">
     <div class="modal-dialog">
       <div class="modal-content">
       
-        <!-- Modal Header -->
+       
         <div class="modal-header">
           <h4 class="modal-title">Print Cheque</h4>
           <button type="button" class="close" data-dismiss="modal"></button>
         </div>
          <form method="POST" action="{{ route('cheque.print') }}" target="_blank">
                 @csrf
-        <!-- Modal body -->
+  
         <div class="modal-body">
             <h4>Select Date Formate:</h4> 
             <select name="date_formate" id="" class="form-control" >
@@ -571,6 +570,23 @@
             <option value="2">25/02/2026</option>
             <option value="3">25 02 2026</option>
             </select><br>
+             
+            <h4>Template:</h4>   
+
+            <select name="cheque_template_id" id="" class="form-control" required>
+            <option value="">Select</option>
+            @foreach ($TBL_cheque_layouts as $val)
+            <option value="{{ $val->id }}">{{ $val->name }}</option>
+            @endforeach
+            </select><br>
+
+       
+            <h4>Payee Name Language:</h4><br>
+                
+            <input type="radio" name="fav_language" value="english" class="lang-radio" checked>
+            <label class="">English: <span id="label_english_name"></span></label><br>
+            <input type="radio" name="fav_language" value="arabic" class="lang-radio">
+            <label class="">Arabic: <span id="label_arabic_name"></span></label>
 
             <h4>Date:</h4>    
             <input type="text" name="date" class="form-control" readonly value=""  id="cheque_date" />
@@ -583,25 +599,15 @@
             <br>
             <h4>Amount Partision:</h4>   
             <input type="text" name="amount_partision" class="form-control" readonly value=""  id="cheque_amount_partision" />
-            <br>
-            <h4>Template:</h4>   
-
-            <select name="cheque_template_id" id="" class="form-control" required>
-            <option value="">Select</option>
-            @foreach ($TBL_cheque_layouts as $val)
-            <option value="{{ $val->id }}">{{ $val->name }}</option>
-            @endforeach
-            
-            
-            </select>
+           
         </div>
         
-        <!-- Modal footer -->
+    
         <div class="modal-footer">
              <button type="submit" class="btn btn-success" >Print Cheque</button>
           <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
         </div>
-        
+        </form>
       </div>
     </div>
   </div>
@@ -793,25 +799,93 @@
             }
         });
 
-        $('.print_cheque').on('click', function(e) {
-            date = $(this).attr('data-date');
-            name = $(this).attr('data-name');
-            total_amount = $(this).attr('data-amount');
+        // $('.print_cheque').on('click', function(e) {
+        //     date = $(this).attr('data-date');
+        //     name = $(this).attr('data-name');
+        //     code = $(this).attr('data-code');
+        //     total_amount = $(this).attr('data-amount');
             
-            parts = total_amount.split('.');
-            amount = parts[0];
-            amount_partision = parts[1];
-            console.log(total_amount,parts,amount,amount_partision);
+        //     parts = total_amount.split('.');
+        //     amount = parts[0];
+        //     amount_partision = parts[1];
+        //     console.log(total_amount,parts,amount,amount_partision);
 
-             $('#cheque_date').val(date);
-             $('#cheque_title').val(name);
-             $('#cheque_amount').val(amount);
-             $('#cheque_amount_partision').val(amount_partision);
+        //      $('#cheque_date').val(date);
+        //      $('#cheque_title').val(name);
+        //      $('#cheque_amount').val(amount);
+        //      $('#cheque_amount_partision').val(amount_partision);
              
-            // $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
+        //     // $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
+        //     $('#print_cheque_modal').modal('show');
+        // });
+
+        $(document).ready(function() {
+        let englishName = "";
+        let arabicName = "";
+
+        $('.print_cheque').on('click', function(e) {
+            let btn = $(this);
+            let date = btn.attr('data-date');
+            let name = btn.attr('data-name');
+            let code = btn.attr('data-code');
+            let total_amount = btn.attr('data-amount').toString();
+
+            // Split amount
+            let parts = total_amount.split('.');
+            let amount = parts[0];
+            let amount_partition = parts[1] ? parts[1].padEnd(2, '0') : '00';
+
+            // Show modal with existing data first
+            $('#cheque_date').val(date);
+            $('#cheque_title').val(name); // Default to English
+            $('#cheque_amount').val(amount);
+            $('#cheque_amount_partision').val(amount_partition);
+            $('#label_english_name').text(name);
+            $('#label_arabic_name').text('Loading...');
+
+            // Fetch Arabic Name via AJAX
+            $.ajax({
+                url: "{{ route('account.get_arabic') }}",
+                method: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    name: name,
+                    code: code
+                },
+                success: function(response) {
+                    let arabic = response.arabic_name;
+                    
+                    // Update the Labels and Radio Data
+                    $('#label_arabic_name').text(arabic || 'Not Found');
+                    
+                    // Store names in the radio buttons for the change event
+                    $('input[value="urdu"]').val(name);   // Usually English/Urdu name
+                    $('input[value="Arabic"]').val(arabic);
+
+                    // If user previously selected Arabic, update the title input immediately
+                    if ($('#Arabic').is(':checked')) {
+                        $('#cheque_title').val(arabic);
+                    }
+                },
+                error: function() {
+                    $('#label_arabic_name').text('Error fetching name');
+                }
+            });
+
             $('#print_cheque_modal').modal('show');
         });
 
+        // Switch title when radio changes
+        $('.lang-radio').on('change', function() {
+            let val = $(this).val();
+            if(val == 'english') {
+                $('#cheque_title').val($('#label_english_name').text());
+            }else{
+                $('#cheque_title').val($('#label_arabic_name').text());
+
+            }
+        });
+    });
         $(document).on('click','.marked',function(){
             var balance_amount  = $(this).parents('tr').find('.balance_amount').val();
             var curr_pay = $(this).parents('tr').find('.curr_pay');

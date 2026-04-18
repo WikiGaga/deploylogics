@@ -159,6 +159,8 @@ public function printCheque(Request $request)
     $inputs['amount']=$inputs['amount'].".".$inputs['amount_partision'];
     $inputs['amount_partision']='';
 
+    dd($total);
+
     $inputs['amount_words'] = \App\Library\Utilities::amountToWords($total);
 
     return view('check.print_pdf', compact('template', 'fields','inputs'));

@@ -12,7 +12,7 @@
                 $chart_level = isset(Session::get('lastData')['chart_level'])?Session::get('lastData')['chart_level']:'';
                 $parent_code = isset(Session::get('lastData')['parent_account_code'])?Session::get('lastData')['parent_account_code']:'';
                 $chart_code = isset(Session::get('lastData')['maxcode'])?Session::get('lastData')['maxcode']:'';
-                $data['level'] = \App\Models\TblAccCoa::select('chart_code','chart_name')->where('chart_level', '=', $chart_level-1)->where(\App\Library\Utilities::currentBC())->get();
+                $data['level'] = \App\Models\TblAccCoa::select('chart_code','chart_name','chart_arabic_name')->where('chart_level', '=', $chart_level-1)->where(\App\Library\Utilities::currentBC())->get();
             }
         }
         if($case == 'edit'){
@@ -21,6 +21,7 @@
             $parent_account_code = $data['current']->parent_account_code;
             $chart_code = $data['current']->chart_code;
             $chart_name = $data['current']->chart_name;
+            $chart_arabic_name = $data['current']->chart_arabic_name;
             $reference_code = $data['current']->chart_reference_code;
             $pos_default = $data['current']->pos_default;
             $can_sale = $data['current']->chart_can_sale;
@@ -129,6 +130,12 @@
                         <label class="col-lg-3 erp-col-form-label">{{ __('message.name') }}:<span class="required" aria-required="true"> * </span></label>
                         <div class="col-lg-6">
                             <input type="text" name="name" value="{{isset($chart_name)?$chart_name:''}}" class="form-control moveIndex erp-form-control-sm medium_text">
+                        </div>
+                    </div>
+                    <div class="form-group-block row">
+                        <label class="col-lg-3 erp-col-form-label">Arabic Name:<span class="required" aria-required="true"> * </span></label>
+                        <div class="col-lg-6">
+                            <input type="text" name="chart_arabic_name" value="{{isset($chart_arabic_name)?$chart_arabic_name:''}}" class="form-control moveIndex erp-form-control-sm medium_text">
                         </div>
                     </div>
                     <div class="form-group-block row">

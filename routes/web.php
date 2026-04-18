@@ -1142,7 +1142,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('Posted/{id?}','Accounts\VoucherController@VoucherPosted');
             Route::post('UnPosted/{id?}','Accounts\VoucherController@VoucherUnPosted');
         });
-
+        Route::post('/get-account-arabic-name', 'Accounts\VoucherController@getAccountArabicName')->name('account.get_arabic');
         Route::prefix('accounts/list')->group(function () {
             Route::get('pv','Accounts\VoucherListController@pvList');
         });

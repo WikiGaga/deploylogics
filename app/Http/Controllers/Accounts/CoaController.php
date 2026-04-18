@@ -56,7 +56,7 @@ class CoaController extends Controller
                 $data['permission'] = self::$menu_dtl_id.'-edit';
                 $data['id'] = $id;
                 $data['current'] = TblAccCoa::with('chart_branches')->where('chart_account_id',$id)->where(Utilities::currentBC())->first();
-                $data['level'] = TblAccCoa::select('chart_code','chart_name')->where('chart_level', '=', $data['current']->chart_level-1)->where(Utilities::currentBC())->get();
+                $data['level'] = TblAccCoa::select('chart_code','chart_name','chart_arabic_name')->where('chart_level', '=', $data['current']->chart_level-1)->where(Utilities::currentBC())->get();
                 $data['chart_branch'] = explode(',',$data['current']->chart_branch_id);
             }else{
                 abort('404');
@@ -153,6 +153,7 @@ class CoaController extends Controller
             }
             $form_id = $coa->chart_account_id;
             $coa->chart_name = $request->name;
+            $coa->chart_arabic_name = $request->chart_arabic_name;
             $coa->chart_code = $request->chart_code;
             $coa->chart_reference_code = $request->reference_code;
             $coa->chart_branch_id = (isset($request->chart_branch_id) && !empty($request->chart_branch_id))?current($request->chart_branch_id):auth()->user()->branch_id;
@@ -225,7 +226,7 @@ class CoaController extends Controller
 
     public function coaDisplayData($radioValue)
     {
-        $columns = TblAccCoa::select('chart_code','chart_name')
+        $columns = TblAccCoa::select('chart_code','chart_name','chart_arabic_name')
         ->where('chart_level', '=', $radioValue-1)
         ->where(Utilities::currentBCB())
         ->get();

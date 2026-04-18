@@ -627,6 +627,7 @@ class Utilities
 
     public static function amountToWords(float $amount, string $currency = 'Omani Rial', string $subunit = 'Baisa'): string
     {
+        dd($amount);
         if (!is_numeric($amount)) {
             return 'Invalid amount';
         }

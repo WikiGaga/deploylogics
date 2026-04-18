@@ -4,7 +4,7 @@
 <div class="modal-body" style="padding: 2px;">
 @php
     $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
-    $data['parent_acc'] = \App\Models\TblAccCoa::select('chart_account_id','chart_code','chart_name')->where('chart_account_id', $data['parent_id'])->where(\App\Library\Utilities::currentBC())->first();
+    $data['parent_acc'] = \App\Models\TblAccCoa::select('chart_account_id','chart_code','chart_name','chart_arabic_name')->where('chart_account_id', $data['parent_id'])->where(\App\Library\Utilities::currentBC())->first();
     $parent_account_id = $data['parent_acc']->chart_account_id;
     $parent_chart_code = $data['parent_acc']->chart_code;
     $parent_chart_name = $data['parent_acc']->chart_name;
@@ -20,6 +20,7 @@
         $parent_account_id = $data['current']->parent_account_id;
         $chart_code = $data['current']->chart_code;
         $chart_name = $data['current']->chart_name;
+        $chart_arabic_name = $data['current']->chart_arabic_name;
         $reference_code = $data['current']->chart_reference_code;
         $pos_default = $data['current']->pos_default;
         $can_sale = $data['current']->chart_can_sale;
@@ -86,6 +87,12 @@
                         <label class="col-lg-3 erp-col-form-label">Name:<span class="required" aria-required="true"> * </span></label>
                         <div class="col-lg-6">
                             <input type="text" name="name" value="{{isset($chart_name)?$chart_name:''}}" class="form-control moveIndex erp-form-control-sm medium_text">
+                        </div>
+                    </div>
+                     <div class="form-group-block row">
+                        <label class="col-lg-3 erp-col-form-label">Arabic Name:<span class="required" aria-required="true"> * </span></label>
+                        <div class="col-lg-6">
+                            <input type="text" name="chart_arabic_name" value="{{isset($chart_arabic_name)?$chart_arabic_name:''}}" class="form-control moveIndex erp-form-control-sm medium_text">
                         </div>
                     </div>
                     <div class="form-group-block row">

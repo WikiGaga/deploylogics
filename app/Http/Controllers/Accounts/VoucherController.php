@@ -237,6 +237,20 @@ class VoucherController extends Controller
         return view('accounts.'.$formUrl.'.form',compact('data'));
     }
 
+    public function getAccountArabicName(Request $request)
+{
+    $account = DB::table('tbl_acco_chart_account')
+                ->where('chart_name', $request->name)
+                ->orwhere('chart_code', $request->code)
+                ->first();
+
+                // dd($request->name,$request->code,$account,$account->chart_arabic_name);
+
+    return response()->json([
+        'arabic_name' => $account ? $account->chart_arabic_name : ''
+    ]);
+}
+
     /**
      * Store a newly created resource in storage.
      *
