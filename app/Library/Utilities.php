@@ -624,10 +624,16 @@ class Utilities
         $res = str_replace("-"," ",$string);
         return ucwords($res);
     }
-
-    public static function amountToWords(float $amount, string $currency = 'Omani Rial', string $subunit = 'Baisa'): string
+    public static function amountToWords($amount, string $currency = 'Omani Rial', string $subunit = 'Baisa'): string
     {
-        dd($amount);
+        // Clean the input: Remove commas if it's a string
+        if (is_string($amount)) {
+            $amount = str_replace(',', '', $amount);
+        }
+
+        // Cast to float for mathematical operations
+        $amount = (float) $amount;
+
         if (!is_numeric($amount)) {
             return 'Invalid amount';
         }
@@ -636,7 +642,11 @@ class Utilities
         $amount = abs($amount);
         
         $whole = (int) $amount;
+        
+        // Note: Since Omani Rial uses 3 decimal places (Baisa), 
+        // your logic * 1000 is correct.
         $fraction = (int) round(($amount - $whole) * 1000);
+        
         $words = [];
         
         if ($isNegative) {
@@ -652,11 +662,44 @@ class Utilities
         }
         
         if ($fraction > 0) {
+            // Ensure fraction is treated as 3 digits for Baisa
             $words[] = self::numberToWords($fraction) . ' ' . $subunit;
         }
         
         return implode(' and ', $words) . ' Only';
     }
+    // public static function amountToWords(float $amount, string $currency = 'Omani Rial', string $subunit = 'Baisa'): string
+    // {
+       
+    //     if (!is_numeric($amount)) {
+    //         return 'Invalid amount';
+    //     }
+
+    //     $isNegative = $amount < 0;
+    //     $amount = abs($amount);
+        
+    //     $whole = (int) $amount;
+    //     $fraction = (int) round(($amount - $whole) * 1000);
+    //     $words = [];
+        
+    //     if ($isNegative) {
+    //         $words[] = 'Negative';
+    //     }
+        
+    //     if ($whole === 0 && $fraction === 0) {
+    //         return 'Zero ' . $currency . ' Only';
+    //     }
+        
+    //     if ($whole > 0) {
+    //         $words[] = self::numberToWords($whole) . ' ' . $currency;
+    //     }
+        
+    //     if ($fraction > 0) {
+    //         $words[] = self::numberToWords($fraction) . ' ' . $subunit;
+    //     }
+        
+    //     return implode(' and ', $words) . ' Only';
+    // }
 
     private static function numberToWords(int $number): string
     {
