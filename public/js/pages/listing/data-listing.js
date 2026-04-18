@@ -50,6 +50,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 var key_id = row[table_id];
                 var voucher_status = row['voucher_status'];
                 var isPosted = (row.posted == 1 || row.posted == '1');
+                console.log('isPosted',isPosted);
                 var dropdownLink = false;
                 var btnDropdownLink = "";
                 var btnEdit = "";
@@ -94,6 +95,12 @@ var KTDatatableRemoteAjaxDemo = function() {
                         }
                         btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
 
+                    }else if(casetype == 'shift_sessions'){
+                        if(!isPosted){
+                            btnPrint += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                        }
+                        btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+
                     }else if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         casetype == 'cpv' ||
@@ -113,14 +120,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     dropdownLink = true;
                 }
                 if(btnEditView){
-                    if(casetype == 'purchase-order'){
-
-                        // if(!isPosted){
-                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
-                                <i class="la la-edit"></i>\
-                            </a>';
-                        // }
-                    }else if(casetype == 'pve' ||
+                    if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         // casetype == 'cpv' ||
                         // casetype == 'crv'||
@@ -143,7 +143,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                 }
                 if(btnDelView){
-                    if(casetype == 'purchase-order'){
+                    if(casetype == 'purchase-order' || casetype == 'shift_sessions'){
                         if(!isPosted){
                             var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
@@ -549,6 +549,58 @@ $(document).on('click', '.POUnPosted', function() {
         },
         error: function(response, status) {
             toastr.error('Error while un-posting.');
+        }
+    });
+});
+
+$(document).on('click', '.SSPosted', function() {
+    var session_id = $(this).attr('data-id');
+    var url = '/shift_sessions/post';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { session_id: session_id },
+        success: function(response, data) {
+            if (response && response.status == 'success') {
+                toastr.success('Successfully Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
+            toastr.error(msg);
+        }
+    });
+});
+
+$(document).on('click', '.SSUnPosted', function() {
+    var session_id = $(this).attr('data-id');
+    var url = '/shift_sessions/unposted';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { data: [session_id] },
+        success: function(response, data) {
+            if (response && (response.status == 'success' || response.success)) {
+                toastr.success('Successfully Un-Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
+            toastr.error(msg);
         }
     });
 });

@@ -109,6 +109,10 @@ class Utilities
         if($biz_type == 'branch'){
             $max = $max->where('branch_id',$branch_id);
         }
+        if(!empty($doc_data['filter_by_prefix'])){
+            $prefix = strtoupper($code_prefix);
+            $max = $max->where($code_field, 'LIKE', $prefix.'-%');
+        }
 //        dd($max);
         $max = $max->max($code_field);
 //        dd($max);

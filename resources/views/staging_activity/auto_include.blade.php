@@ -81,6 +81,16 @@
             if (!btn || !btn.form) return;
             var code = (btn.getAttribute('data-staging-action-code') || '').toLowerCase();
             btn.form.setAttribute('data-staging-last-action-code', code);
+            var actionId = btn.value || btn.getAttribute('data-staging-action-id') || '';
+            btn.form.setAttribute('data-staging-last-action-id', actionId);
+            var hidActionId = btn.form.querySelector('#staging_current_actions_id');
+            if (hidActionId) {
+                hidActionId.value = actionId;
+            }
+            var hidCode = btn.form.querySelector('#staging_action_code');
+            if (hidCode) {
+                hidCode.value = btn.getAttribute('data-staging-action-code') || '';
+            }
         }, true);
     })();
     </script>

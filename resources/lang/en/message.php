@@ -268,4 +268,5 @@ return array (
   'staging_no_access' => 'You do not have access to perform this action at the current stage.',
   'staging_save_not_allowed' => 'Save is not allowed at the current stage.',
   'document_canceled_no_action' => 'This document is canceled. No further actions can be performed.',
+  'document_not_in_current_branch' => 'This document is not available in your current branch.',
 );

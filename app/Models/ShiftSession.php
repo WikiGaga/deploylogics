@@ -49,7 +49,7 @@ class ShiftSession extends Model
         'branch_id' => 'integer',
         'business_id' => 'integer',
         'user_id' => 'integer',
-        'session_no' => 'integer',
+        'session_no' => 'string',
         'session_status' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
