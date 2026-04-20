@@ -23,7 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Register staging view composer for all views
         view()->composer('*', \App\Http\ViewComposers\StagingComposer::class);
     }
 }
