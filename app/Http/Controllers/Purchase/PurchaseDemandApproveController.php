@@ -169,6 +169,10 @@ class PurchaseDemandApproveController extends Controller
                 $sr_no = 1;
                 foreach($request->pd as $pd){
                     if($pd['action']=='approved' || $pd['action']=='reject'){
+
+                    // update supplier of demand
+
+                        DB::table('tbl_purc_demand')->where('demand_id',$pd['demand_id'])->update(['supplier_id'=>$pd['supplier_id']]);
                         $demandApproveDtl = new TblPurcDemandApprovalDtl();
                         $demandApproveDtl->demand_dtl_id = $pd['demand_dtl_id'];
                         $demandApproveDtl->demand_id = $pd['demand_id'];
@@ -208,6 +212,14 @@ class PurchaseDemandApproveController extends Controller
                         $demandApproveDtl->business_id = auth()->user()->business_id;
                         $demandApproveDtl->company_id = auth()->user()->company_id;
                         $demandApproveDtl->save();
+
+                        // add or update supplier against product
+
+                        DB::table('tbl_purc_product_suppliers')
+                            ->updateOrInsert(
+                                ['product_id' => $pd['product_id'], 'branch_id' =>$pd['branch_id']],
+                                ['supplier_id' => $pd['supplier_id']]
+                            );
 
                         $demandDtl = TblPurcDemandDtl::where('demand_dtl_id',$pd['demand_dtl_id'])->first();
                         $demandDtl->demand_dtl_approve_status = $pd['action'];

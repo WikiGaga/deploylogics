@@ -327,6 +327,9 @@
 @section('customJS')
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script src="{{ asset('js/pages/js/open-modal.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+
     <script>
         $(document).ready(function(e){
             calculateGridTotalValue();
@@ -455,7 +458,8 @@
                             '<td><input type="text" id="product_name" name="pd['+total_length+'][product_name]" data-id="product_name" value="'+notNull(response[i]['product']['product_name'])+'" title="'+notNull(response[i]['product']['product_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="uom" name="pd['+total_length+'][uom_name]" value="'+notNull(response[i]['uom']['uom_name'])+'" title="'+notNull(response[i]['uom']['uom_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
                             '<td><input type="text" id="packing" name="pd['+total_length+'][packing_name]" value="'+notNull(response[i]['demand_dtl_packing'])+'" title="'+notNull(response[i]['demand_dtl_packing'])+'" class="form-control erp-form-control-sm" readonly></td>' +
-                            '<td><input type="text" id="supplier_name" name="pd['+total_length+'][supplier_name]" value="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" title="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
+                            // '<td><input type="text" id="supplier_name" name="pd['+total_length+'][supplier_name]" value="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" title="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" class="form-control erp-form-control-sm" readonly></td>' +
+                            '<td><input type="text" id="supplier_name" name="pd['+total_length+'][supplier_name]" value="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" title="'+notNull(response[i]['demand']['supplier']['supplier_name'])+'" data-url="{{action('Common\DataTableController@inlineHelpOpen','supplierHelp')}}"  class="form-control erp-form-control-sm open_inline__help on_click_event"></td>' +
                             '<td><input type="text" id="physical_stock" name="pd['+total_length+'][physical_stock]" value="'+notNull(response[i]['demand_dtl_physical_stock'])+'" title="'+notNull(response[i]['demand_dtl_physical_stock'])+'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
                             '<td><input type="text" id="store_stock" name="pd['+total_length+'][store_stock]" value="'+notNull(response[i]['demand_dtl_store_stock'])+'" title="'+notNull(response[i]['demand_dtl_store_stock'])+'" class="form-control erp-form-control-sm validNumber" readonly></td>' +
                             '<td><input type="text" id="stock_match" name="pd['+total_length+'][stock_match]" value="'+notNull(response[i]['demand_dtl_stock_match'])+'" title="'+notNull(response[i]['demand_dtl_stock_match'])+'" class="form-control erp-form-control-sm" readonly></td>' +

@@ -1,10 +1,13 @@
 $(document).on('click','.data_tbody_row',function(e){
+    
     var thix = $(this);
     var caseType = thix.parents('#inLineHelp').find('.data_thead_row').attr('id');
     var tr = $('.open_inline__help__focus').parents('tr');
     var selected_row = thix;
     var addRow = 0;
     var checkNewEntry = false;
+    console.log('caseType',caseType);
+
     if(caseType == 'accountsHelp'){
         get_acc_detail(tr,selected_row,addRow,checkNewEntry);
     }

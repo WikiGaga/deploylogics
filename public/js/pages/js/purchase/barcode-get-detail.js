@@ -14,8 +14,10 @@ $(document).on("mouseover", '.data_tbody_row', function(e) {
     //tr.find('.pd_barcode').val(barcode);
 });
 $(document).on('click', '.data_tbody_row', function() {
+
     var thix = $(this);
     var caseType = thix.parents('#inLineHelp').find('.data_thead_row').attr('id');
+    console.log('barcode click',caseType)
     var form_type = $('#form_type').val();
     var keycodeNo = 999; // mouse click
     var thix_val = thix.find('tr.data-dtl>td[data-field="product_barcode_barcode"]').text();
