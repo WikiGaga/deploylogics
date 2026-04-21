@@ -255,7 +255,8 @@ class StockController extends Controller
             'code_type'         => $data['stock_code_type'],
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
-
+        $data['menu_dtl_id'] = $this->menu_id;
+        $data['perPrefix'] = $this->menu_id;
         // dd($formUrl);
 
         return view('inventory.'.$formUrl.'.form',compact('data'));
