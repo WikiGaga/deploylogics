@@ -49,6 +49,7 @@ class StockController extends Controller
     public function __construct(StagingService $stagingService)
     {
         $this->stagingService = $stagingService;
+        $this->menu_id = '';
     }
 
     /**
