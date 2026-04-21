@@ -212,6 +212,14 @@ class StockController extends Controller
                 if($type == 'stock-transfer' && $data['current']->stock_receive_status == 1){
                     //$data['page_data']['action'] = '';
                 }
+
+                $data['page_data']['post'] = action('Inventory\StockController@post');
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
+
+                if(isset($data['current']->posted) && $data['current']->posted == 1){
+                    $data['page_data']['action'] = '';
+                }
+
             }else{
                 abort('404');
             }
@@ -345,7 +353,7 @@ class StockController extends Controller
                     ]);
                     $stock->save();
                 }
-                DB::commit();
+                // DB::commit();
 
                 $data = array_merge($data, Utilities::returnJsonEditForm());
                 $isInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
