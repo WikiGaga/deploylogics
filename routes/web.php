@@ -1234,9 +1234,9 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('get-stock-transfer-dtl-data', 'Inventory\StockController@getStockTransferDtlData');
             Route::post('get-grn-dtl-data', 'Inventory\StockController@getGRNDtlData');
 
-            Route::post('{type}/post','Inventory\StockController@post');
-            Route::post('{type}/posted','Inventory\StockController@Posted');
-            Route::post('{type}/unposted','Inventory\StockController@UnPosted');
+            Route::post('post','Inventory\StockController@post');
+            Route::post('posted','Inventory\StockController@Posted');
+            Route::post('unposted','Inventory\StockController@UnPosted');
 
         });
 
