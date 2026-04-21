@@ -42,10 +42,11 @@
         <input type="hidden" name="stock_code_type" value='{{$data['stock_code_type']}}' id="form_type">
         <input type="hidden" name="stock_menu_id" value='{{$data['stock_menu_id']}}'>
         <input type="hidden" name="branch" value="{{auth()->user()->branch_id}}">
+        <input type="hidden" id="stock_id" name="stock_id" value="{{ isset($id) ? $id : '' }}">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
-                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
-                    @include('elements.page_header',['page_data' => $data['page_data']])
+                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
+                    @include('elements.page_header', ['page_data' => $data['page_data']])
                 </div>
                 <div class="kt-portlet__body">
                     <div class="row form-group-block">
@@ -317,6 +318,7 @@
                 </div>
             </div>
         </div>
+        @include('staging_activity.auto_include')
     </form>
     <!--end::Form-->
     @endpermission
@@ -334,6 +336,50 @@
         var formcase = '{{$case}}';
     </script>
     <script>
+
+        var type = "{{ $type }}";
+        function voucher_posted(){
+            var stock_id = $('#stock_id').val();
+            if(!stock_id){
+                toastr.error('Stock Transfer id not found');
+                return;
+            }
+            var url = '/stock/' + type + '/post';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url: url,
+                data: { stock_id: stock_id },
+                success: function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success('Successfully Posted..!');
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function voucher_unposted(){
+            var stock_id = $('#stock_id').val();
+            if(!stock_id){
+                toastr.error('Stock Transfer id not found');
+                return;
+            }
+            var url = '/stock/' + type + '/unposted';
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url: url,
+                data: { data: [stock_id] },
+                success: function(response){
+                    if(response['status'] == 'success'){
+                        toastr.success(response['message'] || 'Successfully Un-Posted..!');
+                        location.reload();
+                    }
+                }
+            });
+        }
+
         var productHelpUrl = "{{url('/common/inline-help/productHelp')}}";
         var arr_text_Field = [
             // keys = id, fieldClass, readonly(boolean), require(boolean)
