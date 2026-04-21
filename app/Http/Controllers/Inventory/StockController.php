@@ -327,6 +327,34 @@ class StockController extends Controller
             }
             $form_id = $stock->stock_id;
             $stock->stock_code_type =  $formType;
+
+            if(isset($id)){
+                $this->assertCanSaveWithStaging($request, $this->menu_id, $form_id, false, $stock);
+            }
+
+            if (isset($id) && !$this->stagingShouldPersistFormChanges($request, $this->menu_id, $form_id, $stock)) {
+                $wasInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+                $stagingService = new StagingService();
+                $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
+
+                if ($criteriaApplies) {
+                    $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
+                        'listing_view' => 'vw_inve_stock',
+                        'form_path' => $type . '/form',
+                        'document_code_key' => 'stock_code',
+                    ]);
+                    $stock->save();
+                }
+                DB::commit();
+
+                $data = array_merge($data, Utilities::returnJsonEditForm());
+                $isInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
+                $data['redirect'] = $isInStaging
+                    ? '/' . $type . '/form/' . $form_id
+                    : $this->prefixIndexPage . $type . '/form';
+                return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+            }
+
             $stock->stock_date =   date('Y-m-d', strtotime($request->stock_date));
             $stock->stock_menu_id =  $request->stock_menu_id;
             $stock->sales_rate_type =  isset($request->rate_type)?$request->rate_type:"";
@@ -818,6 +846,59 @@ class StockController extends Controller
                 }
                 // end insert update stock transfer voucher
             }
+
+            $wasInStaging = isset($id) && !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
+            $stagingService = new StagingService();
+            $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
+
+            if(!$criteriaApplies){
+                $stock->current_stg_id = null;
+                $stock->staging_apply = 1;
+                $stock->posted = 1;
+                $stock->save();
+                \App\Models\TblStgFormLog::where('menu_dtl_id', $this->menu_id)
+                    ->where('document_id', $form_id)
+                    ->update(['posted' => 1]);
+            }else{
+                if(isset($stock->posted) && (int)$stock->posted === 1){
+                    $stock->posted = 0;
+                }
+                if(isset($stock->staging_apply) && (int)$stock->staging_apply === 1){
+                    $stock->staging_apply = 0;
+                }
+                if(empty($stock->current_stg_id)){
+                    $flows = $stagingService->getFormFlows($this->menu_id, null, $form_id, $wasInStaging);
+                    if(!empty($flows['all'])){
+                        $stock->current_stg_id = $flows['all'][0]->stg_flows_id;
+                    }
+                }
+
+                $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
+                    'listing_view' => 'vw_inve_stock',
+                    'form_path' => $type . '/form',
+                    'document_code_key' => 'stock_code',
+                ]);
+
+                $currentFlowId = $request->input('current_flow_id');
+                $nextFlowId = $request->input('next_flow_id');
+                $actionId = $request->input('current_actions_id');
+                if ($currentFlowId !== null && $currentFlowId !== '' && $nextFlowId !== null && $nextFlowId !== '' && $actionId !== null && $actionId !== '') {
+                    $actions = $stagingService->getFormActions($this->menu_id, $currentFlowId, $form_id, $wasInStaging);
+                    foreach ($actions as $action) {
+                        if ((string) $action->stg_actions_id === (string) $actionId) {
+                            $name = strtolower($action->stg_actions_name ?? '');
+                            $orig = strtolower($action->original_action ?? $name);
+                            if (in_array($name, ['forward'], true) || in_array($orig, ['forward'], true)) {
+                                $stock->current_stg_id = $nextFlowId;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                $stock->save();
+            }
+
 
         }catch (QueryException $e) {
             DB::rollback();
