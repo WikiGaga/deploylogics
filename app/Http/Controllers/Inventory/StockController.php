@@ -213,7 +213,7 @@ class StockController extends Controller
                     //$data['page_data']['action'] = '';
                 }
 
-                $data['page_data']['post'] = action('Inventory\StockController@post');
+                $data['page_data']['post'] = action('Inventory\StockController@post', ['type' => $type]);
                 $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
 
                 if(isset($data['current']->posted) && $data['current']->posted == 1){
