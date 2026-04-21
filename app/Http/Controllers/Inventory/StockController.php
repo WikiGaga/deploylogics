@@ -24,6 +24,8 @@ use App\Models\TblSoftBranch;
 use App\Models\ViewInveDisplayLocation;
 use App\Models\ViewInveStock;
 use App\Models\TblAccCoa;
+use App\Traits\HasStaging;
+use App\Services\StagingService;
 
 
 use Illuminate\Http\Request;
@@ -41,6 +43,14 @@ use Maatwebsite\Excel\Importer;
 
 class StockController extends Controller
 {
+    use HasStaging;
+    $menu_id = '';
+
+    public function __construct(StagingService $stagingService)
+    {
+        $this->stagingService = $stagingService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -79,6 +89,7 @@ class StockController extends Controller
                 $formUrl = 'opening_stock';
                 $data['stock_code_type'] = 'os';
                 $data['stock_menu_id'] = '54';
+                $this->menu_id = '54';
                 break;
             }
             case 'stock-transfer': {
@@ -86,6 +97,7 @@ class StockController extends Controller
                 $formUrl = 'stock_transfer';
                 $data['stock_code_type'] = 'st';
                 $data['stock_menu_id'] = '65';
+                $this->menu_id = '65';
                 break;
             }
             case 'stock-adjustment': {
@@ -93,6 +105,7 @@ class StockController extends Controller
                 $formUrl = 'stock_adjustment';
                 $data['stock_code_type'] = 'sa';
                 $data['stock_menu_id'] = '55';
+                $this->menu_id = '55';
                 break;
             }
 
@@ -101,6 +114,7 @@ class StockController extends Controller
                 $formUrl = 'stock_item';
                 $data['stock_code_type'] = 'di';
                 $data['stock_menu_id'] = '57';
+                $this->menu_id = '57';
                 break;
             }
             case 'expired-items': {
@@ -108,6 +122,7 @@ class StockController extends Controller
                 $formUrl = 'stock_item';
                 $data['stock_code_type'] = 'ei';
                 $data['stock_menu_id'] = '58';
+                $this->menu_id = '58';
                 break;
             }
             case 'sample-items': {
@@ -115,6 +130,7 @@ class StockController extends Controller
                 $formUrl = 'stock_item';
                 $data['stock_code_type'] = 'sp';
                 $data['stock_menu_id'] = '56';
+                $this->menu_id = '56';
                 break;
             }
             case 'repair-items': {
@@ -122,6 +138,7 @@ class StockController extends Controller
                 $formUrl = 'stock_item';
                 $data['stock_code_type'] = 'ri';
                 $data['stock_menu_id'] = '183';
+                $this->menu_id = '183';
                 break;
             }
             case 'stock-receiving': {
@@ -129,6 +146,7 @@ class StockController extends Controller
                 $formUrl = 'stock_receiving';
                 $data['stock_code_type'] = 'str';
                 $data['stock_menu_id'] = '76';
+                $this->menu_id = '76';
                 break;
             }
             case 'internal-stock-transfer': {
@@ -136,6 +154,7 @@ class StockController extends Controller
                 $formUrl = 'internal_stock_transfer';
                 $data['stock_code_type'] = 'ist';
                 $data['stock_menu_id'] = '131';
+                $this->menu_id = '131';
                 break;
             }
             case 'disassemble-products': {
@@ -143,9 +162,11 @@ class StockController extends Controller
                 $formUrl = 'assemble_products';
                 $data['stock_code_type'] = 'dss';
                 $data['stock_menu_id'] = '134';
+                $this->menu_id = '134';
                 break;
             }
         }
+
         $data['form_type'] = $type;
         $data['page_data']['path_index'] = $this->prefixIndexPage.'stock/'.$type;
         $data['page_data']['create'] = '/stock/'.$type.$this->prefixCreatePage;
@@ -877,6 +898,7 @@ class StockController extends Controller
                 $data['title'] = 'Opening Stock';
                 $data['stock_code_type'] = 'os';
                 $data['stock_menu_id'] = 54;
+                $this->menu_id = '54';
                 break;
             }
             case 'stock-transfer': {
@@ -886,12 +908,14 @@ class StockController extends Controller
                 $data['type'] = $request->print;
                 $url = '/stock/stock-transfer/print/'.$id;
                 $data['stock_transfer_link'] = $url;
+                $this->menu_id = '65';
                 break;
             }
             case 'stock-adjustment': {
                 $data['title'] = 'Stock Adjustment';
                 $data['stock_code_type'] = 'sa';
                 $data['stock_menu_id'] = 55;
+                $this->menu_id = '55';
                 break;
             }
 
@@ -899,6 +923,7 @@ class StockController extends Controller
                 $data['title'] = 'Stock Audit Adjustment';
                 $data['stock_code_type'] = 'sa';
                 $data['stock_menu_id'] = 312;
+                $this->menu_id = '312';
                 $data['type'] = '';
                 break;
             }
@@ -906,24 +931,28 @@ class StockController extends Controller
                 $data['title'] = 'Damaged Items';
                 $data['stock_code_type'] = 'di';
                 $data['stock_menu_id'] = 57;
+                $this->menu_id = '57';
                 break;
             }
             case 'expired-items': {
                 $data['title'] = 'Expired Items';
                 $data['stock_code_type'] = 'ei';
                 $data['stock_menu_id'] = 58;
+                $this->menu_id = '58';
                 break;
             }
             case 'sample-items': {
                 $data['title'] = 'Sample Items';
                 $data['stock_code_type'] = 'sp';
                 $data['stock_menu_id'] = 56;
+                $this->menu_id = '56';
                 break;
             }
             case 'repair-items': {
                 $data['title'] = 'Repair Items';
                 $data['stock_code_type'] = 'ri';
                 $data['stock_menu_id'] = 57;
+                $this->menu_id = '57';
                 break;
             }
             case 'stock-receiving': {
@@ -933,18 +962,21 @@ class StockController extends Controller
                 $data['type'] = $request->print;
                 $url = '/stock/stock-receiving/print/'.$id;
                 $data['print_link'] = $url;
+                $this->menu_id = '76';
                 break;
             }
             case 'internal-stock-transfer': {
                 $data['title'] = 'Internal Stock Transfer';
                 $data['stock_code_type'] = 'ist';
                 $data['stock_menu_id'] = '131';
+                $this->menu_id = '131';
                 break;
             }
             case 'disassemble-products': {
                 $data['title'] = 'Disassemble Product';
                 $data['stock_code_type'] = 'dss';
                 $data['stock_menu_id'] = '134';
+                $this->menu_id = '134';
                 break;
             }
         }
@@ -993,6 +1025,7 @@ class StockController extends Controller
                 $data['title'] = 'Opening Stock';
                 $data['stock_code_type'] = 'os';
                 $data['stock_menu_id'] = 54;
+                $this->menu_id = '54';
                 break;
             }
             case 'stock-transfer': {
@@ -1002,54 +1035,63 @@ class StockController extends Controller
                 $data['type'] = $request->print;
                 $url = '/stock/stock-transfer/from-stock-print/'.$id;
                 $data['stock_transfer_link'] = $url;
+                $this->menu_id = '65';
                 break;
             }
             case 'stock-adjustment': {
                 $data['title'] = 'Stock Adjustment';
                 $data['stock_code_type'] = 'sa';
                 $data['stock_menu_id'] = 55;
+                $this->menu_id = '55';
                 break;
             }
             case 'damaged-items': {
                 $data['title'] = 'Damaged Items';
                 $data['stock_code_type'] = 'di';
                 $data['stock_menu_id'] = 57;
+                $this->menu_id = '57';
                 break;
             }
             case 'expired-items': {
                 $data['title'] = 'Expired Items';
                 $data['stock_code_type'] = 'ei';
                 $data['stock_menu_id'] = 58;
+                $this->menu_id = '58';
                 break;
             }
             case 'sample-items': {
                 $data['title'] = 'Sample Items';
                 $data['stock_code_type'] = 'sp';
                 $data['stock_menu_id'] = 56;
+                $this->menu_id = '56';
                 break;
             }
             case 'repair-items': {
                 $data['title'] = 'Repair Items';
                 $data['stock_code_type'] = 'ri';
                 $data['stock_menu_id'] = 57;
+                $this->menu_id = '57';
                 break;
             }
             case 'stock-receiving': {
                 $data['title'] = 'Stock Receiving';
                 $data['stock_code_type'] = 'str';
                 $data['stock_menu_id'] = 76;
+                $this->menu_id = '76';
                 break;
             }
             case 'internal-stock-transfer': {
                 $data['title'] = 'Internal Stock Transfer';
                 $data['stock_code_type'] = 'ist';
                 $data['stock_menu_id'] = '131';
+                $this->menu_id = '131';
                 break;
             }
             case 'disassemble-products': {
                 $data['title'] = 'Disassemble Product';
                 $data['stock_code_type'] = 'dss';
                 $data['stock_menu_id'] = '134';
+                $this->menu_id = '134';
                 break;
             }
         }
@@ -1414,5 +1456,94 @@ class StockController extends Controller
 
     public function changeProductGroup (Request $request){
         dd('OK');
+    }
+
+    public function post(Request $request)
+    {
+        $postPerm = $this->menu_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
+        }
+
+        $stock_id = $request->stock_id;
+        $data = [];
+        if(!empty($stock_id)){
+            $row = TblInveStock::where('stock_id',$stock_id)->where(Utilities::currentBCB())->first();
+            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Posting is handled by staging for this form.'
+                ], 422);
+            }
+            if($row){
+                $row->posted = 1;
+                $row->update();
+                $data['status'] = 'success';
+            }else{
+                $data['status'] = 'error';
+            }
+        }else{
+            $data['status'] = 'error';
+        }
+        return response()->json($data);
+    }
+
+    public function Posted(Request $request)
+    {
+        $postPerm = $this->menu_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 1;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
+        }else{
+            abort(404);
+        }
+    }
+
+
+    public function UnPosted(Request $request)
+    {
+        $unpostPerm = $this->menu_id . '-un_post_module';
+        if (!auth()->user()->isAbleTo($unpostPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 0;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);
+        }else{
+            abort(404);
+        }
     }
 }

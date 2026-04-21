@@ -1233,6 +1233,11 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('get-formulation-request-dtl-data', 'Inventory\StockController@getFormulationRequestData');
             Route::post('get-stock-transfer-dtl-data', 'Inventory\StockController@getStockTransferDtlData');
             Route::post('get-grn-dtl-data', 'Inventory\StockController@getGRNDtlData');
+
+            Route::post('{type}/post','Inventory\StockController@post');
+            Route::post('{type}/posted','Inventory\StockController@Posted');
+            Route::post('{type}/unposted','Inventory\StockController@UnPosted');
+
         });
 
         Route::prefix('deal-setup')->group(function () {
