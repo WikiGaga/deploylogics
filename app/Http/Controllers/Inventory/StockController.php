@@ -44,7 +44,7 @@ use Maatwebsite\Excel\Importer;
 class StockController extends Controller
 {
     use HasStaging;
-    $menu_id = '';
+    public $menu_id = '';
 
     public function __construct(StagingService $stagingService)
     {
