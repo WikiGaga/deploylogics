@@ -119,6 +119,12 @@ class StagingDashboardController extends Controller
                 'cols' => ['purchase_order_code', 'purchase_order_entry_date'],
                 'titles' => ['PO NO', 'Date'],
             ],
+            23 => [
+                'path' => '/grn/form/',
+                'pk' => 'grn_id',
+                'cols' => ['grn_code', 'grn_date'],
+                'titles' => ['GRN NO', 'Date'],
+            ],
             354 => [
                 'path' => '/shift_sessions/form/',
                 'pk' => 'session_id',

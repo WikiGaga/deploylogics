@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
+use App\Services\StagingService;
+use App\Traits\HasStaging;
 use App\Models\Settings\TblDefiExpenseAccounts;
 use App\Models\TblSoftBranch;
 use App\Models\TblAccoVoucher;
@@ -29,6 +31,7 @@ use App\Models\ViewPurcProductBarcodeRate;
 use App\Models\ViewPurcPurchaseOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Library\Utilities;
 use App\Models\Defi\TblDefiConstants;
 use App\Models\TblAccoPaymentMode;
@@ -49,6 +52,8 @@ use function PHPSTORM_META\type;
 
 class GRNController extends Controller
 {
+    use HasStaging;
+
     /**
      * Display a listing of the resource.
      *
@@ -290,7 +295,7 @@ class GRNController extends Controller
         $data['page_data'] = [];
         $data['form_type'] = 'grn';
         $data['page_data']['title'] = self::$page_title;
-        $data['page_data']['path_index'] = '/grn/list';//$this->prefixIndexPage.self::$redirect_url;;
+        $data['page_data']['path_index'] = '/listing/grn';
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
         $data['page_data']['pending_pr'] = TRUE;
         $data['menu_dtl_id'] = self::$menu_dtl_id;
@@ -324,6 +329,11 @@ class GRNController extends Controller
                 }
                 $data['grn_code'] = $data['current']->grn_code;
                 $data['page_data']['print'] = '/'.self::$redirect_url.'/print/'.$id;
+                $data['page_data']['post'] = action('Purchase\GRNController@post');
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
+                if (isset($data['current']->posted) && $data['current']->posted == 1) {
+                    $data['page_data']['action'] = '';
+                }
             }else{
                 abort('404');
             }
@@ -360,8 +370,148 @@ class GRNController extends Controller
             'code_type'         => strtoupper('grn'),
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
-        // dd('fdd');
+        if (isset($data['id']) && !empty($data['id'])) {
+            $formId = $data['id'];
+            $current = $data['current'] ?? null;
+            $currentFlowId = ($current && isset($current->current_stg_id)) ? $current->current_stg_id : null;
+            $isAlreadyInStaging = $current && !empty($current->current_stg_id) && (int)($current->posted ?? 0) === 0;
+
+            $stagingService = new StagingService();
+            if ($stagingService->hasStagingOrRemainsInStaging(self::$menu_dtl_id, $formId, $isAlreadyInStaging)) {
+                $flows = $stagingService->getFormFlows(self::$menu_dtl_id, $currentFlowId, $formId, $isAlreadyInStaging);
+                $actions = [];
+                $userAccess = false;
+                $eligibleUsers = collect([]);
+
+                if ($flows['current']) {
+                    $currentFlowIdResolved = $flows['current']->stg_flows_id;
+                    $actions = $stagingService->getFormActions(self::$menu_dtl_id, $currentFlowIdResolved, $formId, $isAlreadyInStaging);
+                    $userAccess = $stagingService->getUserAccess(self::$menu_dtl_id, $currentFlowIdResolved, $formId, $isAlreadyInStaging);
+                    $eligibleUsers = $stagingService->getEligibleUsers(self::$menu_dtl_id, $currentFlowIdResolved, $formId, $isAlreadyInStaging);
+                }
+
+                $stagingData = [
+                    'has_staging' => true,
+                    'flows' => $flows,
+                    'actions' => $actions,
+                    'user_access' => $userAccess,
+                    'eligible_users' => $eligibleUsers,
+                ];
+
+                $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
+                    ->where('menu_dtl_id', self::$menu_dtl_id)
+                    ->where('document_id', $formId)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                $view = view('purchase.grn.form', compact('data'));
+                $view->with('staging_data', $stagingData);
+                $view->with('staging_menu_dtl_id', self::$menu_dtl_id);
+                $view->with('staging_form_id', $formId);
+                $view->with('staging_activity', $activity);
+                if ($flows['current']) {
+                    $view->with('staging_flow_dtls', [
+                        'current' => $flows['current'],
+                        'next' => $flows['next'],
+                        'prev' => $flows['prev'],
+                        'all' => $flows['all'],
+                    ]);
+                    $view->with('staging_last_flow', !empty($flows['all']) ? end($flows['all'])->stg_flows_id : null);
+                    $view->with('staging_first_flow', !empty($flows['all']) ? $flows['all'][0]->stg_flows_id : null);
+                }
+                return $view;
+            }
+        }
+
         return view('purchase.grn.form', compact('data'));
+    }
+
+    public function post(Request $request)
+    {
+        $postPerm = self::$menu_dtl_id . '-post';
+        if (!Gate::allows($postPerm)) {
+            return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
+        }
+
+        $grn_id = $request->grn_id;
+        $data = [];
+        if(!empty($grn_id)){
+            $row = TblPurcGrn::where('grn_id',$grn_id)->where(Utilities::currentBCB())->first();
+            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Posting is handled by staging for this form.'
+                ], 422);
+            }
+            if($row){
+                $row->posted = 1;
+                $row->update();
+                $data['status'] = 'success';
+            }else{
+                $data['status'] = 'error';
+            }
+        }else{
+            $data['status'] = 'error';
+        }
+        return response()->json($data);
+    }
+
+    public function Posted(Request $request)
+    {
+        $postPerm = self::$menu_dtl_id . '-post';
+        if (!Gate::allows($postPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 1;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
+        }else{
+            abort(404);
+        }
+    }
+
+    public function UnPosted(Request $request)
+    {
+        $unpostPerm = self::$menu_dtl_id . '-un_post_module';
+        if (!Gate::allows($unpostPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 0;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);
+        }else{
+            abort(404);
+        }
     }
 
     public function getPO($code){
@@ -510,7 +660,36 @@ class GRNController extends Controller
             }
             if(isset($id)){
                 $grn = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                if (!$grn) {
+                    DB::rollback();
+                    return $this->jsonErrorResponse($data, 'GRN not found', 404);
+                }
                 $grn_code = $grn->grn_code;
+
+                $this->assertCanSaveWithStaging($request, self::$menu_dtl_id, $id, false, $grn);
+                $stagingShouldPersist = $this->stagingShouldPersistFormChanges($request, self::$menu_dtl_id, $id, $grn);
+                if (!$stagingShouldPersist) {
+                    $wasInStaging = !empty($grn->current_stg_id) && (int)($grn->posted ?? 0) === 0;
+                    $stagingService = new StagingService();
+                    $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging(self::$menu_dtl_id, $id, $wasInStaging);
+
+                    if ($criteriaApplies) {
+                        $this->handleStaging($request, self::$menu_dtl_id, $id, $grn, false, [
+                            'listing_view' => 'vw_purc_grn_listing',
+                            'form_path' => '/grn/form',
+                            'document_code_key' => 'grn_code',
+                        ]);
+                        $grn->save();
+                    }
+
+                    DB::commit();
+                    $data = array_merge($data, Utilities::returnJsonEditForm());
+                    $isInStaging = !empty($grn->current_stg_id) && (int)($grn->posted ?? 0) === 0;
+                    $data['redirect'] = $isInStaging
+                        ? '/'.self::$redirect_url.'/form/'.$id
+                        : '/listing/grn';
+                    return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+                }
             }else{
                 $grn = new TblPurcGrn();
                 $grn->grn_id = Utilities::uuid();
@@ -868,6 +1047,40 @@ class GRNController extends Controller
 
             // end insert update grn voucher
 
+            $wasInStaging = isset($id) && !empty($grn->current_stg_id) && (int)($grn->posted ?? 0) === 0;
+            $stagingService = new StagingService();
+            $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging(self::$menu_dtl_id, $form_id, $wasInStaging);
+
+            if (!$criteriaApplies) {
+                $grn->current_stg_id = null;
+                $grn->staging_apply = 1;
+                $grn->posted = 1;
+                $grn->save();
+                \App\Models\TblStgFormLog::where('menu_dtl_id', self::$menu_dtl_id)
+                    ->where('document_id', $form_id)
+                    ->update(['posted' => 1]);
+            } else {
+                if (isset($grn->posted) && (int) $grn->posted === 1) {
+                    $grn->posted = 0;
+                }
+                if (isset($grn->staging_apply) && (int) $grn->staging_apply === 1) {
+                    $grn->staging_apply = 0;
+                }
+                if (empty($grn->current_stg_id)) {
+                    $flows = $stagingService->getFormFlows(self::$menu_dtl_id, null, $form_id, $wasInStaging);
+                    if (!empty($flows['all'])) {
+                        $grn->current_stg_id = $flows['all'][0]->stg_flows_id;
+                    }
+                }
+
+                $this->handleStaging($request, self::$menu_dtl_id, $form_id, $grn, !isset($id), [
+                    'listing_view' => 'vw_purc_grn_listing',
+                    'form_path' => '/grn/form',
+                    'document_code_key' => 'grn_code',
+                ]);
+                $grn->save();
+            }
+
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -884,7 +1097,10 @@ class GRNController extends Controller
         DB::commit();
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $isInStaging = !empty($grn->current_stg_id) && (int)($grn->posted ?? 0) === 0;
+            $data['redirect'] = $isInStaging
+                ? '/'.self::$redirect_url.'/form/'.$id
+                : '/listing/grn';
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());

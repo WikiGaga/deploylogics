@@ -265,6 +265,9 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('delete/{id}','Purchase\GRNController@destroy');
             Route::get('print/{id}','Purchase\GRNController@print');
             Route::get('po/{id}','Purchase\GRNController@getPO');
+            Route::post('post','Purchase\GRNController@post');
+            Route::post('posted','Purchase\GRNController@Posted');
+            Route::post('unposted','Purchase\GRNController@UnPosted');
             Route::post('barcode-price-tag/{id?}','Purchase\GRNController@barcodePriceTag');
             Route::post('grn-price-tag/{id?}','Purchase\GRNController@barcodeGRNTag');
             Route::post('update-product-price/{id?}','Purchase\GRNController@UpdateProductPrice');
