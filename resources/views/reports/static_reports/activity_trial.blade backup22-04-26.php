@@ -4,39 +4,34 @@
 @section('pageCSS')
     <style>
         body{
-            width: 100%;
-            max-width: 100%;
-        }
-        #kt_portlet_table{
-            width: 100%;
-        }
-        table#rep_sale_invoice_datatable th,
-        table#rep_sale_invoice_datatable td{
-            font-size: 12.5px;
-        }
-        .kt-invoice__title{
-            font-size: 26px;
-        }
-        .kt-invoice__criteria{
-            font-size: 13.5px;
+            width: 1600px;
         }
         tr.level_1>td:first-child,
         tr.level_1>td:nth-child(2){
-            font-size: 16px;
+            font-size: 15px;
         }
         tr.level_1>td{
             font-weight: 500 !important;
         }
+        #level_1_color{
+          color:#800000 !important;
+        }
+        #level_2_color{
+          color:#32CD32 !important;
+        }
+        #level_3_color{
+          color:#0000D1 !important;
+        }
         tr.level_2>td:first-child,
         tr.level_2>td:nth-child(2){
-            font-size: 14px;
+            font-size: 13px;
         }
         tr.level_2>td{
             font-weight: 500 !important;
         }
         tr.level_3>td:first-child,
         tr.level_3>td:nth-child(2){
-            font-size: 13px;
+            font-size: 12px;
         }
         tr.level_3>td{
             font-weight: 500 !important;
@@ -135,7 +130,7 @@
             }
             if($data['OrderBy'] == "name")
             {
-                $OrderBy = 'ca.CHART_NAME';
+                $OrderBy = 'vouch.chart_name_sorting';
             }
 
 /*
@@ -640,20 +635,6 @@ $qry ="SELECT ca.CHART_ACCOUNT_ID,
   OPEN_BAL_CR,
   DR_BALANCE,
   CR_BALANCE,
-  (
-    CASE
-      WHEN vouch.PERIOD_BAL > 0
-      THEN vouch.PERIOD_BAL
-      ELSE 0
-    END
-  ) PERIOD_BAL_DR,
-  (
-    CASE
-      WHEN vouch.PERIOD_BAL < 0
-      THEN vouch.PERIOD_BAL * - 1
-      ELSE 0
-    END
-  ) PERIOD_BAL_CR,
   CLOSING_BAL_DR,
   CLOSING_BAL_CR
 FROM (
@@ -1144,7 +1125,7 @@ FROM (
                             <th width="150px">Account Code</th>
                             <th width="400px">Account Title</th>
                             <th class="text-center" colspan="2">Opening</th>
-                            <th class="text-center" colspan="4">Period Balance</th>
+                            <th class="text-center" colspan="2">Period</th>
                             <th class="text-center" colspan="2">Closing</th>
                         </tr>
                         <tr>
@@ -1153,8 +1134,6 @@ FROM (
                             <th width="125px" class="text-center">Debit</th>
                             <th width="125px" class="text-center">Credit</th>
 
-                            <th width="125px" class="text-center">Activity Debit</th>
-                            <th width="125px" class="text-center">Activity Credit</th>
                             <th width="125px" class="text-center">Debit</th>
                             <th width="125px" class="text-center">Credit</th>
 
@@ -1164,9 +1143,6 @@ FROM (
                         @php
                             $level_4_opening_debit = 0;
                             $level_4_opening_credit = 0;
-
-                            $level_4_balance_debit = 0;
-                            $level_4_balance_credit = 0;
 
                             $level_4_period_debit = 0;
                             $level_4_period_credit = 0;
@@ -1190,7 +1166,7 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- balance --}}
+                                    {{-- closing --}}
                                     @if($accounts->dr_balance != 0)
                                         <td id="level_1_color" class="right_number">{{number_format($accounts->dr_balance,3)}}</td>
                                     @else
@@ -1201,30 +1177,14 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- period --}}
-                                    @if($accounts->period_bal_dr != 0)
-                                        <td id="level_1_color" class="right_number">{{number_format($accounts->period_bal_dr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
-                                    @if($accounts->period_bal_cr != 0)
-                                        <td id="level_1_color" class="right_number">{{number_format($accounts->period_bal_cr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
                                     {{-- closing --}}
-                                    @php
-                                        $closing_net = (float)($accounts->closing_bal_dr ?? 0) - (float)($accounts->closing_bal_cr ?? 0);
-                                        $closing_dr = $closing_net > 0 ? $closing_net : 0;
-                                        $closing_cr = $closing_net < 0 ? ($closing_net * -1) : 0;
-                                    @endphp
-                                    @if($closing_dr != 0)
-                                        <td id="level_1_color" class="right_number">{{number_format($closing_dr,3)}}</td>
+                                    @if($accounts->closing_bal_dr != 0)
+                                        <td id="level_1_color" class="right_number">{{number_format($accounts->closing_bal_dr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    @if($closing_cr != 0)
-                                        <td id="level_1_color" class="right_number">{{number_format($closing_cr,3)}}</td>
+                                    @if($accounts->closing_bal_cr != 0)
+                                        <td id="level_1_color" class="right_number">{{number_format($accounts->closing_bal_cr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
@@ -1245,7 +1205,7 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- balance --}}
+                                    {{-- closing --}}
                                     @if($accounts->dr_balance != 0)
                                         <td id="level_2_color" class="right_number">{{number_format($accounts->dr_balance,3)}}</td>
                                     @else
@@ -1256,30 +1216,14 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- period --}}
-                                    @if($accounts->period_bal_dr != 0)
-                                        <td id="level_2_color" class="right_number">{{number_format($accounts->period_bal_dr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
-                                    @if($accounts->period_bal_cr != 0)
-                                        <td id="level_2_color" class="right_number">{{number_format($accounts->period_bal_cr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
                                     {{-- closing --}}
-                                    @php
-                                        $closing_net = (float)($accounts->closing_bal_dr ?? 0) - (float)($accounts->closing_bal_cr ?? 0);
-                                        $closing_dr = $closing_net > 0 ? $closing_net : 0;
-                                        $closing_cr = $closing_net < 0 ? ($closing_net * -1) : 0;
-                                    @endphp
-                                    @if($closing_dr != 0)
-                                        <td id="level_2_color" class="right_number">{{number_format($closing_dr,3)}}</td>
+                                    @if($accounts->closing_bal_dr != 0)
+                                        <td id="level_2_color" class="right_number">{{number_format($accounts->closing_bal_dr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    @if($closing_cr != 0)
-                                        <td id="level_2_color" class="right_number">{{number_format($closing_cr,3)}}</td>
+                                    @if($accounts->closing_bal_cr != 0)
+                                        <td id="level_2_color" class="right_number">{{number_format($accounts->closing_bal_cr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
@@ -1301,7 +1245,7 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- balance --}}
+                                    {{-- closing --}}
                                     @if($accounts->dr_balance != 0)
                                         <td id="level_3_color" class="right_number">{{number_format($accounts->dr_balance,3)}}</td>
                                     @else
@@ -1312,30 +1256,14 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- period --}}
-                                    @if($accounts->period_bal_dr != 0)
-                                        <td id="level_3_color" class="right_number">{{number_format($accounts->period_bal_dr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
-                                    @if($accounts->period_bal_cr != 0)
-                                        <td id="level_3_color" class="right_number">{{number_format($accounts->period_bal_cr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
                                     {{-- closing --}}
-                                    @php
-                                        $closing_net = (float)($accounts->closing_bal_dr ?? 0) - (float)($accounts->closing_bal_cr ?? 0);
-                                        $closing_dr = $closing_net > 0 ? $closing_net : 0;
-                                        $closing_cr = $closing_net < 0 ? ($closing_net * -1) : 0;
-                                    @endphp
-                                    @if($closing_dr != 0)
-                                        <td id="level_3_color" class="right_number">{{number_format($closing_dr,3)}}</td>
+                                    @if($accounts->closing_bal_dr != 0)
+                                        <td id="level_3_color" class="right_number">{{number_format($accounts->closing_bal_dr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    @if($closing_cr != 0)
-                                        <td id="level_3_color" class="right_number">{{number_format($closing_cr,3)}}</td>
+                                    @if($accounts->closing_bal_cr != 0)
+                                        <td id="level_3_color" class="right_number">{{number_format($accounts->closing_bal_cr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
@@ -1357,7 +1285,7 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- balance --}}
+                                    {{-- closing --}}
                                     @if($accounts->dr_balance != 0)
                                         <td class="right_number">{{number_format($accounts->dr_balance,3)}}</td>
                                     @else
@@ -1368,30 +1296,14 @@ FROM (
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    {{-- period --}}
-                                    @if($accounts->period_bal_dr != 0)
-                                        <td class="right_number">{{number_format($accounts->period_bal_dr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
-                                    @if($accounts->period_bal_cr != 0)
-                                        <td class="right_number">{{number_format($accounts->period_bal_cr,3)}}</td>
-                                    @else
-                                        <td class="right_number"></td>
-                                    @endif
                                     {{-- closing --}}
-                                    @php
-                                        $closing_net = (float)($accounts->closing_bal_dr ?? 0) - (float)($accounts->closing_bal_cr ?? 0);
-                                        $closing_dr = $closing_net > 0 ? $closing_net : 0;
-                                        $closing_cr = $closing_net < 0 ? ($closing_net * -1) : 0;
-                                    @endphp
-                                    @if($closing_dr != 0)
-                                        <td class="right_number">{{number_format($closing_dr,3)}}</td>
+                                    @if($accounts->closing_bal_dr != 0)
+                                        <td class="right_number">{{number_format($accounts->closing_bal_dr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
-                                    @if($closing_cr != 0)
-                                        <td class="right_number">{{number_format($closing_cr,3)}}</td>
+                                    @if($accounts->closing_bal_cr != 0)
+                                        <td class="right_number">{{number_format($accounts->closing_bal_cr,3)}}</td>
                                     @else
                                         <td class="right_number"></td>
                                     @endif
@@ -1399,12 +1311,9 @@ FROM (
                                     @php
                                         $level_4_opening_debit += $accounts->open_bal_dr;
                                         $level_4_opening_credit += $accounts->open_bal_cr;
-
-                                        $level_4_balance_debit += $accounts->dr_balance;
-                                        $level_4_balance_credit += $accounts->cr_balance;
-
-                                        $level_4_period_debit += $accounts->period_bal_dr;
-                                        $level_4_period_credit += $accounts->period_bal_cr;
+                                        
+                                        $level_4_period_debit += $accounts->dr_balance;
+                                        $level_4_period_credit += $accounts->cr_balance;
 
                                         $level_4_closing_debit += $accounts->closing_bal_dr;
                                         $level_4_closing_credit += $accounts->closing_bal_cr;
@@ -1417,12 +1326,9 @@ FROM (
                                     @php
                                         $level_4_opening_debit += $accounts->open_bal_dr;
                                         $level_4_opening_credit += $accounts->open_bal_cr;
-
-                                        $level_4_balance_debit += $accounts->dr_balance;
-                                        $level_4_balance_credit += $accounts->cr_balance;
-
-                                        $level_4_period_debit += $accounts->period_bal_dr;
-                                        $level_4_period_credit += $accounts->period_bal_cr;
+                                        
+                                        $level_4_period_debit += $accounts->dr_balance;
+                                        $level_4_period_credit += $accounts->cr_balance;
 
                                         $level_4_closing_debit += $accounts->closing_bal_dr;
                                         $level_4_closing_credit += $accounts->closing_bal_cr;
@@ -1435,8 +1341,6 @@ FROM (
                             <td colspan="2" class="rep-font-bold">Total:</td>
                             <td class="text-right rep-font-bold">{{number_format($level_4_opening_debit,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($level_4_opening_credit,3)}}</td>
-                            <td class="text-right rep-font-bold">{{number_format($level_4_balance_debit,3)}}</td>
-                            <td class="text-right rep-font-bold">{{number_format($level_4_balance_credit,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($level_4_period_debit,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($level_4_period_credit,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($level_4_closing_debit,3)}}</td>

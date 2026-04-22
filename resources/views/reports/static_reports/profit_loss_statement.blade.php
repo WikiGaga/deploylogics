@@ -494,7 +494,7 @@ $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purch
                     @endphp
                     <table width="100%" id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                         <tr>
-                            <td>Net Purchases</td>
+                            <td>Net Purchases (8-00-00-0000)</td>
                             <td class="text-right">{{number_format($cogs_net_purchases,3)}}</td>
                         </tr>
                         <tr>
