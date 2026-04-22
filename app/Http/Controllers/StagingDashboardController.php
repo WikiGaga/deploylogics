@@ -125,6 +125,24 @@ class StagingDashboardController extends Controller
                 'cols' => ['session_no', 'session_id'],
                 'titles' => ['Session no', 'ID'],
             ],
+            54 => [
+                'path' => '/stock/opening-stock/form/',
+                'pk' => 'stock_id',
+                'cols' => ['stock_code', 'stock_id'],
+                'titles' => ['Stock Code', 'ID'],
+            ],
+            65 => [
+                'path' => '/stock/stock-transfer/form/',
+                'pk' => 'stock_id',
+                'cols' => ['stock_code', 'stock_id'],
+                'titles' => ['Stock Code', 'ID'],
+            ],
+            76 => [
+                'path' => '/stock/stock-receiving/form/',
+                'pk' => 'stock_id',
+                'cols' => ['stock_code', 'stock_id'],
+                'titles' => ['Stock Code', 'ID'],
+            ],
         ];
 
         if (isset($configs[$menuDtlId])) {
