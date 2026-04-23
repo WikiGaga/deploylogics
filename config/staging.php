@@ -8,7 +8,12 @@ return [
         '54'    => 'stock_id',
         '76'    => 'stock_id',
         '23' => 'grn_id',
+        '28' => 'voucher_id',
+        '29' => 'voucher_id',
+        '31' => 'voucher_id',
+        '36' => 'voucher_id',
         '37' => 'voucher_id',
+        '62' => 'voucher_id',
 
     ],
 ];

@@ -118,12 +118,8 @@ var KTDatatableRemoteAjaxDemo = function() {
                         casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
-
-                        console.log('innn')
                         if(!isPosted){
-                        console.log('innn2')
-
-                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
+                        btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
                         }
                         btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
 

@@ -53,10 +53,12 @@
         <form id="voucher_form" class="kt-form" method="post" action="{{action('Accounts\VoucherController@pvstore', [$type,isset($id)?$id:''])}}">
     @endif
     @csrf
+        <input type="hidden" value='{{ $data['menu_id'] ?? ($data['menu_dtl_id'] ?? '') }}' id="menu_id">
+        <input type="hidden" value='{{ isset($id) ? $id : '' }}' id="form_id">
         <input type="hidden" value='{{$type}}' id="form_type">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
-                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                     @include('elements.page_header',['page_data' => $data['page_data']])
                 </div>
                 <div class="kt-portlet__body">
@@ -548,6 +550,7 @@
                 </div>
             </div>
         </div>
+         @include('staging_activity.auto_include')
     </form>
                 <!--end::Form-->
     @endpermission
@@ -623,6 +626,61 @@
     <script src="{{ asset('js/pages/js/account-table-calculations.js') }}" type="text/javascript"></script>
     <script>
         var var_form_name = 'bank_voucher';
+    </script>
+    <script>
+        function voucher_posted() {
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
+                toastr.error('Voucher id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/accounts/bpv/post',
+                dataType: 'json',
+                data: { voucher_id: voucher_id },
+                success: function (response) {
+                    if (response['status'] == 'success') {
+                        toastr.success('Successfully Posted..!');
+                        location.reload();
+                    } else {
+                        toastr.error(response['message'] || 'Unable to post');
+                    }
+                },
+                error: function (xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to post';
+                    toastr.error(msg);
+                }
+            });
+        }
+
+        function voucher_unposted() {
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
+                toastr.error('Voucher id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/accounts/bpv/unposted',
+                dataType: 'json',
+                data: { data: [voucher_id] },
+                success: function (response) {
+                    if (response['status'] == 'success') {
+                        toastr.success(response['message'] || 'Successfully Un-Posted..!');
+                        location.reload();
+                    } else {
+                        toastr.error(response['message'] || 'Unable to unpost');
+                    }
+                },
+                error: function (xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to unpost';
+                    toastr.error(msg);
+                }
+            });
+        }
     </script>
     <script>
         var accountsHelpUrl = "{{url('/common/inline-help/accountsHelp')}}";

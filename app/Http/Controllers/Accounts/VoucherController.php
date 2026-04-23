@@ -950,6 +950,7 @@ class VoucherController extends Controller
                 return $this->returnjsonerror(" Voucher not correct",201);
             }
         }
+        
         if(!isset($request->pd) || count($request->pd) == 0){
             return $this->jsonErrorResponse($data, trans('message.fill_the_grid'), 200);
         }

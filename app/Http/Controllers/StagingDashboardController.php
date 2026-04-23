@@ -143,10 +143,40 @@ class StagingDashboardController extends Controller
                 'cols' => ['stock_code', 'stock_id'],
                 'titles' => ['Stock Code', 'ID'],
             ],
+            28 => [
+                'path' => '/accounts/crv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
             37 => [
                 'path' => '/accounts/cpv/form/',
                 'pk' => 'voucher_id',
-                'cols' => ['stock_code', 'voucher_id'],
+                'cols' => ['voucher_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
+            29 => [
+                'path' => '/accounts/brv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
+            36 => [
+                'path' => '/accounts/bpv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
+            31 => [
+                'path' => '/accounts/jv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
+            62 => [
+                'path' => '/accounts/obv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_code', 'voucher_id'],
                 'titles' => ['Voucher Code', 'ID'],
             ],
         ];
