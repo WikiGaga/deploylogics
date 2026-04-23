@@ -423,17 +423,17 @@
     <script src="{{ asset('js/pages/js/account-table-calculations.js') }}" type="text/javascript"></script>
      <script>
         function voucher_posted() {
-            var grn_id = $('#form_id').val();
-            if (!grn_id) {
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
                 toastr.error('Voucher id not found');
                 return;
             }
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/grn/post',
+                url: '/accounts/cpv/post',
                 dataType: 'json',
-                data: { grn_id: grn_id },
+                data: { voucher_id: voucher_id },
                 success: function (response) {
                     if (response['status'] == 'success') {
                         toastr.success('Successfully Posted..!');
@@ -450,17 +450,17 @@
         }
 
         function voucher_unposted() {
-            var grn_id = $('#form_id').val();
-            if (!grn_id) {
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
                 toastr.error('GRN id not found');
                 return;
             }
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/grn/unposted',
+                url: '/accounts/cpv/unposted',
                 dataType: 'json',
-                data: { data: [grn_id] },
+                data: { data: [voucher_id] },
                 success: function (response) {
                     if (response['status'] == 'success') {
                         toastr.success(response['message'] || 'Successfully Un-Posted..!');
