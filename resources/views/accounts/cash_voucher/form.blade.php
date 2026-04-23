@@ -50,6 +50,8 @@
     @endif
     @csrf
         <input type="hidden" value='{{$type}}' id="form_type">
+        <input type="hidden" value='{{ $data['menu_id'] ?? ($data['menu_dtl_id'] ?? '') }}' id="menu_id">
+        <input type="hidden" value='{{ isset($id) ? $id : '' }}' id="form_id">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
                 <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
@@ -154,7 +156,7 @@
                                         <select name="saleman_id" id="salesman" class="form-control erp-form-control-sm moveIndex kt-select2">
                                             <option value="">{{ __('message.select') }}</option>
                                             @if($case == 'edit')
-                                                @php $$saleman = isset($$saleman)?$$saleman:""; @endphp
+                                                @php $saleman = isset($saleman)?$saleman:""; @endphp
                                                 @foreach($data['users'] as $user)
                                                     <option value="{{$user->id}}" {{$user->id ==$saleman ?"selected":""}}>{{$user->name}}</option>
                                                 @endforeach
@@ -452,7 +454,7 @@
         function voucher_unposted() {
             var voucher_id = $('#form_id').val();
             if (!voucher_id) {
-                toastr.error('GRN id not found');
+                toastr.error('Voucher id not found');
                 return;
             }
             $.ajax({

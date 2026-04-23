@@ -54,10 +54,8 @@
         <input type="hidden" name="form_type" id="form_type" value="{{$form_type}}">
         <input type="hidden" name="voucher_no" value="{{$voucher_no}}">
         <input type="hidden" id="voucher_id" value='{{$id}}' >
-        @if($case == 'edit' || $case == 'view')
-            <input type="hidden" id="form_id" value='{{$id}}' >
-            <input type="hidden" id="menu_id" value="{{$data['stock_menu_id']}}">
-        @endif
+        <input type="hidden" id="form_id" value='{{$id}}' >
+        <input type="hidden" id="menu_id" value="{{ $data['stock_menu_id'] ?? ($data['menu_id'] ?? ($data['menu_dtl_id'] ?? '')) }}">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
                 <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky  {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
@@ -342,17 +340,17 @@
     </script>
      <script>
         function voucher_posted() {
-            var grn_id = $('#form_id').val();
-            if (!grn_id) {
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
                 toastr.error('Voucher id not found');
                 return;
             }
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/grn/post',
+                url: "{{ action('Accounts\\VoucherController@post', ['type' => $type]) }}",
                 dataType: 'json',
-                data: { grn_id: grn_id },
+                data: { voucher_id: voucher_id },
                 success: function (response) {
                     if (response['status'] == 'success') {
                         toastr.success('Successfully Posted..!');
@@ -369,17 +367,17 @@
         }
 
         function voucher_unposted() {
-            var grn_id = $('#form_id').val();
-            if (!grn_id) {
-                toastr.error('GRN id not found');
+            var voucher_id = $('#form_id').val();
+            if (!voucher_id) {
+                toastr.error('Voucher id not found');
                 return;
             }
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/grn/unposted',
+                url: "{{ action('Accounts\\VoucherController@UnPosted', ['type' => $type]) }}",
                 dataType: 'json',
-                data: { data: [grn_id] },
+                data: { data: [voucher_id] },
                 success: function (response) {
                     if (response['status'] == 'success') {
                         toastr.success(response['message'] || 'Successfully Un-Posted..!');
