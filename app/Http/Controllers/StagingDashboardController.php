@@ -143,6 +143,12 @@ class StagingDashboardController extends Controller
                 'cols' => ['stock_code', 'stock_id'],
                 'titles' => ['Stock Code', 'ID'],
             ],
+            37 => [
+                'path' => '/accounts/cpv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['stock_code', 'voucher_id'],
+                'titles' => ['Voucher Code', 'ID'],
+            ],
         ];
 
         if (isset($configs[$menuDtlId])) {

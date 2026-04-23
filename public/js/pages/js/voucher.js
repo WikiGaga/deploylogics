@@ -54,7 +54,74 @@ var KTFormWidgets = function() {
             submitHandler: function (form) {
                 $("form").find(":submit").prop('disabled', true);
                 //form[0].submit(); // submit the form
+                  var stagingFlowId = form.querySelector('input[name=current_flow_id]');
+                function stagingUserCanSave(frm) {
+                    var buttons = frm.querySelectorAll('.staging-action-btn[data-staging-action-code]');
+                    for (var i = 0; i < buttons.length; i++) {
+                        var c = (buttons[i].getAttribute('data-staging-action-code') || '').toLowerCase();
+                        if (c === 'save' || c === 'create' || c === 'edit') return true;
+                    }
+                    return false;
+                }
+                function stagingActionCodeForSubmit(frm) {
+                    var el = document.activeElement;
+                    if (el && el.classList && el.classList.contains('staging-action-btn')) {
+                        return (el.getAttribute('data-staging-action-code') || '').toLowerCase();
+                    }
+                    return (frm.getAttribute('data-staging-last-action-code') || '').toLowerCase();
+                }
+                var stagingCode = stagingActionCodeForSubmit(form);
+                var warnCodes = ['forward', 'post', 'back', 'cancel'];
+                var needStagingDiscardWarn = stagingFlowId && stagingFlowId.value && warnCodes.indexOf(stagingCode) !== -1
+                    && !stagingUserCanSave(form) && form.getAttribute('data-staging-dirty') === '1';
+                if (needStagingDiscardWarn) {
+                    if (!window.confirm('Changes will not be saved. Do you want to continue?')) {
+                        $("form").find(":submit").prop('disabled', false);
+                        $('body').removeClass('pointerEventsNone');
+                        return;
+                    }
+                    form.removeAttribute('data-staging-dirty');
+                }
+
+
                 var formData = new FormData(form);
+
+                   var stagingActionId = form.querySelector('#staging_current_actions_id');
+                var stagingActionCode = form.querySelector('#staging_action_code');
+
+                if (stagingFlowId && stagingFlowId.value) {
+                    formData.set('current_flow_id', stagingFlowId.value);
+                    var flowRemarks = form.querySelector('textarea[name=flow_remarks]');
+                    if (flowRemarks) {
+                        formData.set('flow_remarks', flowRemarks.value || '');
+                    }
+
+                    var submitter = document.activeElement;
+                    var actionId = null;
+                    var actionCode = null;
+
+                    if (submitter && submitter.classList && submitter.classList.contains('staging-action-btn')) {
+                        actionId = submitter.value || submitter.getAttribute('data-staging-action-id');
+                        actionCode = submitter.getAttribute('data-staging-action-code') || '';
+                    }
+
+                    if (!actionId && stagingActionId && stagingActionId.value) {
+                        actionId = stagingActionId.value;
+                    }
+
+                    if (actionId) {
+                        formData.set('current_actions_id', actionId);
+                    }
+                    if (actionCode) {
+                        formData.set('staging_action_code', actionCode);
+                    }
+
+                    var nextFlow = form.querySelector('input[name=next_flow_id]');
+                    var prevFlow = form.querySelector('input[name=prev_flow_id]');
+                    if (nextFlow && nextFlow.value) formData.set('next_flow_id', nextFlow.value);
+                    if (prevFlow && prevFlow.value) formData.set('prev_flow_id', prevFlow.value);
+                }
+
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -78,7 +145,9 @@ var KTFormWidgets = function() {
                             setTimeout(function () {
                                 $("form").find(":submit").prop('disabled', false);
                             }, 2000);
-                            if(response.data.form == 'new'){
+                             if (response.data && response.data.redirect) {
+                            window.location.href = response.data.redirect;
+                            } else if(response.data.form == 'new'){
                                 window.location.href = response.data.redirect;
                             }else{
                                 $('.new-row').removeClass('new-row');

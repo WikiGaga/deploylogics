@@ -1139,6 +1139,10 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('irv-store/{id?}','Accounts\VoucherController@irvstore');
             Route::post('delete/{id}','Accounts\VoucherController@destroy');
             Route::get('print/{id}','Accounts\VoucherController@print');
+            Route::post('post','Accounts\VoucherController@post');
+            Route::post('posted','Accounts\VoucherController@Posted');
+            Route::post('unposted','Accounts\VoucherController@UnPosted');
+            
             Route::post('Posted/{id?}','Accounts\VoucherController@VoucherPosted');
             Route::post('UnPosted/{id?}','Accounts\VoucherController@VoucherUnPosted');
         });

@@ -6,6 +6,9 @@ return [
         '354' => 'session_id',
         '65'    => 'stock_id',
         '54'    => 'stock_id',
-        '76'    => 'stock_id'
+        '76'    => 'stock_id',
+        '23' => 'grn_id',
+        '37' => 'voucher_id',
+
     ],
 ];

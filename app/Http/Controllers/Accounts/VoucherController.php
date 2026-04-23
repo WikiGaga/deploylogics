@@ -33,8 +33,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use PhpParser\Node\Stmt\Else_;
 use TheUmar98\BarcodeBundle\Utils\QrCode;
 
-
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use App\Services\StagingService;
+use App\Traits\HasStaging;
 
 
 
@@ -42,6 +44,9 @@ use TheUmar98\BarcodeBundle\Utils\QrCode;
 
 class VoucherController extends Controller
 {
+    use HasStaging;
+
+    public $menu_id = '';
     /**
      * Display a listing of the resource.
      *
@@ -73,7 +78,7 @@ class VoucherController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($type,$id = null)
+    public function create(Request $request, $type,$id = null)
     {
 
         // dd('ds',$type,$id);
@@ -82,6 +87,8 @@ class VoucherController extends Controller
         $cash_group = substr($chart_cash_group->chart_code,0,7);
         $bank_group = substr($chart_bank_group->chart_code,0,7);
 
+        
+
         $data['page_data'] = [];
         $data['type'] = $type;
         switch ($type){
@@ -89,18 +96,24 @@ class VoucherController extends Controller
                 $data['page_data']['title'] = 'Journal';
                 $formUrl = 'jv';
                 $data['stock_menu_id'] = '31';
+                $data['menu_dtl_id'] = '31';
+                $data['menu_id'] = '31';
                 break;
             }
             case 'obv': {
                 $data['page_data']['title'] = 'Opening Balance';
                 $formUrl = 'jv';
                 $data['stock_menu_id'] = '62';
+                $data['menu_dtl_id'] = '62';
+                $data['menu_id'] = '62';
                 break;
             }
             case 'crv': {
                 $data['page_data']['title'] = 'Cash Received';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '28';
+                $data['menu_dtl_id'] = '28';
+                $data['menu_id'] = '28';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
@@ -108,6 +121,8 @@ class VoucherController extends Controller
                 $data['page_data']['title'] = 'Cash Payment';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '37';
+                $data['menu_dtl_id'] = '37';
+                $data['menu_id'] = '37';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
@@ -115,6 +130,8 @@ class VoucherController extends Controller
                 $data['page_data']['title'] = 'Bank Received';
                 $formUrl = 'bank_voucher';
                 $data['stock_menu_id'] = '29';
+                $data['menu_dtl_id'] = '29';
+                $data['menu_id'] = '29';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
@@ -122,6 +139,8 @@ class VoucherController extends Controller
                 $data['page_data']['title'] = 'Bank Payment';
                 $formUrl = 'bank_voucher';
                 $data['stock_menu_id'] = '36';
+                $data['menu_dtl_id'] = '36';
+                $data['menu_id'] = '36';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
             }
@@ -129,12 +148,16 @@ class VoucherController extends Controller
                 $data['page_data']['title'] = 'Contra Voucher';
                 $formUrl = 'ctrv';
                 $data['stock_menu_id'] = '138';
+                $data['menu_dtl_id'] = '138';
+                $data['menu_id'] = '138';
                 break;
             }
             case 'lfv': {
                 $data['page_data']['title'] = 'Listing Fee Voucher';
                 $formUrl = 'cash_voucher';
                 $data['stock_menu_id'] = '171';
+                $data['menu_dtl_id'] = '171';
+                $data['menu_id'] = '171';
                 //$data['stock_menu_id'] = '148';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
                 break;
@@ -206,6 +229,14 @@ class VoucherController extends Controller
                 }
                 $data['voucher_no'] = $data['current']->voucher_no;
                 $data['page_data']['print'] = '/accounts/'.$type.'/print/'.$id;
+
+                $data['id'] = $id;
+                $data['page_data']['post'] = action('Accounts\VoucherController@post', ['type' => $type]);
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
+
+                if(isset($data['current']->posted) && $data['current']->posted == 1){
+                    $data['page_data']['action'] = '';
+                }
             }else{
                 abort('404');
             }
@@ -214,6 +245,18 @@ class VoucherController extends Controller
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
             $max_voucher = TblAccoVoucher::where('voucher_type',$type)->where(Utilities::currentBCB())->max('voucher_no');
             $data['voucher_no'] = $this->documentCode($max_voucher,$type);
+
+            $data['id'] = null;
+            $branchIdForCode = auth()->user()->branch_id;
+            $requestedBranch = $request->query('session_branch');
+            if ($requestedBranch !== null && $requestedBranch !== '') {
+                $requestedBranch = (string) $requestedBranch;
+                if (TblSoftBranch::where('branch_id', $requestedBranch)->exists()) {
+                    $branchIdForCode = $requestedBranch;
+                }
+            }
+            $data['selected_session_branch_id'] = $branchIdForCode;
+
         }
         $data['users'] = User::where('user_type','erp')->where('user_entry_status',1)->where(Utilities::currentBC())->get();
         $data['currency']  = TblDefiCurrency::where('currency_entry_status',1)->where(Utilities::currentBC())->get();
@@ -233,6 +276,8 @@ class VoucherController extends Controller
         $TBL_cheque_layouts= DB::table('TBL_cheque_layouts')->get();
         $data['TBL_cheque_layouts'] = $TBL_cheque_layouts;
 
+        $data['menu_dtl_id'] = $this->menu_id;
+        $data['perPrefix'] = $this->menu_id;
 
         return view('accounts.'.$formUrl.'.form',compact('data'));
     }
@@ -738,6 +783,8 @@ class VoucherController extends Controller
                 $max_voucher = TblAccoVoucher::where('voucher_type',$type)->where(Utilities::currentBCB())->max('voucher_no');
                 $voucher_no = $this->documentCode($max_voucher,$type);
             }
+
+            
             $form_id = $uuid;
             $voucher_date =  $request->voucher_date;
             $currency_id = $request->currency_id;
@@ -776,6 +823,34 @@ class VoucherController extends Controller
                         $voucher->voucher_user_id = auth()->user()->id;
                     }
                     $voucher->save();
+
+                     if(isset($id)){
+                        $this->assertCanSaveWithStaging($request, $this->menu_id, $form_id, false, $stock);
+                    }
+
+                    if (isset($id) && !$this->stagingShouldPersistFormChanges($request, $this->menu_id, $form_id, $stock)) {
+                        $wasInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+                        $stagingService = new StagingService();
+                        $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
+
+                        if ($criteriaApplies) {
+                            $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
+                                'listing_view' => 'vw_inve_stock',
+                                'form_path' => $type . '/form',
+                                'document_code_key' => 'stock_code',
+                            ]);
+                            $stock->save();
+                        }
+                        // DB::commit();
+
+                        $data = array_merge($data, Utilities::returnJsonEditForm());
+                        $isInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
+                        $data['redirect'] = $isInStaging
+                            ? '/' . $type . '/form/' . $form_id
+                            : $this->prefixIndexPage . $type . '/form';
+                        return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+                    }
+            
                 }
             }
 
@@ -2746,6 +2821,95 @@ class VoucherController extends Controller
         }
         DB::commit();
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
+    }
+
+        public function post(Request $request)
+    {
+        $postPerm = $this->menu_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
+        }
+
+        $voucher_id = $request->voucher_id;
+        $data = [];
+        if(!empty($voucher_id)){
+            $row = TblAccoVoucher::where('voucher_id',$voucher_id)->where(Utilities::currentBCB())->first();
+            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Posting is handled by staging for this form.'
+                ], 422);
+            }
+            if($row){
+                $row->posted = 1;
+                $row->update();
+                $data['status'] = 'success';
+            }else{
+                $data['status'] = 'error';
+            }
+        }else{
+            $data['status'] = 'error';
+        }
+        return response()->json($data);
+    }
+
+    public function Posted(Request $request)
+    {
+        $postPerm = $this->menu_id . '-post';
+        if (!auth()->user()->isAbleTo($postPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 1;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
+        }else{
+            abort(404);
+        }
+    }
+
+
+    public function UnPosted(Request $request)
+    {
+        $unpostPerm = $this->menu_id . '-un_post_module';
+        if (!auth()->user()->isAbleTo($unpostPerm)) {
+            return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
+        }
+
+        $data = [];
+        $ids = $request->data;
+        if(is_array($ids) && count($ids) > 0){
+            foreach($ids as $id){
+                $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
+                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                    return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
+                }
+            }
+            foreach($ids as $id){
+                if(TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->exists()){
+                    $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 0;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);
+        }else{
+            abort(404);
+        }
     }
 
 }

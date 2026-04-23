@@ -58,6 +58,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 var btnPrint = "";
 
                 if(btnPrintView){
+                    console.log(casetype,'ccccccccc');
                     if(casetype != 'pos-sales-invoice' && casetype != 'pos-sales-return' && casetype != 'stock-audit-adjustment')
                     {
                         var btnPrint = '<a class="dropdown-item" href="'+pathAction+'/print/'+key_id+'" target="_blank"><i class="la la-print"></i>Print</a>';
@@ -101,6 +102,12 @@ var KTDatatableRemoteAjaxDemo = function() {
                         }
                         btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
 
+                    }else if(casetype == 'stock-receiving'){
+                        if(!isPosted){
+                            btnPrint += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                        }
+                        btnPrint += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+
                     }else if(casetype == 'pve' ||
                         casetype == 'pv' ||
                         casetype == 'cpv' ||
@@ -111,11 +118,18 @@ var KTDatatableRemoteAjaxDemo = function() {
                         casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
-                        if(voucher_status == 'Un-Posted')
-                        {
-                            btnPrint += '<button class="dropdown-item Posted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+
+                        if(!isPosted){
+                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
                         }
-                        btnPrint += '<button class="dropdown-item UnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+                        btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
+
+                        // /
+                        // if(voucher_status == 'Un-Posted')
+                        // {
+                        //     btnPrint += '<button class="dropdown-item Posted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                        // }
+                        // btnPrint += '<button class="dropdown-item UnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
                     }
                     dropdownLink = true;
                 }
@@ -143,7 +157,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                 }
                 if(btnDelView){
-                    if(casetype == 'purchase-order' || casetype == 'shift_sessions'){
+                    if(casetype == 'purchase-order' || casetype == 'shift_sessions' || casetype == 'stock-receiving'){
                         if(!isPosted){
                             var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
@@ -604,6 +618,113 @@ $(document).on('click', '.SSUnPosted', function() {
         }
     });
 });
+
+$(document).on('click', '.SRPosted', function() {
+    var session_id = $(this).attr('data-id');
+    var url = 'stock/{type}/post';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { session_id: session_id },
+        success: function(response, data) {
+            if (response && response.status == 'success') {
+                toastr.success('Successfully Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
+            toastr.error(msg);
+        }
+    });
+});
+
+$(document).on('click', '.SRUnPosted', function() {
+    var session_id = $(this).attr('data-id');
+    var url = '/stock/{type}/unposted';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { data: [session_id] },
+        success: function(response, data) {
+            if (response && (response.status == 'success' || response.success)) {
+                toastr.success('Successfully Un-Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
+            toastr.error(msg);
+        }
+    });
+});
+
+$(document).on('click', '.CPVPosted', function() {
+    var voucher_id = $(this).attr('data-id');
+    var url = '/accounts/cpv/post';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { voucher_id: voucher_id },
+        success: function(response, data) {
+            if (response && response.status == 'success') {
+                toastr.success('Successfully Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
+            toastr.error(msg);
+        }
+    });
+});
+
+$(document).on('click', '.CPVUnPosted', function() {
+    var voucher_id = $(this).attr('data-id');
+    var case_name = $(this).attr('data-case');
+    var url = '/accounts/'+case_name+'/unposted';
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        type: "POST",
+        url: url,
+        dataType: 'json',
+        data: { data: [voucher_id] },
+        success: function(response, data) {
+            if (response && (response.status == 'success' || response.success)) {
+                toastr.success('Successfully Un-Posted.');
+                location.reload();
+            } else {
+                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
+            }
+        },
+        error: function(response, status) {
+            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
+            toastr.error(msg);
+        }
+    });
+});
+
+
 
 $(document).on('keypress', 'input', function(e) {
     if (e.which === 13) {
