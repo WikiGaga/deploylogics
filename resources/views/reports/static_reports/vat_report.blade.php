@@ -49,7 +49,7 @@
             FROM tbl_acco_voucher v
             JOIN tbl_acco_chart_account ca
                 ON ca.chart_account_id = v.chart_account_id
-            WHERE ca.chart_code LIKE '7-01-01%'
+            WHERE ca.chart_code LIKE '7-01-01%' and ca.chart_code != '7-01-01-0007' 
               AND (v.voucher_date between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
               $and_where_bcb_v
         ";
