@@ -123,12 +123,12 @@ var KTDatatableRemoteAjaxDemo = function() {
                         }
                         btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
 
-                      
-                        if(voucher_status == 'Un-Posted')
-                        {
-                            btnPrint += '<button class="dropdown-item Posted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
-                        }
-                        btnPrint += '<button class="dropdown-item UnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+
+                        // if(voucher_status == 'Un-Posted')
+                        // {
+                        //     btnPrint += '<button class="dropdown-item Posted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                        // }
+                        // btnPrint += '<button class="dropdown-item UnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
                     }
                     dropdownLink = true;
                 }

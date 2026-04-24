@@ -20,12 +20,12 @@ use App\Models\Rent\TblRentAgreementDtl;
 use App\Models\TblSoftBranch;
 
 use Exception;
-use Validator;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
@@ -945,6 +945,11 @@ class VoucherController extends Controller
         }else{
             return $this->returnjsonerror("Voucher type not correct",201);
         }
+        $menuDtlId = [
+            'jv' => '31',
+            'obv' => '62',
+            'lv' => '138',
+        ][$type] ?? null;
         if($type == 'jv' || $type == 'lv'){
             if($request->tot_jv_difference != 0){
                 return $this->returnjsonerror(" Voucher not correct",201);
@@ -971,6 +976,45 @@ class VoucherController extends Controller
             $i = 0;
             if(isset($id)){
                 $uuid = $id;
+                if($menuDtlId){
+                    $existingMaster = TblAccoVoucher::where('voucher_id',$uuid)
+                        ->where('voucher_type',$type)
+                        ->where('voucher_sr_no','=','1')
+                        ->where(Utilities::currentBCB())
+                        ->first();
+                    if($existingMaster){
+                        $this->assertCanSaveWithStaging($request, $menuDtlId, $uuid, false, $existingMaster);
+                        if (!$this->stagingShouldPersistFormChanges($request, $menuDtlId, $uuid, $existingMaster)) {
+                            $wasInStaging = !empty($existingMaster->current_stg_id) && (int)($existingMaster->posted ?? 0) === 0;
+                            $stagingService = new StagingService();
+                            $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($menuDtlId, $uuid, $wasInStaging);
+
+                            if ($criteriaApplies) {
+                                $this->handleStaging($request, $menuDtlId, $uuid, $existingMaster, false, [
+                                    'listing_view' => 'vw_acco_voucher_listing',
+                                    'form_path' => '/accounts/'.$type.'/form',
+                                    'document_code_key' => 'voucher_no',
+                                ]);
+                                $existingMaster->save();
+                                TblAccoVoucher::where('voucher_id',$uuid)
+                                    ->where('voucher_type',$type)
+                                    ->where(Utilities::currentBCB())
+                                    ->update([
+                                        'current_stg_id' => $existingMaster->current_stg_id,
+                                        'staging_apply' => $existingMaster->staging_apply,
+                                        'posted' => $existingMaster->posted,
+                                    ]);
+                            }
+                            DB::commit();
+                            $data = array_merge($data, Utilities::returnJsonEditForm());
+                            $isInStaging = !empty($existingMaster->current_stg_id) && (int)($existingMaster->posted ?? 0) === 0;
+                            $data['redirect'] = $isInStaging
+                                ? '/accounts/'.$type.'/form/'.$uuid
+                                : $this->prefixIndexPage.'accounts/'.$type;
+                            return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+                        }
+                    }
+                }
                 $code= TblAccoVoucher::where('voucher_id',$uuid)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_no');
                 $voucher_no = $code->voucher_no;
                 $user= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_user_id');
@@ -1024,34 +1068,63 @@ class VoucherController extends Controller
                         $voucher->voucher_user_id = auth()->user()->id;
                     }
                     $voucher->save();
+                }
+            }
 
-                     if(isset($id)){
-                        $this->assertCanSaveWithStaging($request, $this->menu_id, $form_id, false, $stock);
-                    }
-
-                    if (isset($id) && !$this->stagingShouldPersistFormChanges($request, $this->menu_id, $form_id, $stock)) {
-                        $wasInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
-                        $stagingService = new StagingService();
-                        $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
-
-                        if ($criteriaApplies) {
-                            $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
-                                'listing_view' => 'vw_inve_stock',
-                                'form_path' => $type . '/form',
-                                'document_code_key' => 'stock_code',
+            if($menuDtlId){
+                $master = TblAccoVoucher::where('voucher_id',$form_id)
+                    ->where('voucher_type',$type)
+                    ->where('voucher_sr_no','=','1')
+                    ->where(Utilities::currentBCB())
+                    ->first();
+                if($master){
+                    $wasInStaging = isset($id) && !empty($master->current_stg_id) && (int)($master->posted ?? 0) === 0;
+                    $stagingService = new StagingService();
+                    $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($menuDtlId, $form_id, $wasInStaging);
+                    if(!$criteriaApplies){
+                        $master->current_stg_id = null;
+                        $master->staging_apply = 1;
+                        $master->posted = 1;
+                        $master->save();
+                        TblAccoVoucher::where('voucher_id',$form_id)
+                            ->where('voucher_type',$type)
+                            ->where(Utilities::currentBCB())
+                            ->update([
+                                'current_stg_id' => null,
+                                'staging_apply' => 1,
+                                'posted' => 1,
                             ]);
-                            $stock->save();
+                        \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
+                            ->where('document_id', $form_id)
+                            ->update(['posted' => 1]);
+                    }else{
+                        if(isset($master->posted) && (int)$master->posted === 1){
+                            $master->posted = 0;
                         }
-                        // DB::commit();
-
-                        $data = array_merge($data, Utilities::returnJsonEditForm());
-                        $isInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
-                        $data['redirect'] = $isInStaging
-                            ? '/' . $type . '/form/' . $form_id
-                            : $this->prefixIndexPage . $type . '/form';
-                        return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+                        if(isset($master->staging_apply) && (int)$master->staging_apply === 1){
+                            $master->staging_apply = 0;
+                        }
+                        if(empty($master->current_stg_id)){
+                            $flows = $stagingService->getFormFlows($menuDtlId, null, $form_id, $wasInStaging);
+                            if(!empty($flows['all'])){
+                                $master->current_stg_id = $flows['all'][0]->stg_flows_id;
+                            }
+                        }
+                        $this->handleStaging($request, $menuDtlId, $form_id, $master, false, [
+                            'listing_view' => 'vw_acco_voucher_listing',
+                            'form_path' => '/accounts/'.$type.'/form',
+                            'document_code_key' => 'voucher_no',
+                        ]);
+                        $master->save();
+                        TblAccoVoucher::where('voucher_id',$form_id)
+                            ->where('voucher_type',$type)
+                            ->where(Utilities::currentBCB())
+                            ->update([
+                                'current_stg_id' => $master->current_stg_id,
+                                'staging_apply' => $master->staging_apply,
+                                'posted' => $master->posted,
+                            ]);
                     }
-            
                 }
             }
 

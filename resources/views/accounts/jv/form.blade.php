@@ -253,10 +253,10 @@
                                     </thead>
                                     <tbody class="erp_form__grid_body">
                                     @if(isset($dtls))
-                                        @foreach($dtls as $data)
+                                        @foreach($dtls as $dtl)
                                             @php
                                                 $bgt_dsc = '';
-                                                $budget =\App\Models\TblAccBudget::where('budget_id',$data->budget_id)->where('budget_branch_id',$data->budget_branch_id)->first();
+                                                $budget =\App\Models\TblAccBudget::where('budget_id',$dtl->budget_id)->where('budget_branch_id',$dtl->budget_branch_id)->first();
                                                 if($budget != Null){
                                                     $bgt_dsc = $budget->budget_budgetart_position;
                                                 }
@@ -264,18 +264,18 @@
                                             <tr>
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{ $loop->iteration }}" name="pd[{{ $loop->iteration }}][voucher_sr_number]" title="{{ $loop->iteration }}"  class=" form-control erp-form-control-sm handle" readonly>
-                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][account_id]" data-id="account_id" value="{{$data->chart_account_id}}"  class="account_id form-control erp-form-control-sm">
-                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_id]" data-id="budget_id" value="{{$data->budget_id}}"  class="budget_id form-control erp-form-control-sm">
-                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_branch_id]" data-id="budget_branch_id" value="{{$data->budget_branch_id}}"  class="budget_branch_id form-control erp-form-control-sm">
+                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][account_id]" data-id="account_id" value="{{$dtl->chart_account_id}}"  class="account_id form-control erp-form-control-sm">
+                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_id]" data-id="budget_id" value="{{$dtl->budget_id}}"  class="budget_id form-control erp-form-control-sm">
+                                                    <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_branch_id]" data-id="budget_branch_id" value="{{$dtl->budget_branch_id}}"  class="budget_branch_id form-control erp-form-control-sm">
                                                 </td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_code]" data-id="account_code" value="{{$data->accounts->chart_code}}" title="{{$data->accounts->chart_code}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" class="acc_code open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_name]" data-id="account_name" value="{{$data->accounts->chart_name}}" title="{{$data->accounts->chart_name}}" class="acc_name form-control erp-form-control-sm" readonly></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_descrip]" data-id="voucher_descrip" value="{{$data->voucher_descrip}}" title="{{$data->voucher_descrip}}" class="moveIndex moveIndex2  form-control erp-form-control-sm" ></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_code]" data-id="account_code" value="{{$dtl->accounts->chart_code}}" title="{{$dtl->accounts->chart_code}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" class="acc_code open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_name]" data-id="account_name" value="{{$dtl->accounts->chart_name}}" title="{{$dtl->accounts->chart_name}}" class="acc_name form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_descrip]" data-id="voucher_descrip" value="{{$dtl->voucher_descrip}}" title="{{$dtl->voucher_descrip}}" class="moveIndex moveIndex2  form-control erp-form-control-sm" ></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][budget]" data-id="budget" value="{{isset($bgt_dsc)?$bgt_dsc:''}}" title="{{isset($bgt_dsc)?$bgt_dsc:''}}"   data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}" class="budget_dscrp open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_debit]" data-id="voucher_debit" value="{{number_format($data->voucher_debit,3)}}" title="{{$data->voucher_debit}}" class="tb_moveIndex debit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_credit]" data-id="voucher_credit" value="{{number_format($data->voucher_credit,3)}}" title="{{$data->voucher_credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_fc_debit]" data-id="voucher_fc_debit" value="{{number_format($data->voucher_fc_debit,3)}}" title="{{$data->voucher_fc_debit}}" class="tb_moveIndex fcdebit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_fc_credit]" data-id="voucher_fc_credit" value="{{number_format($data->voucher_fc_credit,3)}}" title="{{$data->voucher_fc_credit}}" class="tb_moveIndex fccredit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_debit]" data-id="voucher_debit" value="{{number_format($dtl->voucher_debit,3)}}" title="{{$dtl->voucher_debit}}" class="tb_moveIndex debit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_credit]" data-id="voucher_credit" value="{{number_format($dtl->voucher_credit,3)}}" title="{{$dtl->voucher_credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_fc_debit]" data-id="voucher_fc_debit" value="{{number_format($dtl->voucher_fc_debit,3)}}" title="{{$dtl->voucher_fc_debit}}" class="tb_moveIndex fcdebit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_fc_credit]" data-id="voucher_fc_credit" value="{{number_format($dtl->voucher_fc_credit,3)}}" title="{{$dtl->voucher_fc_credit}}" class="tb_moveIndex fccredit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group" aria-label="..."><button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>
                                             </tr>
                                         @endforeach

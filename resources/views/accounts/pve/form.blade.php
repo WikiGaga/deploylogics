@@ -641,10 +641,8 @@
         function voucher_posted()
         {
             var voucher_id = $('#voucher_id').val();
-            var formData = {
-                voucher_id : voucher_id,
-            }
-            var url = '{{action('Accounts\VoucherController@voucherpost')}}';
+            var formData = { voucher_id : voucher_id };
+            var url = "{{ action('Accounts\\VoucherController@post', ['type' => $type]) }}";
             $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -655,7 +653,8 @@
                 data        : formData,
                 success: function(response) {
                     if(response['status'] == 'success'){
-                        toastr.error('Successfully Voucher Posted..!');
+                        toastr.success('Successfully Posted..!');
+                        location.reload();
                     }
                     if(response['status'] == 'error')
                     {

@@ -433,7 +433,7 @@
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/accounts/cpv/post',
+                url: "{{ action('Accounts\\VoucherController@post', ['type' => $type]) }}",
                 dataType: 'json',
                 data: { voucher_id: voucher_id },
                 success: function (response) {
@@ -460,7 +460,7 @@
             $.ajax({
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 type: 'POST',
-                url: '/accounts/cpv/unposted',
+                url: "{{ action('Accounts\\VoucherController@UnPosted', ['type' => $type]) }}",
                 dataType: 'json',
                 data: { data: [voucher_id] },
                 success: function (response) {
