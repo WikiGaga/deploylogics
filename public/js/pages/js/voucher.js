@@ -148,7 +148,7 @@ var KTFormWidgets = function() {
                              if (response.data && response.data.redirect) {
                             window.location.href = response.data.redirect;
                             } else if(response.data.form == 'new'){
-                                window.location.href = response.data.redirect;
+                                window.location.href = response.data.redirect || ('/accounts/{{ $type }}/form/' + (response.data.id || ''));
                             }else{
                                 $('.new-row').removeClass('new-row');
                             }
@@ -164,7 +164,7 @@ var KTFormWidgets = function() {
                             if(response.data.hasOwnProperty('budgets')){
                                 var budgets = response.data.budgets;
                                 var rows = document.querySelectorAll('.erp_form__grid_body tr input.account_id');
-                                const entries = Object.values(budgets);    
+                                const entries = Object.values(budgets);
                                 entries.forEach((key) => {
                                     rows.forEach(function(row){
                                         console.log(key);

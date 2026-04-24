@@ -131,6 +131,12 @@ class StagingDashboardController extends Controller
                 'cols' => ['stock_code', 'stock_id'],
                 'titles' => ['Stock Code', 'ID'],
             ],
+            31 => [
+                'path' => '/accounts/jv/form/',
+                'pk' => 'voucher_id',
+                'cols' => ['voucher_no', 'voucher_date'],
+                'titles' => ['Voucher No', 'Voucher Date'],
+            ],
             65 => [
                 'path' => '/stock/stock-transfer/form/',
                 'pk' => 'stock_id',
