@@ -118,6 +118,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                         casetype == 'brpv'||
                         casetype == 'brrv'
                     ){
+                        console.log(casetype,'vvvvvvvvvvvv')
                         if(!isPosted){
                         btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
                         }

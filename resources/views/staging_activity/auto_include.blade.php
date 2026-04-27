@@ -1,8 +1,14 @@
 @if((isset($staging_data) && $staging_data['has_staging']) || (isset($staging_activity_only) && isset($staging_activity) && $staging_activity->count() > 0))
     @php
-        if (!isset($data)) {
+        // if (!isset($data)) {
+        //     $data = [];
+        // }
+        if (isset($data) && is_object($data)) {
+            $data = $data->toArray();
+        } elseif (!isset($data)) {
             $data = [];
         }
+
         if (isset($staging_data) && $staging_data['has_staging']) {
             $data['stg'] = $staging_data;
             $data['flow_dtls'] = $staging_flow_dtls ?? null;
@@ -18,7 +24,6 @@
             }
             $current_stg_activities = $staging_activity;
         }
-
         $id = $staging_form_id ?? $data['id'] ?? null;
     @endphp
 

@@ -173,12 +173,6 @@ class StagingDashboardController extends Controller
                 'cols' => ['voucher_code', 'voucher_id'],
                 'titles' => ['Voucher Code', 'ID'],
             ],
-            31 => [
-                'path' => '/accounts/jv/form/',
-                'pk' => 'voucher_id',
-                'cols' => ['voucher_code', 'voucher_id'],
-                'titles' => ['Voucher Code', 'ID'],
-            ],
             62 => [
                 'path' => '/accounts/obv/form/',
                 'pk' => 'voucher_id',
