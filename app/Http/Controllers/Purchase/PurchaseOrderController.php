@@ -902,8 +902,8 @@ class PurchaseOrderController extends Controller
         $data['print_link'] = $url;
         // dd($url);
         if(isset($id)){
-            if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
-                $data['current'] = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')->where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+            if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->exists()){
+                $data['current'] = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')->where('purchase_order_id',$id)->where(Utilities::currentBC())->first();
             }else{
                 abort('404');
             }

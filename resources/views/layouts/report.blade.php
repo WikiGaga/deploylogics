@@ -17,6 +17,8 @@
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
 
     <!--end::Global Theme Styles -->
+    <link href="{{ asset('css/custom.css?v=2') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('css/responsive.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('css/report.css') }}" rel="stylesheet" type="text/css" />
     <!-- RTL CSS - loaded dynamically based on user preference -->
     <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
@@ -261,33 +263,36 @@
         var viewParam = '?view=1';
 
         // accounts
-        var accountsTypeList = ['crv','cpv','brv','bpv','jv','obv','lv'];
-        if(accountsTypeList.includes(type)) {
-            path = '/accounts/'+type+'/form/'+id+viewParam;
+        type = (type || '').toString();
+        var typeLower = type.toLowerCase();
+        var typeUpper = type.toUpperCase();
+        var accountsTypeList = ['pve','pv','cpv','crv','lv','jv','rv','brpv','brrv','brv','bpv','obv'];
+        if(accountsTypeList.includes(typeLower)) {
+            path = '/accounts/'+typeLower+'/form/'+id+viewParam;
         }
 
         // purchase
-        if(type == 'GRN' || type == 'GRNM'){path = '/grn/form/'+id+viewParam;}
-        if(type == 'PR'){path = '/purchase-return/form/'+id+viewParam;}
-        if(type == 'PO'){path = '/purchase-order/form/'+id+viewParam;}
+        if(typeUpper == 'GRN' || typeUpper == 'GRNM'){path = '/grn/form/'+id+viewParam;}
+        if(typeUpper == 'PR'){path = '/purchase-return/form/'+id+viewParam;}
+        if(typeUpper == 'PO'){path = '/purchase-order/form/'+id+viewParam;}
         // sale
-        if(type == 'SI'){path = '/sales-invoice/form/'+id+viewParam;}
-        if(type == 'SR'){path = '/sale-return/form/'+id+viewParam;}
-        if(type == 'POS'){path = '/pos-sales-invoice/form/'+id+viewParam;}
-        if(type == 'RPOS'){path = '/pos-sales-return/form/'+id+viewParam;}
-        if(type == 'SD'){path = '/sales-delivery/form/'+id+viewParam;}
-        if(type == 'LFS'){path = '/sales-fee/form/'+id+viewParam;}
-        if(type == 'RI'){path = '/rebate-invoice/form/'+id+viewParam;}
-        if(type == 'DRF'){path = '/display-rent-fee/form/'+id+viewParam;}
+        if(typeUpper == 'SI'){path = '/sales-invoice/form/'+id+viewParam;}
+        if(typeUpper == 'SR'){path = '/sale-return/form/'+id+viewParam;}
+        if(typeUpper == 'POS'){path = '/pos-sales-invoice/form/'+id+viewParam;}
+        if(typeUpper == 'RPOS'){path = '/pos-sales-return/form/'+id+viewParam;}
+        if(typeUpper == 'SD'){path = '/sales-delivery/form/'+id+viewParam;}
+        if(typeUpper == 'LFS'){path = '/sales-fee/form/'+id+viewParam;}
+        if(typeUpper == 'RI'){path = '/rebate-invoice/form/'+id+viewParam;}
+        if(typeUpper == 'DRF'){path = '/display-rent-fee/form/'+id+viewParam;}
         // stock inventory
-        if(type == 'OS'){path = '/stock/opening-stock/form/'+id+viewParam;}
-        if(type == 'EI'){path = '/stock/expired-items/form/'+id+viewParam;}
-        if(type == 'ST'){path = '/stock/stock-transfer/form/'+id+viewParam;}
-        if(type == 'STR'){path = '/stock/stock-receiving/form/'+id+viewParam;}
-        if(type == 'SA'){path = '/stock/stock-adjustment/form/'+id+viewParam;}
-        if(type == 'SP'){path = '/stock/sample-items/form/'+id+viewParam;}
-        if(type == 'DI'){path = '/stock/damaged-items/form/'+id+viewParam;}
-        if(type == 'IST'){path = '/stock/internal-stock-transfer/form/'+id+viewParam;}
+        if(typeUpper == 'OS'){path = '/stock/opening-stock/form/'+id+viewParam;}
+        if(typeUpper == 'EI'){path = '/stock/expired-items/form/'+id+viewParam;}
+        if(typeUpper == 'ST'){path = '/stock/stock-transfer/form/'+id+viewParam;}
+        if(typeUpper == 'STR'){path = '/stock/stock-receiving/form/'+id+viewParam;}
+        if(typeUpper == 'SA'){path = '/stock/stock-adjustment/form/'+id+viewParam;}
+        if(typeUpper == 'SP'){path = '/stock/sample-items/form/'+id+viewParam;}
+        if(typeUpper == 'DI'){path = '/stock/damaged-items/form/'+id+viewParam;}
+        if(typeUpper == 'IST'){path = '/stock/internal-stock-transfer/form/'+id+viewParam;}
 
         if(path != ''){
             window.open(path, "_blank");

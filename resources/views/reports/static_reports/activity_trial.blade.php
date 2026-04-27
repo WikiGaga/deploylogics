@@ -1456,11 +1456,38 @@ FROM (
     </div>
 @endsection
 @section('pageJS')
-
 @endsection
 
 @section('customJS')
+    <script>
+        $(document).on('click', '.generate_report', function(e){
+            e.preventDefault();
+            var thix = $(this);
+            var account_id = thix.attr('data-id') || '';
+            var code_val = $.trim(thix.text());
+            var name_val = $.trim(thix.closest('tr').find('td').eq(1).text());
 
+            var data_url = '/report/criteria-list';
+            var data = {
+                title: 'Accounting Ledger',
+                account_id: account_id,
+                name_val: name_val,
+                code_val: code_val,
+                btn_id: 'generate_account_report'
+            };
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                }
+            });
+
+            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url, data);
+            $('.modal-dialog').draggable({
+                handle: ".modal-header"
+            });
+        });
+    </script>
 @endsection
 @section('exportXls')
     @if($data['form_file_type'] == 'xls')

@@ -441,7 +441,8 @@
                                 setTimeout(function () {
                                     $("form").find(":submit").prop('disabled', false);
                                 }, 2000);
-                                var win = window.open(response['data']['url'], "report");
+                                var reportWinName = "report_" + (formData.report_case || "general_ledger");
+                                var win = window.open(response['data']['url'], reportWinName);
                                 win.location.reload();
                                 //  window.location.href = response['data']['redirect'];
                             }else{
@@ -718,12 +719,13 @@
             var account_id = thix.parents('.modal-content').find('input[name="account_id"]').val();
             var from_date = thix.parents('.modal-content').find('input[name="date_from"]').val();
             var to_date = thix.parents('.modal-content').find('input[name="date_to"]').val();
+            var ledger_report_case = thix.parents('.modal-content').find('select[name="ledger_report_case"]').val() || 'general_ledger';
             var formData = {
                 report_branch_ids : [{{auth()->user()->branch_id}}],
-                chart_account : account_id,
+                chart_account_multiple : [account_id],
                 date_from : from_date,
                 date_to : to_date,
-                report_case : 'accounting_ledger',
+                report_case : ledger_report_case,
                 report_type :  "static",
                 form_file_type : "report",
                 accounting_ledger_ob_toggle: 'on'
@@ -755,7 +757,7 @@
                                 setTimeout(function () {
                                     $("form").find(":submit").prop('disabled', false);
                                 }, 2000);
-                                var win = window.open(response['data']['url'], "report");
+                                var win = window.open(response['data']['url'], "_blank");
                                 win.location.reload();
                                 //  window.location.href = response['data']['redirect'];
                             }else{
@@ -1016,7 +1018,7 @@
                 toastr.error("Please Enter Required Fields.");
             }
         });
-        
+
         $(document).on('click','#upload_documents',function(){
             $.ajaxSetup({
                 headers: {

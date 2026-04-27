@@ -634,11 +634,15 @@ class PurchaseReturnController extends Controller
         $data['print_link'] = $url;
         // dd($url);
         if(isset($id)){
-            if(TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->exists()){
-                $data['current'] = TblPurcGrn::with('grn_dtl','supplier','PO','grn_expense')->where('grn_id',$id)->where(Utilities::currentBCB())->first();
-            }else{
+            $current = TblPurcGrn::with('grn_dtl','supplier','PO','grn_expense')
+                ->where('grn_id',$id)
+                ->where('grn_type','PR')
+                ->where(Utilities::currentBC())
+                ->first();
+            if(empty($current)){
                 abort('404');
             }
+            $data['current'] = $current;
         }
         $data['currency'] = TblDefiCurrency::where('currency_id',$data['current']->currency_id)->where(Utilities::currentBC())->first();
         $data['store'] = TblDefiStore::where('store_id',$data['current']->store_id)->where(Utilities::currentBCB())->first();

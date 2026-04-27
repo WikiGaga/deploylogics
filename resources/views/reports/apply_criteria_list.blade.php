@@ -24,6 +24,21 @@
                 <span class="erp-col-form-label" style="color: #5d78ff;">{{$data['name_val']}}</span>
             </div>
         </div>
+        @if(isset($data['title']) && $data['title'] == 'Accounting Ledger')
+            <div class="row form-group-block">
+                <div class="col-lg-3">
+                    <label class="erp-col-form-label">Report Type:</label>
+                </div>
+                <div class="col-lg-6">
+                    <div class="erp-select2">
+                        <select class="form-control erp-form-control-sm kt_select2_options" name="ledger_report_case">
+                            <option value="general_ledger" selected>General Ledger</option>
+                            <option value="accounting_ledger">Accounting Ledger</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        @endif
         @php
             $all_document_types = ['POS','RPOS','SI','SR','GRN','PR','SP','IST','DI','STR','OS','SA','EI','ST',];
             sort($all_document_types);

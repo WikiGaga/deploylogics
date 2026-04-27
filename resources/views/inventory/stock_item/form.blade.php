@@ -8,6 +8,9 @@
 
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            if($case == 'view'){
+                $case = 'edit';
+            }
             if($case == 'new'){
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');

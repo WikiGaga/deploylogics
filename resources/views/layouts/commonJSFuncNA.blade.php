@@ -4,7 +4,7 @@
         "placeholder": "dd-mm-yyyy",
         autoUnmask: false
     });
-    
+
     $(document).on('blur', ".date_inputmask,input[data-id='expiry_date']" , function validatedate(e) {
         var inputText = $(this);
         var thsid = inputText.attr('id');
@@ -33,7 +33,7 @@
                 var mm = parseInt(pdate[1]);
                 var yy = parseInt(pdate[2]);
                 var month=12,day=31;
-                
+
                 if (mm == 1 || mm > 2) {
                     (mm > ListofDays.length) ? month = 12 : month = mm;
                     (dd > ListofDays[month - 1]) ? day = ListofDays[month - 1] : day = dd;
@@ -377,7 +377,8 @@
                                 setTimeout(function () {
                                     $("form").find(":submit").prop('disabled', false);
                                 }, 2000);
-                                var win = window.open(response['data']['url'], "report");
+                                var reportWinName = "report_" + (formData.report_case || "general_ledger");
+                                var win = window.open(response['data']['url'], reportWinName);
                                 win.location.reload();
                                 //  window.location.href = response['data']['redirect'];
                             }else{
@@ -471,7 +472,7 @@
                                 setTimeout(function () {
                                     $("form").find(":submit").prop('disabled', false);
                                 }, 2000);
-                                var win = window.open(response['data']['url'], "report");
+                                var win = window.open(response['data']['url'], "_blank");
                                 win.location.reload();
                                 //  window.location.href = response['data']['redirect'];
                             }else{
@@ -619,12 +620,13 @@
             var account_id = thix.parents('.modal-content').find('input[name="account_id"]').val();
             var from_date = thix.parents('.modal-content').find('input[name="date_from"]').val();
             var to_date = thix.parents('.modal-content').find('input[name="date_to"]').val();
+            var ledger_report_case = thix.parents('.modal-content').find('select[name="ledger_report_case"]').val() || 'general_ledger';
             var formData = {
                 report_branch_ids : [{{$data['branch_branch_id']}}],
-                chart_account : account_id,
+                chart_account_multiple : [account_id],
                 date_from : from_date,
                 date_to : to_date,
-                report_case : 'accounting_ledger',
+                report_case : ledger_report_case,
                 report_type :  "static",
                 form_file_type : "report",
                 accounting_ledger_ob_toggle: 'on'
@@ -656,7 +658,7 @@
                                 setTimeout(function () {
                                     $("form").find(":submit").prop('disabled', false);
                                 }, 2000);
-                                var win = window.open(response['data']['url'], "report");
+                                var win = window.open(response['data']['url'], "_blank");
                                 win.location.reload();
                                 //  window.location.href = response['data']['redirect'];
                             }else{

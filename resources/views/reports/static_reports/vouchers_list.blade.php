@@ -93,9 +93,9 @@
                                         $where .=  " and ( voucher_debit <> 0 OR  voucher_credit <> 0 ) ";
                                     }
 
-                                    $Query = "Select voucher_id,voucher_date,voucher_no,voucher_status,voucher_type,chart_code,chart_name,voucher_descrip,voucher_debit,voucher_credit,voucher_sr_no from VW_ACCO_VOUCHER_ALL
+                                    $Query = "Select voucher_id,voucher_document_id,voucher_date,voucher_no,voucher_status,voucher_type,chart_code,chart_name,voucher_descrip,voucher_debit,voucher_credit,voucher_sr_no from VW_ACCO_VOUCHER_ALL
                                                 where voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
-                                            $where and branch_id in(".$branch->branch_id.") ".$data['where']." 
+                                            $where and branch_id in(".$branch->branch_id.") ".$data['where']."
                                             $whereVoucher
                                             order by voucher_date,voucher_no,voucher_sr_no";
                                     $result = \Illuminate\Support\Facades\DB::select($Query);
@@ -104,12 +104,14 @@
                                 @endphp
                                 @foreach($result as $voucher)
                                     @php
-                                        $path = '';
-                                        $path = '/accounts/'.$voucher->voucher_type.'/print/'.$voucher->voucher_id;
+                                        $print_id = $voucher->voucher_document_id ?? '';
+                                        if($print_id == ''){$print_id = $voucher->voucher_id;}
                                     @endphp
                                     <tr>
                                         <td class="text-left">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$voucher->voucher_date))))}}</td>
-                                        <td class="text-left"><a href="{{$path}}" target="_blank">{{$voucher->voucher_no}}</a></td>
+                                        <td class="text-left">
+                                            <span class="generate_report clickable-cell" data-id="{{$print_id}}" data-type="{{$voucher->voucher_type}}">{{$voucher->voucher_no}}</span>
+                                        </td>
                                         <td class="text-center">{{$voucher->voucher_status}}</td>
                                         <td class="text-center">{{$voucher->chart_code}}</td>
                                         <td class="text-left">{{$voucher->chart_name}}<br><span style="margin-left:20px;">{{$voucher->voucher_descrip}}</span></td>

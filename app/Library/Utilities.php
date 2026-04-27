@@ -38,7 +38,7 @@ class Utilities
     }
     public static function viewForm(){
         $data = [];
-        $data['type'] = 'view';
+        $data['type'] = 'edit';
         $data['action'] = '';
         $data['action_id'] = 3;
         return $data;
