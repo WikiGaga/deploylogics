@@ -121,6 +121,7 @@
                         FROM 
                             VW_PURC_GRN 
                         where branch_id in (".implode(",",$data['branch_ids']).")
+                            and posted = 1
                             and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                             $where  
                         GROUP BY branch_short_name,SUPPLIER_NAME, GRN_DATE, GRN_ID, GRN_TYPE,GRN_CODE 

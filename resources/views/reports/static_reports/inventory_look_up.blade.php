@@ -139,6 +139,7 @@ FROM(
         FROM
             VW_PURC_STOCK_DTL 
         WHERE branch_id in (".implode(",",$data['branch_ids']).")
+            AND posted = 1
             AND ".$data['clause_business_id'] . $data['clause_company_id'] . "  
             AND document_date <= to_date('".$data['date']."', 'yyyy/mm/dd')
         GROUP BY PRODUCT_ID
@@ -206,6 +207,7 @@ FROM(
         FROM
             VW_PURC_STOCK_DTL 
         WHERE branch_id in (".implode(",",$data['branch_ids']).")
+            AND posted = 1
             AND ".$data['clause_business_id'] . $data['clause_company_id'] . "  
             AND document_date <= to_date('".$data['date']."', 'yyyy/mm/dd')
         GROUP BY PRODUCT_ID, BRANCH_ID

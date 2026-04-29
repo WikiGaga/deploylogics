@@ -43,12 +43,12 @@
                 GET_STOCK_CURRENT_QTY_DATE(PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,SALES_STORE_ID,to_date('".$data['date']."', 'yyyy/mm/dd')) BALANCE_QTY,
                 GET_STOCK_AVG_RATE_ON_DATE(PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,to_date('".$data['date']."', 'yyyy/mm/dd')) avg_rate,
                 GET_STOCK_AVG_RATE_ON_DATE(PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,to_date('".$data['date']."', 'yyyy/mm/dd'))* GET_STOCK_CURRENT_QTY_DATE (PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,SALES_STORE_ID,to_date('".$data['date']."', 'yyyy/mm/dd')) BALANCE_AMOUNT,0 RATE_EFFECT
-                FROM VW_PURC_STOCK_DTL WHERE  product_id = '".$data['product']->product_id."'
+                FROM VW_PURC_STOCK_DTL WHERE posted = 1 and product_id = '".$data['product']->product_id."'
                 UNION ALL SELECT DISTINCT 2 data_priority,DOCUMENT_DATE,DOCUMENT_CODE,DOCUMENT_TYPE,PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,QTY_IN,STOCK_RATE rate_in,QTY_IN * STOCK_RATE AMOUNT_IN,0 QTY_OUT,0 RATE_OUT,0 amount_out,0 BALANCE_QTY,0 AVG_RATE,0 BALANCE_AMOUNT,RATE_EFFECT
-                FROM VW_PURC_STOCK_DTL WHERE STOCK_CALCULATION_EFFECT = '+' AND document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd') AND product_id = '".$data['product']->product_id."'
+                FROM VW_PURC_STOCK_DTL WHERE posted = 1 AND STOCK_CALCULATION_EFFECT = '+' AND document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd') AND product_id = '".$data['product']->product_id."'
                 UNION ALL SELECT DISTINCT 2 data_priority,DOCUMENT_DATE,DOCUMENT_CODE,DOCUMENT_TYPE,PRODUCT_ID,'',BUSINESS_ID,COMPANY_ID,BRANCH_ID,0 QTY_IN,0 RATE_IN,
                 0 amount_in,QTY_OUT,0 RATE_out,0 amount_out,0 BALANCE_QTY,0 average_rate,0 BALANCE_AMOUNT,RATE_EFFECT
-                FROM VW_PURC_STOCK_DTL WHERE STOCK_CALCULATION_EFFECT = '-' AND document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd') AND product_id = '".$data['product']->product_id."' order by  data_priority,document_date ";
+                FROM VW_PURC_STOCK_DTL WHERE posted = 1 AND STOCK_CALCULATION_EFFECT = '-' AND document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd') AND product_id = '".$data['product']->product_id."' order by  data_priority,document_date ";
 
             $ResultList = DB::select($query);
         @endphp

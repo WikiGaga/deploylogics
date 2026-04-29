@@ -130,6 +130,7 @@
                                     VW_PURC_GRN GRN 
                                 WHERE GRN.PRODUCT_ID = PROD.PRODUCT_ID 
                                     AND UPPER(GRN_TYPE) = 'GRN' 
+                                    AND GRN.posted = 1
                                     and GRN.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                 ORDER BY grn_code DESC,
                                     CREATED_AT DESC FETCH FIRST 1 ROWS ONLY
@@ -141,6 +142,7 @@
                                     VW_PURC_GRN GRN 
                                 WHERE GRN.PRODUCT_ID = PROD.PRODUCT_ID 
                                     AND UPPER(GRN_TYPE) = 'GRN' 
+                                    AND GRN.posted = 1
                                     and GRN.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                 ORDER BY grn_code DESC,
                                     CREATED_AT DESC FETCH FIRST 1 ROWS ONLY
@@ -152,6 +154,7 @@
                                     VW_PURC_GRN GRN 
                                 WHERE GRN.PRODUCT_ID = PROD.PRODUCT_ID 
                                     AND UPPER(GRN_TYPE) = 'GRN' 
+                                    AND GRN.posted = 1
                                     and GRN.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                 ORDER BY grn_code DESC,
                                     CREATED_AT DESC FETCH FIRST 1 ROWS ONLY
@@ -163,6 +166,7 @@
                                     VW_PURC_GRN GRN 
                                 WHERE GRN.PRODUCT_ID = PROD.PRODUCT_ID 
                                     AND UPPER(GRN_TYPE) = 'GRN' 
+                                    AND GRN.posted = 1
                                     and GRN.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                 ORDER BY grn_code DESC,
                                     CREATED_AT DESC FETCH FIRST 1 ROWS ONLY
@@ -185,6 +189,7 @@
                                     SUM (s.QTY_BASE_UNIT_VALUE)     CURRENT_STOCK 
                                     FROM VW_PURC_STOCK_DTL s
                                     WHERE s.BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
+                                        AND s.posted = 1
                                         AND (s.created_at between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI') )
                                     GROUP BY s.PRODUCT_ID,
                                     S.BRANCH_ID 

@@ -132,6 +132,7 @@
                     WHERE business_id = ".auth()->user()->business_id." 
                         AND company_id = ".auth()->user()->company_id." 
                         AND branch_id in (".implode(",",$data['branch_ids']).")
+                        AND posted = 1
                         AND VW_PURC_STOCK_DTL.DOCUMENT_DATE <= to_date('".$data['date']."','yyyy/mm/dd')
                     GROUP BY PRODUCT_ID,
                         BUSINESS_ID,

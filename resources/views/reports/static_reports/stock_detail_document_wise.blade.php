@@ -26,7 +26,7 @@
             $query = "select * from (select product_id,business_id,company_id,branch_id,document_type,
                     get_stock_current_qty_date (product_id,'',business_id,company_id,branch_id,'',to_date('".$data['date_opening_bal']."', 'yyyy/mm/dd')) opening_stock,qty_base_unit_value,
                     0 closing_bal
-                    from vw_purc_stock_dtl s where document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd'))
+                    from vw_purc_stock_dtl s where posted = 1 and document_date between to_date('".$data['from_date']."', 'yyyy/mm/dd') and to_date('".$data['to_date']."', 'yyyy/mm/dd'))
                     pivot (sum (qty_base_unit_value) for document_type in (".$data['types'].")) order by product_id";
            // dd($query);
             $list_data = DB::select($query);

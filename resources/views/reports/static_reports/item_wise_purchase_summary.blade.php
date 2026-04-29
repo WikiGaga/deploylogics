@@ -133,6 +133,7 @@
                             FROM 
                                 VW_PURC_GRN
                             where branch_id in (".implode(",",$data['branch_ids']).")
+                                and posted = 1
                                 and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                 and grn_type = 'GRN'
                                 $where  
@@ -163,6 +164,7 @@
                             FROM 
                                 VW_PURC_GRN
                             where branch_id in (".implode(",",$data['branch_ids']).")
+                                and posted = 1
                                 and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                 and grn_type = 'PR'
                                 $where  

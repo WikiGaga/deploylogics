@@ -148,6 +148,7 @@
                                 ) PROD_RATE ON VW_PURC_STOCK_DTL.PRODUCT_ID = PROD_RATE.PRODUCT_ID 
                                 AND  VW_PURC_STOCK_DTL.BRANCH_ID = PROD_RATE.BRANCH_ID 
                             where VW_PURC_STOCK_DTL.BRANCH_ID in (".implode(",",$data['branch_ids']).")
+                                and VW_PURC_STOCK_DTL.posted = 1
                                 $date_field
                             GROUP BY VW_PURC_STOCK_DTL.BRANCH_ID, VW_PURC_STOCK_DTL.PRODUCT_ID 
                             ) STOCK, VW_PURC_PRODUCT  PROD , 

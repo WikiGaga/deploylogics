@@ -2429,6 +2429,7 @@ class UserReportsController extends Controller
                 $data['from_date'] = date('Y-m-d', strtotime($from_date));
 
                 $getdata = DB::table('vw_inve_stock')->whereIn('branch_id', $data['branch_ids'])
+                    ->where('posted', 1)
                     ->whereBetween('stock_date',[$data['from_date'],$data['to_date']]);
 
                 if($data['report_case'] == 'opening_stock'){

@@ -99,7 +99,7 @@
                                 TBL_PURC_GRN_DTL_SALE_RATE 
                             FROM
                                 VW_PURC_GRN 
-                            WHERE GRN_TYPE = 'GRN' 
+                            WHERE GRN_TYPE = 'GRN' AND posted = 1
                             UNION
                             ALL 
                             SELECT 
@@ -140,7 +140,7 @@
                                 0 
                             FROM
                                 VW_INVE_STOCK 
-                            WHERE STOCK_CODE_TYPE = 'str') GAGA,
+                            WHERE STOCK_CODE_TYPE = 'str' AND posted = 1) GAGA,
                                 VW_PURC_PRODUCT_BARCODE PROD ,
                                 TBL_SOFT_BRANCH BRC,
                                 USERS

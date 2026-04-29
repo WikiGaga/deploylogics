@@ -250,6 +250,7 @@ FROM
       VW_PURC_STOCK_DTL 
     WHERE branch_id in (".implode(",",$data['branch_ids']).")
         and ".$data['clause_business_id'] . $data['clause_company_id'] . " 
+        and posted = 1
         $date_field
     GROUP BY PRODUCT_ID) STOCK,
     VW_PURC_PRODUCT PROD 

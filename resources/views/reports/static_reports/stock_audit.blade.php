@@ -106,6 +106,7 @@
                         FROM 
                             VW_INVE_STOCK
                         WHERE BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
+                            AND posted = 1
                             AND (STOCK_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))
                             $where
                         GROUP BY BRANCH_ID,

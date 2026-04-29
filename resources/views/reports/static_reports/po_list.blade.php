@@ -16,6 +16,7 @@
     @php
         $data = Session::get('data');
         $podata = \Illuminate\Support\Facades\DB::table('vw_purc_purchase_order')->whereIn('branch_id', $data['branch_ids'])
+            ->where('posted', 1)
             ->whereBetween('purchase_order_entry_date',[$data['from_date'],$data['to_date']])
             ->orderby('purchase_order_entry_date')->orderby('purchase_order_code')
             ->get();

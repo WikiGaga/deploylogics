@@ -117,6 +117,7 @@
                                         sum(TBL_PURC_GRN_DTL_AMOUNT)  TBL_PURC_GRN_DTL_AMOUNT ,
                                         COUNT(GRN_ID)  INV_NUMBERS
                                         FROM VW_PURC_GRN where branch_id in (".implode(",",$data['branch_ids']).")
+                                        and posted = 1
                                         $where
                                         GROUP BY GROUP_ITEM_PARENT_NAME, GROUP_ITEM_NAME, PRODUCT_ID,PRODUCT_BARCODE_ID,
                                         PRODUCT_BARCODE_BARCODE, PRODUCT_NAME

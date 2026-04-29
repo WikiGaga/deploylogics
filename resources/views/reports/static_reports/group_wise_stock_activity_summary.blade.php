@@ -480,6 +480,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
+        AND posted = 1
         $date_field2
     UNION
     ALL 
@@ -497,6 +498,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'GRN' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
         $date_field
     UNION
@@ -515,6 +517,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'STR' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
         $date_field 
     UNION
@@ -533,6 +536,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'RPOS' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
         $date_field 
     UNION
@@ -551,6 +555,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'POS' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
         $date_field 
     UNION
@@ -569,6 +574,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'ST' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field 
     UNION
@@ -587,6 +593,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'PR' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field 
     UNION
@@ -605,6 +612,7 @@ FROM
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'SA' 
+        AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field
     ) STOCK, VW_PURC_PRODUCT PROD, TBL_SOFT_BRANCH 

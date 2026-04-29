@@ -122,7 +122,7 @@
                         case   when GRN_TYPE ='PR' THEN TBL_PURC_GRN_DTL_FED_AMOUNT * -1 ELSE TBL_PURC_GRN_DTL_FED_AMOUNT END  TBL_PURC_GRN_DTL_FED_AMOUNT ,
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_total_amount * -1 ELSE tbl_purc_grn_dtl_total_amount END  tbl_purc_grn_dtl_total_amount ,
                         TBL_PURC_GRN_DTL_NET_TP
-                        from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
+                        from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and posted = 1 and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                         $where ORDER BY grn_date, branch_short_name, grn_code";
 
                         $grn_id_code=DB::table('TBL_PURC_GRN')->pluck('grn_id','grn_code')->all();

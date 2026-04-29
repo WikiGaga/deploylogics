@@ -90,7 +90,7 @@
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_disc_amount * -1 ELSE tbl_purc_grn_dtl_disc_amount END  tbl_purc_grn_dtl_disc_amount ,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_vat_amount * -1 ELSE tbl_purc_grn_dtl_vat_amount END  tbl_purc_grn_dtl_vat_amount ,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_total_amount * -1 ELSE tbl_purc_grn_dtl_total_amount END  tbl_purc_grn_dtl_total_amount
-                                    from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
+                                    from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and posted = 1 and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                     $where ORDER BY grn_date, grn_code";
                             
                             $getdata = \Illuminate\Support\Facades\DB::select($qq);

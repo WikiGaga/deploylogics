@@ -215,6 +215,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     AND GRN.BUSINESS_ID = ".auth()->user()->business_id."
                                     AND GRN.COMPANY_ID = ".auth()->user()->company_id."
                                     AND  GRN.branch_id in( ".implode(",",$data['branch_ids']).")
+                                    AND GRN.posted = 1
                                     $date_field";
 
                            // dd($store_qry);
@@ -256,6 +257,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                 $date_field2
                                                 $dt
+                                                AND STOCK.posted = 1
                                                 AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
                                                 AND STOCK.COMPANY_ID = ".auth()->user()->company_id."
                                                 AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")
@@ -294,6 +296,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                                     $date_field2
                                                     $dt
+                                                    AND STOCK.posted = 1
                                                     AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
                                                     AND STOCK.COMPANY_ID = ".auth()->user()->company_id."
                                                     AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")
@@ -361,6 +364,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
                                         $date_field2
                                         $dt
+                                        AND STOCK.posted = 1
                                         AND STOCK.BUSINESS_ID = ".auth()->user()->business_id."
                                         AND STOCK.COMPANY_ID = ".auth()->user()->company_id."
                                         AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")

@@ -90,7 +90,7 @@
                                     $Days15 = date('Y-m-d', strtotime($data['date']. ' - 15 days'));  
                                     $qry15 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days15."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";
@@ -117,7 +117,7 @@
                                     $Days30 = date('Y-m-d', strtotime($data['date']. ' - 30 days'));  
                                     $qry30 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days30."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";
@@ -145,7 +145,7 @@
                                     $Days45 = date('Y-m-d', strtotime($data['date']. ' - 45 days'));  
                                     $qry45 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days45."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";
@@ -173,7 +173,7 @@
                                     $Days60 = date('Y-m-d', strtotime($data['date']. ' - 60 days'));  
                                     $qry60 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days60."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";
@@ -201,7 +201,7 @@
                                     $Days90 = date('Y-m-d', strtotime($data['date']. ' - 90 days'));  
                                     $qry90 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days90."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";
@@ -229,7 +229,7 @@
                                     $Days1000 = date('Y-m-d', strtotime($data['date']. ' - 1000 days'));  
                                     $qry1000 = "select sum(grn_total_net_amount) net_amount from 
                                                 (
-                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' 
+                                                select distinct  grn_id  , grn_code, grn_total_net_amount from vw_purc_grn where grn_type = 'GRN' and posted = 1
                                                 and grn_date  between  to_date ('".$Days1000."', 'yyyy/mm/dd') and to_date ('".$data['date']."', 'yyyy/mm/dd') 
                                                 ".$where_common." and  chart_account_id = ".$chart_list->chart_account_id." 
                                                 ) xyz";

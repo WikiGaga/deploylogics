@@ -131,6 +131,7 @@
                                     GRN_TOTAL_NET_AMOUNT  ,
                                     BRANCH_ID
                                     FROM VW_PURC_GRN where branch_id in (".implode(",",$data['branch_ids']).")
+                                    and posted = 1
                                     and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                     $where AND lower(grn_type) = 'grn'
                                      ) GAGA

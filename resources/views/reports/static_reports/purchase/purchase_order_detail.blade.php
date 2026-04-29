@@ -80,7 +80,7 @@
                             purchase_order_dtlfed_amount ,
                             purchase_order_dtltotal_amount   ,
                             purchase_order_dtlnet_tp
-                            from vw_purc_purchase_order where branch_id in (".implode(",",$data['branch_ids']).")
+                            from vw_purc_purchase_order where branch_id in (".implode(",",$data['branch_ids']).") and posted = 1
                             and (purchase_order_entry_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                             $where ORDER BY purchase_order_entry_date, purchase_order_code";
 //dd($qq);
