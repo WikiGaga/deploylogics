@@ -102,13 +102,13 @@
                                         and company_id = ".auth()->user()->company_id." and business_id = ".auth()->user()->business_id;
                                 
                                 // get total debit of the month
-                                $debit_qry = "select sum(voucher_debit) as voucher_debit from VW_ACCO_VOUCHER_POSTED where ".$where;
+                                $debit_qry = "select sum(voucher_debit) as voucher_debit from VW_ACCO_VOUCHER_POSTED where ".$where."AND posted =1";
                                 $debit_res = DB::select($debit_qry);
                                 $debit = $debit_res[0]->voucher_debit;
                                 $tot_debit = $debit;
                                 
                                 //get total credit of the month
-                                $credit_qry = "select sum(voucher_credit) as voucher_credit from VW_ACCO_VOUCHER_POSTED where ".$where;
+                                $credit_qry = "select sum(voucher_credit) as voucher_credit from VW_ACCO_VOUCHER_POSTED where ".$where."AND posted =1";
                                 $credit_res = DB::select($credit_qry);
                                 $credit = $credit_res[0]->voucher_credit;
                                 $tot_credit = $credit;

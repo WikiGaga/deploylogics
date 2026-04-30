@@ -95,7 +95,7 @@
                                 $lv1chartPrefix = $chart_data[0];
                                 $level1Criteria = " AND (VW_ACCO_VOUCHER.business_id = ".auth()->user()->business_id." AND VW_ACCO_VOUCHER.branch_id in (".implode(",",$data['branch_ids']).") )";
                                 $level1Query = "select sum(VOUCHER_DEBIT) DEBIT_TOT, sum(VOUCHER_CREDIT)  CREDIT_TOT , sum(VOUCHER_DEBIT)- sum(VOUCHER_CREDIT) BALANCE_TOT  from VW_ACCO_VOUCHER where 
-                                CHART_CODE LIKE '".$lv1chartPrefix."-%' $level1Criteria AND VOUCHER_DATE BETWEEN to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                                CHART_CODE LIKE '".$lv1chartPrefix."-%' $level1Criteria And posted = 1 AND VOUCHER_DATE BETWEEN to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                                 $level1Calc = \Illuminate\Support\Facades\DB::select($level1Query)[0];
                                 $opening_balc = 0;
                                 $paras = [
@@ -178,6 +178,7 @@
                                     AND COA.COMPANY_ID = C.COMPANY_ID
                                     AND COA.BRANCH_ID = BR.BRANCH_ID
                                     AND COA.CHART_ACCOUNT_ENTRY_STATUS = 1
+                                    AND COA.POSTED = 1
                                     AND COA.CHART_LEVEL > 1 
                                     and COA.CHART_CODE like '".$chartPrefix."'
                                     order by COA.CHART_CODE";
@@ -251,7 +252,7 @@
                                         $lv3chartPrefix = $chart_data[0]."-".$chart_data[1];
                                         $level3Criteria = " AND (VW_ACCO_VOUCHER.business_id = ".auth()->user()->business_id." AND VW_ACCO_VOUCHER.branch_id in (".implode(",",$data['branch_ids']).") )";
                                         $level3Query = "select sum(VOUCHER_DEBIT) DEBIT_TOT, sum(VOUCHER_CREDIT)  CREDIT_TOT , sum(VOUCHER_DEBIT)- sum(VOUCHER_CREDIT) BALANCE_TOT  from VW_ACCO_VOUCHER where 
-                                        CHART_CODE LIKE '".$lv3chartPrefix."-%' $level3Criteria AND VOUCHER_DATE BETWEEN to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                                        CHART_CODE LIKE '".$lv3chartPrefix."-%' $level3Criteria AND POSTED = 1 AND VOUCHER_DATE BETWEEN to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                                         $level3Calc = \Illuminate\Support\Facades\DB::select($level3Query)[0];
                                         $opening_balc = 0;
                                         $paras = [
@@ -321,7 +322,7 @@
                                     $where = "( VOUCH.chart_account_id = " . $result->chart_account_id . " )";
                                     $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
                                     $q1 = "Select VOUCH.* from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
-                                    where VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND
+                                    where VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.POSTED = 1 AND
                                     (VOUCH.voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))
                                     and ( VOUCH.voucher_debit <> 0 OR  VOUCH.voucher_credit <> 0 ) and " .$where." order by VOUCH.voucher_date,SEQ.SQUENCE_SORTING_ORDER,VOUCH.voucher_sr_no,VOUCH.VOUCHER_NO";
                                     $DetailList = \Illuminate\Support\Facades\DB::select($q1);

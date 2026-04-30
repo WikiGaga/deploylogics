@@ -49,7 +49,7 @@
             FROM tbl_acco_voucher v
             JOIN tbl_acco_chart_account ca
                 ON ca.chart_account_id = v.chart_account_id
-            WHERE ca.chart_code LIKE '7-01-01%' and ca.chart_code != '7-01-01-0007' 
+            WHERE ca.chart_code LIKE '7-01-01%' and ca.chart_code != '7-01-01-0007' AND v.posted = 1
               AND (v.voucher_date between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
               $and_where_bcb_v
         ";
@@ -66,7 +66,7 @@
                                         union all
                                         SELECT sum(STOCK_DTL_AMOUNT) GROSS_AMT ,  0 VAT_AMT , ( SUM(STOCK_DTL_VAT_AMOUNT) / sum(STOCK_DTL_AMOUNT)) * 100
                                         FROM VW_INVE_STOCK INV, TBL_PURC_PRODUCT_BARCODE_DTL  PROD
-                                        WHERE   INV.PRODUCT_BARCODE_ID =  PROD.PRODUCT_BARCODE_ID AND   PROD.PRODUCT_BARCODE_TAX_APPLY = 1 AND PROD.PRODUCT_BARCODE_TAX_VALUE = 0
+                                        WHERE   INV.PRODUCT_BARCODE_ID =  PROD.PRODUCT_BARCODE_ID  AND   PROD.PRODUCT_BARCODE_TAX_APPLY = 1 AND PROD.PRODUCT_BARCODE_TAX_VALUE = 0
                                         and INV.STOCK_CODE_TYPE = 'st' AND (INV.STOCK_DTL_VAT_PERCENT <= 0 or INV.STOCK_DTL_VAT_PERCENT IS NULL )
                                         and (INV.STOCK_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd'))
                                         and INV.branch_id in (".implode(",",$data['branch_ids']).") AND INV.business_id = ".$business_id." AND INV.company_id =".$company_id."
@@ -76,15 +76,15 @@
         $qry_domestic_taxable_purchases = "SELECT SUM(GROSS_AMT)  GROSS_AMT ,  SUM( VAT_AMOUNT)  VAT_AMOUNT ,  ( SUM(VAT_AMOUNT) / sum(GROSS_AMT)) * 100 VAT_PER ,  (SUM( VAT_AMOUNT) / 5 * 100 ) VAT_SALE  FROM
                                             (
                                             select sum(TBL_PURC_GRN_DTL_AMOUNT -  TBL_PURC_GRN_DTL_DISC_AMOUNT ) GROSS_AMT ,  SUM( TBL_PURC_GRN_DTL_VAT_AMOUNT) VAT_AMOUNT  ,  0
-                                             from VW_PURC_GRN WHERE  GRN_TYPE = 'GRN' AND
+                                             from VW_PURC_GRN WHERE  GRN_TYPE = 'GRN' AND posted = 1 AND 
                                              TBL_PURC_GRN_DTL_VAT_AMOUNT > 0  and (GRN_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
                                              union all
                                              select -sum(TBL_PURC_GRN_DTL_AMOUNT -  TBL_PURC_GRN_DTL_DISC_AMOUNT ) GROSS_AMT ,  SUM( -TBL_PURC_GRN_DTL_VAT_AMOUNT)  , ( SUM(TBL_PURC_GRN_DTL_AMOUNT) / sum(TBL_PURC_GRN_DTL_VAT_AMOUNT)) * 100
-                                            from VW_PURC_GRN WHERE  GRN_TYPE = 'PR' AND
+                                            from VW_PURC_GRN WHERE  GRN_TYPE = 'PR' AND posted = 1 AND
                                              TBL_PURC_GRN_DTL_VAT_AMOUNT > 0  and (GRN_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
                                             union all
                                             SELECT sum(STOCK_DTL_AMOUNT - STOCK_DTL_DISC_AMOUNT) GROSS_AMT ,  SUM(STOCK_DTL_VAT_AMOUNT) VAT_AMT , ( SUM(STOCK_DTL_VAT_AMOUNT) / sum(STOCK_DTL_AMOUNT)) * 100   FROM  VW_INVE_STOCK
-                                            WHERE   STOCK_CODE_TYPE = 'str' AND STOCK_DTL_VAT_AMOUNT > 0
+                                            WHERE   STOCK_CODE_TYPE = 'str' AND posted = 1 AND STOCK_DTL_VAT_AMOUNT > 0
                                             and (STOCK_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
                                             ) gaga";
       //  dd($qry_domestic_taxable_purchases);
@@ -94,18 +94,18 @@
         $qry_domestic_purchases_unregistered = "SELECT SUM(GROSS_AMT)  GROSS_AMT ,  SUM( VAT_AMOUNT)  VAT_AMOUNT ,  ( SUM(VAT_AMOUNT) / sum(GROSS_AMT)) * 100 VAT_PER FROM
                             (
                             select sum(TBL_PURC_GRN_DTL_AMOUNT -  TBL_PURC_GRN_DTL_DISC_AMOUNT ) GROSS_AMT  ,  SUM( TBL_PURC_GRN_DTL_VAT_AMOUNT) VAT_AMOUNT  , 0 VAT_PER
-                             from VW_PURC_GRN WHERE  GRN_TYPE = 'GRN' AND
+                             from VW_PURC_GRN WHERE  GRN_TYPE = 'GRN'  AND posted = 1 AND
                              (TBL_PURC_GRN_DTL_VAT_AMOUNT <= 0 OR  TBL_PURC_GRN_DTL_VAT_AMOUNT IS NULL)  and (GRN_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
 
                              union all
 
                              select -sum(TBL_PURC_GRN_DTL_AMOUNT -  TBL_PURC_GRN_DTL_DISC_AMOUNT ) GROSS_AMT ,  SUM( -TBL_PURC_GRN_DTL_VAT_AMOUNT)  ,  0 VAT_PER
-                             from VW_PURC_GRN WHERE  GRN_TYPE = 'PR' AND
+                             from VW_PURC_GRN WHERE  GRN_TYPE = 'PR' AND posted = 1 AND
                              (TBL_PURC_GRN_DTL_VAT_AMOUNT <= 0 OR  TBL_PURC_GRN_DTL_VAT_AMOUNT IS NULL)    and (GRN_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
 
                             union all
                             SELECT sum(STOCK_DTL_AMOUNT - STOCK_DTL_DISC_AMOUNT) GROSS_AMT ,  SUM(STOCK_DTL_VAT_AMOUNT) VAT_AMT ,  0 VAT_PER   FROM  VW_INVE_STOCK
-                            WHERE   STOCK_CODE_TYPE = 'str' AND (STOCK_DTL_VAT_AMOUNT <= 0 OR  STOCK_DTL_VAT_AMOUNT IS NULL)
+                            WHERE   STOCK_CODE_TYPE = 'str' AND posted = 1 AND (STOCK_DTL_VAT_AMOUNT <= 0 OR  STOCK_DTL_VAT_AMOUNT IS NULL)
                             and (STOCK_DATE between to_date('$from_date', 'yyyy/mm/dd') and to_date ('$to_date', 'yyyy/mm/dd')) $and_where_bcb
                             ) gaga";
         $domestic_purchases_unregistered = \Illuminate\Support\Facades\DB::selectOne($qry_domestic_purchases_unregistered);

@@ -26,7 +26,7 @@
             @include('reports.template.branding')
         </div>
         @php
-            $ResultList = DB::table('tbl_acco_chart_account')->orderby('chart_code')->get();
+            $ResultList = DB::table('tbl_acco_chart_account')->where('posted',1)->orderby('chart_code')->get();
         @endphp
         <div class="kt-portlet__body">
             <div class="row row-block">

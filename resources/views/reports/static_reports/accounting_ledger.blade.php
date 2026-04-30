@@ -208,13 +208,13 @@
                             }else{
                                 $date_field = "AND VOUCH.voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                             }
-                            $query = "Select * from vw_acco_voucher where (voucher_debit <> 0 OR  voucher_credit <> 0 ) and " .$where." $date_field  order by voucher_date,voucher_no";
+                            $query = "Select * from vw_acco_voucher where (voucher_debit <> 0 OR  voucher_credit <> 0 ) AND posted = 1 and " .$where." $date_field  order by voucher_date,voucher_no";
 
                             // $query = "Select VOUCH.*from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             $query = "Select VOUCH.*,acc.chart_name contra_chart_name from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             ,TBL_ACCO_CHART_ACCOUNT acc
                             where acc.chart_account_id(+) = VOUCH.voucher_cont_acc_code
-                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+)
+                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.posted = 1
                             $date_field
                             and ( VOUCH.voucher_debit <> 0 OR  VOUCH.voucher_credit <> 0 ) and " .$where." order by VOUCH.voucher_date,VOUCH.created_at,SEQ.SQUENCE_SORTING_ORDER,VOUCH.voucher_sr_no,VOUCH.VOUCHER_NO";
                           // dump($query);

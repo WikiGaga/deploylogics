@@ -740,7 +740,7 @@ FROM (
                 CR_BALANCE
               FROM 
                 VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-              WHERE v.chart_account_id = coa.chart_account_id
+              WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
@@ -766,7 +766,7 @@ FROM (
                 AS CR_BALANCE
               FROM 
                 VW_ACCO_VOUCHER_POSTED    v,tbl_acco_chart_account coa
-              WHERE v.chart_account_id = coa.chart_account_id 
+              WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
                 AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                 AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
@@ -775,7 +775,7 @@ FROM (
             GROUP BY D.chart_code, D.business_id, D.company_id
       ) M,
       tbl_acco_chart_account ca
-      WHERE M.chart_code = ca.chart_code(+)
+      WHERE M.chart_code = ca.chart_code(+) AND ca.posted = 1
     ) G
     UNION 
     ALL
@@ -859,7 +859,7 @@ FROM (
                   AS CR_BALANCE
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-              WHERE v.chart_account_id = coa.chart_account_id
+              WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
@@ -886,7 +886,7 @@ FROM (
                   AS CR_BALANCE
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-                WHERE v.chart_account_id = coa.chart_account_id
+                WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                   AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
                   AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                   AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
@@ -977,7 +977,7 @@ FROM (
                 AS CR_BALANCE
               FROM 
                 VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-              WHERE v.chart_account_id = coa.chart_account_id
+              WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
@@ -1002,7 +1002,7 @@ FROM (
                 AS CR_BALANCE
               FROM 
                 VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-              WHERE v.chart_account_id = coa.chart_account_id
+              WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
                 AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                 AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
@@ -1094,7 +1094,7 @@ FROM (
                   AS CR_BALANCE
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-                WHERE v.chart_account_id = coa.chart_account_id
+                WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                   AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
                   AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                   $chart_qry
@@ -1119,7 +1119,7 @@ FROM (
                   v.company_id) AS CR_BALANCE
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
-                WHERE v.chart_account_id = coa.chart_account_id
+                WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                   AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                   AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                   AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
@@ -1129,7 +1129,7 @@ FROM (
               ) M
             )G
             GROUP BY G.SSGRP_CODE) vouch, tbl_acco_chart_account ca
-            WHERE vouch.chart_code = ca.chart_code(+)
+            WHERE vouch.chart_code = ca.chart_code(+) AND ca.posted = 1
             $level_list
             ORDER BY $OrderBy";
 

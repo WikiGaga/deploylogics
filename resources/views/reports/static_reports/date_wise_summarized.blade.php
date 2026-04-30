@@ -64,7 +64,7 @@
                 SUM(VOUCHER_CREDIT) AS VOUCHER_CREDIT
             from 
                 VW_ACCO_VOUCHER 
-            where BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+            where BRANCH_ID IN (".implode(",",$data['branch_ids']).") AND posted = 1 
                 $where
             group by VOUCHER_DATE,BRANCH_ID
             ORDER by VOUCHER_DATE";

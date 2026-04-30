@@ -91,7 +91,7 @@
                                 WHERE (CHART_CODE LIKE '6-02-01-%') 
                                 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
                                 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI'))
-                                AND VOUCHER_DEBIT > 0 
+                                AND VOUCHER_DEBIT > 0 and posted = 1
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV')) 
                                 AND VOUCHER_CREDIT > 0 
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV') 
@@ -132,7 +132,7 @@
                                 WHERE (CHART_CODE LIKE '6-02-02-%') 
                                 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
                                 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
-                                AND VOUCHER_DEBIT > 0 
+                                AND VOUCHER_DEBIT > 0 and posted = 1
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV' , 'RV' )) -- CHANGES 
                                 AND VOUCHER_CREDIT > 0 
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV' , 'RV')  -- CHANGES 
@@ -156,7 +156,7 @@
     VW_ACCO_VOUCHER VOUCH , TBL_ACCO_CHART_ACCOUNT  CHART 
   WHERE
      VOUCH.VOUCHER_CONT_ACC_CODE =  CHART.CHART_ACCOUNT_ID(+)
-     AND 
+    and VOUCH.posted = 1 AND 
  VOUCHER_ID IN 
     (
    
@@ -167,7 +167,7 @@
 WHERE (CHART_CODE LIKE '6-02-02-%') 
 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
-AND VOUCHER_DEBIT > 0 
+AND VOUCHER_DEBIT > 0 and posted = 1
 AND  UPPER(VOUCHER_TYPE)   IN ('RV')
                                   
       
@@ -208,7 +208,7 @@ AND  UPPER(VOUCHER_TYPE)   IN ('RV')
                                 WHERE (CHART_CODE LIKE '6-02-01-%') 
                                 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
                                 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI'))
-                                AND VOUCHER_DEBIT > 0 
+                                AND VOUCHER_DEBIT > 0 and posted = 1
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV')) 
                                 AND VOUCHER_CREDIT > 0 
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV') 
@@ -250,7 +250,7 @@ AND  UPPER(VOUCHER_TYPE)   IN ('RV')
                                 WHERE (CHART_CODE LIKE '6-02-02-%') 
                                 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
                                 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
-                                AND VOUCHER_DEBIT > 0 
+                                AND VOUCHER_DEBIT > 0 and posted = 1
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV' , 'RV' )) -- CHANGES 
                                 AND VOUCHER_CREDIT > 0 
                                 AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV' , 'RV')  -- CHANGES 
@@ -274,7 +274,7 @@ AND  UPPER(VOUCHER_TYPE)   IN ('RV')
     VW_ACCO_VOUCHER VOUCH , TBL_ACCO_CHART_ACCOUNT  CHART 
   WHERE
      VOUCH.VOUCHER_CONT_ACC_CODE =  CHART.CHART_ACCOUNT_ID(+)
-     AND 
+    and VOUCH.posted = 1 AND 
  VOUCHER_ID IN 
     (
    
@@ -282,7 +282,7 @@ AND  UPPER(VOUCHER_TYPE)   IN ('RV')
       VOUCHER_ID 
     FROM
       VW_ACCO_VOUCHER 
-WHERE (CHART_CODE LIKE '6-02-02-%') 
+WHERE (CHART_CODE LIKE '6-02-02-%') and posted = 1
 AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
 AND VOUCHER_DEBIT > 0 
@@ -358,7 +358,7 @@ FROM
       VOUCHER_ID 
     FROM
       VW_ACCO_VOUCHER 
-    WHERE (CHART_CODE LIKE '6-02-01-%') 
+    WHERE (CHART_CODE LIKE '6-02-01-%') and posted = 1
     AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
 
@@ -397,7 +397,7 @@ AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH
         VOUCHER_ID 
       FROM
         VW_ACCO_VOUCHER 
-      WHERE (CHART_CODE LIKE '6-02-02-%') 
+      WHERE (CHART_CODE LIKE '6-02-02-%') and posted = 1
       AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
  
@@ -424,12 +424,12 @@ AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH
       VW_ACCO_VOUCHER VOUCH,
       TBL_ACCO_CHART_ACCOUNT CHART 
     WHERE VOUCH.VOUCHER_CONT_ACC_CODE = CHART.CHART_ACCOUNT_ID (+) 
-      AND VOUCHER_ID IN 
+     and VOUCH.posted = 1 AND VOUCHER_ID IN 
       (SELECT DISTINCT 
         VOUCHER_ID 
       FROM
         VW_ACCO_VOUCHER 
-      WHERE (CHART_CODE LIKE '6-02-02-%') 
+      WHERE (CHART_CODE LIKE '6-02-02-%') and posted = 1
       AND BRANCH_ID in (".implode(",",$data['branch_ids']).")
 AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
 
@@ -500,7 +500,7 @@ ORDER BY CHART_CODE";
                                                 (sum(voucher_debit) - sum(voucher_credit)) as BAL 
                                             from 
                                                 vw_acco_voucher 
-                                            where  branch_id = $branch_key  
+                                            where  branch_id = $branch_key  and posted = 1
                                                 AND (voucher_date < to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI')) 
                                                 $where_acc_code
                                                 
@@ -614,7 +614,7 @@ ORDER BY CHART_CODE";
                                                             VOUCHER_ID 
                                                             FROM
                                                             VW_ACCO_VOUCHER 
-                                                            WHERE (CHART_CODE LIKE '6-02-01-%') 
+                                                            WHERE (CHART_CODE LIKE '6-02-01-%') and posted = 1
                                                             AND BRANCH_ID = '".$branch_key."' 
                                                             AND (voucher_date BETWEEN to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
                                                             AND VOUCHER_CREDIT > 0 
@@ -638,12 +638,12 @@ ORDER BY CHART_CODE";
                                                             VW_ACCO_VOUCHER VOUCH,
                                                             TBL_ACCO_CHART_ACCOUNT CHART 
                                                         WHERE VOUCH.VOUCHER_CONT_ACC_CODE = CHART.CHART_ACCOUNT_ID (+) 
-                                                            AND VOUCHER_ID IN 
+                                                            and VOUCH.posted = 1 AND VOUCHER_ID IN 
                                                             (SELECT DISTINCT 
                                                             VOUCHER_ID 
                                                             FROM
                                                             VW_ACCO_VOUCHER 
-                                                            WHERE (CHART_CODE LIKE '6-02-01-%') 
+                                                            WHERE (CHART_CODE LIKE '6-02-01-%') and posted = 1
                                                             AND BRANCH_ID = '".$branch_key."' 
                                                             AND (voucher_date BETWEEN to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
                                                             AND VOUCHER_CREDIT > 0 
@@ -696,7 +696,7 @@ ORDER BY CHART_CODE";
                             VOUCHER_ID 
                             FROM
                             VW_ACCO_VOUCHER 
-                            WHERE (CHART_CODE LIKE '6-02-02-%') AND BRANCH_ID = '".$branch_key."' 
+                            WHERE (CHART_CODE LIKE '6-02-02-%') AND BRANCH_ID = '".$branch_key."' and posted = 1
                             AND (voucher_date between to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
                             AND VOUCHER_CREDIT > 0 
                             AND UPPER(VOUCHER_TYPE) NOT IN ('SIV', 'SRV','PV')) 
@@ -724,7 +724,7 @@ ORDER BY CHART_CODE";
   FROM
     VW_ACCO_VOUCHER VOUCH , TBL_ACCO_CHART_ACCOUNT  CHART 
   WHERE
-     VOUCH.VOUCHER_CONT_ACC_CODE =  CHART.CHART_ACCOUNT_ID(+)
+     VOUCH.VOUCHER_CONT_ACC_CODE =  CHART.CHART_ACCOUNT_ID(+) and VOUCH.posted = 1
      AND 
  VOUCHER_ID IN 
     (
@@ -733,7 +733,7 @@ ORDER BY CHART_CODE";
       VOUCHER_ID 
     FROM
       VW_ACCO_VOUCHER 
-    WHERE (CHART_CODE LIKE '6-02-02-%') 
+    WHERE (CHART_CODE LIKE '6-02-02-%') and posted = 1
       AND BRANCH_ID = '".$branch_key."' 
       AND (voucher_date BETWEEN to_date ('".$data['date_time_from']."', 'yyyy/mm/dd HH24:MI') and to_date ('".$data['date_time_to']."', 'yyyy/mm/dd HH24:MI')) 
       AND VOUCHER_CREDIT > 0 

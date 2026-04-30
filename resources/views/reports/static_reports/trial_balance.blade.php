@@ -315,7 +315,7 @@ SELECT trial.business_id,
                                         v.business_id,
                                         v.company_id)    bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -336,7 +336,7 @@ SELECT trial.business_id,
                                         v.business_id,
                                         v.company_id)                   level2_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -360,7 +360,7 @@ SELECT trial.business_id,
                                         v.company_id)
                      level2_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -384,7 +384,7 @@ SELECT trial.business_id,
                                         v.company_id)
                      level1_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -418,7 +418,7 @@ SELECT trial.business_id,
                                         v.business_id,
                                         v.company_id)    bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -439,7 +439,7 @@ SELECT trial.business_id,
                                         v.business_id,
                                         v.company_id)                   level2_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -463,7 +463,7 @@ SELECT trial.business_id,
                                         v.company_id)
                      level2_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')
@@ -487,7 +487,7 @@ SELECT trial.business_id,
                                         v.company_id)
                      level1_bal
             FROM VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
-           WHERE     v.chart_account_id = coa.chart_account_id
+           WHERE     v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
                 $chart_code
                 AND v.VOUCHER_DATE <= to_date('".$data['date']."', 'yyyy/mm/dd')

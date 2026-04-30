@@ -127,7 +127,7 @@ FROM
 WHERE VOUCH.CHART_NAME = SUP.SUPPLIER_NAME 
     AND UPPER(VOUCH.VOUCHER_TYPE) IN ('PV', 'PVE') 
     and VOUCH.BRANCH_ID in(".implode(",",$data['branch_ids']).")
-    and VOUCH.VOUCHER_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
+    AND VOUCH.posted = 1 and VOUCH.VOUCHER_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
     $chart_code 
 GROUP BY VOUCH.VOUCHER_ID,
   VOUCH.VOUCHER_NO,

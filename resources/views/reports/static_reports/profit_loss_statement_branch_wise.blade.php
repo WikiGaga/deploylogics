@@ -106,7 +106,7 @@
                                 sum (v.voucher_debit) over (partition by v.chart_account_id,v.business_id,v.company_id)  AS DR_BALANCE,
                                 sum (v.voucher_credit) over (partition by v.chart_account_id,v.business_id,v.company_id) AS CR_BALANCE
                                 from tbl_acco_voucher v, tbl_acco_chart_account coa
-                                where v.chart_account_id = coa.chart_account_id  and $where
+                                where v.chart_account_id = coa.chart_account_id and v.posted = 1 and $where
                             ) D GROUP BY D.chart_code ,   D.business_id,D.company_id
                             ) M
                             ) G
@@ -118,7 +118,7 @@
                                 sum (v.voucher_debit) over (partition by v.chart_account_id,v.business_id,v.company_id)  AS DR_BALANCE,
                                 sum (v.voucher_credit) over (partition by v.chart_account_id,v.business_id,v.company_id) AS CR_BALANCE
                                 from tbl_acco_voucher v, tbl_acco_chart_account coa
-                                where v.chart_account_id = coa.chart_account_id  and $where
+                                where v.chart_account_id = coa.chart_account_id and v.posted = 1 and $where
                             ) D GROUP BY D.chart_code ,   D.business_id,D.company_id
                             ) M
                             ) G  GROUP BY  G.GRP_CODE
@@ -130,7 +130,7 @@
                                 sum (v.voucher_debit) over (partition by v.chart_account_id,v.business_id,v.company_id)  AS DR_BALANCE,
                                 sum (v.voucher_credit) over (partition by v.chart_account_id,v.business_id,v.company_id) AS CR_BALANCE
                                 from tbl_acco_voucher v, tbl_acco_chart_account coa
-                                where v.chart_account_id = coa.chart_account_id  and $where
+                                where v.chart_account_id = coa.chart_account_id and v.posted = 1 and $where
                             ) D GROUP BY D.chart_code ,   D.business_id,D.company_id
                             ) M
                             ) G  GROUP BY  G.SGRP_CODE
@@ -142,11 +142,11 @@
                                 sum (v.voucher_debit) over (partition by v.chart_account_id,v.business_id,v.company_id)  AS DR_BALANCE,
                                 sum (v.voucher_credit) over (partition by v.chart_account_id,v.business_id,v.company_id) AS CR_BALANCE
                                 from tbl_acco_voucher v, tbl_acco_chart_account coa
-                                where v.chart_account_id = coa.chart_account_id  and $where
+                                where v.chart_account_id = coa.chart_account_id and v.posted = 1 and $where
                             ) D GROUP BY D.chart_code ,   D.business_id,D.company_id
                             ) M
                             ) G  GROUP BY  G.SSGRP_CODE
-                        ) vouch, tbl_acco_chart_account ca where  vouch.chart_code = ca.chart_code(+) ORDER BY vouch.CHART_CODE";
+                        ) vouch, tbl_acco_chart_account ca where  vouch.chart_code = ca.chart_code(+) and ca.posted = 1 ORDER BY vouch.CHART_CODE";
 
                     $acc_data = \Illuminate\Support\Facades\DB::select($query);
 
@@ -163,7 +163,7 @@
 
                             SELECT SUM( (STOCK_DTL_QTY_BASE_UNIT  *  COST_RATE))  COST_VALUE    FROM VW_INVE_STOCK  WHERE
                                 (UPPER(STOCK_CODE_TYPE) = 'ST'  OR UPPER(STOCK_CODE_TYPE) = 'DI' OR  UPPER(STOCK_CODE_TYPE) = 'SP' )
-                            AND  BRANCH_ID IN (1)
+                            AND  BRANCH_ID IN (1) and posted = 1
                             AND STOCK_DATE  BETWEEN to_date('".$from_date."','yyyy/mm/dd') AND to_date('".$to_date."','yyyy/mm/dd')
                             ) ABC";
                     $cost_value = \Illuminate\Support\Facades\DB::select($query2);
@@ -297,7 +297,7 @@
                     inner join TBL_PURC_GRN B ON A.GRN_ID = B.GRN_ID
                     WHERE
                     B.grn_date < TO_DATE('".$data['from_date']."', 'yyyy/mm/dd')
-                    AND B.branch_id = $branch_list->branch_id
+                    AND B.branch_id = $branch_list->branch_id and B.posted = 1
                     AND UPPER(B.GRN_TYPE) = 'GRN'
                     group by
                     product_id
@@ -313,7 +313,7 @@
                     inner join TBL_INVE_STOCK D ON C.STOCK_ID = D.STOCK_ID
                     WHERE
                     D.STOCK_DATE < TO_DATE('".$data['from_date']."', 'yyyy/mm/dd')
-                    AND D.branch_id = $branch_list->branch_id
+                    AND D.branch_id = $branch_list->branch_id and D.posted = 1
                     AND (
                         UPPER(D.STOCK_CODE_TYPE) = 'STR'
                         OR UPPER(D.STOCK_CODE_TYPE) = 'OS'
@@ -334,7 +334,7 @@
                     inner join TBL_PURC_GRN B ON A.GRN_ID = B.GRN_ID
                     WHERE
                     B.grn_date <= TO_DATE('".$data['from_date']."', 'yyyy/mm/dd')
-                    AND B.branch_id = $branch_list->branch_id
+                    AND B.branch_id = $branch_list->branch_id and B.posted = 1
                     AND UPPER(B.GRN_TYPE) = 'GRN'
                     group by
                     product_id
@@ -350,7 +350,7 @@
                     inner join TBL_INVE_STOCK D ON C.STOCK_ID = D.STOCK_ID
                     WHERE
                     D.STOCK_DATE <= TO_DATE('".$data['from_date']."', 'yyyy/mm/dd')
-                    AND D.branch_id = $branch_list->branch_id
+                    AND D.branch_id = $branch_list->branch_id and D.posted = 1
                     AND (
                         UPPER(D.STOCK_CODE_TYPE) = 'STR'
                         OR UPPER(D.STOCK_CODE_TYPE) = 'OS'
@@ -417,7 +417,7 @@
                     inner join TBL_PURC_GRN B ON A.GRN_ID = B.GRN_ID
                     WHERE
                     B.grn_date < TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
-                    AND B.branch_id = $branch_list->branch_id
+                    AND B.branch_id = $branch_list->branch_id and B.posted = 1
                     AND UPPER(B.GRN_TYPE) = 'GRN'
                     group by
                     product_id
@@ -433,7 +433,7 @@
                     inner join TBL_INVE_STOCK D ON C.STOCK_ID = D.STOCK_ID
                     WHERE
                     D.STOCK_DATE < TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
-                    AND D.branch_id = $branch_list->branch_id
+                    AND D.branch_id = $branch_list->branch_id and D.posted = 1
                     AND (
                         UPPER(D.STOCK_CODE_TYPE) = 'STR'
                         OR UPPER(D.STOCK_CODE_TYPE) = 'OS'
@@ -454,7 +454,7 @@
                     inner join TBL_PURC_GRN B ON A.GRN_ID = B.GRN_ID
                     WHERE
                     B.grn_date <= TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
-                    AND B.branch_id = $branch_list->branch_id
+                    AND B.branch_id = $branch_list->branch_id and B.posted = 1
                     AND UPPER(B.GRN_TYPE) = 'GRN'
                     group by
                     product_id
@@ -470,7 +470,7 @@
                     inner join TBL_INVE_STOCK D ON C.STOCK_ID = D.STOCK_ID
                     WHERE
                     D.STOCK_DATE <= TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
-                    AND D.branch_id = $branch_list->branch_id
+                    AND D.branch_id = $branch_list->branch_id and D.posted = 1
                     AND (
                         UPPER(D.STOCK_CODE_TYPE) = 'STR'
                         OR UPPER(D.STOCK_CODE_TYPE) = 'OS'
@@ -485,7 +485,7 @@
             $closing_data = \Illuminate\Support\Facades\DB::selectOne($closing_qry);
 
         $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purchase from
-            VW_ACCO_VOUCHER where   CHART_CODE like '8-%'
+            VW_ACCO_VOUCHER where   CHART_CODE like '8-%' and posted = 1
             and VOUCHER_DATE between TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') and TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
             and business_id = ".auth()->user()->business_id." and  company_id = ".auth()->user()->company_id." and branch_id = $branch_list->branch_id ";
 
