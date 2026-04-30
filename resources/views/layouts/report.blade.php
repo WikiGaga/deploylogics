@@ -12,6 +12,9 @@
     {{--<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
     --}}<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     @yield('pageCSS')
+    @if(isset($data['form_file_type']) && $data['form_file_type'] == 'pdf')
+        @include('reports.pdfCss')
+    @endif
     <!--begin::Global Theme Styles(used by all pages) -->
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
@@ -103,9 +106,6 @@
 </head>
 
 <body>
-@if(isset($data['form_file_type']) && $data['form_file_type'] == 'pdf')
-    @include('reports.pdfCss')
-@endif
 @include('elements/popup')
 <!-- Order Details Modal -->
 <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true" data-keyboard="false">

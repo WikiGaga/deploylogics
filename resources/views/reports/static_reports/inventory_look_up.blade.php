@@ -67,7 +67,7 @@
             <div class="row row-block">
                 <div class="col-lg-12">
                     @php
-                    
+
 
                     $where = "";
                     $whereSup = "";
@@ -110,7 +110,7 @@
                     //End Vendor Wise whereclause
 if($data['consolidate'] == 1)
 {
-    $qry = "SELECT 
+    $qry = "SELECT
     PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
     PR.BRANCH_ID,
     PR.BRANCH_NAME,
@@ -120,9 +120,9 @@ if($data['consolidate'] == 1)
     PR.product_name,
     PR.product_arabic_name,
     PR.PRODUCT_QTY,
-    SALE_RATE 
+    SALE_RATE
 FROM(
-    SELECT 
+    SELECT
         PROD.product_id,
         PROD.product_code,
         PROD.BRANCH_ID,
@@ -130,54 +130,54 @@ FROM(
         PROD.BRAND_NAME,
         product_name,
         product_arabic_name,
-        PRODUCT_QTY 
+        PRODUCT_QTY
     FROM (
-        SELECT 
-            PRODUCT_ID, 
+        SELECT
+            PRODUCT_ID,
             -- SUM(QTY_BASE_UNIT_VALUE) PRODUCT_QTY ,
-            (SUM (NVL (QTY_IN, 0)) - SUM (NVL (QTY_OUT, 0)) ) PRODUCT_QTY 
+            (SUM (NVL (QTY_IN, 0)) - SUM (NVL (QTY_OUT, 0)) ) PRODUCT_QTY
         FROM
-            VW_PURC_STOCK_DTL 
+            VW_PURC_STOCK_DTL
         WHERE branch_id in (".implode(",",$data['branch_ids']).")
             AND posted = 1
-            AND ".$data['clause_business_id'] . $data['clause_company_id'] . "  
+            AND ".$data['clause_business_id'] . $data['clause_company_id'] . "
             AND document_date <= to_date('".$data['date']."', 'yyyy/mm/dd')
         GROUP BY PRODUCT_ID
-    ) STOCK, VW_PURC_PRODUCT PROD 
-    $vendorfrom 
+    ) STOCK, VW_PURC_PRODUCT PROD
+    $vendorfrom
     WHERE branch_id in (".implode(",",$data['branch_ids']).")
-        AND STOCK.PRODUCT_ID = PROD.PRODUCT_ID 
-        $vendorjoin 
-        $whereSup 
+        AND STOCK.PRODUCT_ID = PROD.PRODUCT_ID
+        $vendorjoin
+        $whereSup
         $where
-    ) PR 
+    ) PR
     LEFT OUTER JOIN (
-        SELECT DISTINCT 
+        SELECT DISTINCT
             PRODUCT_ID,
-            MAX(SALE_RATE) SALE_RATE 
+            MAX(SALE_RATE) SALE_RATE
         FROM
-            TBL_PURC_PRODUCT_BARCODE_PURCH_RATE PROD_RATE 
-        WHERE branch_id in (".implode(",",$data['branch_ids']).") 
+            TBL_PURC_PRODUCT_BARCODE_PURCH_RATE PROD_RATE
+        WHERE branch_id in (".implode(",",$data['branch_ids']).")
         GROUP BY PRODUCT_ID
-    ) PROD_RATE 
-    ON PR.PRODUCT_ID = PROD_RATE.PRODUCT_ID 
+    ) PROD_RATE
+    ON PR.PRODUCT_ID = PROD_RATE.PRODUCT_ID
     LEFT OUTER JOIN (
-        SELECT 
+        SELECT
             MAX(PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
-            PRODUCT_ID 
+            PRODUCT_ID
         FROM
-            tbl_purc_product_barcode 
-        WHERE BASE_BARCODE = 1 
+            tbl_purc_product_barcode
+        WHERE BASE_BARCODE = 1
         GROUP BY PRODUCT_ID
-    ) PROD_BARCODE 
-    ON PR.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID 
+    ) PROD_BARCODE
+    ON PR.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID
     ORDER BY PR.product_name";
 
     $list = \Illuminate\Support\Facades\DB::select($qry);
 }
 else
 {
-    $qry = "SELECT 
+    $qry = "SELECT
     PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
     PR.BRANCH_ID,
     PR.BRANCH_NAME,
@@ -187,9 +187,9 @@ else
     PR.product_name,
     PR.product_arabic_name,
     PR.PRODUCT_QTY,
-    SALE_RATE 
+    SALE_RATE
 FROM(
-    SELECT 
+    SELECT
         PROD.product_id,
         PROD.product_code,
         STOCK.BRANCH_ID,
@@ -197,49 +197,49 @@ FROM(
         PROD.BRAND_NAME,
         product_name,
         product_arabic_name,
-        PRODUCT_QTY 
+        PRODUCT_QTY
     FROM (
-        SELECT 
-            PRODUCT_ID, 
+        SELECT
+            PRODUCT_ID,
             BRANCH_ID,
             -- SUM(QTY_BASE_UNIT_VALUE) PRODUCT_QTY ,
-            (SUM (NVL (QTY_IN, 0)) - SUM (NVL (QTY_OUT, 0)) ) PRODUCT_QTY 
+            (SUM (NVL (QTY_IN, 0)) - SUM (NVL (QTY_OUT, 0)) ) PRODUCT_QTY
         FROM
-            VW_PURC_STOCK_DTL 
+            VW_PURC_STOCK_DTL
         WHERE branch_id in (".implode(",",$data['branch_ids']).")
             AND posted = 1
-            AND ".$data['clause_business_id'] . $data['clause_company_id'] . "  
+            AND ".$data['clause_business_id'] . $data['clause_company_id'] . "
             AND document_date <= to_date('".$data['date']."', 'yyyy/mm/dd')
         GROUP BY PRODUCT_ID, BRANCH_ID
     ) STOCK, VW_PURC_PRODUCT PROD , tbl_soft_branch BB
-    $vendorfrom 
+    $vendorfrom
     WHERE STOCK.BRANCH_ID in (".implode(",",$data['branch_ids']).")
-        AND STOCK.PRODUCT_ID = PROD.PRODUCT_ID 
-        AND STOCK.BRANCH_ID = BB.BRANCH_ID 
-        $vendorjoin 
-        $whereSup 
+        AND STOCK.PRODUCT_ID = PROD.PRODUCT_ID
+        AND STOCK.BRANCH_ID = BB.BRANCH_ID
+        $vendorjoin
+        $whereSup
         $where
-    ) PR 
+    ) PR
     LEFT OUTER JOIN (
-        SELECT DISTINCT 
+        SELECT DISTINCT
             PRODUCT_ID,
-            MAX(SALE_RATE) SALE_RATE 
+            MAX(SALE_RATE) SALE_RATE
         FROM
-            TBL_PURC_PRODUCT_BARCODE_PURCH_RATE PROD_RATE 
-        WHERE branch_id in (".implode(",",$data['branch_ids']).") 
+            TBL_PURC_PRODUCT_BARCODE_PURCH_RATE PROD_RATE
+        WHERE branch_id in (".implode(",",$data['branch_ids']).")
         GROUP BY PRODUCT_ID
-    ) PROD_RATE 
-    ON PR.PRODUCT_ID = PROD_RATE.PRODUCT_ID 
+    ) PROD_RATE
+    ON PR.PRODUCT_ID = PROD_RATE.PRODUCT_ID
     LEFT OUTER JOIN (
-        SELECT 
+        SELECT
             MAX(PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
-            PRODUCT_ID 
+            PRODUCT_ID
         FROM
-            tbl_purc_product_barcode 
-        WHERE BASE_BARCODE = 1 
+            tbl_purc_product_barcode
+        WHERE BASE_BARCODE = 1
         GROUP BY PRODUCT_ID
-    ) PROD_BARCODE 
-    ON PR.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID 
+    ) PROD_BARCODE
+    ON PR.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID
     ORDER BY PR.product_name";
 //dd($qry);
     $getdata = \Illuminate\Support\Facades\DB::select($qry);

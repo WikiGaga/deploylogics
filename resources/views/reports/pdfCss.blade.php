@@ -174,4 +174,49 @@
     .data_entry_header{
         display: none;
     }
+
+    @page {
+        margin-top: 10mm;
+        margin-right: 20mm;
+        margin-bottom: 10mm;
+        margin-left: 20mm;
+    }
+
+    html, body{
+        width: 100%;
+        height: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #content{
+        padding-left: 6mm;
+        padding-right: 6mm;
+    }
+
+    #downloadBtn,
+    .modal,
+    .modal-backdrop{
+        display: none !important;
+    }
+
+    .kt-portlet .kt-portlet__head{
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    table{
+        page-break-inside: auto;
+        border-collapse: collapse;
+    }
+    thead{
+        display: table-header-group;
+    }
+    tfoot{
+        display: table-footer-group;
+    }
+    tr{
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
 </style>
