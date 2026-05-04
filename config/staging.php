@@ -16,4 +16,15 @@ return [
         '62' => 'voucher_id',
 
     ],
+
+    'voucher_type_by_menu' => [
+        '28' => 'crv',
+        '29' => 'brv',
+        '31' => 'jv',
+        '36' => 'bpv',
+        '37' => 'cpv',
+        '62' => 'obv',
+        '138' => 'ctrv',
+        '171' => 'lfv',
+    ],
 ];

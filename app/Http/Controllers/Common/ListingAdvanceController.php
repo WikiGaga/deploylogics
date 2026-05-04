@@ -450,9 +450,12 @@ class ListingAdvanceController extends Controller
         $data['case'] == 'crv'||
         $data['case'] == 'pve'||
         $data['case'] == 'lv'||
+        $data['case'] == 'lfv'||
         $data['case'] == 'jv'||
         $data['case'] == 'brpv'||
         $data['case'] == 'brrv'||
+        $data['case'] == 'brv'||
+        $data['case'] == 'bpv'||
         $data['case'] == 'ipv'||
         $data['case'] == 'irv'||
         $data['case'] == 'rv'||
@@ -467,10 +470,10 @@ class ListingAdvanceController extends Controller
             }
             if(isset($globalFilters['post_status'])){
                 if($globalFilters['post_status'] == "1"){
-                    $where .= " and lower(".$tbl_1_alias."voucher_status) = 'posted'";
+                    $where .= " and (lower(".$tbl_1_alias."voucher_status) = 'posted' or ".$tbl_1_alias."posted = 1)";
                 }
                 if($globalFilters['post_status'] == "0"){
-                    $where .= " and lower(".$tbl_1_alias."voucher_status) = 'un-posted'";
+                    $where .= " and (lower(".$tbl_1_alias."voucher_status) = 'un-posted' or nvl(".$tbl_1_alias."posted,0) = 0)";
                 }
             }
         }

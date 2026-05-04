@@ -73,6 +73,45 @@ class VoucherController extends Controller
         }
     }
 
+    protected function applyAccountsVoucherEditJsonRedirect($type, $id, array &$data)
+    {
+        $data = array_merge($data, Utilities::returnJsonEditForm());
+        $master = TblAccoVoucher::where('voucher_id', $id)
+            ->where('voucher_type', $type)
+            ->where('voucher_sr_no', '=', '1')
+            ->where(Utilities::currentBCB())
+            ->first();
+        $inStaging = $master && !empty($master->current_stg_id) && (int) ($master->posted ?? 0) === 0;
+        $data['redirect'] = $inStaging
+            ? '/accounts/' . $type . '/form/' . $id
+            : $this->prefixIndexPage . 'accounts/' . $type;
+    }
+
+    protected function syncMenuIdFromRouteType($type)
+    {
+        $map = [
+            'jv' => '31',
+            'obv' => '62',
+            'crv' => '28',
+            'cpv' => '37',
+            'brv' => '29',
+            'bpv' => '36',
+            'ctrv' => '138',
+            'lv' => '138',
+            'lfv' => '171',
+            'brpv' => '269',
+            'brrv' => '274',
+            'pv' => '270',
+            'rv' => '286',
+            'ipv' => '271',
+            'irv' => '272',
+            'pve' => '273',
+        ];
+        if (isset($map[$type])) {
+            $this->menu_id = $map[$type];
+        }
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -608,8 +647,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -917,8 +955,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -1143,8 +1180,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -1452,8 +1488,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -1630,8 +1665,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -1933,8 +1967,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -2178,8 +2211,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -2349,8 +2381,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -2508,8 +2539,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -2758,8 +2788,7 @@ class VoucherController extends Controller
         }
         DB::commit();
         if(isset($id)){
-            $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'accounts/'.$type;
+            $this->applyAccountsVoucherEditJsonRedirect($type, $id, $data);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());
@@ -3199,8 +3228,9 @@ class VoucherController extends Controller
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 
-        public function post(Request $request)
+        public function post(Request $request, $type)
     {
+        $this->syncMenuIdFromRouteType($type);
         $postPerm = $this->menu_id . '-post';
         if (!auth()->user()->isAbleTo($postPerm)) {
             return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
@@ -3209,18 +3239,23 @@ class VoucherController extends Controller
         $voucher_id = $request->voucher_id;
         $data = [];
         if(!empty($voucher_id)){
-            $row = TblAccoVoucher::where('voucher_id',$voucher_id)->where(Utilities::currentBCB())->first();
-            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+            $master = TblAccoVoucher::where('voucher_id', $voucher_id)
+                ->where('voucher_sr_no', '=', '1')
+                ->where(Utilities::currentBCB())
+                ->first();
+            if (!$master) {
+                $master = TblAccoVoucher::where('voucher_id', $voucher_id)->where(Utilities::currentBCB())->first();
+            }
+            if ($master && !empty($master->current_stg_id) && (int) ($master->posted ?? 0) === 0) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Posting is handled by staging for this form.'
                 ], 422);
             }
-            if($row){
-                $row->posted = 1;
-                $row->update();
+            if ($master) {
+                TblAccoVoucher::where('voucher_id', $voucher_id)->where(Utilities::currentBCB())->update(['posted' => 1]);
                 $data['status'] = 'success';
-            }else{
+            } else {
                 $data['status'] = 'error';
             }
         }else{
@@ -3229,8 +3264,9 @@ class VoucherController extends Controller
         return response()->json($data);
     }
 
-    public function Posted(Request $request)
+    public function Posted(Request $request, $type)
     {
+        $this->syncMenuIdFromRouteType($type);
         $postPerm = $this->menu_id . '-post';
         if (!auth()->user()->isAbleTo($postPerm)) {
             return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
@@ -3240,16 +3276,20 @@ class VoucherController extends Controller
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
-                $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                $master = TblAccoVoucher::where('voucher_id', $id)
+                    ->where('voucher_sr_no', '=', '1')
+                    ->where(Utilities::currentBCB())
+                    ->first();
+                if (!$master) {
+                    $master = TblAccoVoucher::where('voucher_id', $id)->where(Utilities::currentBCB())->first();
+                }
+                if ($master && !empty($master->current_stg_id) && (int) ($master->posted ?? 0) === 0) {
                     return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
                 }
             }
             foreach($ids as $id){
                 if(TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-                    $row->posted = 1;
-                    $row->update();
+                    TblAccoVoucher::where('voucher_id', $id)->where(Utilities::currentBCB())->update(['posted' => 1]);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
@@ -3259,8 +3299,9 @@ class VoucherController extends Controller
     }
 
 
-    public function UnPosted(Request $request)
+    public function UnPosted(Request $request, $type)
     {
+        $this->syncMenuIdFromRouteType($type);
         $unpostPerm = $this->menu_id . '-un_post_module';
         if (!auth()->user()->isAbleTo($unpostPerm)) {
             return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
@@ -3270,16 +3311,20 @@ class VoucherController extends Controller
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
-                $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
+                $master = TblAccoVoucher::where('voucher_id', $id)
+                    ->where('voucher_sr_no', '=', '1')
+                    ->where(Utilities::currentBCB())
+                    ->first();
+                if (!$master) {
+                    $master = TblAccoVoucher::where('voucher_id', $id)->where(Utilities::currentBCB())->first();
+                }
+                if ($master && !empty($master->current_stg_id) && (int) ($master->posted ?? 0) === 0) {
                     return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
                 }
             }
             foreach($ids as $id){
                 if(TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblAccoVoucher::where('voucher_id',$id)->where(Utilities::currentBCB())->first();
-                    $row->posted = 0;
-                    $row->update();
+                    TblAccoVoucher::where('voucher_id', $id)->where(Utilities::currentBCB())->update(['posted' => 0]);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);

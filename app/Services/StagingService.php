@@ -142,6 +142,7 @@ class StagingService
             }
             $query = DB::table($formTableName);
             $query->where($primaryKey, $formId);
+            $this->scopeAccoVoucherMasterRow($formTableName, $query);
             return $query->whereRaw($whereClause, $bindings)->exists();
         }
 
@@ -205,6 +206,8 @@ class StagingService
         if ($primaryKey !== null && $formId !== null) {
             $query->where($primaryKey, $formId);
         }
+
+        $this->scopeAccoVoucherMasterRow($formTableName, $query);
 
         $result = $query->whereRaw($whereClause, $bindings)->exists();
 
@@ -447,6 +450,31 @@ class StagingService
         return $criteria ? $criteria->menu_flow_criteria_id : null;
     }
 
+    protected function scopeAccoVoucherMasterRow($tableName, $query)
+    {
+        if (strtolower((string) $tableName) !== 'tbl_acco_voucher') {
+            return;
+        }
+        $query->where(function ($q) {
+            $q->where('voucher_sr_no', '1')->orWhere('voucher_sr_no', 1);
+        });
+    }
+
+    protected function scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $query)
+    {
+        if (strtolower((string) $tableName) !== 'tbl_acco_voucher') {
+            return;
+        }
+        $this->scopeAccoVoucherMasterRow($tableName, $query);
+        if (!is_numeric($formNameOrMenuDtlId)) {
+            return;
+        }
+        $voucherType = config('staging.voucher_type_by_menu.' . $formNameOrMenuDtlId);
+        if ($voucherType !== null && $voucherType !== '') {
+            $query->where('voucher_type', $voucherType);
+        }
+    }
+
     public function getDocumentsAtFlowStage($formNameOrMenuDtlId, $flowId, $tableName, $primaryKey)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId);
@@ -459,6 +487,8 @@ class StagingService
             ->where('current_stg_id', $flowId)
             ->where('posted', 0)
             ->where('staging_apply', 0);
+
+        $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
 
         return $documents->get();
     }
@@ -477,6 +507,8 @@ class StagingService
                 ->where('current_stg_id', $flow->stg_flows_id)
                 ->where('posted', 0)
                 ->where('staging_apply', 0);
+
+            $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $count);
 
             $counts[$flow->stg_flows_id] = $count->count();
         }

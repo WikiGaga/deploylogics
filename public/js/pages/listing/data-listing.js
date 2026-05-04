@@ -5,9 +5,24 @@ var inline_filter_data = {};
 var downloadClicked = false;
 
 var KTDatatableRemoteAjaxDemo = function() {
-    // Private functions
+    function accountingVoucherCasetype(ct) {
+        return ['pve', 'pv', 'cpv', 'crv', 'lv', 'lfv', 'jv', 'rv', 'brpv', 'brrv', 'brv', 'bpv', 'obv', 'ipv', 'irv'].indexOf(ct) !== -1;
+    }
 
-    // basic demo
+    function rowPostedAndStaging(row, voucher_status) {
+        var isPosted = (row.posted == 1 || row.posted === '1');
+        if (row.posted === undefined || row.posted === null || row.posted === '') {
+            var vs = String(voucher_status || '').toLowerCase();
+            isPosted = vs === 'posted';
+        }
+        var st = row.current_stg_id;
+        if (st === undefined || st === null) {
+            st = row.CURRENT_STG_ID;
+        }
+        var inStaging = st != null && String(st).replace(/\s/g, '') !== '' && !isPosted;
+        return { isPosted: isPosted, inStaging: inStaging };
+    }
+
     var demo = function() {
         localStorage.removeItem('ajax_data-1-meta');
         var table = $('.kt-datatable');
@@ -46,11 +61,11 @@ var KTDatatableRemoteAjaxDemo = function() {
             autoHide: false,
             template: function(row)
             {
-                // console.log(row);
                 var key_id = row[table_id];
                 var voucher_status = row['voucher_status'];
-                var isPosted = (row.posted == 1 || row.posted == '1');
-                console.log('isPosted',isPosted);
+                var ps = rowPostedAndStaging(row, voucher_status);
+                var isPosted = ps.isPosted;
+                var inStaging = ps.inStaging;
                 var dropdownLink = false;
                 var btnDropdownLink = "";
                 var btnEdit = "";
@@ -58,7 +73,6 @@ var KTDatatableRemoteAjaxDemo = function() {
                 var btnPrint = "";
 
                 if(btnPrintView){
-                    console.log(casetype,'ccccccccc');
                     if(casetype != 'pos-sales-invoice' && casetype != 'pos-sales-return' && casetype != 'stock-audit-adjustment')
                     {
                         var btnPrint = '<a class="dropdown-item" href="'+pathAction+'/print/'+key_id+'" target="_blank"><i class="la la-print"></i>Print</a>';
@@ -91,61 +105,36 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
                 if(btnpostView){
                     if(casetype == 'purchase-order'){
-                        if(!isPosted){
+                        if(!isPosted && !inStaging){
                             btnPrint += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
                         }
                         btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
 
                     }else if(casetype == 'shift_sessions'){
-                        if(!isPosted){
+                        if(!isPosted && !inStaging){
                             btnPrint += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
                         }
                         btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
 
                     }else if(casetype == 'stock-receiving'){
-                        if(!isPosted){
+                        if(!isPosted && !inStaging){
                             btnPrint += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
                         }
                         btnPrint += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
 
-                    }else if(casetype == 'pve' ||
-                        casetype == 'pv' ||
-                        casetype == 'cpv' ||
-                        casetype == 'crv'||
-                        casetype == 'lv'||
-                        casetype == 'jv'||
-                        casetype == 'rv'||
-                        casetype == 'brpv'||
-                        casetype == 'brrv'
-                    ){
-                        console.log(casetype,'vvvvvvvvvvvv')
-                        if(!isPosted){
-                        btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
+                    }else if(accountingVoucherCasetype(casetype)){
+                        if(!isPosted && !inStaging){
+                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
                         }
-                        btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
-
-
-                        // if(voucher_status == 'Un-Posted')
-                        // {
-                        //     btnPrint += '<button class="dropdown-item Posted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
-                        // }
-                        // btnPrint += '<button class="dropdown-item UnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+                        if(isPosted){
+                            btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
+                        }
                     }
                     dropdownLink = true;
                 }
                 if(btnEditView){
-                    if(casetype == 'pve' ||
-                        casetype == 'pv' ||
-                        // casetype == 'cpv' ||
-                        // casetype == 'crv'||
-                        casetype == 'lv'||
-                        casetype == 'jv'||
-                        casetype == 'rv'||
-                        casetype == 'brpv'||
-                        casetype == 'brrv'
-                    ){
-                        if(voucher_status == "Un-Posted")
-                        {
+                    if(accountingVoucherCasetype(casetype)){
+                        if(!isPosted){
                             var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
                                 <i class="la la-edit"></i>\
                             </a>';
@@ -163,18 +152,8 @@ var KTDatatableRemoteAjaxDemo = function() {
                                 <i class="la la-trash"></i>\
                             </button>';
                         }
-                    }else if(casetype == 'pve' ||
-                        casetype == 'pv' ||
-                        // casetype == 'cpv' ||
-                        // casetype == 'crv'||
-                        casetype == 'lv'||
-                        casetype == 'jv'||
-                        casetype == 'rv'||
-                        casetype == 'brpv'||
-                        casetype == 'brrv'
-                    ){
-                        if(voucher_status == "Un-Posted")
-                        {
+                    }else if(accountingVoucherCasetype(casetype)){
+                        if(!isPosted){
                             var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
                             </button>';
@@ -673,7 +652,8 @@ $(document).on('click', '.SRUnPosted', function() {
 
 $(document).on('click', '.CPVPosted', function() {
     var voucher_id = $(this).attr('data-id');
-    var url = '/accounts/cpv/post';
+    var case_name = $(this).attr('data-case') || 'cpv';
+    var url = '/accounts/' + case_name + '/post';
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
