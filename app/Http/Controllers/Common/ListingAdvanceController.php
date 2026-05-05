@@ -45,12 +45,13 @@ class ListingAdvanceController extends Controller
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
-        // dd( $case_name, $listing );
+        // dd( $case_name, $listing,$listing->menu_dtl_id );
         // if(empty($listing)){
         //     return abort('404');
         // }
         $data['data_url'] = action('Common\ListingAdvanceController@index',$case_name);
         $data['menu_dtl_id'] = $listing->menu_dtl_id;
+        $data['has_staging'] = DB::table('tbl_menu_flow_criteria')->where('menu_dtl_id',$listing->menu_dtl_id)->exists();
         $data['title'] =  $listing->listing_studio_title;
         $data['case'] = $case_name;
         $data['caseType'] = $caseType;

@@ -4,6 +4,9 @@ var inline_filter_data = {};
 
 var downloadClicked = false;
 
+
+console.log('has_staging', has_staging);
+
 var KTDatatableRemoteAjaxDemo = function() {
     function accountingVoucherCasetype(ct) {
         return ['pve', 'pv', 'cpv', 'crv', 'lv', 'lfv', 'jv', 'rv', 'brpv', 'brrv', 'brv', 'bpv', 'obv', 'ipv', 'irv'].indexOf(ct) !== -1;
@@ -72,6 +75,8 @@ var KTDatatableRemoteAjaxDemo = function() {
                 var btnDel = "";
                 var btnPrint = "";
 
+                console.log('row', inStaging, isPosted, row);
+
                 if(btnPrintView){
                     if(casetype != 'pos-sales-invoice' && casetype != 'pos-sales-return' && casetype != 'stock-audit-adjustment')
                     {
@@ -134,7 +139,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
                 if(btnEditView){
                     if(accountingVoucherCasetype(casetype)){
-                        if(!isPosted){
+                        if(has_staging || !isPosted){
                             var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
                                 <i class="la la-edit"></i>\
                             </a>';

@@ -88,7 +88,8 @@
         $close_module = $data['menu_dtl_id'] . '-close_module';
         $un_post_module = $data['menu_dtl_id'] . '-un_post_module';
         $post_module = $data['menu_dtl_id'] . '-post';
-        //  dd($data['table_columns']);
+
+        //  dd($data['has_staging']);
 
         // dd($changePass);
     @endphp
@@ -113,7 +114,8 @@
         var pathAction = '{{ $data['form-action'] }}'
         var table_id = '{{ $data['table_id'] }}'
         var casetype = '{{ $data['case'] }}'
-        var user_id = '{{ auth()->user()->id }}'
+        var casetype = '{{ $data['case'] }}'
+        var has_staging = '{{ $data['has_staging'] }}'
     </script>
     @permission($edit)
         <script>
