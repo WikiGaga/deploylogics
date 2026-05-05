@@ -15,6 +15,45 @@ use Illuminate\Support\Facades\Log;
 
 class StagingService
 {
+    protected function flowIsEnabled($flow): bool
+    {
+        if (!$flow) {
+            return false;
+        }
+
+        $candidates = [
+            'menu_flow_criteria_flow_entry_status',
+            'menu_flow_criteria_flow_status',
+            'flow_entry_status',
+            'flow_status',
+            'entry_status',
+            'status',
+            'is_active',
+            'active',
+            'enabled',
+        ];
+
+        foreach ($candidates as $key) {
+            if (isset($flow->$key)) {
+                return (int) $flow->$key === 1;
+            }
+        }
+
+        // If there is no explicit enable/disable column on tbl_menu_flow_* flow rows,
+        // treat the flow as enabled.
+        return true;
+    }
+
+    protected function activeCriteriaFlows($criteria)
+    {
+        if (!$criteria || !$criteria->flows || $criteria->flows->isEmpty()) {
+            return collect([]);
+        }
+        return $criteria->flows
+            ->filter(fn ($f) => $this->flowIsEnabled($f))
+            ->values();
+    }
+
     protected function getFormNameFromMenuDtlId($menuDtlId)
     {
         $menu = TblSoftMenuDtl::find($menuDtlId);
@@ -217,7 +256,8 @@ class StagingService
     public function getFormFlows($formNameOrMenuDtlId, $currentFlowId = null, $formId = null, $skipConditionCheck = false)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
-        if (!$criteria || !$criteria->flows || $criteria->flows->isEmpty()) {
+        $activeFlows = $this->activeCriteriaFlows($criteria);
+        if (!$criteria || $activeFlows->isEmpty()) {
             return [
                 'all' => [],
                 'current' => null,
@@ -230,7 +270,7 @@ class StagingService
         $currentFlow = null;
         $currentIndex = -1;
 
-        foreach ($criteria->flows as $flow) {
+        foreach ($activeFlows as $flow) {
             $flowObj = (object)[
                 'stg_flows_id' => $flow->stg_flows_id,
                 'stg_flows_name' => $flow->flow_name ?: 'Unknown',
@@ -268,7 +308,7 @@ class StagingService
             return [];
         }
 
-        $flow = $criteria->flows->where('stg_flows_id', $flowId)->first();
+        $flow = $this->activeCriteriaFlows($criteria)->where('stg_flows_id', $flowId)->first();
 
         if (!$flow) {
             return [];
@@ -327,7 +367,7 @@ class StagingService
             return false;
         }
 
-        $flow = $criteria->flows->first(function ($f) use ($flowId) {
+        $flow = $this->activeCriteriaFlows($criteria)->first(function ($f) use ($flowId) {
             return (string) $f->stg_flows_id === (string) $flowId;
         });
 
@@ -395,7 +435,7 @@ class StagingService
             return collect([]);
         }
 
-        $flow = $criteria->flows->first(function ($f) use ($flowId) {
+        $flow = $this->activeCriteriaFlows($criteria)->first(function ($f) use ($flowId) {
             return (string) $f->stg_flows_id === (string) $flowId;
         });
 
@@ -432,14 +472,20 @@ class StagingService
     public function hasStaging($formNameOrMenuDtlId, $formId = null)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId);
-        return $criteria !== null;
+        if ($criteria === null) {
+            return false;
+        }
+        return $this->activeCriteriaFlows($criteria)->isNotEmpty();
     }
 
     public function hasStagingOrRemainsInStaging($formNameOrMenuDtlId, $formId, $isAlreadyInStaging)
     {
         if ($isAlreadyInStaging) {
             $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, null);
-            return $criteria !== null;
+            if ($criteria === null) {
+                return false;
+            }
+            return $this->activeCriteriaFlows($criteria)->isNotEmpty();
         }
         return $this->hasStaging($formNameOrMenuDtlId, $formId);
     }
@@ -502,7 +548,7 @@ class StagingService
         }
 
         $counts = [];
-        foreach ($criteria->flows as $flow) {
+        foreach ($this->activeCriteriaFlows($criteria) as $flow) {
             $count = DB::table($tableName)
                 ->where('current_stg_id', $flow->stg_flows_id)
                 ->where('posted', 0)

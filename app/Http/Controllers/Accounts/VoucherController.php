@@ -411,6 +411,22 @@ class VoucherController extends Controller
                                     'staging_apply' => $existingMaster->staging_apply,
                                     'posted' => $existingMaster->posted,
                                 ]);
+                        } else {
+                            $existingMaster->current_stg_id = null;
+                            $existingMaster->staging_apply = 1;
+                            $existingMaster->posted = 1;
+                            $existingMaster->save();
+                            TblAccoVoucher::where('voucher_id',$id)
+                                ->where('voucher_type',$type)
+                                ->where(Utilities::currentBCB())
+                                ->update([
+                                    'current_stg_id' => null,
+                                    'staging_apply' => 1,
+                                    'posted' => 1,
+                                ]);
+                            \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
+                                ->where('document_id', $id)
+                                ->update(['posted' => 1]);
                         }
                         DB::commit();
                         $data = array_merge($data, Utilities::returnJsonEditForm());
@@ -725,6 +741,22 @@ class VoucherController extends Controller
                                     'staging_apply' => $existingMaster->staging_apply,
                                     'posted' => $existingMaster->posted,
                                 ]);
+                        } else {
+                            $existingMaster->current_stg_id = null;
+                            $existingMaster->staging_apply = 1;
+                            $existingMaster->posted = 1;
+                            $existingMaster->save();
+                            TblAccoVoucher::where('voucher_id',$id)
+                                ->where('voucher_type',$type)
+                                ->where(Utilities::currentBCB())
+                                ->update([
+                                    'current_stg_id' => null,
+                                    'staging_apply' => 1,
+                                    'posted' => 1,
+                                ]);
+                            \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
+                                ->where('document_id', $id)
+                                ->update(['posted' => 1]);
                         }
                         DB::commit();
                         $data = array_merge($data, Utilities::returnJsonEditForm());
@@ -1041,6 +1073,22 @@ class VoucherController extends Controller
                                         'staging_apply' => $existingMaster->staging_apply,
                                         'posted' => $existingMaster->posted,
                                     ]);
+                            } else {
+                                $existingMaster->current_stg_id = null;
+                                $existingMaster->staging_apply = 1;
+                                $existingMaster->posted = 1;
+                                $existingMaster->save();
+                                TblAccoVoucher::where('voucher_id',$uuid)
+                                    ->where('voucher_type',$type)
+                                    ->where(Utilities::currentBCB())
+                                    ->update([
+                                        'current_stg_id' => null,
+                                        'staging_apply' => 1,
+                                        'posted' => 1,
+                                    ]);
+                                \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
+                                    ->where('document_id', $uuid)
+                                    ->update(['posted' => 1]);
                             }
                             DB::commit();
                             $data = array_merge($data, Utilities::returnJsonEditForm());
