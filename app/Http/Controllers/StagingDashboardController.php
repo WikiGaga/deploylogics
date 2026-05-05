@@ -24,7 +24,7 @@ class StagingDashboardController extends Controller
      */
     public function index()
     {
-        dump('Staging dashboard is under maintenance. Please check back later.');
+        // dump('Staging dashboard is under maintenance. Please check back later.');
         // $menus = TblSoftMenuDtl::where('menu_id', 4)->get();
         $menus = TblSoftMenuDtl::all();
         $flowsMenuDtlByMenu = [];
@@ -80,8 +80,6 @@ class StagingDashboardController extends Controller
                 }
                 $flowsMenuDtlByMenu[$menuId]['document_count'][$flowKey] += $count;
 
-                // dump($flowsMenuDtlByMenu);
-
             }
         }
 
@@ -95,7 +93,7 @@ class StagingDashboardController extends Controller
             ->orderBy('menu_sorting')
             ->get();
 
-        dd($flowsMenuDtlByMenu);
+        // dd($flowsMenuDtlByMenu);
         $data['flows_menu_dtl'] = $flowsMenuDtlByMenu;
 
         return view('staging_activity.dashboard', compact('data'));
