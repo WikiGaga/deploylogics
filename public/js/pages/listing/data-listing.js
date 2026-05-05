@@ -139,7 +139,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
                 if(btnEditView){
                     if(accountingVoucherCasetype(casetype)){
-                        if(has_staging || !isPosted){
+                        if(!has_staging || !isPosted){
                             var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
                                 <i class="la la-edit"></i>\
                             </a>';
@@ -152,13 +152,13 @@ var KTDatatableRemoteAjaxDemo = function() {
                 }
                 if(btnDelView){
                     if(casetype == 'purchase-order' || casetype == 'shift_sessions' || casetype == 'stock-receiving'){
-                        if(!isPosted){
+                        if(!has_staging || !isPosted){
                             var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
                             </button>';
                         }
                     }else if(accountingVoucherCasetype(casetype)){
-                        if(!isPosted){
+                        if(!has_staging || !isPosted){
                             var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                                 <i class="la la-trash"></i>\
                             </button>';

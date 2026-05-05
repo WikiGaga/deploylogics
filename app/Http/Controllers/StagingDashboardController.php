@@ -88,6 +88,7 @@ class StagingDashboardController extends Controller
             ->orderBy('menu_sorting')
             ->get();
 
+        dd($flowsMenuDtlByMenu);
         $data['flows_menu_dtl'] = $flowsMenuDtlByMenu;
 
         return view('staging_activity.dashboard', compact('data'));

@@ -51,7 +51,7 @@ class ListingAdvanceController extends Controller
         // }
         $data['data_url'] = action('Common\ListingAdvanceController@index',$case_name);
         $data['menu_dtl_id'] = $listing->menu_dtl_id;
-        $data['has_staging'] = DB::table('tbl_menu_flow_criteria')->where('menu_dtl_id',$listing->menu_dtl_id)->exists();
+        $data['has_staging'] = DB::table('tbl_menu_flow_criteria')->where('menu_flow_criteria_status',1)->where('menu_dtl_id',$listing->menu_dtl_id)->exists();
         $data['title'] =  $listing->listing_studio_title;
         $data['case'] = $case_name;
         $data['caseType'] = $caseType;
