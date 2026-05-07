@@ -32,6 +32,9 @@
                 </div>
             </div>
             <div class="kt-portlet__body">
+                <div class="alert alert-light border" role="alert" style="margin-bottom: 1.25rem;">
+                    Documents for <strong>your current branch</strong> open in the usual way so you can use staging actions. Documents for <strong>another branch</strong> open in view-only mode (no edits or staging actions) so you can still review them without switching branch.
+                </div>
                 @foreach($data['flows'] as $flow)
                     <div class="form-group row" style="background: #eff0ff">
                         <div class="erp-col-form-label col-lg-12">
@@ -109,13 +112,6 @@
             var link = (thix.attr('data-link') || '').toString();
             if (!link || link === '#') {
                 return false;
-            }
-
-            var viewParam = 'view=1';
-            var hasQuery = link.indexOf('?') !== -1;
-            var hasView = /(^|[?&])view=1(&|$)/.test(link);
-            if (!hasView) {
-                link = link + (hasQuery ? '&' : '?') + viewParam;
             }
 
             window.history.pushState(state, "Prev Title", link);

@@ -216,6 +216,24 @@ class StagingDashboardController extends Controller
         return (string) $branchId;
     }
 
+    protected function stagingDashboardDocumentLink(string $path, $documentId, $documentBranchId): string
+    {
+        if ($documentId === null || $documentId === '') {
+            return '#';
+        }
+        $href = url($path . $documentId);
+        $userBranchId = auth()->user()->branch_id ?? null;
+        if ($documentBranchId === null || $documentBranchId === '') {
+            return $href;
+        }
+        if ((string) $documentBranchId === (string) $userBranchId) {
+            return $href;
+        }
+        $sep = strpos($href, '?') !== false ? '&' : '?';
+
+        return $href . $sep . 'view=1';
+    }
+
     /**
      * Show module list for a specific form
      */
@@ -256,7 +274,7 @@ class StagingDashboardController extends Controller
                         $row[$col] = $arr[$col] ?? $arr[strtoupper($col)] ?? '';
                     }
                     $id = $arr[$pk] ?? $arr[strtoupper($pk)] ?? null;
-                    $row['link'] = $id ? url($config['path'] . $id) : '#';
+                    $row['link'] = $this->stagingDashboardDocumentLink($config['path'], $id, $branchId);
                     $rows[] = $row;
                 }
 
