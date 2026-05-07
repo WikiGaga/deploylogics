@@ -32,9 +32,6 @@
                 </div>
             </div>
             <div class="kt-portlet__body">
-                <div class="alert alert-info font-weight-bold" role="alert" style="margin-bottom: 1.25rem;">
-                    Must login from the relevant branch to view its document. If the branch is not listed, please contact the administrator.
-                </div>
                 @foreach($data['flows'] as $flow)
                     <div class="form-group row" style="background: #eff0ff">
                         <div class="erp-col-form-label col-lg-12">
@@ -106,10 +103,23 @@
     <script>
         $(document).on('click','.view_form',function(){
             var thix = $(this);
-            var url = window.location.href
-            const state = { 'PrevLink': url}
-            window.history.pushState(state, "Prev Title", thix.attr('data-link'))
-            window.location = thix.attr('data-link');
+            var url = window.location.href;
+            const state = { 'PrevLink': url };
+
+            var link = (thix.attr('data-link') || '').toString();
+            if (!link || link === '#') {
+                return false;
+            }
+
+            var viewParam = 'view=1';
+            var hasQuery = link.indexOf('?') !== -1;
+            var hasView = /(^|[?&])view=1(&|$)/.test(link);
+            if (!hasView) {
+                link = link + (hasQuery ? '&' : '?') + viewParam;
+            }
+
+            window.history.pushState(state, "Prev Title", link);
+            window.open(link, "_blank");
         })
     </script>
 @endsection

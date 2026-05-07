@@ -498,17 +498,34 @@ class StagingService
 
     protected function scopeAccoVoucherMasterRow($tableName, $query)
     {
-        if (strtolower((string) $tableName) !== 'tbl_acco_voucher') {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'acco_voucher') === false) {
             return;
         }
-        $query->where(function ($q) {
-            $q->where('voucher_sr_no', '1')->orWhere('voucher_sr_no', 1);
-        });
+        try {
+            $cols = DB::getSchemaBuilder()->getColumnListing($tableName);
+            $hasSrNo = false;
+            foreach ($cols as $c) {
+                if (strtolower((string) $c) === 'voucher_sr_no') {
+                    $hasSrNo = true;
+                    break;
+                }
+            }
+            if (!$hasSrNo) {
+                return;
+            }
+            $query->where(function ($q) {
+                $q->where('voucher_sr_no', '1')->orWhere('voucher_sr_no', 1);
+            });
+        } catch (\Throwable $e) {
+            return;
+        }
     }
 
     protected function scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $query)
     {
-        if (strtolower((string) $tableName) !== 'tbl_acco_voucher') {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'acco_voucher') === false) {
             return;
         }
         $this->scopeAccoVoucherMasterRow($tableName, $query);

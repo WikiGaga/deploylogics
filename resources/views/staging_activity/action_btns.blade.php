@@ -1,4 +1,5 @@
 @php
+    $isViewOnly = (string) request('view', '') === '1';
     $stagingService = new \App\Services\StagingService();
     $currentFlowId = isset($data['flow_dtls']['current']) ? $data['flow_dtls']['current']->stg_flows_id : (isset($data['firstStag']) ? $data['firstStag'] : null);
     $formId = isset($id) ? $id : null;
@@ -16,7 +17,7 @@
     $flows = $stagingService->getFormFlows($data['menu_dtl_id'], $currentFlowId, $formId);
     $lastFlowId = !empty($flows['all']) ? end($flows['all'])->stg_flows_id : null;
 @endphp
-@if(isset($actionsList))
+@if(!$isViewOnly && isset($actionsList))
     @permission([$data['perPrefix'].'-create'])
     @if(!isset($id) && (in_array('save',array_column($actionsList, 'name')) || in_array('create',array_column($actionsList, 'name'))))
         @php
