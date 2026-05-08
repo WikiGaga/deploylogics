@@ -126,7 +126,7 @@ class VoucherController extends Controller
         $cash_group = substr($chart_cash_group->chart_code,0,7);
         $bank_group = substr($chart_bank_group->chart_code,0,7);
 
-        
+
 
         $data['page_data'] = [];
         $data['type'] = $type;
@@ -605,7 +605,7 @@ class VoucherController extends Controller
                     if(!$criteriaApplies){
                         $master->current_stg_id = null;
                         $master->staging_apply = 1;
-                        $master->posted = 1;
+                        $master->posted = 0;
                         $master->save();
                         TblAccoVoucher::where('voucher_id',$form_id)
                             ->where('voucher_type',$type)
@@ -613,11 +613,11 @@ class VoucherController extends Controller
                             ->update([
                                 'current_stg_id' => null,
                                 'staging_apply' => 1,
-                                'posted' => 1,
+                                'posted' => 0,
                             ]);
                         \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
                             ->where('document_id', $form_id)
-                            ->update(['posted' => 1]);
+                            ->update(['posted' => 0]);
                     }else{
                         if(isset($master->posted) && (int)$master->posted === 1){
                             $master->posted = 0;
@@ -928,7 +928,7 @@ class VoucherController extends Controller
                     if(!$criteriaApplies){
                         $master->current_stg_id = null;
                         $master->staging_apply = 1;
-                        $master->posted = 1;
+                        $master->posted = 0;
                         $master->save();
                         TblAccoVoucher::where('voucher_id',$form_id)
                             ->where('voucher_type',$type)
@@ -936,11 +936,11 @@ class VoucherController extends Controller
                             ->update([
                                 'current_stg_id' => null,
                                 'staging_apply' => 1,
-                                'posted' => 1,
+                                'posted' => 0,
                             ]);
                         \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
                             ->where('document_id', $form_id)
-                            ->update(['posted' => 1]);
+                            ->update(['posted' => 0]);
                     }else{
                         if(isset($master->posted) && (int)$master->posted === 1){
                             $master->posted = 0;
@@ -1024,7 +1024,7 @@ class VoucherController extends Controller
                 return $this->returnjsonerror(" Voucher not correct",201);
             }
         }
-        
+
         if(!isset($request->pd) || count($request->pd) == 0){
             return $this->jsonErrorResponse($data, trans('message.fill_the_grid'), 200);
         }
@@ -1114,7 +1114,7 @@ class VoucherController extends Controller
                 $voucher_no = $this->documentCode($max_voucher,$type);
             }
 
-            
+
             $form_id = $uuid;
             $voucher_date =  $request->voucher_date;
             $currency_id = $request->currency_id;
@@ -1169,7 +1169,7 @@ class VoucherController extends Controller
                     if(!$criteriaApplies){
                         $master->current_stg_id = null;
                         $master->staging_apply = 1;
-                        $master->posted = 1;
+                        $master->posted = 0;
                         $master->save();
                         TblAccoVoucher::where('voucher_id',$form_id)
                             ->where('voucher_type',$type)
@@ -1177,11 +1177,11 @@ class VoucherController extends Controller
                             ->update([
                                 'current_stg_id' => null,
                                 'staging_apply' => 1,
-                                'posted' => 1,
+                                'posted' => 0,
                             ]);
                         \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
                             ->where('document_id', $form_id)
-                            ->update(['posted' => 1]);
+                            ->update(['posted' => 0]);
                     }else{
                         if(isset($master->posted) && (int)$master->posted === 1){
                             $master->posted = 0;
@@ -1486,7 +1486,7 @@ class VoucherController extends Controller
                     if(!$criteriaApplies){
                         $master->current_stg_id = null;
                         $master->staging_apply = 1;
-                        $master->posted = 1;
+                        $master->posted = 0;
                         $master->save();
                         TblAccoVoucher::where('voucher_id',$form_id)
                             ->where('voucher_type',$type)
@@ -1494,11 +1494,11 @@ class VoucherController extends Controller
                             ->update([
                                 'current_stg_id' => null,
                                 'staging_apply' => 1,
-                                'posted' => 1,
+                                'posted' => 0,
                             ]);
                         \App\Models\TblStgFormLog::where('menu_dtl_id', $menuDtlId)
                             ->where('document_id', $form_id)
-                            ->update(['posted' => 1]);
+                            ->update(['posted' => 0]);
                     }else{
                         if(isset($master->posted) && (int)$master->posted === 1){
                             $master->posted = 0;
@@ -3123,10 +3123,10 @@ class VoucherController extends Controller
                 break;
             }
         }
-        
+
         if(isset($id)){
             if(TblAccoVoucher::where('voucher_id','LIKE',$id)->exists()){
-                
+
             // if($type != 'POS'){
                     $data['permission'] = $data['stock_menu_id'].'-print';
                 // }

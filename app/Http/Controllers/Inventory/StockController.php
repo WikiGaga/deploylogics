@@ -863,11 +863,11 @@ class StockController extends Controller
             if(!$criteriaApplies){
                 $stock->current_stg_id = null;
                 $stock->staging_apply = 1;
-                $stock->posted = 1;
+                $stock->posted = 0;
                 $stock->save();
                 \App\Models\TblStgFormLog::where('menu_dtl_id', $this->menu_id)
                     ->where('document_id', $form_id)
-                    ->update(['posted' => 1]);
+                    ->update(['posted' => 0]);
             }else{
                 if(isset($stock->posted) && (int)$stock->posted === 1){
                     $stock->posted = 0;
