@@ -34,6 +34,19 @@
         }
     }
 @endphp
+<style>
+    .stg-action-disabled {
+        opacity: 0.55 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        pointer-events: auto;
+    }
+    .stg-action-disabled:hover,
+    .stg-action-disabled:focus {
+        opacity: 0.55 !important;
+        cursor: not-allowed !important;
+    }
+</style>
 
 <div class="stg-header-row" style="display: flex; justify-content: space-between; align-items: center; flex: 1; min-width: 0; gap: 8px;">
     <div class="stg-actions-left">
@@ -42,7 +55,8 @@
         <button
             type="button"
             class="btn btn-sm btn-success stg-action-disabled"
-            title="Update"
+            title="{{ __('message.staging_no_access') }}"
+            aria-disabled="true"
             data-stg-not-allowed="{{ __('message.staging_no_access') }}">
             Update
         </button>
@@ -115,7 +129,8 @@
                 <button
                     type="button"
                     class="btn btn-sm {{$btnClass}} stg-action-disabled"
-                    title="{{$finalLabel}}"
+                    title="{{ __('message.staging_no_access') }}"
+                    aria-disabled="true"
                     data-stg-not-allowed="{{ __('message.staging_no_access') }}">
                     {{$finalLabel}}
                 </button>
