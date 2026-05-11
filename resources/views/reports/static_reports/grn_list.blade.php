@@ -83,7 +83,7 @@
                             if(count($data['product_ids']) != 0){
                                 $where .= " and product_name in (".implode(",",$data['product_ids']).") ";
                             }
-                            $qq = "select  grn_date,grn_code, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing,
+                            $qq = "select  grn_date,grn_code, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing, branch_name,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_quantity * -1 ELSE tbl_purc_grn_dtl_quantity END  tbl_purc_grn_dtl_quantity ,
                                     tbl_purc_grn_dtl_rate,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_amount * -1 ELSE tbl_purc_grn_dtl_amount END  tbl_purc_grn_dtl_amount ,
@@ -121,7 +121,7 @@
                                     $total_total_amount = 0;
                                 @endphp
                                 <tr>
-                                    <td colspan="10">{{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}}</td>
+                                    <td colspan="10">{{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}} - {{isset($invoice[0]->branch_name)?$invoice[0]->branch_name:''}}</td>
                                 </tr>
                                 @foreach($invoice as $product)
                                     <tr>
