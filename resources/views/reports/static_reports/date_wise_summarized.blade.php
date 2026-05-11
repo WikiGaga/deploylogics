@@ -64,14 +64,14 @@
                 SUM(VOUCHER_CREDIT) AS VOUCHER_CREDIT
             from 
                 VW_ACCO_VOUCHER 
-            where BRANCH_ID IN (".implode(",",$data['branch_ids']).") AND posted = 1 
+            where posted = 1 AND BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
                 $where
             group by VOUCHER_DATE,BRANCH_ID
             ORDER by VOUCHER_DATE";
             
-            //dd($query);
 
             $Result_List = DB::select($query);
+
         @endphp
         <div class="kt-portlet__body">
             <div class="row row-block">
@@ -94,7 +94,7 @@
                         @foreach($Result_List as $list)
                             @php
                             $paras = [
-                                'chart_account_id' => $data['chart_account_id'],
+                                'chart_account_id' => $data['chart_account_id'] ?? 0,
                                 'voucher_date' => date('d-m-Y', strtotime($list->voucher_date)),
                                 'branch_ids' => $data['branch_ids'],
                             ];

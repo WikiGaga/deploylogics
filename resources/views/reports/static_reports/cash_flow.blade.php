@@ -875,28 +875,48 @@ ORDER BY CHART_CODE";
                                             </tr>
                                             @php
                                             
-                                            $outflowquery = "SELECT 
-                                                CHART_ACCOUNT_ID,
-                                                CHART_CODE,
-                                                CHART_NAME,
-                                                SUM(BANK) BANK,
-                                                SUM(CASH) CASH ,
-                                                BRANCH_NAME
-                                            FROM
-                                                (
-                                                    $whereoutflowcash
-                                                    $whereoutflowbank
+                //                             $outflowquery = "SELECT 
+                //                                 CHART_ACCOUNT_ID,
+                //                                 CHART_CODE,
+                //                                 CHART_NAME,
+                //                                 SUM(BANK) BANK,
+                //                                 SUM(CASH) CASH ,
+                //                                 BRANCH_NAME
+                //                             FROM
+                //                                 (
+                //                                 $whereoutflowcash
+                //                                 $whereoutflowbank
                                                  
-                                                ) KAKA 
-                                                GROUP BY CHART_ACCOUNT_ID,
-                                                CHART_CODE,
-                                                CHART_NAME ,
-                                                BRANCH_NAME
-                                                ORDER BY CHART_CODE ";
-                   // dd($outflowquery);
+                //                                 ) KAKA 
+                //                                 GROUP BY CHART_ACCOUNT_ID,
+                //                                 CHART_CODE,
+                //                                 CHART_NAME ,
+                //                                 BRANCH_NAME
+                //                                 ORDER BY CHART_CODE ";
+                //    // dd($outflowquery);
                                             
-                                            $getoutflowdata = \Illuminate\Support\Facades\DB::select($outflowquery);
+                //                             $getoutflowdata = \Illuminate\Support\Facades\DB::select($outflowquery);
                                             //dd($getdata);
+
+
+                                $subqueryParts = array_filter([trim($whereoutflowcash), trim($whereoutflowbank)]);
+
+                                if (empty($subqueryParts)) {
+                                    // Stop here if no data is selected to prevent ORA-00903
+                                    $getoutflowdata = [];
+                                } else {
+                                    // Join the parts with UNION ALL only if there are multiple parts
+                                    $innerSql = implode(" UNION ALL ", $subqueryParts);
+
+                                    $outflowquery = "SELECT 
+                                                        CHART_ACCOUNT_ID, CHART_CODE, CHART_NAME,
+                                                        SUM(BANK) BANK, SUM(CASH) CASH, BRANCH_NAME
+                                                    FROM ( $innerSql ) KAKA 
+                                                    GROUP BY CHART_ACCOUNT_ID, CHART_CODE, CHART_NAME, BRANCH_NAME
+                                                    ORDER BY CHART_CODE";
+
+                                    $getoutflowdata = \Illuminate\Support\Facades\DB::select($outflowquery);
+                                }
 
                                             $outlist = [];
                                             foreach ($getoutflowdata as $row){
