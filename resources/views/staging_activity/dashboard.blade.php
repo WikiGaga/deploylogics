@@ -45,7 +45,7 @@
                                             <table class="table">
                                                 <tbody>
                                                     @foreach($flows_menu_dtl['rows'] as $k=>$m_dtl)
-                                                        <tr onclick="location.href='/staging-dashboard/{{$k}}'" style="cursor: pointer">
+                                                        <tr onclick="window.open('/staging-dashboard/{{$k}}', '_blank')" style="cursor: pointer">
                                                             <td width="90%">
                                                                 <i class="fa fa-caret-right"></i>
                                                                 <span style="margin-left:10px;display:inline-block;font-weight: 500;">{{$m_dtl['name']}}</span>

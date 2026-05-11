@@ -666,11 +666,11 @@ class PurchaseOrderController extends Controller
             if(!$criteriaApplies){
                 $po->current_stg_id = null;
                 $po->staging_apply = 1;
-                $po->posted = 1;
+                $po->posted = 0;
                 $po->save();
                 \App\Models\TblStgFormLog::where('menu_dtl_id', self::$menu_dtl_id)
                     ->where('document_id', $form_id)
-                    ->update(['posted' => 1]);
+                    ->update(['posted' => 0]);
             }else{
                 if(isset($po->posted) && (int)$po->posted === 1){
                     $po->posted = 0;

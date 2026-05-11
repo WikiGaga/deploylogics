@@ -1,5 +1,6 @@
 
 @php
+    $isViewOnly = (string) request('view', '') === '1';
     $currentFlowId = isset($staging_data['flows']['current']) && is_object($staging_data['flows']['current'])
         ? $staging_data['flows']['current']->stg_flows_id
         : null;
@@ -36,7 +37,7 @@
 
 <div class="stg-header-row" style="display: flex; justify-content: space-between; align-items: center; flex: 1; min-width: 0; gap: 8px;">
     <div class="stg-actions-left">
-@if(!$isCanceled && !($isPosted && $isCompleted) && !empty($actions))
+@if(!$isViewOnly && !$isCanceled && !($isPosted && $isCompleted) && !empty($actions))
     @if(!$userHasAccess && isset($id))
         <button
             type="button"

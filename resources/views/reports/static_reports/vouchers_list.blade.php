@@ -67,13 +67,16 @@
                                 <td colspan="7" class="text-left rep-font-bold">{{$branch->branch_name}}</td>
                             </tr>
                             @php
-                                $VNQuery = "Select distinct voucher_date,voucher_no,voucher_status,voucher_type from VW_ACCO_VOUCHER_ALL where
-                                            ( voucher_debit <> 0 OR  voucher_credit <> 0 ) and posted = 1 and branch_id in(".$branch->branch_id.") ".$data['where']."
+                                $VNQuery = "Select distinct voucher_date,voucher_no,voucher_status,voucher_type from VW_ACCO_VOUCHER_ALL where  posted = 1 and
+                                            ( voucher_debit <> 0 OR  voucher_credit <> 0 ) and  branch_id in(".$branch->branch_id.") ".$data['where']."
                                             and voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
                                             $whereVoucher
                                             order by voucher_date,voucher_no";
 
                                 $VNresult = \Illuminate\Support\Facades\DB::select($VNQuery);
+
+                                
+
                                     $debit_total_unit = 0;
                                     $credit_total_unit = 0;
                             @endphp
@@ -94,11 +97,13 @@
                                     }
 
                                     $Query = "Select voucher_id,voucher_document_id,voucher_date,voucher_no,voucher_status,voucher_type,chart_code,chart_name,voucher_descrip,voucher_debit,voucher_credit,voucher_sr_no from VW_ACCO_VOUCHER_ALL
-                                                where voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and posted = 1 and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
+                                                where posted = 1 and voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')
                                             $where and branch_id in(".$branch->branch_id.") ".$data['where']."
                                             $whereVoucher
                                             order by voucher_date,voucher_no,voucher_sr_no";
                                     $result = \Illuminate\Support\Facades\DB::select($Query);
+
+                                   
                                     $credit_total = 0;
                                     $debit_total = 0;
                                 @endphp
