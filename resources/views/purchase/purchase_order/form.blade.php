@@ -94,7 +94,7 @@
                                                 <input type="text" value="{{ isset($lpo_code) ? $lpo_code : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'lpoPoHelp') }}"
                                                     id="lpo_generation_no" name="lpo_generation_no"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="lpo_generation_no_id" name="lpo_generation_no_id"
                                                     value="{{ isset($lpo_id) ? $lpo_id : '' }}" />
@@ -122,12 +122,12 @@
                                                 <input type="text" value="{{ isset($supplier_code) ? $supplier_code : '' }}"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}"
                                                     id="supplier_name" name="supplier_name"
-                                                    class="open_inline__help form-control erp-form-control-sm moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex"
                                                     placeholder="{{ __('message.enter_here') }}">
                                                 <input type="hidden" id="supplier_id" name="supplier_id"
                                                     value="{{ isset($supplier_id) ? $supplier_id : '' }}" />
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text btn-open-mob-help open_inline__help erp-form-control-sm moveIndex"
+                                                    <span class="input-group-text btn-open-mob-help open_inline__help on_click_event erp-form-control-sm moveIndex"
                                                         id="OpenInlineSupplierHelp"
                                                         data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'supplierHelp') }}">
                                                         <i class="la la-search"></i>
@@ -263,7 +263,7 @@
                                                 <input type="text" value="{{ isset($autoDemandCode) ? $autoDemandCode : '' }}"
                                                     name="auto_demand_code" id="auto_demand_code"
                                                     data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'autoDemandHelp') }}"
-                                                    class="open_inline__help form-control erp-form-control-sm open_modal moveIndex"
+                                                    class="open_inline__help on_click_event form-control erp-form-control-sm open_modal moveIndex"
                                                     placeholder="{{ __('message.auto_demand_refrence') }}">
                                                 <input type="hidden" value="{{ isset($auto_demand_id) ? $auo_demand_id : '' }}"
                                                     name="auto_demand_id" id="auto_demand_id" readonly>
@@ -1240,7 +1240,7 @@
                                     '][pd_barcode]" data-id="pd_barcode" data-url="" value="' + lpos[p]
                                     .product_barcode_barcode + '" title="' + lpos[p]
                                     .product_barcode_barcode +
-                                    '" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off"></td>' +
+                                    '" class="form-control erp-form-control-sm pd_barcode tb_moveIndex on_click_event open_inline__help" readonly="" autocomplete="off"></td>' +
                                     '<td><input type="text" name="pd[' + total_length +
                                     '][product_name]" data-id="product_name" data-url="" value="' +
                                     lpos[p].product_name + '" title="' + lpos[p].product_name +
@@ -1392,7 +1392,7 @@
                                     '][pd_barcode]" data-id="pd_barcode" data-url="" value="' + lpos[p]
                                     .product_barcode_barcode + '" title="' + lpos[p]
                                     .product_barcode_barcode +
-                                    '" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off"></td>' +
+                                    '" class="form-control erp-form-control-sm pd_barcode tb_moveIndex on_click_event open_inline__help" readonly="" autocomplete="off"></td>' +
                                     '<td><input type="text" name="pd[' + total_length +
                                     '][product_name]" data-id="product_name" data-url="" value="' +
                                     lpos[p].product_name + '" title="' + lpos[p].product_name +

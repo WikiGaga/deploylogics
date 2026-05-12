@@ -350,6 +350,7 @@ class BarcodeController extends Controller
                 // Suggested Qty
                 $SuggestedDetail = TblPurcProductBarcodeDtl::where('product_barcode_id',$data['current_product']['product_barcode_id'])
                 ->where('branch_id',auth()->user()->branch_id)->first(['product_barcode_shelf_stock_max_qty','product_barcode_stock_cons_day']);
+                // dd($SuggestedDetail,DB::table('tbl_purc_product_barcode_dtl')->where('product_barcode_id', $data['current_product']['product_barcode_id'])->first(['branch_id','product_barcode_shelf_stock_max_qty', 'product_barcode_stock_cons_day']));
                 $maxLimit = $SuggestedDetail->product_barcode_shelf_stock_max_qty;
 
                 $consumption_days = $SuggestedDetail->product_barcode_stock_cons_day;
