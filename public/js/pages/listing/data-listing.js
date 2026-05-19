@@ -111,28 +111,28 @@ var KTDatatableRemoteAjaxDemo = function() {
                 if(btnpostView){
                     if(casetype == 'purchase-order'){
                         if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                            btnPrint += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
                         }
-                        btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+                        btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
 
                     }else if(casetype == 'shift_sessions'){
                         if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                            btnPrint += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
                         }
-                        btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+                        btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
 
                     }else if(casetype == 'stock-receiving'){
                         if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Posted</button>';
+                            btnPrint += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
                         }
-                        btnPrint += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Posted</button>';
+                        btnPrint += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
 
                     }else if(accountingVoucherCasetype(casetype)){
                         if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Posted</button>';
+                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Post</button>';
                         }
                         if(isPosted){
-                            btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Posted</button>';
+                            btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Post</button>';
                         }
                     }
                     dropdownLink = true;

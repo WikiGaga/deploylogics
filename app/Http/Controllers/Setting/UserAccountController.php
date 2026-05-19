@@ -151,7 +151,11 @@ class UserAccountController extends Controller
         DB::beginTransaction();
         try{
             if(isset($id)){
-                $user = User::where('id',$id)->where('user_entry_status',1)->where(Utilities::currentBC())->first();
+                $user = User::where('id',$id)->where(Utilities::currentBC())->first();
+                if(!$user){
+                    DB::rollback();
+                    return $this->jsonErrorResponse($data, 'User not found.', 404);
+                }
 
                 $user->update_id = Utilities::uuid();
             }else{
