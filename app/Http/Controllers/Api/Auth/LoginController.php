@@ -61,6 +61,12 @@ class LoginController extends ApiController
             return $this->ApiJsonErrorResponse($data,'The given data was invalid');
         }
 
+        $user = auth()->user();
+        if (!$user || (int) $user->user_entry_status !== 1) {
+            auth()->logout();
+            return $this->ApiJsonErrorResponse($data, 'Your account has been disabled.');
+        }
+
         $credentials = $request->only('email', 'password','business_id');
 
         if ($token = $this->guard()->attempt($credentials)) {

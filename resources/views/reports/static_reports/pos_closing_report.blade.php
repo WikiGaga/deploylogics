@@ -214,47 +214,38 @@
                 d.PHONE,
                 d.cash_paid,
                 d.card_paid,
-                COALESCE(SUM(od.price), 0) AS gross_amount,
+                COALESCE(od_agg.gross_amount, 0) AS gross_amount,
                 order_taker.name AS order_taker_name,
                 payment_user.name AS payment_user_name
             FROM
                 ORDERS o
             LEFT JOIN
                 POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
-            LEFT JOIN
-                order_details od ON od.order_id = o.ID
+            LEFT JOIN (
+                SELECT
+                    od.order_id,
+                    SUM(od.price) AS gross_amount
+                FROM
+                    order_details od
+                INNER JOIN
+                    ORDERS o_filter ON o_filter.ID = od.order_id
+                WHERE
+                    o_filter.CREATED_AT BETWEEN TO_TIMESTAMP('{$data['date_time_from']}', 'YYYY-MM-DD HH24:MI')
+                        AND TO_TIMESTAMP('{$data['date_time_to']}', 'YYYY-MM-DD HH24:MI')
+                    AND o_filter.SESSION_ID IS NOT NULL
+                    AND o_filter.SESSION_ID > 0
+                GROUP BY
+                    od.order_id
+            ) od_agg ON od_agg.order_id = o.ID
             LEFT JOIN
                 users order_taker ON order_taker.id = o.ORDER_TAKEN_BY
             LEFT JOIN
                 users payment_user ON payment_user.id = o.PAYMENT_USER_ID
             WHERE
-                o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
+                o.CREATED_AT BETWEEN TO_TIMESTAMP('{$data['date_time_from']}', 'YYYY-MM-DD HH24:MI')
+                    AND TO_TIMESTAMP('{$data['date_time_to']}', 'YYYY-MM-DD HH24:MI')
                 AND o.SESSION_ID IS NOT NULL
-                AND o.SESSION_ID != ''
-                AND o.SESSION_ID != '0'
-                AND TRIM(o.SESSION_ID) != ''
-            GROUP BY
-                o.ID,
-                o.ORDER_SERIAL,
-                o.ORDER_AMOUNT,
-                o.ORDER_DATE,
-                o.TOTAL_TAX_AMOUNT,
-                o.DELIVERY_CHARGE,
-                o.RESTAURANT_DISCOUNT_AMOUNT,
-                o.PAYMENT_STATUS,
-                o.ORDER_STATUS,
-                o.ORDER_TYPE,
-                o.ORDER_TAKEN_BY,
-                o.PAYMENT_USER_ID,
-                o.CREATED_AT,
-                o.SESSION_ID,
-                d.CUSTOMER_NAME,
-                d.CAR_NUMBER,
-                d.PHONE,
-                d.cash_paid,
-                d.card_paid,
-                order_taker.name,
-                payment_user.name
+                AND o.SESSION_ID > 0
             ORDER BY
                 o.PAYMENT_USER_ID,
                 o.SESSION_ID,
@@ -286,43 +277,34 @@
                     d.PHONE,
                     d.cash_paid,
                     d.card_paid,
-                    COALESCE(SUM(od.price), 0) AS gross_amount,
+                    COALESCE(od_agg.gross_amount, 0) AS gross_amount,
                     order_taker.name AS order_taker_name,
                     payment_user.name AS payment_user_name
                 FROM
                     ORDERS o
                 LEFT JOIN
                     POS_ORDER_ADDITIONAL_DTL d ON d.ORDER_ID = o.ID
-                LEFT JOIN
-                    order_details od ON od.order_id = o.ID
+                LEFT JOIN (
+                    SELECT
+                        od.order_id,
+                        SUM(od.price) AS gross_amount
+                    FROM
+                        order_details od
+                    INNER JOIN
+                        ORDERS o_filter ON o_filter.ID = od.order_id
+                    WHERE
+                        o_filter.CREATED_AT BETWEEN TO_TIMESTAMP('{$data['date_time_from']}', 'YYYY-MM-DD HH24:MI')
+                            AND TO_TIMESTAMP('{$data['date_time_to']}', 'YYYY-MM-DD HH24:MI')
+                    GROUP BY
+                        od.order_id
+                ) od_agg ON od_agg.order_id = o.ID
                 LEFT JOIN
                     users order_taker ON order_taker.id = o.ORDER_TAKEN_BY
                 LEFT JOIN
                     users payment_user ON payment_user.id = o.PAYMENT_USER_ID
                 WHERE
-                    o.CREATED_AT BETWEEN '{$data['date_time_from']}' AND '{$data['date_time_to']}'
-                GROUP BY
-                    o.ID,
-                    o.ORDER_SERIAL,
-                    o.ORDER_AMOUNT,
-                    o.ORDER_DATE,
-                    o.TOTAL_TAX_AMOUNT,
-                    o.DELIVERY_CHARGE,
-                    o.RESTAURANT_DISCOUNT_AMOUNT,
-                    o.PAYMENT_STATUS,
-                    o.ORDER_STATUS,
-                    o.ORDER_TYPE,
-                    o.ORDER_TAKEN_BY,
-                    o.PAYMENT_USER_ID,
-                    o.CREATED_AT,
-                    o.SESSION_ID,
-                    d.CUSTOMER_NAME,
-                    d.CAR_NUMBER,
-                    d.PHONE,
-                    d.cash_paid,
-                    d.card_paid,
-                    order_taker.name,
-                    payment_user.name
+                    o.CREATED_AT BETWEEN TO_TIMESTAMP('{$data['date_time_from']}', 'YYYY-MM-DD HH24:MI')
+                        AND TO_TIMESTAMP('{$data['date_time_to']}', 'YYYY-MM-DD HH24:MI')
                 ORDER BY
                     o.PAYMENT_USER_ID,
                     o.SESSION_ID,

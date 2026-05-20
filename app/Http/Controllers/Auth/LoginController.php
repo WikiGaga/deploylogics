@@ -117,6 +117,11 @@ class LoginController extends Controller
     protected function sendLoginResponse(Request $request)
     {
         $user = $this->guard()->user();
+        if (!$user || (int) $user->user_entry_status !== 1) {
+            Auth::logout();
+            return $this->jsonErrorResponse([], 'Your account has been disabled.', 403);
+        }
+
         $wanAddress = 'erp.risen.com.pk';
         if (str_contains($request->url(), $wanAddress) && ($user && $user->ip_address_apply == 0)) {
             Auth::logout();

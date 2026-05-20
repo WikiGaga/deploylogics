@@ -374,9 +374,9 @@ class ShiftSessionsController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Session id not found.'], 422);
         }
 
-        $row = ShiftSession::where('session_id', $session_id)->where(Utilities::currentBCB())->first();
+        $row = ShiftSession::where('session_id', $session_id)->first();
         if (!$row) {
-            return $this->jsonErrorResponse([], trans('message.document_not_in_current_branch'), 422);
+            return $this->jsonErrorResponse([], 'Session not found.', 422);
         }
         if (!empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
             return response()->json(['status' => 'error', 'message' => 'Posting is handled by staging for this form.'], 422);
@@ -406,7 +406,7 @@ class ShiftSessionsController extends Controller
         }
 
         foreach ($ids as $id) {
-            $row = ShiftSession::where('session_id', $id)->where(Utilities::currentBCB())->first();
+            $row = ShiftSession::where('session_id', $id)->first();
             if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
                 return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
             }
@@ -414,7 +414,7 @@ class ShiftSessionsController extends Controller
 
         $updated = 0;
         foreach ($ids as $id) {
-            $row = ShiftSession::where('session_id', $id)->where(Utilities::currentBCB())->first();
+            $row = ShiftSession::where('session_id', $id)->first();
             if ($row && Schema::hasColumn($row->getTable(), 'posted')) {
                 $row->posted = 0;
                 $row->save();
@@ -423,7 +423,7 @@ class ShiftSessionsController extends Controller
         }
 
         if ($updated === 0) {
-            return $this->jsonErrorResponse([], trans('message.document_not_in_current_branch'), 422);
+            return $this->jsonErrorResponse([], 'Session not found.', 422);
         }
 
         return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);

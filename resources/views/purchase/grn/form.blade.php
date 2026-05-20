@@ -845,6 +845,7 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
+                                                <td></td>
                                                 <td class="total_grid_qty">
                                                     <input value="0.000" readonly
                                                         type="text"class="form-control erp-form-control-sm validNumber validOnlyFloatNumber">
