@@ -30,26 +30,18 @@
                     <!--begin::Form-->
                     <div class="kt-portlet__body">
                         <div class="form-group-block row">
-                            <label class="col-lg-3 erp-col-form-label">Delivery Type: <span class="required">*</span></label>
+                            <label class="col-lg-3 erp-col-form-label">Discount Name: <span class="required">*</span></label>
                             <div class="col-lg-6">
                                 <input type="text" name="name" value="{{isset($name)?$name:""}}" class="form-control erp-form-control-sm medium_text">
                             </div>
                         </div>
                         <div class="form-group-block row">
-                            <label class="col-lg-3 erp-col-form-label">Arabic Name:</label>
+                            <label class="col-lg-3 erp-col-form-label">Default Discount:</label>
                             <div class="col-lg-6">
                                 <input type="text" name="arabic_name" value="{{isset($arabic_name)?$arabic_name:""}}" class="form-control erp-form-control-sm medium_text">
                             </div>
                         </div>
                         <div class="form-group-block row">
-                            <div class="col-lg-6">
-                                <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label">Serial:</label>
-                                    <div class="col-lg-6">
-                                        <input type="text" name="serial" value="{{isset($serial)?$serial:""}}" class="form-control erp-form-control-sm medium_text">
-                                    </div>
-                                </div>
-                            </div>
                             <div class="col-lg-4">
                                 <div class="row">
                                     <div class="col-lg-6">
