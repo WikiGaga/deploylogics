@@ -1241,6 +1241,12 @@ Route::group(['middleware' => ['auth']], function () {
 
         });
 
+        Route::prefix('discount-types')->group(function () {
+            Route::get('form/{id?}','Setting\POSDiscountController@create');
+            Route::post('form/{id?}','Setting\POSDiscountController@store');
+            Route::post('delete/{id}','Setting\POSDiscountController@destroy');
+        });
+
         Route::prefix('deal-setup')->group(function () {
             Route::get('form/{id?}','Inventory\DealSetupController@create');
             Route::post('form/{id?}','Inventory\DealSetupController@store');
