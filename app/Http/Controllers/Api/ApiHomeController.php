@@ -108,10 +108,10 @@ class ApiHomeController extends ApiController
         //     ], 401);
         // }
 
-    //      $Employee = DB::table('tbl_payr_employee as e')
-    //   ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
-    //     ->where('e.employee_id', $employee_id)
-    //     ->first();
+        //      $Employee = DB::table('tbl_payr_employee as e')
+        //   ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
+        //     ->where('e.employee_id', $employee_id)
+        //     ->first();
 
         $employee_id = $request->input('employee_id');
 
@@ -120,7 +120,7 @@ class ApiHomeController extends ApiController
         ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
         ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
         ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
-        "g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
+        "e.branch_id","g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
         ->where('e.employee_id', $employee_id)
         ->first();
 
@@ -144,19 +144,13 @@ class ApiHomeController extends ApiController
 
         public function get_all_employees(Request $request)
     {
-        // $employee_id = $request->input('employee_id');
-
-        //  $Employee = DB::table('tbl_payr_employee')
-        // ->where('employee_id', 12123325261244)
         
-        //  ->update(['EMPLOYEE_LOCAL_PERSONAL_EMAIL'=>'o26s26m@gmail.com']);
-
-         $Employees = DB::table('tbl_payr_employee as e')
+        $Employees = DB::table('tbl_payr_employee as e')
         ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
         ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
         ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
         ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
-        "g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
+        "e.branch_id","g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
         // ->where('employee_id', $employee_id)
         ->get();
 
@@ -166,7 +160,11 @@ class ApiHomeController extends ApiController
             $Employee->employee_img = "images/employee/$Employee->employee_img";
         }
 
-    //    dd($Employee);
+        $branch = DB::table('tbl_soft_branch')
+        ->select( 'branch_id', 'branch_longitude', 'branch_latitude')
+        ->get();
+
+        //    dd($Employee);
 
         // if (empty($Employee)) {
         //     return response()->json([
@@ -179,7 +177,7 @@ class ApiHomeController extends ApiController
         return response()->json( $Employees); // Use 200 OK HTTP status
     }
 
-        public function store_attendance(Request $request)
+    public function store_attendance(Request $request)
     {
 
         // dd($request->all()) ;
@@ -224,70 +222,55 @@ class ApiHomeController extends ApiController
             'Data' => $Employee,
         ], 200); // Use 200 OK HTTP status
     }
-//    public function update_employee_face(Request $request)
-//     {
 
-//         $validator = Validator::make($request->all(), [
-//              'emp_id'    => 'required',
-//              'attendance_image'    => 'required',
-//              'image_embeded_code'    => 'required',
-             
-//         ]);
+    public function bulk_store_attendance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'attendances'              => 'required|array|min:1',
+            'attendances.*.emp_id'         => 'required',
+            'attendances.*.attendance_date' => 'required',
+            'attendances.*.attendance_time' => 'required',
+            'attendances.*.attendance_type' => 'required',
+            'attendances.*.shift_id'        => 'required',
+        ]);
 
-//         if ($validator->fails()) {
-//             return response()->json([
-//                 'status' => false,
-//                 'message' => 'Validation error',
-//                 'errors' => $validator->errors()
-//             ], 422);
-//         }
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Validation error',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
 
-//         $employee_id = $request->input('emp_id');
+        $insertData = [];
+        $nextId = DB::table('Tbl_hr_attendence_dtl')->max('id') + 1;
 
-//         $Employee = DB::table('tbl_payr_employee')
-//         ->where('employee_id', $employee_id)
-//         ->first();
+        foreach ($request->attendances as $attendance) {
+            $insertData[] = [
+                'id'              => $nextId++,
+                'emp_id'          => $attendance['emp_id'],
+                'attendance_date' => date('Y-m-d', strtotime($attendance['attendance_date'])),
+                'attendance_time' => date('Y-m-d H:i:s', strtotime($attendance['attendance_time'])),
+                'attendance_type' => $attendance['attendance_type'],
+                'shift_id'        => $attendance['shift_id'],
+            ];
+        }
 
+        $inserted = DB::table('Tbl_hr_attendence_dtl')->insert($insertData);
 
-//         if (empty($Employee)) {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Employee not found.',
-//             ], 404); // Use 404 Not Found HTTP status
-//         }
+        if (!$inserted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to store attendance records.',
+            ], 500);
+        }
 
-//         $attendance_image=NULL;
-//         if($request->hasFile('attendance_image'))
-//         {
-//             $folder = 'images/employee_face/';
-//             if (! File::exists($folder)) {
-//                 File::makeDirectory($folder, 0775, true,true);
-//             }
-//             $image = $request->file('attendance_image');
-//             $filename = time() . '.' . $image->getClientOriginalExtension();
-//             $path = public_path($folder . $filename);
-//             Image::make($image->getRealPath())->save($path);
-//             $attendance_image = isset($filename)?$filename:'';
-//         }
-
-        
-
-//         $data=['attendance_image'=>$attendance_image, 'image_embeded_code'=>$request->image_embeded_code,'REGISTER_STATUS'=>1];
-
-//         // dd($data);
-
-//         $Employee = DB::table('tbl_payr_employee')
-//          ->where('employee_id', $employee_id)
-//         ->UPDATE(  $data );
-
-//         // 3. Return the user data as a JSON response
-//         return response()->json([
-//             'success' => true,
-//             'message' => 'User data update successfully.',
-//             'Data' => $Employee,
-//         ], 200); // Use 200 OK HTTP status
-//     }
-
+        return response()->json([
+            'success' => true,
+            'message' => count($insertData) . ' attendance record(s) stored successfully.',
+            'total'   => count($insertData),
+        ], 200);
+    }
 
     public function update_employee_face(Request $request)
     {
@@ -462,6 +445,24 @@ class ApiHomeController extends ApiController
             ], 200);
         });
     }
+
+    private function haversineDistance($point1, $point2) {
+        $R = 6371000; // Earth radius in meters
+        $lat1 = deg2rad($point1['latitude']);
+        $lat2 = deg2rad($point2['latitude']);
+        $dLat = deg2rad($point2['latitude'] - $point1['latitude']);
+        $dLon = deg2rad($point2['longitude'] - $point1['longitude']);
+
+        $a = sin($dLat/2) * sin($dLat/2) +
+            cos($lat1) * cos($lat2) *
+            sin($dLon/2) * sin($dLon/2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+        return $R * $c; // Distance in meters
+    }
+
+
     /**
      * Display a listing of the resource.
      *
