@@ -54,6 +54,22 @@ class StagingService
             ->values();
     }
 
+    public function criteriaFlowsForDocument($criteria, $model = null, $formNameOrMenuDtlId = null)
+    {
+        if (!$criteria || !$criteria->flows || $criteria->flows->isEmpty()) {
+            return collect([]);
+        }
+
+        $criteriaInactive = (int) ($criteria->menu_flow_criteria_status ?? 0) !== 1
+            || (int) ($criteria->menu_flow_criteria_entry_status ?? 0) !== 1;
+
+        if ($criteriaInactive && $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId)) {
+            return $criteria->flows->values();
+        }
+
+        return $this->activeCriteriaFlows($criteria);
+    }
+
     protected function getFormNameFromMenuDtlId($menuDtlId)
     {
         $menu = TblSoftMenuDtl::find($menuDtlId);
@@ -61,7 +77,31 @@ class StagingService
     }
 
 
-    public function getFlowCriteriaForForm($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false)
+    public function documentRetainsStagingWorkflow($model, $isAlreadyInStaging = false, $formNameOrMenuDtlId = null): bool
+    {
+        return $isAlreadyInStaging || $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId);
+    }
+
+    protected function flowCriteriaQuery($formNameOrMenuDtlId, $formName, $activeOnly = true)
+    {
+        $criteriaQuery = TblMenuFlowCriteria::with(['flows.actions', 'flows.users', 'flows.designations', 'conditions']);
+        if ($activeOnly) {
+            $criteriaQuery->active();
+        }
+
+        if (is_numeric($formNameOrMenuDtlId)) {
+            $criteriaQuery->where(function ($q) use ($formNameOrMenuDtlId, $formName) {
+                $q->where('menu_dtl_id', $formNameOrMenuDtlId)
+                  ->orWhereRaw('lower(trim(menu_flow_criteria_name)) = ?', [strtolower(trim($formName))]);
+            });
+        } else {
+            $criteriaQuery->forForm($formName);
+        }
+
+        return $criteriaQuery;
+    }
+
+    public function getFlowCriteriaForForm($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false, $model = null)
     {
         if (is_numeric($formNameOrMenuDtlId)) {
             $formName = $this->getFormNameFromMenuDtlId($formNameOrMenuDtlId);
@@ -73,21 +113,25 @@ class StagingService
         }
         $formName = trim($formName);
 
-        $criteriaQuery = TblMenuFlowCriteria::with(['flows.actions', 'flows.users', 'flows.designations', 'conditions'])
-            ->active();
+        $retainForEnrolled = $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId);
+        $criteria = $this->flowCriteriaQuery($formNameOrMenuDtlId, $formName, true)
+            ->orderBy('menu_flow_criteria_apply_at', 'desc')
+            ->first();
+        $usedInactiveCriteria = false;
 
-        if (is_numeric($formNameOrMenuDtlId)) {
-            $criteriaQuery->where(function ($q) use ($formNameOrMenuDtlId, $formName) {
-                $q->where('menu_dtl_id', $formNameOrMenuDtlId)
-                  ->orWhereRaw('lower(trim(menu_flow_criteria_name)) = ?', [strtolower(trim($formName))]);
-            });
-        } else {
-            $criteriaQuery->forForm($formName);
+        if (!$criteria && $retainForEnrolled) {
+            $criteria = $this->flowCriteriaQuery($formNameOrMenuDtlId, $formName, false)
+                ->orderBy('menu_flow_criteria_apply_at', 'desc')
+                ->first();
+            $usedInactiveCriteria = (bool) $criteria;
         }
 
-        $criteria = $criteriaQuery->orderBy('menu_flow_criteria_apply_at', 'desc')->first();
+        if (!$criteria) {
+            return null;
+        }
 
-        if (!$criteria || $criteria->menu_flow_criteria_status != 1 || $criteria->menu_flow_criteria_entry_status != 1) {
+        if (!$usedInactiveCriteria
+            && ($criteria->menu_flow_criteria_status != 1 || $criteria->menu_flow_criteria_entry_status != 1)) {
             return null;
         }
 
@@ -253,10 +297,10 @@ class StagingService
         return $result;
     }
 
-    public function getFormFlows($formNameOrMenuDtlId, $currentFlowId = null, $formId = null, $skipConditionCheck = false)
+    public function getFormFlows($formNameOrMenuDtlId, $currentFlowId = null, $formId = null, $skipConditionCheck = false, $model = null)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
-        $activeFlows = $this->activeCriteriaFlows($criteria);
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
+        $activeFlows = $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId);
         if (!$criteria || $activeFlows->isEmpty()) {
             return [
                 'all' => [],
@@ -304,15 +348,18 @@ class StagingService
         ];
     }
 
-    public function getFormActions($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false)
+    public function getFormActions($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false, $model = null)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
 
         if (!$criteria || !$flowId) {
             return [];
         }
 
-        $flow = $this->activeCriteriaFlows($criteria)->where('stg_flows_id', $flowId)->first();
+        $flow = $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId)
+            ->first(function ($f) use ($flowId) {
+                return (string) $f->stg_flows_id === (string) $flowId;
+            });
 
         if (!$flow) {
             return [];
@@ -361,17 +408,18 @@ class StagingService
         return $actions;
     }
 
-    public function getUserAccess($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false)
+    public function getUserAccess($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false, $model = null)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
 
         if (!$criteria || !$flowId) {
             return false;
         }
 
-        $flow = $this->activeCriteriaFlows($criteria)->first(function ($f) use ($flowId) {
-            return (string) $f->stg_flows_id === (string) $flowId;
-        });
+        $flow = $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId)
+            ->first(function ($f) use ($flowId) {
+                return (string) $f->stg_flows_id === (string) $flowId;
+            });
 
         if (!$flow) {
             return false;
@@ -429,17 +477,18 @@ class StagingService
         return false;
     }
 
-    public function getEligibleUsers($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false)
+    public function getEligibleUsers($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false, $model = null)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
 
         if (!$criteria || !$flowId) {
             return collect([]);
         }
 
-        $flow = $this->activeCriteriaFlows($criteria)->first(function ($f) use ($flowId) {
-            return (string) $f->stg_flows_id === (string) $flowId;
-        });
+        $flow = $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId)
+            ->first(function ($f) use ($flowId) {
+                return (string) $f->stg_flows_id === (string) $flowId;
+            });
 
         if (!$flow) {
             return collect([]);
@@ -480,14 +529,14 @@ class StagingService
         return $this->activeCriteriaFlows($criteria)->isNotEmpty();
     }
 
-    public function hasStagingOrRemainsInStaging($formNameOrMenuDtlId, $formId, $isAlreadyInStaging)
+    public function hasStagingOrRemainsInStaging($formNameOrMenuDtlId, $formId, $forExistingDocument, $model = null)
     {
-        if ($isAlreadyInStaging) {
-            $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, null);
+        if ($forExistingDocument || $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId)) {
+            $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, null, true, $model);
             if ($criteria === null) {
                 return false;
             }
-            return $this->activeCriteriaFlows($criteria)->isNotEmpty();
+            return $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId)->isNotEmpty();
         }
         return $this->hasStaging($formNameOrMenuDtlId, $formId);
     }
@@ -524,11 +573,15 @@ class StagingService
 
     public function shouldUseStagingForDocument($formNameOrMenuDtlId, $formId, $model, $isAlreadyInStaging, $isNew = false): bool
     {
-        if (!$this->hasStagingOrRemainsInStaging($formNameOrMenuDtlId, $formId, $isAlreadyInStaging)) {
-            return false;
+        $retainStaging = $this->documentRetainsStagingWorkflow($model, $isAlreadyInStaging, $formNameOrMenuDtlId);
+
+        if ($retainStaging && !$isNew) {
+            $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, true, $model);
+            return $criteria !== null && $this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId)->isNotEmpty();
         }
-        if ($isAlreadyInStaging) {
-            return true;
+
+        if (!$this->hasStaging($formNameOrMenuDtlId, $formId)) {
+            return false;
         }
         if ($isNew) {
             return true;
@@ -539,9 +592,9 @@ class StagingService
         return $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId);
     }
 
-    public function getFlowCriteriaId($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false)
+    public function getFlowCriteriaId($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false, $model = null)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
         return $criteria ? $criteria->menu_flow_criteria_id : null;
     }
 

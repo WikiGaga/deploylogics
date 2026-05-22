@@ -54,21 +54,38 @@ class StagingComposer
         $stagingExempt = $this->stagingService->isDocumentStagingExempt($current, $menuDtlId);
         $stagingEnrolled = $this->stagingService->isDocumentStagingEnrolled($current, $menuDtlId);
         $skipCriteriaConditions = $isAlreadyInStaging || $stagingEnrolled;
-        $showStagingUi = ($stagingEnrolled || $isAlreadyInStaging)
-            && !$stagingExempt
-            && $this->stagingService->hasStagingOrRemainsInStaging($menuDtlId, $formId, $skipCriteriaConditions);
+        $showStagingUi = false;
+        if (!$stagingExempt && ($stagingEnrolled || $isAlreadyInStaging)) {
+            if ($stagingEnrolled) {
+                $criteria = $this->stagingService->getFlowCriteriaForForm(
+                    $menuDtlId,
+                    $formId,
+                    $skipCriteriaConditions,
+                    $current
+                );
+                $showStagingUi = $criteria !== null
+                    && $this->stagingService->criteriaFlowsForDocument($criteria, $current, $menuDtlId)->isNotEmpty();
+            } else {
+                $showStagingUi = $this->stagingService->hasStagingOrRemainsInStaging(
+                    $menuDtlId,
+                    $formId,
+                    true,
+                    $current
+                );
+            }
+        }
 
         if ($showStagingUi) {
-            $flows = $this->stagingService->getFormFlows($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
+            $flows = $this->stagingService->getFormFlows($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $current);
             $actions = [];
             $userAccess = false;
             $eligibleUsers = collect([]);
 
             if ($flows['current']) {
                 $currentFlowId = $flows['current']->stg_flows_id;
-                $actions = $this->stagingService->getFormActions($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
-                $userAccess = $this->stagingService->getUserAccess($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
-                $eligibleUsers = $this->stagingService->getEligibleUsers($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
+                $actions = $this->stagingService->getFormActions($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $current);
+                $userAccess = $this->stagingService->getUserAccess($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $current);
+                $eligibleUsers = $this->stagingService->getEligibleUsers($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $current);
             }
 
             $stagingData = [

@@ -117,7 +117,9 @@
         $formId = isset($id) ? $id : (isset($staging_form_id) ? $staging_form_id : null);
         $current = $data['current'] ?? null;
         $isAlreadyInStaging = $current && !empty($current->current_stg_id) && (int)($current->posted ?? 0) === 0;
-        $flowsData = $stagingService->getFormFlows($data['menu_dtl_id'] ?? $staging_menu_dtl_id ?? null, $currentFlowId, $formId, $isAlreadyInStaging);
+        $stagingEnrolled = $current && isset($current->staging_apply) && (int) $current->staging_apply === 1;
+        $skipCriteriaConditions = $isAlreadyInStaging || $stagingEnrolled;
+        $flowsData = $stagingService->getFormFlows($data['menu_dtl_id'] ?? $staging_menu_dtl_id ?? null, $currentFlowId, $formId, $skipCriteriaConditions, $current);
     }
     $flows = $flowsData['all'] ?? [];
     $currentFlow = $flowsData['current'] ?? null;
