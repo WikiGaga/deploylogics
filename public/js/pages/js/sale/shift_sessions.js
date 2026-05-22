@@ -126,29 +126,21 @@ var KTFormWidgets = function () {
             cache       : false,
             contentType : false,
             processData : false,
-            success: function(response,status) {
-                if(response.status == 'success'){
-                    toastr.success(response.message);
-                    setTimeout(function () {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
-                    if (response.data && response.data.redirect) {
-                        window.location.href = response.data.redirect;
-                    } else if (response.data && response.data.form == 'new') {
-                        window.location.href = response.data.redirect;
-                    } else {
-                        $('.new-row').removeClass('new-row');
+            success: function(response, status, xhr) {
+                var ok = erpFormAjaxDone(response, xhr, {
+                    newFormUrl: function(res) {
+                        return (res.data && res.data.redirect) || '';
                     }
-                }else{
-                    toastr.error(response.message);
-                    setTimeout(function () {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
+                });
+                setTimeout(function () {
+                    $("form").find(":submit").prop('disabled', false);
+                }, 2000);
+                if (ok && !(response.data && (response.data.redirect || response.data.form === 'new'))) {
+                    $('.new-row').removeClass('new-row');
                 }
             },
-            error: function(response,status) {
-                // console.log(response.responseJSON);
-                toastr.error(response.responseJSON.message);
+            error: function(xhr) {
+                erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed', reload: false });
                 setTimeout(function () {
                     $("form").find(":submit").prop('disabled', false);
                 }, 2000);

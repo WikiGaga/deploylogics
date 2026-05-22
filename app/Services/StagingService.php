@@ -266,11 +266,15 @@ class StagingService
             ];
         }
 
+        $sortedFlows = $activeFlows->sortBy(function ($flow) {
+            return (int) ($flow->flow_order ?? 0);
+        })->values();
+
         $flows = [];
         $currentFlow = null;
         $currentIndex = -1;
 
-        foreach ($activeFlows as $flow) {
+        foreach ($sortedFlows as $flow) {
             $flowObj = (object)[
                 'stg_flows_id' => $flow->stg_flows_id,
                 'stg_flows_name' => $flow->flow_name ?: 'Unknown',
@@ -278,7 +282,7 @@ class StagingService
             ];
             $flows[] = $flowObj;
 
-            if ($currentFlowId && $flow->stg_flows_id == $currentFlowId) {
+            if ($currentFlowId && (string) $flow->stg_flows_id === (string) $currentFlowId) {
                 $currentFlow = $flowObj;
                 $currentIndex = count($flows) - 1;
             }
@@ -319,40 +323,38 @@ class StagingService
             $flowActions = TblMenuFlowCriteriaFlowAction::where('menu_flow_criteria_flow_id', $flow->menu_flow_criteria_flow_id)->get();
         }
 
+        $actionMap = [
+            'create' => 'save',
+            'edit' => 'save',
+            'save' => 'save',
+            'forward' => 'forward',
+            'send_forward' => 'forward',
+            'post' => 'post',
+            'back' => 'back',
+            'send_back' => 'back',
+            'sendback' => 'back',
+            'cancel' => 'cancel',
+            'un_post' => 'un_post',
+            'unpost' => 'un_post',
+        ];
+
         $actions = [];
+        $seenCanonical = [];
         foreach ($flowActions as $flowAction) {
             $actionName = $flowAction->action_name;
+            $actionKey = strtolower(str_replace([' ', '-'], '_', trim((string) $actionName)));
+            $canonicalAction = $actionMap[$actionKey] ?? $actionKey;
 
-            $actionMap = [
-                'create' => 'save',
-                'edit' => 'save',
-                'save' => 'save',
-                'forward' => 'forward',
-                'post' => 'forward',
-                'back' => 'back',
-                'cancel' => 'cancel'
-            ];
-
-            $lookupActionName = $actionMap[$actionName] ?? $actionName;
-
-            $lookupCandidates = [$lookupActionName];
-            if ($lookupActionName === 'save') {
-                $lookupCandidates[] = 'create';
-                $lookupCandidates[] = 'edit';
-            } elseif ($lookupActionName === 'forward') {
-                $lookupCandidates[] = 'post';
-            } elseif ($lookupActionName === 'back') {
-                $lookupCandidates[] = 'send back';
-                $lookupCandidates[] = 'send_back';
-            } elseif ($lookupActionName === 'cancel') {
-                $lookupCandidates[] = 'cancel';
+            if (isset($seenCanonical[$canonicalAction])) {
+                continue;
             }
+            $seenCanonical[$canonicalAction] = true;
 
             $actions[] = (object)[
                 'stg_actions_id' => $flowAction->menu_flow_criteria_flow_action_id,
                 'stg_actions_name' => $actionName,
                 'stg_actions_label' => ucfirst(str_replace('_', ' ', $actionName)),
-                'original_action' => $actionName
+                'original_action' => $canonicalAction,
             ];
         }
 
@@ -490,6 +492,53 @@ class StagingService
         return $this->hasStaging($formNameOrMenuDtlId, $formId);
     }
 
+    public function getStagingApplyEnrolledValue($formNameOrMenuDtlId = null): int
+    {
+        return 1;
+    }
+
+    public function getStagingApplyExemptValue($formNameOrMenuDtlId = null): int
+    {
+        return 0;
+    }
+
+    public function isDocumentStagingEnrolled($model, $formNameOrMenuDtlId = null): bool
+    {
+        if (!$model) {
+            return false;
+        }
+        $enrolledValue = $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId);
+
+        return isset($model->staging_apply) && (int) $model->staging_apply === $enrolledValue;
+    }
+
+    public function isDocumentStagingExempt($model, $formNameOrMenuDtlId = null): bool
+    {
+        if (!$model) {
+            return true;
+        }
+        $exemptValue = $this->getStagingApplyExemptValue($formNameOrMenuDtlId);
+
+        return (int) ($model->staging_apply ?? $exemptValue) === $exemptValue;
+    }
+
+    public function shouldUseStagingForDocument($formNameOrMenuDtlId, $formId, $model, $isAlreadyInStaging, $isNew = false): bool
+    {
+        if (!$this->hasStagingOrRemainsInStaging($formNameOrMenuDtlId, $formId, $isAlreadyInStaging)) {
+            return false;
+        }
+        if ($isAlreadyInStaging) {
+            return true;
+        }
+        if ($isNew) {
+            return true;
+        }
+        if ($this->isDocumentStagingExempt($model, $formNameOrMenuDtlId)) {
+            return false;
+        }
+        return $this->isDocumentStagingEnrolled($model, $formNameOrMenuDtlId);
+    }
+
     public function getFlowCriteriaId($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck);
@@ -549,7 +598,7 @@ class StagingService
         $documents = DB::table($tableName)
             ->where('current_stg_id', $flowId)
             ->where('posted', 0)
-            ->where('staging_apply', 0);
+            ->where('staging_apply', $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId));
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
 
@@ -564,12 +613,13 @@ class StagingService
             return [];
         }
 
+        $enrolledValue = $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId);
         $counts = [];
         foreach ($this->activeCriteriaFlows($criteria) as $flow) {
             $count = DB::table($tableName)
                 ->where('current_stg_id', $flow->stg_flows_id)
                 ->where('posted', 0)
-                ->where('staging_apply', 0);
+                ->where('staging_apply', $enrolledValue);
 
             $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $count);
 

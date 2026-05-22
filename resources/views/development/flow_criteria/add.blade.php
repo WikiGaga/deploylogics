@@ -256,6 +256,12 @@
                                                                         <span></span>
                                                                     </label>
                                                                 </div>
+                                                                <div class="col-lg-3">
+                                                                    <label class="kt-checkbox kt-checkbox--bold kt-checkbox--brand"> Un Post
+                                                                        <input type="checkbox" name="action" data-action-code="un_post">
+                                                                        <span></span>
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                             </div>
                                                             <div class="tab-pane" data-tab-pane="designation">

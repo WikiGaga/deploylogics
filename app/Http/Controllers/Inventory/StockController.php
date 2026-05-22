@@ -214,11 +214,12 @@ class StockController extends Controller
                 }
 
                 $data['page_data']['post'] = action('Inventory\StockController@post', ['type' => $type]);
-                $data['page_data']['is_posted'] = isset($data['current']->posted) && $data['current']->posted == 1;
+                $data['page_data']['cancel'] = action('Inventory\StockController@cancel', ['type' => $type]);
+                $data['page_data']['document_id_field'] = 'stock_id';
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && (int) $data['current']->posted === 1;
+                $data['page_data']['is_canceled'] = isset($data['current']->posted) && (int) $data['current']->posted === 2;
 
-                if(isset($data['current']->posted) && $data['current']->posted == 1){
-                    $data['page_data']['action'] = '';
-                }
+                $this->clearFormUpdateActionIfDocumentNotEditable($data['page_data'], $data['current']);
 
             }else{
                 abort('404');
@@ -342,9 +343,9 @@ class StockController extends Controller
             }
 
             if (isset($id) && !$this->stagingShouldPersistFormChanges($request, $this->menu_id, $form_id, $stock)) {
-                $wasInStaging = !empty($po->current_stg_id) && (int)($po->posted ?? 0) === 0;
+                $wasInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
                 $stagingService = new StagingService();
-                $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
+                $criteriaApplies = $stagingService->shouldUseStagingForDocument($this->menu_id, $form_id, $stock, $wasInStaging, false);
 
                 if ($criteriaApplies) {
                     $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
@@ -357,10 +358,7 @@ class StockController extends Controller
                 // DB::commit();
 
                 $data = array_merge($data, Utilities::returnJsonEditForm());
-                $isInStaging = !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
-                $data['redirect'] = $isInStaging
-                    ? '/' . $type . '/form/' . $form_id
-                    : $this->prefixIndexPage . $type . '/form';
+                $data['redirect'] = $this->documentFormStayRedirect('/stock/' . $type, $form_id);
                 return $this->jsonSuccessResponse($data, trans('message.update'), 200);
             }
 
@@ -856,57 +854,15 @@ class StockController extends Controller
                 // end insert update stock transfer voucher
             }
 
-            $wasInStaging = isset($id) && !empty($stock->current_stg_id) && (int)($stock->posted ?? 0) === 0;
-            $stagingService = new StagingService();
-            $criteriaApplies = $stagingService->hasStagingOrRemainsInStaging($this->menu_id, $form_id, $wasInStaging);
-
-            if(!$criteriaApplies){
-                $stock->current_stg_id = null;
-                $stock->staging_apply = 1;
-                $stock->posted = 0;
-                $stock->save();
-                \App\Models\TblStgFormLog::where('menu_dtl_id', $this->menu_id)
-                    ->where('document_id', $form_id)
-                    ->update(['posted' => 0]);
-            }else{
-                if(isset($stock->posted) && (int)$stock->posted === 1){
-                    $stock->posted = 0;
-                }
-                if(isset($stock->staging_apply) && (int)$stock->staging_apply === 1){
-                    $stock->staging_apply = 0;
-                }
-                if(empty($stock->current_stg_id)){
-                    $flows = $stagingService->getFormFlows($this->menu_id, null, $form_id, $wasInStaging);
-                    if(!empty($flows['all'])){
-                        $stock->current_stg_id = $flows['all'][0]->stg_flows_id;
-                    }
-                }
-
-                $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
+            $this->finalizeDocumentStaging($request, $this->menu_id, $form_id, $stock, !isset($id), [
+                'notification' => [
                     'listing_view' => 'vw_inve_stock',
                     'form_path' => $type . '/form',
                     'document_code_key' => 'stock_code',
-                ]);
-
-                $currentFlowId = $request->input('current_flow_id');
-                $nextFlowId = $request->input('next_flow_id');
-                $actionId = $request->input('current_actions_id');
-                if ($currentFlowId !== null && $currentFlowId !== '' && $nextFlowId !== null && $nextFlowId !== '' && $actionId !== null && $actionId !== '') {
-                    $actions = $stagingService->getFormActions($this->menu_id, $currentFlowId, $form_id, $wasInStaging);
-                    foreach ($actions as $action) {
-                        if ((string) $action->stg_actions_id === (string) $actionId) {
-                            $name = strtolower($action->stg_actions_name ?? '');
-                            $orig = strtolower($action->original_action ?? $name);
-                            if (in_array($name, ['forward'], true) || in_array($orig, ['forward'], true)) {
-                                $stock->current_stg_id = $nextFlowId;
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                $stock->save();
-            }
+                ],
+                'posted_when_exempt' => 0,
+                'stg_log_posted_when_exempt' => 0,
+            ]);
 
 
         }catch (QueryException $e) {
@@ -1549,50 +1505,75 @@ class StockController extends Controller
         dd('OK');
     }
 
-    public function post(Request $request)
+    protected function resolveStockMenuIdFromType($type): string
     {
-        $postPerm = $this->menu_id . '-post';
-        if (!auth()->user()->isAbleTo($postPerm)) {
-            return response()->json(['status' => 'error', 'message' => 'You do not have permission to post.'], 403);
+        switch ($type) {
+            case 'opening-stock': return '54';
+            case 'stock-transfer': return '65';
+            case 'stock-adjustment': return '55';
+            case 'damaged-items': return '57';
+            case 'expired-items': return '58';
+            case 'sample-items': return '56';
+            case 'repair-items': return '183';
+            case 'stock-receiving': return '76';
+            case 'internal-stock-transfer': return '131';
+            case 'disassemble-products': return '134';
+            default: return (string) $this->menu_id;
         }
-
-        $stock_id = $request->stock_id;
-        $data = [];
-        if(!empty($stock_id)){
-            $row = TblInveStock::where('stock_id',$stock_id)->where(Utilities::currentBCB())->first();
-            if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Posting is handled by staging for this form.'
-                ], 422);
-            }
-            if($row){
-                $row->posted = 1;
-                $row->update();
-                $data['status'] = 'success';
-            }else{
-                $data['status'] = 'error';
-            }
-        }else{
-            $data['status'] = 'error';
-        }
-        return response()->json($data);
     }
 
-    public function Posted(Request $request)
+    public function cancel(Request $request, $type)
     {
-        $postPerm = $this->menu_id . '-post';
-        if (!auth()->user()->isAbleTo($postPerm)) {
-            return $this->jsonErrorResponse([], 'You do not have permission to post.', 403);
+        $this->menu_id = $this->resolveStockMenuIdFromType($type);
+        try {
+            $stock_id = $request->stock_id;
+            if (empty($stock_id)) {
+                return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
+            }
+            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBCB())->first();
+            $this->guardUmDocumentAction($this->menu_id, $row, 'cancel', 'cancel');
+            $row->posted = 2;
+            $row->update();
+            return response()->json(['status' => 'success', 'message' => trans('message.cancel')]);
+        } catch (\RuntimeException $e) {
+            return $this->umJsonErrorFromException($e);
         }
+    }
 
+    public function post(Request $request, $type = null)
+    {
+        if ($type) {
+            $this->menu_id = $this->resolveStockMenuIdFromType($type);
+        }
+        try {
+            $stock_id = $request->stock_id;
+            if (empty($stock_id)) {
+                return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
+            }
+            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBCB())->first();
+            $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
+            $row->posted = 1;
+            $row->update();
+            return response()->json(['status' => 'success']);
+        } catch (\RuntimeException $e) {
+            return $this->umJsonErrorFromException($e);
+        }
+    }
+
+    public function Posted(Request $request, $type = null)
+    {
+        if ($type) {
+            $this->menu_id = $this->resolveStockMenuIdFromType($type);
+        }
         $data = [];
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
-                $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
-                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
-                    return $this->jsonErrorResponse([], 'Posting is handled by staging for this form.', 422);
+                try {
+                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBCB())->first();
+                    $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
+                } catch (\RuntimeException $e) {
+                    return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
@@ -1609,20 +1590,20 @@ class StockController extends Controller
     }
 
 
-    public function UnPosted(Request $request)
+    public function UnPosted(Request $request, $type = null)
     {
-        $unpostPerm = $this->menu_id . '-un_post_module';
-        if (!auth()->user()->isAbleTo($unpostPerm)) {
-            return $this->jsonErrorResponse([], 'You do not have permission to unpost.', 403);
+        if ($type) {
+            $this->menu_id = $this->resolveStockMenuIdFromType($type);
         }
-
         $data = [];
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
-                $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
-                if ($row && !empty($row->current_stg_id) && (int)($row->posted ?? 0) === 0) {
-                    return $this->jsonErrorResponse([], 'Unposting is handled by staging for this form.', 422);
+                try {
+                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBCB())->first();
+                    $this->guardUmDocumentAction($this->menu_id, $row, 'un_post_module', 'unpost');
+                } catch (\RuntimeException $e) {
+                    return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){

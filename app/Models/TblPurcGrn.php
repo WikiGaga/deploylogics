@@ -10,6 +10,14 @@ class TblPurcGrn extends Model
     protected $table = 'tbl_purc_grn';
     protected $primaryKey = 'grn_id';
 
+    protected $fillable = [
+        'grn_id',
+        'grn_code',
+        'current_stg_id',
+        'staging_apply',
+        'posted',
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }

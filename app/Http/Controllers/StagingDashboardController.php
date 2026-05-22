@@ -108,7 +108,7 @@ class StagingDashboardController extends Controller
             $query = DB::table($tableName)
                 ->where('current_stg_id', $flowId)
                 ->where('posted', 0)
-                ->where('staging_apply', 0);
+                ->where('staging_apply', 1);
 
             return $query->count();
         } catch (\Exception $e) {
@@ -124,6 +124,12 @@ class StagingDashboardController extends Controller
                 'pk' => 'purchase_order_id',
                 'cols' => ['purchase_order_code', 'purchase_order_entry_date'],
                 'titles' => ['PO NO', 'Date'],
+            ],
+            23 => [
+                'path' => '/grn/form/',
+                'pk' => 'grn_id',
+                'cols' => ['grn_code', 'grn_date'],
+                'titles' => ['GRN NO', 'Date'],
             ],
             354 => [
                 'path' => '/shift_sessions/form/',

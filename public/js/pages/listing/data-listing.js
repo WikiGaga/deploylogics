@@ -5,25 +5,108 @@ var inline_filter_data = {};
 var downloadClicked = false;
 
 
-console.log('has_staging', has_staging);
-
 var KTDatatableRemoteAjaxDemo = function() {
     function accountingVoucherCasetype(ct) {
         return ['pve', 'pv', 'cpv', 'crv', 'lv', 'lfv', 'jv', 'rv', 'brpv', 'brrv', 'brv', 'bpv', 'obv', 'ipv', 'irv'].indexOf(ct) !== -1;
     }
 
-    function rowPostedAndStaging(row, voucher_status) {
-        var isPosted = (row.posted == 1 || row.posted === '1');
-        if (row.posted === undefined || row.posted === null || row.posted === '') {
-            var vs = String(voucher_status || '').toLowerCase();
-            isPosted = vs === 'posted';
+    function listingSupportsUmPostActions() {
+        return casetype === 'purchase-order'
+            || casetype === 'grn'
+            || casetype === 'shift_sessions'
+            || casetype === 'stock-receiving'
+            || accountingVoucherCasetype(casetype);
+    }
+
+    function rowPostedState(row, voucher_status) {
+        if (row.posted !== undefined && row.posted !== null && row.posted !== '') {
+            return parseInt(row.posted, 10) || 0;
         }
-        var st = row.current_stg_id;
-        if (st === undefined || st === null) {
-            st = row.CURRENT_STG_ID;
+        var vs = String(voucher_status || '').toLowerCase();
+        if (vs === 'posted') {
+            return 1;
         }
-        var inStaging = st != null && String(st).replace(/\s/g, '') !== '' && !isPosted;
-        return { isPosted: isPosted, inStaging: inStaging };
+        if (vs === 'canceled' || vs === 'cancelled') {
+            return 2;
+        }
+        return 0;
+    }
+
+    function isRowStagingEnrolled(row) {
+        var sa = row.staging_apply;
+        if (sa === undefined || sa === null) {
+            sa = row.STAGING_APPLY;
+        }
+        return sa == 1 || sa === '1';
+    }
+
+    function useUmListingActions(row) {
+        if (!has_staging || has_staging === '0' || has_staging === '') {
+            return true;
+        }
+        return !isRowStagingEnrolled(row);
+    }
+
+    function canListingDelete(row) {
+        var posted = rowPostedState(row);
+        if (listingSupportsUmPostActions() && useUmListingActions(row)) {
+            return posted === 0;
+        }
+        if (!has_staging || has_staging === '0' || has_staging === '') {
+            return true;
+        }
+        if (isRowStagingEnrolled(row)) {
+            return posted === 0;
+        }
+        return true;
+    }
+
+    function appendUmPostActionButtons(row, key_id) {
+        var html = '';
+        if (!listingSupportsUmPostActions() || !useUmListingActions(row)) {
+            return html;
+        }
+        var posted = rowPostedState(row);
+        if (posted === 0 && btnpostView) {
+            if (casetype === 'purchase-order') {
+                html += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
+            } else if (casetype === 'grn') {
+                html += '<button class="dropdown-item GRNPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
+            } else if (casetype === 'shift_sessions') {
+                html += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
+            } else if (casetype === 'stock-receiving') {
+                html += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
+            } else if (accountingVoucherCasetype(casetype)) {
+                html += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Post</button>';
+            }
+        }
+        if ((posted === 1 || posted === 2) && btnUnpostView) {
+            if (casetype === 'purchase-order') {
+                html += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
+            } else if (casetype === 'grn') {
+                html += '<button class="dropdown-item GRNUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
+            } else if (casetype === 'shift_sessions') {
+                html += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
+            } else if (casetype === 'stock-receiving') {
+                html += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
+            } else if (accountingVoucherCasetype(casetype)) {
+                html += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Post</button>';
+            }
+        }
+        if (posted === 0 && btnCancelView) {
+            if (casetype === 'purchase-order') {
+                html += '<button class="dropdown-item POCancel" style="background-color:#C0392B;color:#FFFF;" data-id="'+key_id+'">Cancel</button>';
+            } else if (casetype === 'grn') {
+                html += '<button class="dropdown-item GRNCancel" style="background-color:#C0392B;color:#FFFF;" data-id="'+key_id+'">Cancel</button>';
+            } else if (casetype === 'shift_sessions') {
+                html += '<button class="dropdown-item SSCancel" style="background-color:#C0392B;color:#FFFF;" data-id="'+key_id+'">Cancel</button>';
+            } else if (casetype === 'stock-receiving') {
+                html += '<button class="dropdown-item SRCancel" style="background-color:#C0392B;color:#FFFF;" data-id="'+key_id+'">Cancel</button>';
+            } else if (accountingVoucherCasetype(casetype)) {
+                html += '<button class="dropdown-item CPVCancel" style="background-color:#C0392B;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Cancel</button>';
+            }
+        }
+        return html;
     }
 
     var demo = function() {
@@ -66,16 +149,12 @@ var KTDatatableRemoteAjaxDemo = function() {
             {
                 var key_id = row[table_id];
                 var voucher_status = row['voucher_status'];
-                var ps = rowPostedAndStaging(row, voucher_status);
-                var isPosted = ps.isPosted;
-                var inStaging = ps.inStaging;
+                var posted = rowPostedState(row, voucher_status);
                 var dropdownLink = false;
                 var btnDropdownLink = "";
                 var btnEdit = "";
                 var btnDel = "";
                 var btnPrint = "";
-
-                console.log('row', inStaging, isPosted, row);
 
                 if(btnPrintView){
                     if(casetype != 'pos-sales-invoice' && casetype != 'pos-sales-return' && casetype != 'stock-audit-adjustment')
@@ -108,61 +187,22 @@ var KTDatatableRemoteAjaxDemo = function() {
                     }
                     dropdownLink = true;
                 }
-                if(btnpostView){
-                    if(casetype == 'purchase-order'){
-                        if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
-                        }
-                        btnPrint += '<button class="dropdown-item POUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
-
-                    }else if(casetype == 'shift_sessions'){
-                        if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item SSPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
-                        }
-                        btnPrint += '<button class="dropdown-item SSUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
-
-                    }else if(casetype == 'stock-receiving'){
-                        if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item SRPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
-                        }
-                        btnPrint += '<button class="dropdown-item SRUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-id="'+key_id+'">Un-Post</button>';
-
-                    }else if(accountingVoucherCasetype(casetype)){
-                        if(!isPosted && !inStaging){
-                            btnPrint += '<button class="dropdown-item CPVPosted" style="background-color:#2471A3;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Post</button>';
-                        }
-                        if(isPosted){
-                            btnPrint += '<button class="dropdown-item CPVUnPosted" style="background-color:#7D3C98;color:#FFFF;" data-case="'+casetype+'" data-id="'+key_id+'">Un-Post</button>';
-                        }
+                if (btnpostView || btnUnpostView || btnCancelView) {
+                    btnPrint += appendUmPostActionButtons(row, key_id);
+                    if (btnPrint !== '') {
+                        dropdownLink = true;
                     }
-                    dropdownLink = true;
                 }
                 if(btnEditView){
-                    if(accountingVoucherCasetype(casetype)){
-                        if(!has_staging || !isPosted){
-                            var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
-                                <i class="la la-edit"></i>\
-                            </a>';
-                        }
-                    }else{
-                        var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
-                            <i class="la la-edit"></i>\
-                        </a>';
-                    }
+                    var btnEdit = '<a href="'+pathAction+'/form/'+key_id+'" class="btn btn-sm btn-icon btn-icon-sm btn-warning" title="Edit">\
+                        <i class="la la-edit"></i>\
+                    </a>';
                 }
-                if(btnDelView){
-                    if(casetype == 'purchase-order' || casetype == 'shift_sessions' || casetype == 'stock-receiving'){
-                        if(!has_staging || !isPosted){
-                            var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
-                                <i class="la la-trash"></i>\
-                            </button>';
-                        }
-                    }else if(accountingVoucherCasetype(casetype)){
-                        if(!has_staging || !isPosted){
-                            var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
-                                <i class="la la-trash"></i>\
-                            </button>';
-                        }
+                if(btnDelView && canListingDelete(row)){
+                    if(casetype == 'purchase-order' || casetype == 'grn' || casetype == 'shift_sessions' || casetype == 'stock-receiving' || accountingVoucherCasetype(casetype)){
+                        var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
+                            <i class="la la-trash"></i>\
+                        </button>';
                     }else{
                         var btnDel = '<button type="button" data-url="'+pathAction+'/delete/'+key_id+'" id="del"  class="btn btn-sm btn-icon btn-icon-sm btn-danger mlr" title="Delete">\
                             <i class="la la-trash"></i>\
@@ -180,7 +220,7 @@ var KTDatatableRemoteAjaxDemo = function() {
                         '</div>';
                 }
 
-                return  btnEdit + btnDel + btnDropdownLink;
+                return btnEdit + btnDel + btnDropdownLink;
             }
         };
         dataColumns.push(lastColumn);
@@ -500,216 +540,116 @@ $('body').on('click', '#export_csv, #export_pdf', function () {
 });
 
 $(document).on('click', '.POPosted', function() {
-    var purchase_order_id = $(this).attr('data-id');
-    var url = '/purchase-order/post';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { purchase_order_id: purchase_order_id },
-        success: function(response, data) {
-            if (response && response.status == 'success') {
-                toastr.success('Successfully Posted.');
-                // redraw datatable
-                location.reload();
-            } else {
-                toastr.error('Unable to Post.');
-            }
-        },
-        error: function(response, status) {
-            toastr.error('Error while posting.');
-        }
+    erpDocumentAjax({
+        url: '/purchase-order/post',
+        data: { purchase_order_id: $(this).attr('data-id') },
+        successMsg: 'Successfully Posted.'
     });
 });
 
 $(document).on('click', '.POUnPosted', function() {
-    var purchase_order_id = $(this).attr('data-id');
-    var url = '/purchase-order/unposted';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { data: [purchase_order_id] },
-        success: function(response, data) {
-            if (response && (response.status == 'success' || response.success)) {
-                toastr.success('Successfully Un-Posted.');
-                // redraw datatable
-                                location.reload();
-            } else {
-                toastr.error('Unable to Un-Post.');
-            }
-        },
-        error: function(response, status) {
-            toastr.error('Error while un-posting.');
-        }
+    erpDocumentAjax({
+        url: '/purchase-order/unposted',
+        data: { data: [$(this).attr('data-id')] },
+        successMsg: 'Successfully Un-Posted.'
+    });
+});
+
+$(document).on('click', '.GRNPosted', function() {
+    erpDocumentAjax({
+        url: '/grn/post',
+        data: { grn_id: $(this).attr('data-id') },
+        successMsg: 'Successfully Posted.'
+    });
+});
+
+$(document).on('click', '.GRNUnPosted', function() {
+    erpDocumentAjax({
+        url: '/grn/unposted',
+        data: { data: [$(this).attr('data-id')] },
+        successMsg: 'Successfully Un-Posted.'
     });
 });
 
 $(document).on('click', '.SSPosted', function() {
-    var session_id = $(this).attr('data-id');
-    var url = '/shift_sessions/post';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { session_id: session_id },
-        success: function(response, data) {
-            if (response && response.status == 'success') {
-                toastr.success('Successfully Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/shift_sessions/post',
+        data: { session_id: $(this).attr('data-id') },
+        successMsg: 'Successfully Posted.'
     });
 });
 
 $(document).on('click', '.SSUnPosted', function() {
-    var session_id = $(this).attr('data-id');
-    var url = '/shift_sessions/unposted';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { data: [session_id] },
-        success: function(response, data) {
-            if (response && (response.status == 'success' || response.success)) {
-                toastr.success('Successfully Un-Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/shift_sessions/unposted',
+        data: { data: [$(this).attr('data-id')] },
+        successMsg: 'Successfully Un-Posted.'
     });
 });
 
 $(document).on('click', '.SRPosted', function() {
-    var session_id = $(this).attr('data-id');
-    var url = 'stock/{type}/post';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { session_id: session_id },
-        success: function(response, data) {
-            if (response && response.status == 'success') {
-                toastr.success('Successfully Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/stock/stock-receiving/post',
+        data: { stock_id: $(this).attr('data-id') },
+        successMsg: 'Successfully Posted.'
     });
 });
 
 $(document).on('click', '.SRUnPosted', function() {
-    var session_id = $(this).attr('data-id');
-    var url = '/stock/{type}/unposted';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { data: [session_id] },
-        success: function(response, data) {
-            if (response && (response.status == 'success' || response.success)) {
-                toastr.success('Successfully Un-Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/stock/stock-receiving/unposted',
+        data: { data: [$(this).attr('data-id')] },
+        successMsg: 'Successfully Un-Posted.'
     });
 });
 
 $(document).on('click', '.CPVPosted', function() {
-    var voucher_id = $(this).attr('data-id');
     var case_name = $(this).attr('data-case') || 'cpv';
-    var url = '/accounts/' + case_name + '/post';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { voucher_id: voucher_id },
-        success: function(response, data) {
-            if (response && response.status == 'success') {
-                toastr.success('Successfully Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/accounts/' + case_name + '/post',
+        data: { voucher_id: $(this).attr('data-id') },
+        successMsg: 'Successfully Posted.'
     });
 });
 
 $(document).on('click', '.CPVUnPosted', function() {
-    var voucher_id = $(this).attr('data-id');
     var case_name = $(this).attr('data-case');
-    var url = '/accounts/'+case_name+'/unposted';
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        type: "POST",
-        url: url,
-        dataType: 'json',
-        data: { data: [voucher_id] },
-        success: function(response, data) {
-            if (response && (response.status == 'success' || response.success)) {
-                toastr.success('Successfully Un-Posted.');
-                location.reload();
-            } else {
-                toastr.error((response && response.message) ? response.message : 'Unable to Un-Post.');
-            }
-        },
-        error: function(response, status) {
-            var msg = (response && response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : 'Error while un-posting.';
-            toastr.error(msg);
-        }
+    erpDocumentAjax({
+        url: '/accounts/' + case_name + '/unposted',
+        data: { data: [$(this).attr('data-id')] },
+        successMsg: 'Successfully Un-Posted.'
     });
 });
 
+function listingUmCancel(url, payload) {
+    erpDocumentAjax({
+        url: url,
+        data: payload,
+        successMsg: 'Canceled.'
+    });
+}
 
+$(document).on('click', '.POCancel', function() {
+    if (!confirm('Cancel this document?')) { return; }
+    listingUmCancel('/purchase-order/cancel', { purchase_order_id: $(this).attr('data-id') });
+});
+$(document).on('click', '.GRNCancel', function() {
+    if (!confirm('Cancel this document?')) { return; }
+    listingUmCancel('/grn/cancel', { grn_id: $(this).attr('data-id') });
+});
+$(document).on('click', '.SSCancel', function() {
+    if (!confirm('Cancel this document?')) { return; }
+    listingUmCancel('/shift_sessions/cancel', { session_id: $(this).attr('data-id') });
+});
+$(document).on('click', '.SRCancel', function() {
+    if (!confirm('Cancel this document?')) { return; }
+    listingUmCancel('/stock/stock-receiving/cancel', { stock_id: $(this).attr('data-id') });
+});
+$(document).on('click', '.CPVCancel', function() {
+    if (!confirm('Cancel this document?')) { return; }
+    var case_name = $(this).attr('data-case') || 'cpv';
+    listingUmCancel('/accounts/' + case_name + '/cancel', { voucher_id: $(this).attr('data-id') });
+});
 
 $(document).on('keypress', 'input', function(e) {
     if (e.which === 13) {

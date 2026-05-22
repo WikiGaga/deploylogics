@@ -138,38 +138,32 @@ var KTFormWidgets = function() {
                         $('.erp_form__grid_body tr input.acc_code').removeAttr('style');
                         $('.erp_form__grid_body tr input.acc_name').removeAttr('style');
                     },
-                    success: function(response,status) {
+                    success: function(response, status, xhr) {
                         $('body').removeClass('pointerEventsNone');
-                        if(response.status == 'success'){
-                            toastr.success(response.message);
-                            setTimeout(function () {
-                                $("form").find(":submit").prop('disabled', false);
-                            }, 2000);
-                             if (response.data && response.data.redirect) {
-                            window.location.href = response.data.redirect;
-                            } else if(response.data.form == 'new'){
-                                window.location.href = response.data.redirect || ('/accounts/{{ $type }}/form/' + (response.data.id || ''));
-                            }else{
+                        var ok = erpFormAjaxDone(response, xhr, {
+                            newFormUrl: function(res) {
+                                return '/accounts/{{ $type }}/form/' + ((res.data && res.data.id) || '');
+                            }
+                        });
+                        setTimeout(function () {
+                            $("form").find(":submit").prop('disabled', false);
+                        }, 2000);
+                        if (ok) {
+                            if (!(response.data && (response.data.redirect || response.data.form === 'new'))) {
                                 $('.new-row').removeClass('new-row');
                             }
-                        }else{
-                            toastr.error(response.message);
-                            setTimeout(function () {
-                                $("form").find(":submit").prop('disabled', false);
-                            }, 2000);
-                            if(response.data.hasOwnProperty('budgetCharts')){
+                        } else if (response.data) {
+                            if (response.data.hasOwnProperty('budgetCharts')) {
                                 $('#kt_modal_lg .modal-content').html('').html(response.data.budgetCharts);
                                 $('#kt_modal_lg').modal('show');
                             }
-                            if(response.data.hasOwnProperty('budgets')){
+                            if (response.data.hasOwnProperty('budgets')) {
                                 var budgets = response.data.budgets;
                                 var rows = document.querySelectorAll('.erp_form__grid_body tr input.account_id');
                                 const entries = Object.values(budgets);
                                 entries.forEach((key) => {
                                     rows.forEach(function(row){
-                                        console.log(key);
-                                        console.log($(row).val());
-                                        if($(row).val() == key.accountId){
+                                        if ($(row).val() == key.accountId) {
                                             $(row).parents('tr').find('.acc_code').attr('style', 'background: #dc3545 !important;color:#fff;');
                                             $(row).parents('tr').find('.acc_name').attr('style', 'background: #dc3545 !important;color:#fff;');
                                         }
@@ -178,10 +172,9 @@ var KTFormWidgets = function() {
                             }
                         }
                     },
-                    error: function(response,status) {
+                    error: function(xhr) {
                         $('body').removeClass('pointerEventsNone');
-                        // console.log(response.responseJSON);
-                        toastr.error(response.responseJSON.message);
+                        erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed', reload: false });
                         setTimeout(function () {
                             $("form").find(":submit").prop('disabled', false);
                         }, 2000);

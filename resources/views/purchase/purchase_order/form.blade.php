@@ -698,17 +698,17 @@
                 toastr.error('Purchase Order id not found');
                 return;
             }
-            var url = '/purchase-order/post';
             $.ajax({
                 headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                 type:'POST',
-                url: url,
+                url: '/purchase-order/post',
+                dataType: 'json',
                 data: { purchase_order_id: purchase_order_id },
-                success: function(response){
-                    if(response['status'] == 'success'){
-                        toastr.success('Successfully Posted..!');
-                        location.reload();
-                    }
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
                 }
             });
         }
@@ -719,17 +719,17 @@
                 toastr.error('Purchase Order id not found');
                 return;
             }
-            var url = '/purchase-order/unposted';
             $.ajax({
                 headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                 type:'POST',
-                url: url,
+                url: '/purchase-order/unposted',
+                dataType: 'json',
                 data: { data: [purchase_order_id] },
-                success: function(response){
-                    if(response['status'] == 'success'){
-                        toastr.success(response['message'] || 'Successfully Un-Posted..!');
-                        location.reload();
-                    }
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Un-Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to unpost.' });
                 }
             });
         }

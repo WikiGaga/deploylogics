@@ -88,6 +88,7 @@
         $close_module = $data['menu_dtl_id'] . '-close_module';
         $un_post_module = $data['menu_dtl_id'] . '-un_post_module';
         $post_module = $data['menu_dtl_id'] . '-post';
+        $cancel_module = $data['menu_dtl_id'] . '-cancel';
 
         //  dd($data['has_staging']);
 
@@ -111,6 +112,8 @@
         var btnCloseAuditView = false;
         var btnunpostAuditView = false;
         var btnpostView = false;
+        var btnUnpostView = false;
+        var btnCancelView = false;
         var pathAction = '{{ $data['form-action'] }}'
         var table_id = '{{ $data['table_id'] }}'
         var casetype = '{{ $data['case'] }}'
@@ -154,6 +157,16 @@
     @permission($post_module)
         <script>
             var btnpostView = true;
+        </script>
+    @endpermission
+    @permission($un_post_module)
+        <script>
+            var btnUnpostView = true;
+        </script>
+    @endpermission
+    @permission($cancel_module)
+        <script>
+            var btnCancelView = true;
         </script>
     @endpermission
     @permission($view)

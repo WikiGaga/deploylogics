@@ -292,6 +292,7 @@
 <!--begin::Page Scripts(used by this page) -->
 <script src="/assets/js/pages/crud/forms/widgets/select2.js" type="text/javascript"></script>
 <script src="/assets/js/pages/components/extended/toastr.js" type="text/javascript"></script>
+<script src="{{ asset('js/pages/js/erp-document-actions.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/language.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/select2.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/shortcuts.js') }}" type="text/javascript"></script>

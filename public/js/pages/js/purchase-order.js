@@ -169,32 +169,27 @@ var KTFormWidgets = function () {
             beforeSend: function( xhr ) {
                  $('body').addClass('pointerEventsNone');
             },
-            success: function(response,status) {
-                if(response.status == 'success'){
-                    toastr.success(response.message);
-                    setTimeout(function () {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
-                    if (response.data && response.data.redirect) {
-                        window.location.href = response.data.redirect;
-                    } else if (response.data && response.data.form == 'new') {
-                        window.location.href = response.data.redirect || ('/purchase-order/form/' + (response.data.id || ''));
-                    } else {
+            success: function(response, status, xhr) {
+                var ok = erpFormAjaxDone(response, xhr, {
+                    newFormUrl: function(res) {
+                        return '/purchase-order/form/' + ((res.data && res.data.id) || '');
+                    }
+                });
+                setTimeout(function () {
+                    $("form").find(":submit").prop('disabled', false);
+                }, 2000);
+                if (ok) {
+                    if (!(response.data && (response.data.redirect || response.data.form === 'new'))) {
                         $('.new-row').removeClass('new-row');
                         $('body').removeClass('pointerEventsNone');
                     }
-                }else{
-                    toastr.error(response.message);
-                    setTimeout(function () {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
+                } else {
                     $('body').removeClass('pointerEventsNone');
                 }
                 $('#pd_barcode').focus();
             },
-            error: function(response,status) {
-                //   console.log(response);
-                toastr.error(response.statusText);
+            error: function(xhr) {
+                erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed', reload: false });
                 $('body').removeClass('pointerEventsNone');
                 setTimeout(function () {
                     $("form").find(":submit").prop('disabled', false);

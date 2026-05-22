@@ -1916,3 +1916,38 @@ tr.focus_selected_tr td {
     border-radius: 0 !important;
     margin: 0.2px 0;
 }
+
+#toast-container > .toast-error,
+.toast-error {
+    background-color: #b42318 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+#toast-container > .toast-error .toast-title,
+#toast-container > .toast-error .toast-message,
+.toast-error .toast-title,
+.toast-error .toast-message {
+    color: #ffffff !important;
+}
+
+#toast-container > .toast-success,
+.toast-success {
+    background-color: #0d7a5f !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+#toast-container > .toast-warning,
+.toast-warning {
+    background-color: #d97706 !important;
+    color: #1f2937 !important;
+    opacity: 1 !important;
+}
+
+#toast-container > .toast-info,
+.toast-info {
+    background-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}

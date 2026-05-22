@@ -45,21 +45,31 @@
                     $postMenuId = $data['menu_dtl_id'] ?? $data['menu_id'] ?? $data['stock_menu_id'] ?? null;
                     $postPerm = $postMenuId ? ($postMenuId . '-post') : null;
                     $unpostPerm = $postMenuId ? ($postMenuId . '-un_post_module') : null;
+                    $cancelPerm = $postMenuId ? ($postMenuId . '-cancel') : null;
+                    $isPostedUm = !empty($data['page_data']['is_posted']);
+                    $isCanceledUm = !empty($data['page_data']['is_canceled']);
                 @endphp
                 @if($postPerm && $unpostPerm)
-                    @if(!empty($data['page_data']['is_posted']))
+                    @if($isPostedUm || $isCanceledUm)
                         @permission($unpostPerm)
                             <a href="" onclick="voucher_unposted(); return false;" style="background-color:#E74C3C;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.unpost') }}">
                                 {{ __('message.unpost') }}
                             </a>
                         @endpermission
-                    @else
+                    @elseif(!$isPostedUm && !$isCanceledUm)
                         @permission($postPerm)
                             <a href="" onclick="voucher_posted(); return false;" style="background-color:#2471A3;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.post') }}">
                                 {{ __('message.post') }}
                             </a>
                         @endpermission
                     @endif
+                @endif
+                @if($cancelPerm && !$isPostedUm && !$isCanceledUm && !empty($data['page_data']['cancel']))
+                    @permission($cancelPerm)
+                        <a href="" onclick="voucher_cancel(); return false;" style="background-color:#C0392B;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.cancel') }}">
+                            {{ __('message.cancel') }}
+                        </a>
+                    @endpermission
                 @endif
             @endif
         @endif
@@ -92,13 +102,40 @@
         @if(isset($staging_data) && $staging_data['has_staging'])
             @include('staging_activity.header_action_btns')
         @elseif(isset($page_data['action']) && $page_data['action'] != '')
-            <button type="submit" id="btn-update-entry" class="btn btn-sm btn-success">{{$page_data['action']}}</button>
+            @php
+                $umDocPostedState = isset($data['current']->posted) ? (int) $data['current']->posted : 0;
+            @endphp
+            @if($umDocPostedState === 0)
+                <button type="submit" id="btn-update-entry" class="btn btn-sm btn-success">{{$page_data['action']}}</button>
+            @endif
         @endif
 
     </div>
 </div>
 <div class="kt-portlet__head-toolbar">
     <div class="kt-portlet__head-wrapper">
+        @php
+            $showUmDocStatus = !(isset($staging_data) && $staging_data['has_staging'])
+                && isset($data['current'])
+                && isset($data['current']->posted)
+                && isset($data['page_data']['post']);
+            $umPostedVal = $showUmDocStatus ? (int) ($data['current']->posted ?? 0) : null;
+        @endphp
+        @if($showUmDocStatus && isset($id))
+            @if($umPostedVal === 2)
+                <span class="btn btn-sm btn-danger" style="cursor: default; pointer-events: none; margin-right: 8px;">
+                    <i class="la la-ban"></i> Canceled
+                </span>
+            @elseif($umPostedVal === 1)
+                <span class="btn btn-sm btn-success" style="cursor: default; pointer-events: none; margin-right: 8px;">
+                    <i class="la la-check-circle"></i> Posted
+                </span>
+            @else
+                <span class="btn btn-sm btn-info" style="cursor: default; pointer-events: none; margin-right: 8px;">
+                    <i class="la la-file-alt"></i> Draft
+                </span>
+            @endif
+        @endif
         <div class="btn-group btn-group-sm switch-entry" role="group" aria-label="...">
             @php
                 $upload_doc_allow = ['jv','pve','pv','cpv','crv','lv','brpv','purc_order','grn'];
@@ -129,6 +166,36 @@
         </div>
     </div>
 </div>
+
+@if(!(isset($staging_data) && $staging_data['has_staging']) && !empty($data['page_data']['cancel']))
+<script>
+function voucher_cancel() {
+    if (!confirm('{{ __('message.cancel') }} this document?')) {
+        return;
+    }
+    var fieldId = '{{ $data['page_data']['document_id_field'] ?? 'form_id' }}';
+    var docId = $('#' + fieldId).val();
+    if (!docId) {
+        toastr.error('Document id not found');
+        return;
+    }
+    var payload = {};
+    payload[fieldId] = docId;
+    $.ajax({
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        type: 'POST',
+        url: '{{ $data['page_data']['cancel'] }}',
+        data: payload,
+        success: function(response, textStatus, xhr) {
+            erpDocumentAjaxDone(response, xhr, { successMsg: '{{ __('message.cancel') }}' });
+        },
+        error: function(xhr) {
+            erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed' });
+        }
+    });
+}
+</script>
+@endif
 
 <script>
 function formatPakPhoneNumber(phone) {

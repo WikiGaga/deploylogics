@@ -187,6 +187,7 @@
 
 <!--begin::Global Theme Bundle(used by all pages) -->
 <script src="/assets/plugins/global/plugins.bundle.js" type="text/javascript"></script>
+<script src="{{ asset('js/pages/js/erp-document-actions.js') }}" type="text/javascript"></script>
 <script src="/assets/js/listing-scripts.bundle.js" type="text/javascript"></script>
 <script src="{{ asset('js/pages/js/shortcuts.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/chatbot.js') }}" type="text/javascript"></script>

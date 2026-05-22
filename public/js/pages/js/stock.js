@@ -174,29 +174,22 @@ var KTFormWidgets = function() {
             cache: false,
             contentType: false,
             processData: false,
-            success: function(response, status) {
-                if (response.status == 'success') {
-                    toastr.success(response.message);
-                    setTimeout(function() {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
-                    if (response.data.form == 'new') {
-                        window.location.href = response.data.redirect;
-                    }else{
-                        location.reload();
+            success: function(response, status, xhr) {
+                var ok = erpFormAjaxDone(response, xhr, {
+                    reloadOnSuccess: !!(response.data && response.data.form !== 'new' && !response.data.redirect),
+                    newFormUrl: function(res) {
+                        return (res.data && res.data.redirect) || '';
                     }
-                } else {
-                    toastr.error(response.message);
-                    setTimeout(function() {
-                        $("form").find(":submit").prop('disabled', false);
-                    }, 2000);
+                });
+                setTimeout(function() {
+                    $("form").find(":submit").prop('disabled', false);
+                }, 2000);
+                if (!ok) {
+                    $('body').removeClass('pointerEventsNone');
                 }
             },
-            error: function(response, status) {
-                console.log(response.responseJSON);
-                if(response.responseJSON !== null && response.responseJSON !== undefined){
-                    toastr.error(response.responseJSON.message);
-                }
+            error: function(xhr) {
+                erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed', reload: false });
                 setTimeout(function() {
                     $("form").find(":submit").prop('disabled', false);
                 }, 2000);

@@ -51,17 +51,24 @@ class StagingComposer
         }
 
         $isAlreadyInStaging = $current && !empty($current->current_stg_id) && (int)($current->posted ?? 0) === 0;
-        if ($this->stagingService->hasStagingOrRemainsInStaging($menuDtlId, $formId, $isAlreadyInStaging)) {
-            $flows = $this->stagingService->getFormFlows($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+        $stagingExempt = $this->stagingService->isDocumentStagingExempt($current, $menuDtlId);
+        $stagingEnrolled = $this->stagingService->isDocumentStagingEnrolled($current, $menuDtlId);
+        $skipCriteriaConditions = $isAlreadyInStaging || $stagingEnrolled;
+        $showStagingUi = ($stagingEnrolled || $isAlreadyInStaging)
+            && !$stagingExempt
+            && $this->stagingService->hasStagingOrRemainsInStaging($menuDtlId, $formId, $skipCriteriaConditions);
+
+        if ($showStagingUi) {
+            $flows = $this->stagingService->getFormFlows($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
             $actions = [];
             $userAccess = false;
             $eligibleUsers = collect([]);
 
             if ($flows['current']) {
                 $currentFlowId = $flows['current']->stg_flows_id;
-                $actions = $this->stagingService->getFormActions($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
-                $userAccess = $this->stagingService->getUserAccess($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
-                $eligibleUsers = $this->stagingService->getEligibleUsers($menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging);
+                $actions = $this->stagingService->getFormActions($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
+                $userAccess = $this->stagingService->getUserAccess($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
+                $eligibleUsers = $this->stagingService->getEligibleUsers($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions);
             }
 
             $stagingData = [
@@ -88,7 +95,7 @@ class StagingComposer
             }
 
             if ($formId) {
-                $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
+                $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action')
                     ->where('menu_dtl_id', $menuDtlId)
                     ->where('document_id', $formId)
                     ->orderBy('created_at', 'desc')
@@ -96,7 +103,7 @@ class StagingComposer
                 $view->with('staging_activity', $activity);
             }
         } else {
-            $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action', 'flow_criteria_flow')
+            $activity = \App\Models\TblStgFormLog::with('flow_dtl', 'action_btn_dtl', 'user', 'criteria_action')
                 ->where('menu_dtl_id', $menuDtlId)
                 ->where('document_id', $formId)
                 ->orderBy('created_at', 'desc')

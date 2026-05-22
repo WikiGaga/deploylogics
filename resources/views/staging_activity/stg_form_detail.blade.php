@@ -72,11 +72,13 @@
                                         </td>
                                     @endforeach
                                     <td width="10%">
-                                        <div data-link="{{$m_dtl['link']}}" class="view_form">
-                                            <span class="kt-badge kt-badge--danger kt-badge--md kt-badge--rounded">
-                                                <i class="fa fa-eye"></i>
-                                            </span>
-                                        </div>
+                                        @if(!empty($m_dtl['link']) && $m_dtl['link'] !== '#')
+                                            <a href="{{ $m_dtl['link'] }}" target="_blank" rel="noopener noreferrer" class="view_form" title="Open document">
+                                                <span class="kt-badge kt-badge--danger kt-badge--md kt-badge--rounded">
+                                                    <i class="fa fa-eye"></i>
+                                                </span>
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -99,23 +101,4 @@
     </div>
 @endsection
 @section('pageJS')
-
-@endsection
-
-@section('customJS')
-    <script>
-        $(document).on('click','.view_form',function(){
-            var thix = $(this);
-            var url = window.location.href;
-            const state = { 'PrevLink': url };
-
-            var link = (thix.attr('data-link') || '').toString();
-            if (!link || link === '#') {
-                return false;
-            }
-
-            window.history.pushState(state, "Prev Title", link);
-            window.open(link, "_blank");
-        })
-    </script>
 @endsection

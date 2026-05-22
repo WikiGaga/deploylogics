@@ -321,20 +321,20 @@
         function voucher_posted(){
             var stock_id = $('#stock_id').val();
             if(!stock_id){
-                toastr.error('Stock Transfer id not found');
+                toastr.error('Stock id not found');
                 return;
             }
-            var url = '/stock/' + type + '/post';
             $.ajax({
                 headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                 type:'POST',
-                url: url,
+                url: '/stock/' + type + '/post',
+                dataType: 'json',
                 data: { stock_id: stock_id },
-                success: function(response){
-                    if(response['status'] == 'success'){
-                        toastr.success('Successfully Posted..!');
-                        location.reload();
-                    }
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
                 }
             });
         }
@@ -342,20 +342,20 @@
         function voucher_unposted(){
             var stock_id = $('#stock_id').val();
             if(!stock_id){
-                toastr.error('Stock Transfer id not found');
+                toastr.error('Stock id not found');
                 return;
             }
-            var url = '/stock/' + type + '/unposted';
             $.ajax({
                 headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                 type:'POST',
-                url: url,
+                url: '/stock/' + type + '/unposted',
+                dataType: 'json',
                 data: { data: [stock_id] },
-                success: function(response){
-                    if(response['status'] == 'success'){
-                        toastr.success(response['message'] || 'Successfully Un-Posted..!');
-                        location.reload();
-                    }
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Un-Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to unpost.' });
                 }
             });
         }

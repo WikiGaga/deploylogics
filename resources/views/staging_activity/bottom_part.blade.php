@@ -20,7 +20,7 @@
 </style>
 @php
     if (!isset($current_stg_activities) && isset($data['menu_dtl_id']) && isset($id)) {
-        $current_stg_activities = \App\Models\TblStgFormLog::with('flow_dtl','action_btn_dtl','user','criteria_action','flow_criteria_flow')
+        $current_stg_activities = \App\Models\TblStgFormLog::with('flow_dtl','action_btn_dtl','user','criteria_action')
             ->where(\App\Library\Utilities::currentBCB())
             ->where('menu_dtl_id', $data['menu_dtl_id'])->where('document_id', $id)->orderBy('created_at','desc')->get();
     }

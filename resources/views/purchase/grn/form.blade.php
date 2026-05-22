@@ -40,11 +40,12 @@
         <form id="grn_form" class="kt-form" method="post" action="{{ action('Purchase\GRNController@store', $id) }}">
             @csrf
             <input type="hidden" value='{{ $form_type }}' id="form_type">
-            <input type="hidden" value='{{ $id }}' id="form_id">
             <input type="hidden" value='{{ $data["menu_dtl_id"] ?? "" }}' id="menu_id">
+            <input type="hidden" value='{{ $id }}' id="form_id">
+            <input type="hidden" id="grn_id" name="grn_id" value="{{ $id }}">
             <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
                 <div class="kt-portlet kt-portlet--mobile">
-                    <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+                    <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                         @include('elements.page_header', ['page_data' => $data['page_data']])
                     </div>
                     <div class="kt-portlet__body">
@@ -1104,6 +1105,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('staging_activity.auto_include')
         </form>
         <!--end::Form-->
     @endpermission
@@ -1123,6 +1126,48 @@
         $(".expense_amount").keyup(function() {
             TotalExpenseAmount();
         });
+
+        function voucher_posted() {
+            var grn_id = $('#grn_id').val();
+            if (!grn_id) {
+                toastr.error('GRN id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/grn/post',
+                dataType: 'json',
+                data: { grn_id: grn_id },
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
+                }
+            });
+        }
+
+        function voucher_unposted() {
+            var grn_id = $('#grn_id').val();
+            if (!grn_id) {
+                toastr.error('GRN id not found');
+                return;
+            }
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'POST',
+                url: '/grn/unposted',
+                dataType: 'json',
+                data: { data: [grn_id] },
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Un-Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to unpost.' });
+                }
+            });
+        }
     </script>
     <script>
         function selectPO() {

@@ -251,6 +251,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('post','Purchase\PurchaseOrderController@post');
             Route::post('posted','Purchase\PurchaseOrderController@Posted');
             Route::post('unposted','Purchase\PurchaseOrderController@UnPosted');
+            Route::post('cancel','Purchase\PurchaseOrderController@cancel');
         });
         Route::prefix('purchase-order-draft')->group(function () {
             Route::post('list-draft','Purchase\PurchaseOrderController@listDraft');
@@ -262,6 +263,10 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('list','Purchase\GRNController@index');
             Route::get('form/{id?}','Purchase\GRNController@create');
             Route::post('form/{id?}','Purchase\GRNController@store');
+            Route::post('post','Purchase\GRNController@post');
+            Route::post('posted','Purchase\GRNController@Posted');
+            Route::post('unposted','Purchase\GRNController@UnPosted');
+            Route::post('cancel','Purchase\GRNController@cancel');
             Route::post('delete/{id}','Purchase\GRNController@destroy');
             Route::get('print/{id}','Purchase\GRNController@print');
             Route::get('po/{id}','Purchase\GRNController@getPO');
@@ -1142,6 +1147,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('post','Accounts\VoucherController@post');
             Route::post('posted','Accounts\VoucherController@Posted');
             Route::post('unposted','Accounts\VoucherController@UnPosted');
+            Route::post('cancel','Accounts\VoucherController@cancel');
             
             Route::post('Posted/{id?}','Accounts\VoucherController@VoucherPosted');
             Route::post('UnPosted/{id?}','Accounts\VoucherController@VoucherUnPosted');
@@ -1238,6 +1244,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('post','Inventory\StockController@post');
             Route::post('posted','Inventory\StockController@Posted');
             Route::post('unposted','Inventory\StockController@UnPosted');
+            Route::post('cancel','Inventory\StockController@cancel');
 
         });
 
@@ -1703,6 +1710,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','Sales\ShiftSessionsController@destroy');
         Route::post('post','Sales\ShiftSessionsController@post');
         Route::post('unposted','Sales\ShiftSessionsController@UnPosted');
+        Route::post('cancel','Sales\ShiftSessionsController@cancel');
 
     });
 

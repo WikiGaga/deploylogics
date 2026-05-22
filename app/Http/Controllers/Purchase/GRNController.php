@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasStaging;
+use App\Services\StagingService;
 use App\Models\Settings\TblDefiExpenseAccounts;
 use App\Models\TblSoftBranch;
 use App\Models\TblAccoVoucher;
@@ -49,6 +51,7 @@ use function PHPSTORM_META\type;
 
 class GRNController extends Controller
 {
+    use HasStaging;
     /**
      * Display a listing of the resource.
      *
@@ -324,6 +327,12 @@ class GRNController extends Controller
                 }
                 $data['grn_code'] = $data['current']->grn_code;
                 $data['page_data']['print'] = '/'.self::$redirect_url.'/print/'.$id;
+                $data['page_data']['post'] = action('Purchase\GRNController@post');
+                $data['page_data']['cancel'] = action('Purchase\GRNController@cancel');
+                $data['page_data']['document_id_field'] = 'grn_id';
+                $data['page_data']['is_posted'] = isset($data['current']->posted) && (int) $data['current']->posted === 1;
+                $data['page_data']['is_canceled'] = isset($data['current']->posted) && (int) $data['current']->posted === 2;
+                $this->clearFormUpdateActionIfDocumentNotEditable($data['page_data'], $data['current']);
             }else{
                 abort('404');
             }
@@ -360,8 +369,96 @@ class GRNController extends Controller
             'code_type'         => strtoupper('grn'),
         ];
         $data['switch_entry'] = $this->switchEntry($arr);
-        // dd('fdd');
+        $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $data['perPrefix'] = self::$menu_dtl_id;
+
         return view('purchase.grn.form', compact('data'));
+    }
+
+    public function post(Request $request)
+    {
+        try {
+            $grn_id = $request->grn_id;
+            if (empty($grn_id)) {
+                return response()->json(['status' => 'error', 'message' => 'GRN id not found.'], 422);
+            }
+            $row = TblPurcGrn::where('grn_id', $grn_id)->where(Utilities::currentBCB())->first();
+            $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
+            $row->posted = 1;
+            $row->update();
+            return response()->json(['status' => 'success']);
+        } catch (\RuntimeException $e) {
+            return $this->umJsonErrorFromException($e);
+        }
+    }
+
+    public function Posted(Request $request)
+    {
+        $data = [];
+        $ids = $request->data;
+        if (is_array($ids) && count($ids) > 0) {
+            foreach ($ids as $id) {
+                try {
+                    $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
+                    $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
+                } catch (\RuntimeException $e) {
+                    return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
+                }
+            }
+            foreach ($ids as $id) {
+                if (TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->exists()) {
+                    $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 1;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
+        }
+
+        abort(404);
+    }
+
+    public function UnPosted(Request $request)
+    {
+        $data = [];
+        $ids = $request->data;
+        if (is_array($ids) && count($ids) > 0) {
+            foreach ($ids as $id) {
+                try {
+                    $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
+                    $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'un_post_module', 'unpost');
+                } catch (\RuntimeException $e) {
+                    return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
+                }
+            }
+            foreach ($ids as $id) {
+                if (TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->exists()) {
+                    $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
+                    $row->posted = 0;
+                    $row->update();
+                }
+            }
+            return $this->jsonSuccessResponse($data, trans('message.unpost'), 200);
+        }
+
+        abort(404);
+    }
+
+    public function cancel(Request $request)
+    {
+        try {
+            $grn_id = $request->grn_id;
+            if (empty($grn_id)) {
+                return response()->json(['status' => 'error', 'message' => 'GRN id not found.'], 422);
+            }
+            $row = TblPurcGrn::where('grn_id', $grn_id)->where(Utilities::currentBCB())->first();
+            $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'cancel', 'cancel');
+            $row->posted = 2;
+            $row->update();
+            return response()->json(['status' => 'success', 'message' => trans('message.cancel')]);
+        } catch (\RuntimeException $e) {
+            return $this->umJsonErrorFromException($e);
+        }
     }
 
     public function getPO($code){
@@ -527,6 +624,29 @@ class GRNController extends Controller
                 $grn->grn_code = $grn_code;
             }
             $form_id = $grn->grn_id;
+
+            if (isset($id)) {
+                $this->assertCanSaveWithStaging($request, self::$menu_dtl_id, $form_id, false, $grn);
+            }
+
+            if (isset($id) && !$this->stagingShouldPersistFormChanges($request, self::$menu_dtl_id, $form_id, $grn)) {
+                $wasInStaging = !empty($grn->current_stg_id) && (int) ($grn->posted ?? 0) === 0;
+                $stagingService = new StagingService();
+                if ($stagingService->shouldUseStagingForDocument(self::$menu_dtl_id, $form_id, $grn, $wasInStaging, false)) {
+                    $this->handleStaging($request, self::$menu_dtl_id, $form_id, $grn, false, [
+                        'listing_view' => 'vw_purc_grn_listing',
+                        'form_path' => '/grn/form',
+                        'document_code_key' => 'grn_code',
+                    ]);
+                    $grn->save();
+                }
+                DB::commit();
+
+                $data = array_merge($data, Utilities::returnJsonEditForm());
+                $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $form_id);
+                return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+            }
+
             $grn->grn_exchange_rate = $request->exchange_rate;
             // $grn->payment_type_id = $request->payment_type_id;
             $grn->grn_date = date('Y-m-d', strtotime($request->grn_date));
@@ -868,6 +988,16 @@ class GRNController extends Controller
 
             // end insert update grn voucher
 
+            $this->finalizeDocumentStaging($request, self::$menu_dtl_id, $form_id, $grn, !isset($id), [
+                'notification' => [
+                    'listing_view' => 'vw_purc_grn_listing',
+                    'form_path' => '/grn/form',
+                    'document_code_key' => 'grn_code',
+                ],
+                'posted_when_exempt' => 0,
+                'stg_log_posted_when_exempt' => 0,
+            ]);
+
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -882,15 +1012,15 @@ class GRNController extends Controller
             return $this->jsonErrorResponse($data, $e->getLine().' : '.$e->getMessage(), 200);
         }
         DB::commit();
-        if(isset($id)){
+        if (isset($id)) {
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;;
+            $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $form_id);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
-        }else{
-            $data = array_merge($data, Utilities::returnJsonNewForm());
-            $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$form_id;
-            return $this->jsonSuccessResponse($data, trans('message.create'), 200);
         }
+
+        $data = array_merge($data, Utilities::returnJsonNewForm());
+        $data['redirect'] = '/' . self::$redirect_url . $this->prefixCreatePage . '/' . $form_id;
+        return $this->jsonSuccessResponse($data, trans('message.create'), 200);
     }
 
     /**

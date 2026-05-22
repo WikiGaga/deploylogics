@@ -6,6 +6,9 @@
                 @if(isset($data['flow_dtls']['current']))
                     @php
                         $currentFlowName = is_object($data['flow_dtls']['current']) ? $data['flow_dtls']['current']->stg_flows_name : 'Unknown';
+                        if (is_object($data['flow_dtls']['current']) && !empty($data['flow_dtls']['current']->flow_name)) {
+                            $currentFlowName = $data['flow_dtls']['current']->flow_name;
+                        }
                     @endphp
                     <div class="kt-timeline-v2__item">
                         <span class="kt-timeline-v2__item-time">{{date("d-m-Y | h:ia")}}</span>
@@ -19,26 +22,36 @@
                 @endif
                 @if(isset($current_stg_activities))
                     @foreach($current_stg_activities as $activity)
+                        @php
+                            $flowName = $activity->display_flow_name;
+                            $actionName = $activity->display_action_name;
+                            $actionCode = $activity->display_action_code;
+                            $badgeClass = 'badge-info';
+                            if (in_array($actionCode, ['back'], true)) {
+                                $badgeClass = 'badge-warning';
+                            } elseif (in_array($actionCode, ['forward', 'post'], true)) {
+                                $badgeClass = 'badge-primary';
+                            } elseif (in_array($actionCode, ['create'], true)) {
+                                $badgeClass = 'badge-success';
+                            } elseif (in_array($actionCode, ['update', 'save', 'edit'], true)) {
+                                $badgeClass = 'badge-info';
+                            } elseif (in_array($actionCode, ['cancel'], true)) {
+                                $badgeClass = 'badge-danger';
+                            } elseif (in_array($actionCode, ['un_post', 'unpost'], true)) {
+                                $badgeClass = 'badge-secondary';
+                            }
+                            $userRemarks = $activity->display_user_remarks;
+                        @endphp
                         <div class="kt-timeline-v2__item">
                             <span class="kt-timeline-v2__item-time">{{date("d-m-Y | h:ia",strtotime($activity->created_at))}}</span>
                             <div class="kt-timeline-v2__item-cricle">
                                 <i class="fa fa-genderless kt-font-danger"></i>
                             </div>
                             <div class="kt-timeline-v2__item-text  kt-padding-top-5">
-                                @php
-                                    $flowName = optional($activity->flow_criteria_flow)->flow_name ?? optional($activity->flow_dtl)->stg_flows_name ?? null;
-                                    $actionName = optional($activity->criteria_action)->action_name ?? optional($activity->action_btn_dtl)->stg_actions_name ?? null;
-                                    if (!$flowName) {
-                                        $flowName = $activity->stg_flows_id ? 'Stage ' . $activity->stg_flows_id : 'Unknown';
-                                    }
-                                    if (!$actionName) {
-                                        $actionName = $activity->stg_actions_id ? 'Action' : 'Save';
-                                    }
-                                @endphp
                                 <span style="color: #5d78ff;font-weight: 400;">{{ $flowName }}: </span> {{ $actionName }} By  <b> {{ $activity->user ? $activity->user->name : 'Unknown' }} </b>
-                                    <span class="badge badge-info badge-pill ml-1">{{ $actionName }}</span>
-                                @if($activity->remarks)
-                                    <br><b>Remarks:</b> {{$activity->remarks}}
+                                <span class="badge {{ $badgeClass }} badge-pill ml-1">{{ $actionName }}</span>
+                                @if($userRemarks)
+                                    <br><b>Remarks:</b> {{ $userRemarks }}
                                 @endif
                             </div>
                         </div>

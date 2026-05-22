@@ -217,18 +217,11 @@
                 url: '/shift_sessions/post',
                 dataType: 'json',
                 data: { session_id: session_id },
-                success: function (response) {
-                    if (response && response.status == 'success') {
-                        toastr.success('Successfully Posted..!');
-                        location.reload();
-                        return;
-                    }
-                    var msg = (response && response.message) ? response.message : 'Unable to post.';
-                    toastr.error(msg);
+                success: function (response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
                 },
                 error: function (xhr) {
-                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to post.';
-                    toastr.error(msg);
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
                 }
             });
         }
@@ -245,18 +238,11 @@
                 url: '/shift_sessions/unposted',
                 dataType: 'json',
                 data: { data: [session_id] },
-                success: function (response) {
-                    if (response && (response.status == 'success' || response.success)) {
-                        toastr.success(response.message || 'Successfully Un-Posted..!');
-                        location.reload();
-                        return;
-                    }
-                    var msg = (response && response.message) ? response.message : 'Unable to un-post.';
-                    toastr.error(msg);
+                success: function (response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Un-Posted.' });
                 },
                 error: function (xhr) {
-                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to un-post.';
-                    toastr.error(msg);
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to unpost.' });
                 }
             });
         }

@@ -56,10 +56,55 @@ var KTFormWidgets = function () {
                 });
             },
             submitHandler: function (form) {
+                var stagingFlowId = form.querySelector('input[name=current_flow_id]');
+                function stagingActionCodeForSubmit(frm) {
+                    var el = document.activeElement;
+                    if (el && el.classList && el.classList.contains('staging-action-btn')) {
+                        return (el.getAttribute('data-staging-action-code') || '').toLowerCase();
+                    }
+                    return (frm.getAttribute('data-staging-last-action-code') || '').toLowerCase();
+                }
+                var stagingCode = stagingActionCodeForSubmit(form);
+                var warnCodes = ['forward', 'post', 'back', 'cancel'];
+                if (stagingFlowId && stagingFlowId.value && warnCodes.indexOf(stagingCode) !== -1
+                    && form.getAttribute('data-staging-dirty') === '1') {
+                    if (!window.confirm('Changes will not be saved. Do you want to continue?')) {
+                        return;
+                    }
+                    form.removeAttribute('data-staging-dirty');
+                }
+
                 $("form").find(":submit").prop('disabled', true);
                 $('body').addClass('pointerEventsNone');
-                //form[0].submit(); // submit the form
                 var formData = new FormData(form);
+                if (stagingFlowId && stagingFlowId.value) {
+                    formData.set('current_flow_id', stagingFlowId.value);
+                    var flowRemarks = form.querySelector('textarea[name=flow_remarks]');
+                    if (flowRemarks) {
+                        formData.set('flow_remarks', flowRemarks.value || '');
+                    }
+                    var submitter = document.activeElement;
+                    var actionId = null;
+                    var actionCode = null;
+                    if (submitter && submitter.classList && submitter.classList.contains('staging-action-btn')) {
+                        actionId = submitter.value || submitter.getAttribute('data-staging-action-id');
+                        actionCode = submitter.getAttribute('data-staging-action-code') || '';
+                    }
+                    var stagingActionId = form.querySelector('#staging_current_actions_id');
+                    if (!actionId && stagingActionId && stagingActionId.value) {
+                        actionId = stagingActionId.value;
+                    }
+                    if (actionId) {
+                        formData.set('current_actions_id', actionId);
+                    }
+                    if (actionCode) {
+                        formData.set('staging_action_code', actionCode);
+                    }
+                    var nextFlow = form.querySelector('input[name=next_flow_id]');
+                    var prevFlow = form.querySelector('input[name=prev_flow_id]');
+                    if (nextFlow && nextFlow.value) formData.set('next_flow_id', nextFlow.value);
+                    if (prevFlow && prevFlow.value) formData.set('prev_flow_id', prevFlow.value);
+                }
                 var ajaxValidate = 1;
                 var title_msg = '';
                 var title_text = '';
@@ -116,37 +161,32 @@ var KTFormWidgets = function () {
                 beforeSend: function( xhr ) {
                   //  $('body').addClass('pointerEventsNone');
                 },
-                success: function(response,status) {
-                    if(response.status == 'success'){
-                        // Clear auto-saved data on successful submission
-                        if (window.GRNFormAutoSave) {
-                            window.GRNFormAutoSave.clearSavedData();
+                success: function(response, status, xhr) {
+                    if (response.status == 'success' && window.GRNFormAutoSave) {
+                        window.GRNFormAutoSave.clearSavedData();
+                    }
+                    var ok = erpFormAjaxDone(response, xhr, {
+                        newFormUrl: function(res) {
+                            return (res.data && res.data.redirect) || '';
                         }
-                        
-                        toastr.success(response.message);
-                        setTimeout(function () {
-                            $("form").find(":submit").prop('disabled', false);
-                        }, 2000);
-                        if(response.data.form == 'new'){
-                            window.location.href = response.data.redirect;
-                        }else{
+                    });
+                    setTimeout(function () {
+                        $("form").find(":submit").prop('disabled', false);
+                    }, 2000);
+                    if (ok) {
+                        if (!(response.data && (response.data.redirect || response.data.form === 'new'))) {
                             $('.new-row').removeClass('new-row');
                             $('body').removeClass('pointerEventsNone');
-                            grnXhr = true;
                         }
-                    }else{
-                        toastr.error(response.message);
-                        setTimeout(function () {
-                            $("form").find(":submit").prop('disabled', false);
-                        }, 2000);
+                        grnXhr = true;
+                    } else {
                         $('body').removeClass('pointerEventsNone');
                         grnXhr = true;
                     }
                     $('#pd_barcode').focus();
                 },
-                error: function(response,status) {
-                    // console.log(response.responseJSON);
-                    toastr.error(response?.responseJSON?.message);
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Request failed', reload: false });
                     $('body').removeClass('pointerEventsNone');
                     setTimeout(function () {
                         $("form").find(":submit").prop('disabled', false);
