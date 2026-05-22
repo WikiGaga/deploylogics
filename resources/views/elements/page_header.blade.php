@@ -23,6 +23,12 @@
     </h3>
     <div class="erp-page--actions {{ (isset($staging_data) && $staging_data['has_staging']) ? 'erp-page--actions-staging' : '' }}">
 
+        @if(isset($data['current']) && (!empty($id) || !empty($data['id'] ?? null)))
+            <input type="hidden" name="document_posted_state" id="document_posted_state" value="{{ (int) ($data['current']->posted ?? 0) }}">
+            @if(!empty($data['current']->current_stg_id))
+                <input type="hidden" name="document_current_stg_id" id="document_current_stg_id" value="{{ $data['current']->current_stg_id }}">
+            @endif
+        @endif
         @if(isset($data['page_data']['create']) && $data['page_data']['create'] != '')
             <a href="{{$data['page_data']['create']}}" class="btn btn-sm btn-brand btn-icon" id="btn-new-entry" title="{{ __('message.create_new') }}">
                 <i class="la la-plus"></i>

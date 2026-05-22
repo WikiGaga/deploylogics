@@ -295,8 +295,32 @@ trait HasStaging
         );
     }
 
+    protected function assertDocumentStateAllowsFormSave($request, $model, bool $isNew = false): void
+    {
+        if ($isNew || !$model) {
+            return;
+        }
+
+        $model = $this->refreshModelRow($model);
+        $freshPosted = $this->getDocumentPostedState($model);
+
+        if ($request->has('document_posted_state') && $request->input('document_posted_state') !== null && $request->input('document_posted_state') !== '') {
+            if ((int) $request->input('document_posted_state') !== $freshPosted) {
+                throw new RuntimeException(__('message.document_state_changed_refresh'), 422);
+            }
+        }
+
+        if ($freshPosted !== 0) {
+            throw new RuntimeException(__('message.document_state_changed_refresh'), 422);
+        }
+    }
+
     protected function assertCanSaveWithStaging($request, $menuDtlId, $formId, $isNew = false, $model = null)
     {
+        if (!$isNew && $model) {
+            $this->assertDocumentStateAllowsFormSave($request, $model, $isNew);
+        }
+
         $service = $this->getStagingService();
         if ($model) {
             $model = $this->refreshModelRow($model);
@@ -338,7 +362,7 @@ trait HasStaging
             throw new RuntimeException(__('message.staging_save_not_allowed'), 403);
         }
 
-        $this->assertStagingActionMatchesDocumentState($model, $actionCode);
+        $this->assertStagingActionMatchesDocumentState($model, $actionCode, $request);
     }
 
     protected function handleStaging($request, $menuDtlId, $formId, $model, $isNew = false, ?array $notificationConfig = null)
@@ -393,7 +417,7 @@ trait HasStaging
         }
 
         if ($resolvedAction) {
-            $this->assertStagingActionMatchesDocumentState($model, $actionCode);
+            $this->assertStagingActionMatchesDocumentState($model, $actionCode, $request);
         }
 
         if ($isNew && $currentFlowId && $model && (property_exists($model, 'current_stg_id') || $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), 'current_stg_id'))) {
@@ -881,10 +905,24 @@ trait HasStaging
         }
     }
 
-    protected function assertStagingActionMatchesDocumentState($model, string $actionCode): void
+    protected function assertStagingActionMatchesDocumentState($model, string $actionCode, $request = null): void
     {
         if (!$model || !isset($model->posted)) {
             return;
+        }
+
+        if ($request && $request->has('document_posted_state') && $request->input('document_posted_state') !== null && $request->input('document_posted_state') !== '') {
+            $freshPosted = $this->getDocumentPostedState($model);
+            if ((int) $request->input('document_posted_state') !== $freshPosted) {
+                throw new RuntimeException(__('message.document_state_changed_refresh'), 422);
+            }
+        }
+
+        if ($request && $request->has('document_current_stg_id') && trim((string) $request->input('document_current_stg_id')) !== '') {
+            $freshStgId = isset($model->current_stg_id) ? trim((string) $model->current_stg_id) : '';
+            if ($freshStgId !== '' && trim((string) $request->input('document_current_stg_id')) !== $freshStgId) {
+                throw new RuntimeException(__('message.document_state_changed_refresh'), 422);
+            }
         }
 
         $posted = $this->getDocumentPostedState($model);
