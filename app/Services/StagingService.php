@@ -408,6 +408,94 @@ class StagingService
         return $actions;
     }
 
+    protected function isUnpostLikeAction($action): bool
+    {
+        $orig = strtolower(str_replace([' ', '-'], '_', trim((string) ($action->original_action ?? $action->stg_actions_name ?? ''))));
+
+        return in_array($orig, ['un_post', 'unpost'], true);
+    }
+
+    public function collectUnpostActionsForDocument($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false, $model = null): array
+    {
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
+        if (!$criteria) {
+            return [];
+        }
+
+        $unpostActions = [];
+        $seenIds = [];
+
+        foreach ($this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId) as $flow) {
+            $flowActions = $this->getFormActions(
+                $formNameOrMenuDtlId,
+                $flow->stg_flows_id,
+                $formId,
+                $skipConditionCheck,
+                $model
+            );
+            foreach ($flowActions as $action) {
+                if (!$this->isUnpostLikeAction($action)) {
+                    continue;
+                }
+                $actionId = (string) ($action->stg_actions_id ?? '');
+                if ($actionId !== '' && isset($seenIds[$actionId])) {
+                    continue;
+                }
+                if ($actionId !== '') {
+                    $seenIds[$actionId] = true;
+                }
+                $unpostActions[] = $action;
+            }
+        }
+
+        return $unpostActions;
+    }
+
+    public function collectAccessibleUnpostActionsForDocument($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false, $model = null): array
+    {
+        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
+        if (!$criteria) {
+            return [];
+        }
+
+        $unpostActions = [];
+        $seenIds = [];
+
+        foreach ($this->criteriaFlowsForDocument($criteria, $model, $formNameOrMenuDtlId) as $flow) {
+            if (!$this->getUserAccess($formNameOrMenuDtlId, $flow->stg_flows_id, $formId, $skipConditionCheck, $model)) {
+                continue;
+            }
+
+            $flowActions = $this->getFormActions(
+                $formNameOrMenuDtlId,
+                $flow->stg_flows_id,
+                $formId,
+                $skipConditionCheck,
+                $model
+            );
+            foreach ($flowActions as $action) {
+                if (!$this->isUnpostLikeAction($action)) {
+                    continue;
+                }
+                $actionId = (string) ($action->stg_actions_id ?? '');
+                if ($actionId !== '' && isset($seenIds[$actionId])) {
+                    continue;
+                }
+                if ($actionId !== '') {
+                    $seenIds[$actionId] = true;
+                }
+                $unpostActions[] = $action;
+            }
+        }
+
+        return $unpostActions;
+    }
+
+    public function userHasUnpostAccessForDocument($formNameOrMenuDtlId, $formId = null, $skipConditionCheck = false, $model = null): bool
+    {
+        return !empty($this->collectAccessibleUnpostActionsForDocument($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model));
+    }
+
     public function getUserAccess($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false, $model = null)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);

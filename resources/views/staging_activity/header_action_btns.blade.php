@@ -37,6 +37,7 @@
     $actions = $staging_data['actions'] ?? [];
 
     $userHasAccess = (bool) ($staging_data['user_access'] ?? false);
+    $unpostUserAccess = (bool) ($staging_data['unpost_user_access'] ?? false);
 
 
 
@@ -44,19 +45,29 @@
 
     $isCanceled = false;
 
-    if (isset($data['current'])) {
+    $currentDoc = $data['current'] ?? ($current ?? null);
 
-        if (isset($data['current']->posted) && (int) $data['current']->posted === 1) {
+    if ($currentDoc && isset($currentDoc->posted)) {
+
+        if ((int) $currentDoc->posted === 1) {
 
             $isPosted = true;
 
         }
 
-        if (isset($data['current']->posted) && (int) $data['current']->posted === 2) {
+        if ((int) $currentDoc->posted === 2) {
 
             $isCanceled = true;
 
         }
+
+    } elseif (!empty($data['page_data']['is_posted'])) {
+
+        $isPosted = true;
+
+    } elseif (!empty($data['page_data']['is_canceled'])) {
+
+        $isCanceled = true;
 
     }
 
@@ -86,7 +97,7 @@
 
     $showWorkflowActions = !$isViewOnly && !$isCanceled && !$isPosted && !empty($workflowActions);
 
-    $showUnpostActions = !$isViewOnly && ($isPosted || $isCanceled) && !empty($unpostActions);
+    $showUnpostActions = !$isViewOnly && ($isPosted || $isCanceled) && !empty($unpostActions) && $unpostUserAccess;
 
 @endphp
 
@@ -312,44 +323,16 @@
 
         @endphp
 
-        @if($userHasAccess)
-
+        @if($unpostUserAccess)
             <button
-
                 type="submit"
-
                 value="{{$actionId}}"
-
                 class="btn btn-sm btn-warning staging-action-btn"
-
                 title="{{ __('message.unpost') }}"
-
                 data-staging-action-id="{{$actionId}}"
-
                 data-staging-action-code="un_post">
-
                 {{ __('message.unpost') }}
-
             </button>
-
-        @else
-
-            <button
-
-                type="button"
-
-                class="btn btn-sm btn-warning stg-action-disabled"
-
-                title="{{ __('message.staging_no_access') }}"
-
-                aria-disabled="true"
-
-                data-stg-not-allowed="{{ __('message.staging_no_access') }}">
-
-                {{ __('message.unpost') }}
-
-            </button>
-
         @endif
 
     @endforeach

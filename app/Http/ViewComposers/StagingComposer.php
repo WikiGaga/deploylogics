@@ -88,11 +88,37 @@ class StagingComposer
                 $eligibleUsers = $this->stagingService->getEligibleUsers($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $current);
             }
 
+            $postedState = ($current && isset($current->posted)) ? (int) $current->posted : 0;
+            $unpostUserAccess = false;
+            if (in_array($postedState, [1, 2], true)) {
+                $accessibleUnpostActions = $this->stagingService->collectAccessibleUnpostActionsForDocument(
+                    $menuDtlId,
+                    $formId,
+                    $skipCriteriaConditions,
+                    $current
+                );
+                $unpostUserAccess = !empty($accessibleUnpostActions);
+                $existingActionIds = [];
+                foreach ($actions as $action) {
+                    $existingActionIds[(string) ($action->stg_actions_id ?? '')] = true;
+                }
+                foreach ($accessibleUnpostActions as $unpostAction) {
+                    $actionId = (string) ($unpostAction->stg_actions_id ?? '');
+                    if ($actionId === '' || !isset($existingActionIds[$actionId])) {
+                        $actions[] = $unpostAction;
+                        if ($actionId !== '') {
+                            $existingActionIds[$actionId] = true;
+                        }
+                    }
+                }
+            }
+
             $stagingData = [
                 'has_staging' => true,
                 'flows' => $flows,
                 'actions' => $actions,
                 'user_access' => $userAccess,
+                'unpost_user_access' => $unpostUserAccess,
                 'eligible_users' => $eligibleUsers
             ];
 

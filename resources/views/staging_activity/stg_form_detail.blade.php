@@ -33,7 +33,7 @@
             </div>
             <div class="kt-portlet__body">
                 <div class="alert alert-light border" role="alert" style="margin-bottom: 1.25rem;">
-                    Documents for <strong>your current branch</strong> open in the usual way so you can use staging actions. Documents for <strong>another branch</strong> open in view-only mode (no edits or staging actions) so you can still review them without switching branch.
+                    Documents for your current branch open in the usual way so you can use staging actions. Documents for another branch open in view-only mode (no edits or staging actions) so you can still review them without switching branch.
                 </div>
                 @foreach($data['flows'] as $flow)
                     <div class="form-group row" style="background: #eff0ff">

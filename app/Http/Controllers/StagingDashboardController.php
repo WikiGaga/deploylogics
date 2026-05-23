@@ -207,6 +207,32 @@ class StagingDashboardController extends Controller
         ];
     }
 
+    protected function formatStagingDashboardCellValue(string $column, $value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $str = trim((string) $value);
+        if (stripos($column, 'date') !== false && preg_match('/^\d{4}-\d{2}-\d{2}/', $str)) {
+            return substr($str, 0, 10);
+        }
+
+        return $str;
+    }
+
+    protected function sortStagingDashboardRowsByDocumentNumber(array $rows, string $sortColumn): array
+    {
+        usort($rows, function ($a, $b) use ($sortColumn) {
+            $left = (string) ($a[$sortColumn] ?? '');
+            $right = (string) ($b[$sortColumn] ?? '');
+
+            return strnatcasecmp($right, $left);
+        });
+
+        return $rows;
+    }
+
     protected function branchNameForDocument($branchId, Collection $branchNames): string
     {
         if ($branchId === null || $branchId === '') {
@@ -277,12 +303,15 @@ class StagingDashboardController extends Controller
                     $branchId = $arr['branch_id'] ?? $arr['BRANCH_ID'] ?? null;
                     $row['_branch_display'] = $this->branchNameForDocument($branchId, $branchNames);
                     foreach ($config['cols'] as $col) {
-                        $row[$col] = $arr[$col] ?? $arr[strtoupper($col)] ?? '';
+                        $raw = $arr[$col] ?? $arr[strtoupper($col)] ?? '';
+                        $row[$col] = $this->formatStagingDashboardCellValue($col, $raw);
                     }
                     $id = $arr[$pk] ?? $arr[strtoupper($pk)] ?? null;
                     $row['link'] = $this->stagingDashboardDocumentLink($config['path'], $id, $branchId);
                     $rows[] = $row;
                 }
+
+                $rows = $this->sortStagingDashboardRowsByDocumentNumber($rows, $config['cols'][0]);
 
                 $flowsMenuDtl[$flow->stg_flows_id] = $rows;
             }

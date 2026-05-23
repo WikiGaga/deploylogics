@@ -227,6 +227,19 @@ trait HasStaging
         return $flowId ? 'Stage ' . $flowId : 'Unknown';
     }
 
+    protected function resolveSaveLikeStagingAction(array $actions)
+    {
+        foreach ($actions as $action) {
+            $name = $this->normalizeStagingActionCode((string) ($action->stg_actions_name ?? ''));
+            $orig = $this->normalizeStagingActionCode((string) ($action->original_action ?? $name));
+            if ($this->stagingActionIsSaveLike($name) || $this->stagingActionIsSaveLike($orig)) {
+                return $action;
+            }
+        }
+
+        return null;
+    }
+
     protected function logStagingFormSaveActivity($request, $menuDtlId, $formId, $model, $isNew, $wasInStaging): void
     {
         $service = $this->getStagingService();
@@ -251,19 +264,29 @@ trait HasStaging
         $flowsData = $service->getFormFlows($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model);
         $actions = $service->getFormActions($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model);
         $resolvedAction = $this->resolveStagingFlowAction($request, $actions);
-        $actionId = $resolvedAction ? $resolvedAction->stg_actions_id : null;
 
-        if (!$actionId) {
-            foreach ($actions as $action) {
-                $name = strtolower($action->stg_actions_name ?? '');
-                $orig = strtolower($action->original_action ?? $name);
-                if (in_array($name, ['save', 'create', 'edit'], true) || in_array($orig, ['save', 'create', 'edit'], true)) {
-                    $actionId = $action->stg_actions_id;
-                    $resolvedAction = $action;
-                    break;
-                }
+        if ($resolvedAction) {
+            $resolvedCode = $this->normalizeStagingActionCode($this->stagingActionCodeFromResolved(
+                $resolvedAction,
+                $request,
+                $menuDtlId,
+                $currentFlowId,
+                $formIdForCriteria ?: $formId,
+                $skipCriteriaConditions
+            ));
+            if ($this->stagingActionIsWorkflowOnly($resolvedCode)
+                && $this->stagingWorkflowActionShouldPersistFormFirst($resolvedCode)
+                && $this->stagingUserHasSaveLikeAction($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
+                $resolvedAction = $this->resolveSaveLikeStagingAction($actions);
             }
         }
+
+        if (!$resolvedAction) {
+            $resolvedAction = $this->resolveSaveLikeStagingAction($actions);
+        }
+
+        $actionId = $resolvedAction ? $resolvedAction->stg_actions_id : null;
+
         if (!$actionId) {
             return;
         }
@@ -317,14 +340,18 @@ trait HasStaging
 
     protected function assertCanSaveWithStaging($request, $menuDtlId, $formId, $isNew = false, $model = null)
     {
-        if (!$isNew && $model) {
-            $this->assertDocumentStateAllowsFormSave($request, $model, $isNew);
-        }
-
         $service = $this->getStagingService();
         if ($model) {
             $model = $this->refreshModelRow($model);
         }
+
+        $requestedActionCode = $this->normalizeStagingActionCode((string) $request->input('staging_action_code', ''));
+        $isWorkflowOnlyRequest = $this->stagingActionIsWorkflowOnly($requestedActionCode);
+
+        if (!$isNew && $model && !$isWorkflowOnlyRequest) {
+            $this->assertDocumentStateAllowsFormSave($request, $model, $isNew);
+        }
+
         $formIdForCriteria = $isNew ? null : $formId;
         $isAlreadyInStaging = !$isNew && $model && !empty($model->current_stg_id) && (int) ($model->posted ?? 0) === 0;
         $skipCriteriaConditions = $isAlreadyInStaging || $service->isDocumentStagingEnrolled($model, $menuDtlId);
@@ -343,11 +370,33 @@ trait HasStaging
         if (!$currentFlowId) {
             throw new RuntimeException(__('message.staging_flow_required'), 403);
         }
-        if (!$service->getUserAccess($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions)) {
+
+        if ($requestedActionCode === 'un_post') {
+            if (!$service->userHasUnpostAccessForDocument($menuDtlId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
+                throw new RuntimeException(__('message.staging_no_access'), 403);
+            }
+        } elseif (!$service->getUserAccess($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
             throw new RuntimeException(__('message.staging_no_access'), 403);
         }
 
         $actions = $service->getFormActions($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model);
+        $postedState = $model ? (int) ($model->posted ?? 0) : 0;
+        if ($requestedActionCode === 'un_post' || in_array($postedState, [1, 2], true)) {
+            $existingActionIds = [];
+            foreach ($actions as $action) {
+                $existingActionIds[(string) ($action->stg_actions_id ?? '')] = true;
+            }
+            foreach ($service->collectAccessibleUnpostActionsForDocument($menuDtlId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model) as $unpostAction) {
+                $actionId = (string) ($unpostAction->stg_actions_id ?? '');
+                if ($actionId === '' || !isset($existingActionIds[$actionId])) {
+                    $actions[] = $unpostAction;
+                    if ($actionId !== '') {
+                        $existingActionIds[$actionId] = true;
+                    }
+                }
+            }
+        }
+
         $resolvedAction = $this->resolveStagingFlowAction($request, $actions);
         $actionCode = $this->stagingActionCodeFromResolved($resolvedAction, $request, $menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions);
 
@@ -368,8 +417,12 @@ trait HasStaging
     protected function handleStaging($request, $menuDtlId, $formId, $model, $isNew = false, ?array $notificationConfig = null)
     {
         $service = $this->getStagingService();
-        if ($model) {
-            $model = $this->refreshModelRow($model);
+        $shouldRefresh = $model && method_exists($model, 'refresh') && !$isNew;
+        if ($shouldRefresh && $this->modelHasStagingColumn($model, 'staging_apply') && $model->isDirty('staging_apply')) {
+            $shouldRefresh = false;
+        }
+        if ($shouldRefresh) {
+            $model->refresh();
         }
         $currentFlowId = $request->current_flow_id ?? null;
         if ($currentFlowId !== null) {
@@ -377,12 +430,30 @@ trait HasStaging
         }
         if (!$isNew && $model && !empty($model->current_stg_id)) {
             $currentFlowId = trim((string) $model->current_stg_id);
+        } elseif (!$isNew && trim((string) $request->input('document_current_stg_id', '')) !== '') {
+            $currentFlowId = trim((string) $request->input('document_current_stg_id'));
         }
 
         $formIdForCriteria = $isNew ? null : $formId;
         $isAlreadyInStaging = !$isNew && $model && !empty($model->current_stg_id) && (int) ($model->posted ?? 0) === 0;
-        $skipCriteriaConditions = $isAlreadyInStaging || $service->isDocumentStagingEnrolled($model, $menuDtlId);
-        if (!$service->shouldUseStagingForDocument($menuDtlId, $formIdForCriteria ?: $formId, $model, $isAlreadyInStaging, $isNew)) {
+        $stagingEnrolled = $service->isDocumentStagingEnrolled($model, $menuDtlId);
+        if (!$stagingEnrolled && !$isNew) {
+            $docStgId = trim((string) $request->input('document_current_stg_id', ''));
+            $reqFlowId = trim((string) ($request->input('current_flow_id') ?? ''));
+            if ($docStgId !== '' || $reqFlowId !== '') {
+                $stagingEnrolled = $service->hasStagingOrRemainsInStaging(
+                    $menuDtlId,
+                    $formIdForCriteria ?: $formId,
+                    true,
+                    $model
+                );
+            }
+        }
+        if (!$isNew && !$isAlreadyInStaging && $stagingEnrolled && trim((string) $request->input('document_current_stg_id', '')) !== '') {
+            $isAlreadyInStaging = (int) ($model->posted ?? 0) === 0;
+        }
+        $skipCriteriaConditions = $isAlreadyInStaging || $stagingEnrolled;
+        if (!$stagingEnrolled && !$service->shouldUseStagingForDocument($menuDtlId, $formIdForCriteria ?: $formId, $model, $isAlreadyInStaging, $isNew)) {
             return;
         }
         if (empty($currentFlowId)) {
@@ -390,13 +461,35 @@ trait HasStaging
             $currentFlowId = !empty($flows['all']) ? $flows['all'][0]->stg_flows_id : null;
         }
 
-        if ($currentFlowId && !$service->getUserAccess($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
+        $requestedActionCode = $this->normalizeStagingActionCode((string) $request->input('staging_action_code', ''));
+        $postedState = $model ? (int) ($model->posted ?? 0) : 0;
+
+        if ($requestedActionCode === 'un_post') {
+            if (!$service->userHasUnpostAccessForDocument($menuDtlId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
+                throw new RuntimeException(__('message.staging_no_access'), 403);
+            }
+        } elseif ($currentFlowId && !$service->getUserAccess($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model)) {
             throw new RuntimeException(__('message.staging_no_access'), 403);
         }
 
         $actions = [];
         if ($currentFlowId) {
             $actions = $service->getFormActions($menuDtlId, $currentFlowId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model);
+        }
+        if ($requestedActionCode === 'un_post' || in_array($postedState, [1, 2], true)) {
+            $existingActionIds = [];
+            foreach ($actions as $action) {
+                $existingActionIds[(string) ($action->stg_actions_id ?? '')] = true;
+            }
+            foreach ($service->collectAccessibleUnpostActionsForDocument($menuDtlId, $formIdForCriteria ?: $formId, $skipCriteriaConditions, $model) as $unpostAction) {
+                $actionId = (string) ($unpostAction->stg_actions_id ?? '');
+                if ($actionId === '' || !isset($existingActionIds[$actionId])) {
+                    $actions[] = $unpostAction;
+                    if ($actionId !== '') {
+                        $existingActionIds[$actionId] = true;
+                    }
+                }
+            }
         }
 
         $resolvedAction = $this->resolveStagingFlowAction($request, $actions);
@@ -422,6 +515,9 @@ trait HasStaging
 
         if ($isNew && $currentFlowId && $model && (property_exists($model, 'current_stg_id') || $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), 'current_stg_id'))) {
             $model->current_stg_id = $currentFlowId;
+            if (property_exists($model, 'staging_apply') || $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), 'staging_apply')) {
+                $model->staging_apply = 1;
+            }
         }
 
         $actionName = null;
@@ -554,6 +650,9 @@ trait HasStaging
                 (property_exists($model, 'current_stg_id') ||
                  $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), 'current_stg_id'))) {
                 $model->current_stg_id = $flows['all'][0]->stg_flows_id;
+                if (property_exists($model, 'staging_apply') || $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), 'staging_apply')) {
+                    $model->staging_apply = 1;
+                }
             }
             if ($notificationConfig && !empty($notificationConfig['listing_view']) && isset($notificationConfig['form_path']) && !empty($flows['all'])) {
                 $matchedNotificationSetting = $this->getNotificationSettingForMenu($menuDtlId);
@@ -685,6 +784,7 @@ trait HasStaging
         if ($this->modelHasStagingColumn($model, 'posted') && (int) ($model->posted ?? 0) === 1) {
             $model->posted = 0;
         }
+
         if ($this->modelHasStagingColumn($model, 'staging_apply')) {
             $model->staging_apply = 1;
         }
@@ -693,6 +793,18 @@ trait HasStaging
             $flows = $stagingService->getFormFlows($menuDtlId, null, $formId, $skipForEnrolled, $model);
             if (!empty($flows['all'])) {
                 $model->current_stg_id = $flows['all'][0]->stg_flows_id;
+            }
+        }
+
+        if (!empty($options['preserved_staging']) && (int) ($options['preserved_staging']['staging_apply'] ?? 0) === 1) {
+            if ($this->modelHasStagingColumn($model, 'staging_apply')) {
+                $model->staging_apply = 1;
+            }
+            if ($this->modelHasStagingColumn($model, 'current_stg_id') && !empty($options['preserved_staging']['current_stg_id'])) {
+                $model->current_stg_id = $options['preserved_staging']['current_stg_id'];
+            }
+            if ($this->modelHasStagingColumn($model, 'posted') && array_key_exists('posted', $options['preserved_staging'])) {
+                $model->posted = (int) $options['preserved_staging']['posted'];
             }
         }
 
@@ -739,10 +851,13 @@ trait HasStaging
 
         $isAlreadyInStaging = $model && !empty($model->current_stg_id) && (int)($model->posted ?? 0) === 0;
         $service = $this->getStagingService();
-        if (!$service->shouldUseStagingForDocument($menuDtlId, $formId, $model, $isAlreadyInStaging, false)) {
+        $stagingEnrolled = $service->isDocumentStagingEnrolled($model, $menuDtlId);
+
+        if (!$stagingEnrolled && !$service->shouldUseStagingForDocument($menuDtlId, $formId, $model, $isAlreadyInStaging, false)) {
             return true;
         }
-        $skipCriteriaConditions = $isAlreadyInStaging || $service->isDocumentStagingEnrolled($model, $menuDtlId);
+
+        $skipCriteriaConditions = $isAlreadyInStaging || $stagingEnrolled;
         $actionCode = $this->resolveRequestedStagingActionCode($request, $menuDtlId, $currentFlowId, $formId, $isAlreadyInStaging, $model);
         if ($actionCode === '') {
             return true;
@@ -758,7 +873,16 @@ trait HasStaging
             return true;
         }
 
+        if (!$this->stagingWorkflowActionShouldPersistFormFirst($actionCode)) {
+            return false;
+        }
+
         return $this->stagingUserHasSaveLikeAction($menuDtlId, $currentFlowId, $formId, $skipCriteriaConditions, $model);
+    }
+
+    protected function stagingWorkflowActionShouldPersistFormFirst(string $actionCode): bool
+    {
+        return in_array($this->normalizeStagingActionCode($actionCode), ['forward', 'post', 'back'], true);
     }
 
     protected function sendStagingNotification(
