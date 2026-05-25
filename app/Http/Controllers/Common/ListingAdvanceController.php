@@ -83,6 +83,7 @@ class ListingAdvanceController extends Controller
             foreach ($data['table_columns'] as $lk => $table_columns){
                 $columns .= ','.$tbl_1_alias.$lk;
             }
+            $columns .= $this->listingWorkflowActionSelectColumns($case_name, $tbl_1_alias, $data['table_columns']);
 
             $where = 'where ';
 
@@ -236,6 +237,31 @@ class ListingAdvanceController extends Controller
         }
 
         return 'string';
+    }
+
+    protected function listingWorkflowActionSelectColumns(string $caseName, string $tblAlias, array $tableColumns): string
+    {
+        $voucherCases = [
+            'pv', 'cpv', 'crv', 'pve', 'lv', 'lfv', 'jv', 'brpv', 'brrv', 'brv', 'bpv', 'ipv', 'irv', 'rv', 'obv',
+        ];
+        $otherCases = ['purchase-order', 'grn', 'shift_sessions', 'stock-receiving'];
+
+        $extra = [];
+        if (in_array($caseName, $voucherCases, true) || in_array($caseName, $otherCases, true)) {
+            $extra = ['posted', 'staging_apply'];
+        }
+        if (in_array($caseName, $voucherCases, true)) {
+            $extra[] = 'voucher_status';
+        }
+
+        $select = '';
+        foreach ($extra as $column) {
+            if (!isset($tableColumns[$column])) {
+                $select .= ',' . $tblAlias . $column;
+            }
+        }
+
+        return $select;
     }
 
     public function getTableColumns($table_name,$listing){

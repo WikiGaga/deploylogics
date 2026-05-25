@@ -19,10 +19,22 @@ var KTDatatableRemoteAjaxDemo = function() {
     }
 
     function rowPostedState(row, voucher_status) {
-        if (row.posted !== undefined && row.posted !== null && row.posted !== '') {
-            return parseInt(row.posted, 10) || 0;
+        var postedKeys = ['posted', 'POSTED'];
+        for (var i = 0; i < postedKeys.length; i++) {
+            var postedVal = row[postedKeys[i]];
+            if (postedVal !== undefined && postedVal !== null && postedVal !== '') {
+                return parseInt(postedVal, 10) || 0;
+            }
         }
-        var vs = String(voucher_status || '').toLowerCase();
+
+        var voucherPosted = row.voucher_posted !== undefined ? row.voucher_posted : row.VOUCHER_POSTED;
+        if (voucherPosted !== undefined && voucherPosted !== null && voucherPosted !== '') {
+            if (parseInt(voucherPosted, 10) === 1) {
+                return 1;
+            }
+        }
+
+        var vs = String(voucher_status || row.voucher_status || row.VOUCHER_STATUS || '').toLowerCase();
         if (vs === 'posted') {
             return 1;
         }
