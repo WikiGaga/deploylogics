@@ -41,7 +41,7 @@ class ListingAdvanceController extends Controller
         // event(new PusherNotifyEvent('test', 'Test Message', 'https://example.com'));
 
             // dd($request->all(),$caseType,$subType);
- 
+
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
@@ -83,7 +83,6 @@ class ListingAdvanceController extends Controller
             foreach ($data['table_columns'] as $lk => $table_columns){
                 $columns .= ','.$tbl_1_alias.$lk;
             }
-            $columns .= $this->listingWorkflowActionSelectColumns($case_name, $tbl_1_alias, $data['table_columns']);
 
             $where = 'where ';
 
@@ -150,7 +149,7 @@ class ListingAdvanceController extends Controller
 
                 // Define file name based on the download type
                 $fileName = 'listing_'. $case_name . '_' . time() . '.' . $download;
-                
+
                 Session::put('report_download_qry', $qry);
                 Session::put('report_download_case_name', $case_name);
                 Session::put('report_download_fileName', $fileName);
@@ -237,31 +236,6 @@ class ListingAdvanceController extends Controller
         }
 
         return 'string';
-    }
-
-    protected function listingWorkflowActionSelectColumns(string $caseName, string $tblAlias, array $tableColumns): string
-    {
-        $voucherCases = [
-            'pv', 'cpv', 'crv', 'pve', 'lv', 'lfv', 'jv', 'brpv', 'brrv', 'brv', 'bpv', 'ipv', 'irv', 'rv', 'obv',
-        ];
-        $otherCases = ['purchase-order', 'grn', 'shift_sessions', 'stock-receiving'];
-
-        $extra = [];
-        if (in_array($caseName, $voucherCases, true) || in_array($caseName, $otherCases, true)) {
-            $extra = ['posted', 'staging_apply'];
-        }
-        if (in_array($caseName, $voucherCases, true)) {
-            $extra[] = 'voucher_status';
-        }
-
-        $select = '';
-        foreach ($extra as $column) {
-            if (!isset($tableColumns[$column])) {
-                $select .= ',' . $tblAlias . $column;
-            }
-        }
-
-        return $select;
     }
 
     public function getTableColumns($table_name,$listing){

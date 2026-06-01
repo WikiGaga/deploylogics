@@ -18,37 +18,58 @@ var KTDatatableRemoteAjaxDemo = function() {
             || accountingVoucherCasetype(casetype);
     }
 
+    function rowField(row, key) {
+        if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+            return row[key];
+        }
+        var upper = key.toUpperCase();
+        if (row[upper] !== undefined && row[upper] !== null && row[upper] !== '') {
+            return row[upper];
+        }
+        return null;
+    }
+
     function rowPostedState(row, voucher_status) {
-        var postedKeys = ['posted', 'POSTED'];
-        for (var i = 0; i < postedKeys.length; i++) {
-            var postedVal = row[postedKeys[i]];
-            if (postedVal !== undefined && postedVal !== null && postedVal !== '') {
-                return parseInt(postedVal, 10) || 0;
-            }
-        }
-
-        var voucherPosted = row.voucher_posted !== undefined ? row.voucher_posted : row.VOUCHER_POSTED;
-        if (voucherPosted !== undefined && voucherPosted !== null && voucherPosted !== '') {
-            if (parseInt(voucherPosted, 10) === 1) {
-                return 1;
-            }
-        }
-
-        var vs = String(voucher_status || row.voucher_status || row.VOUCHER_STATUS || '').toLowerCase();
+        var vs = String(voucher_status || rowField(row, 'voucher_status') || '').toLowerCase().trim();
         if (vs === 'posted') {
             return 1;
         }
         if (vs === 'canceled' || vs === 'cancelled') {
             return 2;
         }
+        if (vs === 'un-posted' || vs === 'unposted' || vs === 'draft') {
+            return 0;
+        }
+
+        var postedVal = rowField(row, 'posted');
+        if (postedVal !== null) {
+            var posted = parseInt(postedVal, 10);
+            if (!isNaN(posted) && (posted === 1 || posted === 2)) {
+                return posted;
+            }
+            if (!isNaN(posted) && posted === 0) {
+                return 0;
+            }
+        }
+
+        var legacyPosted = rowField(row, 'voucher_posted');
+        if (legacyPosted !== null) {
+            var vp = parseInt(legacyPosted, 10);
+            if (!isNaN(vp) && vp === 1) {
+                return 1;
+            }
+        }
+
+        if (postedVal !== null) {
+            var n = parseInt(postedVal, 10);
+            return isNaN(n) ? 0 : n;
+        }
+
         return 0;
     }
 
     function isRowStagingEnrolled(row) {
-        var sa = row.staging_apply;
-        if (sa === undefined || sa === null) {
-            sa = row.STAGING_APPLY;
-        }
+        var sa = rowField(row, 'staging_apply');
         return sa == 1 || sa === '1';
     }
 
@@ -60,7 +81,7 @@ var KTDatatableRemoteAjaxDemo = function() {
     }
 
     function canListingDelete(row) {
-        var posted = rowPostedState(row);
+        var posted = rowPostedState(row, rowField(row, 'voucher_status'));
         if (listingSupportsUmPostActions() && useUmListingActions(row)) {
             return posted === 0;
         }
@@ -78,7 +99,7 @@ var KTDatatableRemoteAjaxDemo = function() {
         if (!listingSupportsUmPostActions() || !useUmListingActions(row)) {
             return html;
         }
-        var posted = rowPostedState(row);
+        var posted = rowPostedState(row, rowField(row, 'voucher_status'));
         if (posted === 0 && btnpostView) {
             if (casetype === 'purchase-order') {
                 html += '<button class="dropdown-item POPosted" style="background-color:#2471A3;color:#FFFF;" data-id="'+key_id+'">Post</button>';
