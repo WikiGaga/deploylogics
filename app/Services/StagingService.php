@@ -8,6 +8,7 @@ use App\Models\TblMenuFlowCriteriaFlowAction;
 use App\Models\TblMenuFlowCriteriaFlowUser;
 use App\Models\TblMenuFlowCriteriaFlowDesignation;
 use App\Models\TblSoftMenuDtl;
+use App\Models\TblStgFlows;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,124 @@ class StagingService
         }
 
         return $this->activeCriteriaFlows($criteria);
+    }
+
+    public function menuHasEnrolledStagingDocuments($formNameOrMenuDtlId): bool
+    {
+        $menu = is_numeric($formNameOrMenuDtlId)
+            ? TblSoftMenuDtl::find($formNameOrMenuDtlId)
+            : TblSoftMenuDtl::where('menu_dtl_name', $formNameOrMenuDtlId)->first();
+
+        if (!$menu || !$menu->menu_dtl_table_name) {
+            return false;
+        }
+
+        if (!$this->tableHasStagingWorkflowColumns($menu->menu_dtl_table_name)) {
+            return false;
+        }
+
+        $query = DB::table($menu->menu_dtl_table_name)
+            ->where('staging_apply', $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId))
+            ->where('posted', 0);
+
+        $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+
+        return $query->exists();
+    }
+
+    public function getFlowCriteriaForDashboard($formNameOrMenuDtlId)
+    {
+        if (is_numeric($formNameOrMenuDtlId)) {
+            $formName = $this->getFormNameFromMenuDtlId($formNameOrMenuDtlId);
+            if (!$formName) {
+                return null;
+            }
+        } else {
+            $formName = trim($formNameOrMenuDtlId);
+        }
+
+        $hasEnrolledDocuments = $this->menuHasEnrolledStagingDocuments($formNameOrMenuDtlId);
+
+        $criteria = $this->flowCriteriaQuery($formNameOrMenuDtlId, $formName, true)
+            ->orderBy('menu_flow_criteria_apply_at', 'desc')
+            ->first();
+
+        if (!$criteria && $hasEnrolledDocuments) {
+            $criteria = $this->flowCriteriaQuery($formNameOrMenuDtlId, $formName, false)
+                ->orderBy('menu_flow_criteria_apply_at', 'desc')
+                ->first();
+        }
+
+        if (!$criteria) {
+            return null;
+        }
+
+        $criteriaInactive = (int) ($criteria->menu_flow_criteria_status ?? 0) !== 1
+            || (int) ($criteria->menu_flow_criteria_entry_status ?? 0) !== 1;
+
+        if ($criteriaInactive && !$hasEnrolledDocuments) {
+            return null;
+        }
+
+        return $criteria;
+    }
+
+    protected function getEnrolledStagingFlowIds($formNameOrMenuDtlId): array
+    {
+        $menu = is_numeric($formNameOrMenuDtlId)
+            ? TblSoftMenuDtl::find($formNameOrMenuDtlId)
+            : TblSoftMenuDtl::where('menu_dtl_name', $formNameOrMenuDtlId)->first();
+
+        if (!$menu || !$menu->menu_dtl_table_name || !$this->tableHasStagingWorkflowColumns($menu->menu_dtl_table_name)) {
+            return [];
+        }
+
+        $query = DB::table($menu->menu_dtl_table_name)
+            ->where('staging_apply', $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId))
+            ->where('posted', 0)
+            ->whereNotNull('current_stg_id');
+
+        $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+
+        return $query->distinct()
+            ->pluck('current_stg_id')
+            ->filter(function ($id) {
+                return $id !== null && $id !== '';
+            })
+            ->values()
+            ->all();
+    }
+
+    public function criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId = null)
+    {
+        if (!$criteria || !$criteria->flows || $criteria->flows->isEmpty()) {
+            return collect([]);
+        }
+
+        $criteriaInactive = (int) ($criteria->menu_flow_criteria_status ?? 0) !== 1
+            || (int) ($criteria->menu_flow_criteria_entry_status ?? 0) !== 1;
+
+        if ($criteriaInactive && $this->menuHasEnrolledStagingDocuments($formNameOrMenuDtlId)) {
+            return $criteria->flows->values();
+        }
+
+        return $this->activeCriteriaFlows($criteria);
+    }
+
+    public function hasStagingDashboardForMenu($formNameOrMenuDtlId): bool
+    {
+        if ($this->hasStaging($formNameOrMenuDtlId)) {
+            return true;
+        }
+
+        if (!$this->menuHasEnrolledStagingDocuments($formNameOrMenuDtlId)) {
+            return false;
+        }
+
+        $criteria = $this->getFlowCriteriaForDashboard($formNameOrMenuDtlId);
+
+        return $criteria !== null
+            && $this->criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId)->isNotEmpty();
     }
 
     protected function getFormNameFromMenuDtlId($menuDtlId)
@@ -348,6 +467,82 @@ class StagingService
         ];
     }
 
+    public function getFormFlowsForDashboard($formNameOrMenuDtlId, $currentFlowId = null)
+    {
+        $criteria = $this->getFlowCriteriaForDashboard($formNameOrMenuDtlId);
+        $activeFlows = $this->criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId);
+        if (!$criteria || $activeFlows->isEmpty()) {
+            return [
+                'all' => [],
+                'current' => null,
+                'next' => null,
+                'prev' => null,
+            ];
+        }
+
+        $sortedFlows = $activeFlows->sortBy(function ($flow) {
+            return (int) ($flow->flow_order ?? 0);
+        })->values();
+
+        $flows = [];
+        $currentFlow = null;
+        $currentIndex = -1;
+
+        foreach ($sortedFlows as $flow) {
+            $flowObj = (object) [
+                'stg_flows_id' => $flow->stg_flows_id,
+                'stg_flows_name' => $flow->flow_name ?: 'Unknown',
+                'flow_order' => $flow->flow_order,
+            ];
+            $flows[] = $flowObj;
+
+            if ($currentFlowId && (string) $flow->stg_flows_id === (string) $currentFlowId) {
+                $currentFlow = $flowObj;
+                $currentIndex = count($flows) - 1;
+            }
+        }
+
+        $knownFlowIds = collect($flows)->map(function ($f) {
+            return (string) $f->stg_flows_id;
+        })->all();
+        $missingFlowIds = array_values(array_filter(
+            $this->getEnrolledStagingFlowIds($formNameOrMenuDtlId),
+            function ($flowId) use ($knownFlowIds) {
+                return !in_array((string) $flowId, $knownFlowIds, true);
+            }
+        ));
+        if (!empty($missingFlowIds)) {
+            $stageFlows = TblStgFlows::whereIn('stg_flows_id', $missingFlowIds)->get()->keyBy(function ($row) {
+                return (string) $row->stg_flows_id;
+            });
+            foreach ($missingFlowIds as $flowId) {
+                $stageFlow = $stageFlows->get((string) $flowId);
+                $flows[] = (object) [
+                    'stg_flows_id' => $flowId,
+                    'stg_flows_name' => $stageFlow && $stageFlow->stg_flows_name
+                        ? $stageFlow->stg_flows_name
+                        : 'Unknown',
+                    'flow_order' => 9999,
+                ];
+            }
+        }
+
+        if (!$currentFlow && !empty($flows)) {
+            $currentFlow = $flows[0];
+            $currentIndex = 0;
+        }
+
+        $nextFlow = isset($flows[$currentIndex + 1]) ? $flows[$currentIndex + 1] : null;
+        $prevFlow = isset($flows[$currentIndex - 1]) ? $flows[$currentIndex - 1] : null;
+
+        return [
+            'all' => $flows,
+            'current' => $currentFlow,
+            'next' => $nextFlow,
+            'prev' => $prevFlow,
+        ];
+    }
+
     public function getFormActions($formNameOrMenuDtlId, $flowId, $formId = null, $skipConditionCheck = false, $model = null)
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
@@ -509,6 +704,36 @@ class StagingService
                 return (string) $f->stg_flows_id === (string) $flowId;
             });
 
+        return $this->userHasAccessToCriteriaFlow($flow);
+    }
+
+    public function getUserAccessForDashboard($formNameOrMenuDtlId, $flowId)
+    {
+        if (!$flowId) {
+            return false;
+        }
+
+        $criteria = $this->getFlowCriteriaForDashboard($formNameOrMenuDtlId);
+        if (!$criteria) {
+            return false;
+        }
+
+        $flow = $this->criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId)
+            ->first(function ($f) use ($flowId) {
+                return (string) $f->stg_flows_id === (string) $flowId;
+            });
+
+        if (!$flow && $criteria->flows) {
+            $flow = $criteria->flows->first(function ($f) use ($flowId) {
+                return (string) $f->stg_flows_id === (string) $flowId;
+            });
+        }
+
+        return $this->userHasAccessToCriteriaFlow($flow);
+    }
+
+    protected function userHasAccessToCriteriaFlow($flow): bool
+    {
         if (!$flow) {
             return false;
         }
@@ -554,14 +779,6 @@ class StagingService
             return true;
         }
 
-        // if (config('app.debug')) {
-        //     Log::debug('StagingService.getUserAccess: access denied', [
-        //         'user_id' => auth()->id(),
-        //         'flow_id' => $flowId,
-        //         'designation_ids' => $designationIds ?? [],
-        //         'user_roles' => auth()->user()->roles()->pluck('id')->toArray(),
-        //     ]);
-        // }
         return false;
     }
 
@@ -728,11 +945,33 @@ class StagingService
         }
     }
 
+    public function tableHasStagingWorkflowColumns($tableName): bool
+    {
+        static $cache = [];
+        $key = strtolower((string) $tableName);
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        try {
+            $cols = array_map('strtolower', DB::getSchemaBuilder()->getColumnListing($tableName));
+            $cache[$key] = in_array('staging_apply', $cols, true)
+                && in_array('current_stg_id', $cols, true)
+                && in_array('posted', $cols, true);
+        } catch (\Throwable $e) {
+            $cache[$key] = false;
+        }
+
+        return $cache[$key];
+    }
+
     public function getDocumentsAtFlowStage($formNameOrMenuDtlId, $flowId, $tableName, $primaryKey)
     {
-        $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId);
+        if (empty($tableName) || $flowId === null || $flowId === '') {
+            return collect([]);
+        }
 
-        if (!$criteria) {
+        if (!$this->tableHasStagingWorkflowColumns($tableName)) {
             return collect([]);
         }
 
@@ -750,7 +989,7 @@ class StagingService
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId);
 
-        if (!$criteria) {
+        if (!$criteria || !$this->tableHasStagingWorkflowColumns($tableName)) {
             return [];
         }
 

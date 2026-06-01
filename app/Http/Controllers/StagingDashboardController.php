@@ -31,11 +31,11 @@ class StagingDashboardController extends Controller
         // dd($menus);
 
         foreach ($menus as $menuDtl) {
-            if (!$this->stagingService->hasStaging($menuDtl->menu_dtl_id)) {
+            if (!$this->stagingService->hasStagingDashboardForMenu($menuDtl->menu_dtl_id)) {
                 continue;
             }
 
-            $flows = $this->stagingService->getFormFlows($menuDtl->menu_dtl_id, null, null);
+            $flows = $this->stagingService->getFormFlowsForDashboard($menuDtl->menu_dtl_id);
             if (empty($flows['all']) || empty($menuDtl->menu_dtl_table_name)) {
                 continue;
             }
@@ -50,7 +50,7 @@ class StagingDashboardController extends Controller
             // dump($flows['all']);
 
             foreach ($flows['all'] as $flow) {
-                if (!$this->stagingService->getUserAccess($menuDtl->menu_dtl_id, $flow->stg_flows_id)) {
+                if (!$this->stagingService->getUserAccessForDashboard($menuDtl->menu_dtl_id, $flow->stg_flows_id)) {
                     continue;
                 }
 
@@ -104,6 +104,10 @@ class StagingDashboardController extends Controller
      */
     protected function getDocumentCountAtStage($tableName, $flowId)
     {
+        if (!$this->stagingService->tableHasStagingWorkflowColumns($tableName)) {
+            return 0;
+        }
+
         try {
             $query = DB::table($tableName)
                 ->where('current_stg_id', $flowId)
@@ -273,14 +277,14 @@ class StagingDashboardController extends Controller
     {
         $menu = TblSoftMenuDtl::find($menuDtlId);
 
-        if (!$menu || !$this->stagingService->hasStaging($menuDtlId)) {
+        if (!$menu || !$this->stagingService->hasStagingDashboardForMenu($menuDtlId)) {
             abort(404);
         }
 
         $config = $this->getFormConfig($menuDtlId, $menu->menu_dtl_table_name);
         $pk = $config['pk'];
 
-        $flows = $this->stagingService->getFormFlows($menuDtlId, null, null);
+        $flows = $this->stagingService->getFormFlowsForDashboard($menuDtlId);
         $branchNames = TblSoftBranch::query()->pluck('branch_name', 'branch_id');
         $flowsMenuDtl = [
             'cols' => array_merge(['_branch_display'], $config['cols']),
@@ -288,7 +292,7 @@ class StagingDashboardController extends Controller
         ];
 
         foreach ($flows['all'] as $flow) {
-            if ($this->stagingService->getUserAccess($menuDtlId, $flow->stg_flows_id)) {
+            if ($this->stagingService->getUserAccessForDashboard($menuDtlId, $flow->stg_flows_id)) {
                 $documents = $this->stagingService->getDocumentsAtFlowStage(
                     $menuDtlId,
                     $flow->stg_flows_id,
