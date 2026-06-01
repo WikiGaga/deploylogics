@@ -46,15 +46,27 @@
             </a>
         @endif--}}
         @if(!(isset($staging_data) && $staging_data['has_staging']))
-            @if(isset($data['page_data']['post']) && $data['page_data']['post'] != '')
-                @php
-                    $postMenuId = $data['menu_dtl_id'] ?? $data['menu_id'] ?? $data['stock_menu_id'] ?? null;
-                    $postPerm = $postMenuId ? ($postMenuId . '-post') : null;
-                    $unpostPerm = $postMenuId ? ($postMenuId . '-un_post_module') : null;
-                    $cancelPerm = $postMenuId ? ($postMenuId . '-cancel') : null;
-                    $isPostedUm = !empty($data['page_data']['is_posted']);
-                    $isCanceledUm = !empty($data['page_data']['is_canceled']);
-                @endphp
+            @php
+                $pageData = $page_data ?? ($data['page_data'] ?? []);
+                $postMenuId = $data['menu_dtl_id'] ?? $data['menu_id'] ?? $data['stock_menu_id'] ?? null;
+                $postPerm = $postMenuId ? ($postMenuId . '-post') : null;
+                $unpostPerm = $postMenuId ? ($postMenuId . '-un_post_module') : null;
+                $cancelPerm = $postMenuId ? ($postMenuId . '-cancel') : null;
+                $umPostedState = isset($data['current']->posted) ? (int) $data['current']->posted : 0;
+                if ($umPostedState === 0 && !empty($pageData['is_posted'])) {
+                    $umPostedState = 1;
+                }
+                if ($umPostedState === 0 && !empty($pageData['is_canceled'])) {
+                    $umPostedState = 2;
+                }
+                $isPostedUm = $umPostedState === 1;
+                $isCanceledUm = $umPostedState === 2;
+                $isDraftUm = $umPostedState === 0;
+                $cancelUrl = $pageData['cancel'] ?? ($data['page_data']['cancel'] ?? '');
+                $postUrl = $pageData['post'] ?? ($data['page_data']['post'] ?? '');
+                $canUmCancel = $cancelPerm && auth()->check() && auth()->user()->isAbleTo($cancelPerm);
+            @endphp
+            @if($postUrl != '')
                 @if($postPerm && $unpostPerm)
                     @if($isPostedUm || $isCanceledUm)
                         @permission($unpostPerm)
@@ -62,20 +74,18 @@
                                 {{ __('message.unpost') }}
                             </a>
                         @endpermission
-                    @elseif(!$isPostedUm && !$isCanceledUm)
+                    @elseif($isDraftUm)
                         @permission($postPerm)
                             <a href="" onclick="voucher_posted(); return false;" style="background-color:#2471A3;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.post') }}">
                                 {{ __('message.post') }}
                             </a>
                         @endpermission
+                        @if($canUmCancel && $cancelUrl != '')
+                            <a href="" onclick="voucher_cancel(); return false;" style="background-color:#C0392B;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.cancel') }}">
+                                {{ __('message.cancel') }}
+                            </a>
+                        @endif
                     @endif
-                @endif
-                @if($cancelPerm && !$isPostedUm && !$isCanceledUm && !empty($data['page_data']['cancel']))
-                    @permission($cancelPerm)
-                        <a href="" onclick="voucher_cancel(); return false;" style="background-color:#C0392B;color:#FFFF;" class="btn btn-sm btn-icon btn-custom" title="{{ __('message.cancel') }}">
-                            {{ __('message.cancel') }}
-                        </a>
-                    @endpermission
                 @endif
             @endif
         @endif
@@ -173,14 +183,17 @@
     </div>
 </div>
 
-@if(!(isset($staging_data) && $staging_data['has_staging']) && !empty($data['page_data']['cancel']))
+@php
+    $pageDataForCancel = $page_data ?? ($data['page_data'] ?? []);
+@endphp
+@if(!(isset($staging_data) && $staging_data['has_staging']) && !empty($pageDataForCancel['cancel']))
 <script>
 function voucher_cancel() {
     if (!confirm('{{ __('message.cancel') }} this document?')) {
         return;
     }
-    var fieldId = '{{ $data['page_data']['document_id_field'] ?? 'form_id' }}';
-    var docId = $('#' + fieldId).val();
+    var fieldId = '{{ $pageDataForCancel['document_id_field'] ?? ($data['page_data']['document_id_field'] ?? 'form_id') }}';
+    var docId = $('#' + fieldId).val() || $('#form_id').val() || $('#voucher_id').val();
     if (!docId) {
         toastr.error('Document id not found');
         return;
@@ -190,7 +203,7 @@ function voucher_cancel() {
     $.ajax({
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
         type: 'POST',
-        url: '{{ $data['page_data']['cancel'] }}',
+        url: '{{ $pageDataForCancel['cancel'] }}',
         data: payload,
         success: function(response, textStatus, xhr) {
             erpDocumentAjaxDone(response, xhr, { successMsg: '{{ __('message.cancel') }}' });
