@@ -461,29 +461,19 @@ $(document).ready(function() {
     }
 
     function showSuccessMessage(message) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: message,
-                timer: 3000,
-                showConfirmButton: false
-            });
+        if (typeof toastr !== 'undefined') {
+            toastr.success(message);
         } else {
             alert(message);
         }
     }
 
     function showErrorMessage(message) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                html: message,
-                showConfirmButton: true
-            });
+        var text = (message || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '');
+        if (typeof toastr !== 'undefined') {
+            toastr.error(text);
         } else {
-            alert(message.replace(/<[^>]*>/g, ''));
+            alert(text);
         }
     }
 

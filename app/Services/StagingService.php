@@ -417,7 +417,7 @@ class StagingService
                 ? config('staging.document_primary_keys_by_menu.' . $menuDtlIdForPk)
                 : null;
 
-            if ($tableName && !$this->evaluateCriteriaConditions($criteria, $tableName, $formId, $configuredDocumentPk)) {
+            if ($tableName && !$this->evaluateCriteriaConditions($criteria, $tableName, $formId, $configuredDocumentPk, $formNameOrMenuDtlId)) {
                 return null;
             }
         }
@@ -425,7 +425,7 @@ class StagingService
         return $criteria;
     }
 
-    public function evaluateCriteriaConditions($criteria, $formTableName, $formId, $configuredPrimaryKey = null)
+    public function evaluateCriteriaConditions($criteria, $formTableName, $formId, $configuredPrimaryKey = null, $formNameOrMenuDtlId = null)
     {
         $conditions = $criteria->conditions;
 
@@ -496,7 +496,7 @@ class StagingService
             }
             $query = DB::table($formTableName);
             $query->where($primaryKey, $formId);
-            $this->scopeAccoVoucherMasterRow($formTableName, $query);
+            $this->scopeAccoVoucherForConditionCheck($formNameOrMenuDtlId, $formTableName, $query);
             return $query->whereRaw($whereClause, $bindings)->exists();
         }
 
@@ -561,7 +561,7 @@ class StagingService
             $query->where($primaryKey, $formId);
         }
 
-        $this->scopeAccoVoucherMasterRow($formTableName, $query);
+        $this->scopeAccoVoucherForConditionCheck($formNameOrMenuDtlId, $formTableName, $query);
 
         $result = $query->whereRaw($whereClause, $bindings)->exists();
 
@@ -1063,6 +1063,24 @@ class StagingService
     {
         $criteria = $this->getFlowCriteriaForForm($formNameOrMenuDtlId, $formId, $skipConditionCheck, $model);
         return $criteria ? $criteria->menu_flow_criteria_id : null;
+    }
+
+    protected function scopeAccoVoucherForConditionCheck($formNameOrMenuDtlId, $tableName, $query)
+    {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'acco_voucher') === false) {
+            return;
+        }
+
+        if (strpos($t, 'tbl_acco_voucher') !== false) {
+            if (is_numeric($formNameOrMenuDtlId)) {
+                $voucherType = config('staging.voucher_type_by_menu.' . $formNameOrMenuDtlId);
+                if ($voucherType !== null && $voucherType !== '') {
+                    $query->where('voucher_type', $voucherType);
+                }
+            }
+            return;
+        }
     }
 
     protected function scopeAccoVoucherMasterRow($tableName, $query)
