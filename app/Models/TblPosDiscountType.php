@@ -13,4 +13,8 @@ class TblPosDiscountType extends Model
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }
+
+    protected $casts = [
+        'status' => 'boolean',
+    ];
 }
