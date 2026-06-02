@@ -25,10 +25,8 @@ class StagingDashboardController extends Controller
     public function index()
     {
         // dump('Staging dashboard is under maintenance. Please check back later.');
-        // $menus = TblSoftMenuDtl::where('menu_id', 4)->get();
-        $menus = TblSoftMenuDtl::all();
+        $menus = $this->stagingService->getMenusForStagingDashboard();
         $flowsMenuDtlByMenu = [];
-        // dd($menus);
 
         foreach ($menus as $menuDtl) {
             if (!$this->stagingService->hasStagingDashboardForMenu($menuDtl->menu_dtl_id)) {
@@ -277,7 +275,7 @@ class StagingDashboardController extends Controller
     {
         $menu = TblSoftMenuDtl::find($menuDtlId);
 
-        if (!$menu || !$this->stagingService->hasStagingDashboardForMenu($menuDtlId)) {
+        if (!$menu || !$this->stagingService->menuHasStagingDefined($menuDtlId)) {
             abort(404);
         }
 

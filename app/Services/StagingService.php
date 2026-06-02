@@ -16,6 +16,41 @@ use Illuminate\Support\Facades\Log;
 
 class StagingService
 {
+    protected $stagingDefinedMenuDtlIds = null;
+
+    protected $dashboardCache = [
+        'menu_dtl' => [],
+        'has_enrolled' => [],
+        'enrolled_flow_ids' => [],
+        'criteria_dashboard' => [],
+        'criteria_flows_dashboard' => [],
+        'user_access_dashboard' => [],
+    ];
+
+    protected function dashboardMenuKey($formNameOrMenuDtlId): string
+    {
+        if (is_numeric($formNameOrMenuDtlId)) {
+            return (string) $formNameOrMenuDtlId;
+        }
+        return strtolower(trim((string) $formNameOrMenuDtlId));
+    }
+
+    protected function resolveMenuDtl($formNameOrMenuDtlId)
+    {
+        $key = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        if (array_key_exists($key, $this->dashboardCache['menu_dtl'])) {
+            return $this->dashboardCache['menu_dtl'][$key];
+        }
+
+        $menu = is_numeric($formNameOrMenuDtlId)
+            ? TblSoftMenuDtl::find($formNameOrMenuDtlId)
+            : TblSoftMenuDtl::where('menu_dtl_name', $formNameOrMenuDtlId)->first();
+
+        $this->dashboardCache['menu_dtl'][$key] = $menu;
+
+        return $menu;
+    }
+
     protected function flowIsEnabled($flow): bool
     {
         if (!$flow) {
@@ -73,15 +108,20 @@ class StagingService
 
     public function menuHasEnrolledStagingDocuments($formNameOrMenuDtlId): bool
     {
-        $menu = is_numeric($formNameOrMenuDtlId)
-            ? TblSoftMenuDtl::find($formNameOrMenuDtlId)
-            : TblSoftMenuDtl::where('menu_dtl_name', $formNameOrMenuDtlId)->first();
+        $key = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        if (array_key_exists($key, $this->dashboardCache['has_enrolled'])) {
+            return (bool) $this->dashboardCache['has_enrolled'][$key];
+        }
+
+        $menu = $this->resolveMenuDtl($formNameOrMenuDtlId);
 
         if (!$menu || !$menu->menu_dtl_table_name) {
+            $this->dashboardCache['has_enrolled'][$key] = false;
             return false;
         }
 
         if (!$this->tableHasStagingWorkflowColumns($menu->menu_dtl_table_name)) {
+            $this->dashboardCache['has_enrolled'][$key] = false;
             return false;
         }
 
@@ -91,14 +131,23 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
 
-        return $query->exists();
+        $result = $query->exists();
+        $this->dashboardCache['has_enrolled'][$key] = (bool) $result;
+
+        return (bool) $result;
     }
 
     public function getFlowCriteriaForDashboard($formNameOrMenuDtlId)
     {
+        $key = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        if (array_key_exists($key, $this->dashboardCache['criteria_dashboard'])) {
+            return $this->dashboardCache['criteria_dashboard'][$key];
+        }
+
         if (is_numeric($formNameOrMenuDtlId)) {
             $formName = $this->getFormNameFromMenuDtlId($formNameOrMenuDtlId);
             if (!$formName) {
+                $this->dashboardCache['criteria_dashboard'][$key] = null;
                 return null;
             }
         } else {
@@ -118,6 +167,7 @@ class StagingService
         }
 
         if (!$criteria) {
+            $this->dashboardCache['criteria_dashboard'][$key] = null;
             return null;
         }
 
@@ -125,19 +175,25 @@ class StagingService
             || (int) ($criteria->menu_flow_criteria_entry_status ?? 0) !== 1;
 
         if ($criteriaInactive && !$hasEnrolledDocuments) {
+            $this->dashboardCache['criteria_dashboard'][$key] = null;
             return null;
         }
 
+        $this->dashboardCache['criteria_dashboard'][$key] = $criteria;
         return $criteria;
     }
 
     protected function getEnrolledStagingFlowIds($formNameOrMenuDtlId): array
     {
-        $menu = is_numeric($formNameOrMenuDtlId)
-            ? TblSoftMenuDtl::find($formNameOrMenuDtlId)
-            : TblSoftMenuDtl::where('menu_dtl_name', $formNameOrMenuDtlId)->first();
+        $key = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        if (array_key_exists($key, $this->dashboardCache['enrolled_flow_ids'])) {
+            return $this->dashboardCache['enrolled_flow_ids'][$key];
+        }
+
+        $menu = $this->resolveMenuDtl($formNameOrMenuDtlId);
 
         if (!$menu || !$menu->menu_dtl_table_name || !$this->tableHasStagingWorkflowColumns($menu->menu_dtl_table_name)) {
+            $this->dashboardCache['enrolled_flow_ids'][$key] = [];
             return [];
         }
 
@@ -148,13 +204,16 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
 
-        return $query->distinct()
+        $ids = $query->distinct()
             ->pluck('current_stg_id')
             ->filter(function ($id) {
                 return $id !== null && $id !== '';
             })
             ->values()
             ->all();
+        $this->dashboardCache['enrolled_flow_ids'][$key] = $ids;
+
+        return $ids;
     }
 
     public function criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId = null)
@@ -163,18 +222,33 @@ class StagingService
             return collect([]);
         }
 
+        $key = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        $criteriaKey = (string) ($criteria->menu_flow_criteria_id ?? '0');
+        $cacheKey = $key . ':' . $criteriaKey;
+        if (array_key_exists($cacheKey, $this->dashboardCache['criteria_flows_dashboard'])) {
+            return $this->dashboardCache['criteria_flows_dashboard'][$cacheKey];
+        }
+
         $criteriaInactive = (int) ($criteria->menu_flow_criteria_status ?? 0) !== 1
             || (int) ($criteria->menu_flow_criteria_entry_status ?? 0) !== 1;
 
         if ($criteriaInactive && $this->menuHasEnrolledStagingDocuments($formNameOrMenuDtlId)) {
-            return $criteria->flows->values();
+            $result = $criteria->flows->values();
+            $this->dashboardCache['criteria_flows_dashboard'][$cacheKey] = $result;
+            return $result;
         }
 
-        return $this->activeCriteriaFlows($criteria);
+        $result = $this->activeCriteriaFlows($criteria);
+        $this->dashboardCache['criteria_flows_dashboard'][$cacheKey] = $result;
+        return $result;
     }
 
     public function hasStagingDashboardForMenu($formNameOrMenuDtlId): bool
     {
+        if (!$this->menuHasStagingDefined($formNameOrMenuDtlId)) {
+            return false;
+        }
+
         if ($this->hasStaging($formNameOrMenuDtlId)) {
             return true;
         }
@@ -187,6 +261,84 @@ class StagingService
 
         return $criteria !== null
             && $this->criteriaFlowsForDashboard($criteria, $formNameOrMenuDtlId)->isNotEmpty();
+    }
+
+    public function getStagingDashboardMenuDtlIds(): array
+    {
+        if ($this->stagingDefinedMenuDtlIds !== null) {
+            return $this->stagingDefinedMenuDtlIds;
+        }
+
+        $menuDtlIds = TblMenuFlowCriteria::query()
+            ->whereNotNull('menu_dtl_id')
+            ->distinct()
+            ->pluck('menu_dtl_id')
+            ->filter(function ($id) {
+                return $id !== null && $id !== '' && (int) $id > 0;
+            })
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->values()
+            ->all();
+
+        $criteriaNames = TblMenuFlowCriteria::query()
+            ->where(function ($q) {
+                $q->whereNull('menu_dtl_id')->orWhere('menu_dtl_id', 0);
+            })
+            ->whereNotNull('menu_flow_criteria_name')
+            ->distinct()
+            ->pluck('menu_flow_criteria_name')
+            ->filter()
+            ->map(function ($name) {
+                return strtolower(trim((string) $name));
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($criteriaNames)) {
+            $menusByName = TblSoftMenuDtl::query()
+                ->where(function ($q) use ($criteriaNames) {
+                    foreach ($criteriaNames as $name) {
+                        $q->orWhereRaw('lower(trim(menu_dtl_name)) = ?', [$name]);
+                    }
+                })
+                ->pluck('menu_dtl_id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->all();
+
+            $menuDtlIds = array_values(array_unique(array_merge($menuDtlIds, $menusByName)));
+        }
+
+        $this->stagingDefinedMenuDtlIds = $menuDtlIds;
+
+        return $menuDtlIds;
+    }
+
+    public function getMenusForStagingDashboard()
+    {
+        $menuDtlIds = $this->getStagingDashboardMenuDtlIds();
+        if (empty($menuDtlIds)) {
+            return TblSoftMenuDtl::query()->whereRaw('1 = 0')->get();
+        }
+
+        return TblSoftMenuDtl::whereIn('menu_dtl_id', $menuDtlIds)->get();
+    }
+
+    public function menuHasStagingDefined($formNameOrMenuDtlId): bool
+    {
+        if (is_numeric($formNameOrMenuDtlId)) {
+            return in_array((int) $formNameOrMenuDtlId, $this->getStagingDashboardMenuDtlIds(), true);
+        }
+
+        $menu = $this->resolveMenuDtl($formNameOrMenuDtlId);
+
+        return $menu
+            ? in_array((int) $menu->menu_dtl_id, $this->getStagingDashboardMenuDtlIds(), true)
+            : false;
     }
 
     protected function getFormNameFromMenuDtlId($menuDtlId)
@@ -713,8 +865,15 @@ class StagingService
             return false;
         }
 
+        $menuKey = $this->dashboardMenuKey($formNameOrMenuDtlId);
+        $accessKey = $menuKey . ':' . (string) $flowId;
+        if (array_key_exists($accessKey, $this->dashboardCache['user_access_dashboard'])) {
+            return (bool) $this->dashboardCache['user_access_dashboard'][$accessKey];
+        }
+
         $criteria = $this->getFlowCriteriaForDashboard($formNameOrMenuDtlId);
         if (!$criteria) {
+            $this->dashboardCache['user_access_dashboard'][$accessKey] = false;
             return false;
         }
 
@@ -729,7 +888,10 @@ class StagingService
             });
         }
 
-        return $this->userHasAccessToCriteriaFlow($flow);
+        $result = $this->userHasAccessToCriteriaFlow($flow);
+        $this->dashboardCache['user_access_dashboard'][$accessKey] = (bool) $result;
+
+        return (bool) $result;
     }
 
     protected function userHasAccessToCriteriaFlow($flow): bool
