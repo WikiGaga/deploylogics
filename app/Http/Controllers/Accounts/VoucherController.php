@@ -75,12 +75,13 @@ class VoucherController extends Controller
 
     protected function applyAccountsVoucherEditJsonRedirect($type, $id, array &$data)
     {
+        $new_branch_id = !empty($this->branch_id)? $this->branch_id : auth()->user()->branch_id;
         $data = array_merge($data, Utilities::returnJsonEditForm());
         $master = TblAccoVoucher::where('voucher_id', $id)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
             ->where(Utilities::currentBC())
-            ->where('branch_id', $this->branch_id)
+            ->where('branch_id', $new_branch_id)
             ->first();
         $data['redirect'] = $this->documentFormStayRedirect('/accounts/' . $type, $id);
     }
@@ -128,11 +129,13 @@ class VoucherController extends Controller
 
     protected function syncAccountsVoucherStagingRows($request, $master, string $voucherId, string $type): void
     {
+        $new_branch_id = !empty($this->branch_id)? $this->branch_id : auth()->user()->branch_id;
+
         $freshMaster = TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
             ->where(Utilities::currentBC())
-            ->where('branch_id', $request->new_branch_id)
+            ->where('branch_id', $new_branch_id)
             ->first();
 
         if (!$freshMaster) {
@@ -148,7 +151,7 @@ class VoucherController extends Controller
         TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
             ->where(Utilities::currentBC())
-            ->where('branch_id', $request->new_branch_id)
+            ->where('branch_id', $new_branch_id)
             ->update([
                 'current_stg_id' => $freshMaster->current_stg_id,
                 'staging_apply' => $freshMaster->staging_apply,
@@ -158,18 +161,19 @@ class VoucherController extends Controller
 
     protected function captureAccountsVoucherStagingSnapshot(string $voucherId, string $type): ?array
     {
+        $new_branch_id = !empty($this->branch_id)? $this->branch_id : auth()->user()->branch_id;
         $master = TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
             ->where(Utilities::currentBC())
-            ->where('branch_id', $this->branch_id)
+            ->where('branch_id', $new_branch_id)
             ->first(['staging_apply', 'current_stg_id', 'posted']);
 
         if (!$master) {
             $master = TblAccoVoucher::where('voucher_id', $voucherId)
                 ->where('voucher_type', $type)
                 ->where(Utilities::currentBC())
-                ->where('branch_id', $this->branch_id)
+                ->where('branch_id', $new_branch_id)
                 ->first(['staging_apply', 'current_stg_id', 'posted']);
         }
 
@@ -222,12 +226,13 @@ class VoucherController extends Controller
         if (!isset($id) || !$menuDtlId) {
             return null;
         }
+        $new_branch_id = !empty($this->branch_id)? $this->branch_id : auth()->user()->branch_id;
 
         $existingMaster = TblAccoVoucher::where('voucher_id', $id)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
             ->where(Utilities::currentBC())
-            ->where('branch_id', $request->new_branch_id)
+            ->where('branch_id', $new_branch_id)
             ->first();
 
         if (!$existingMaster) {
