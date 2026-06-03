@@ -15,12 +15,6 @@
 @section('content')
     @php
         $data = Session::get('data');
-        $period = \Carbon\CarbonPeriod::create($data['from_date'], $data['to_date']);
-        $dates = [];
-        foreach ($period as $date) {
-            $dates[] = $date->format('Y/m/d');
-        }
-
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -31,7 +25,7 @@
                     <span style="color: #5578eb;">{{" ".date('d-m-Y', strtotime($data['from_date']))." to ". date('d-m-Y', strtotime($data['to_date']))." "}}</span>
                 </h6>
                 @if(count($data['branch_ids']) != 0)
-                    @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->select('branch_name', 'branch_id')->whereIn('branch_id',$data['branch_ids'])->where(\App\Library\Utilities::currentBC())->where('branch_active_status',1)->get(); @endphp
+                    @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->where(\App\Library\Utilities::currentBC())->where('branch_active_status',1)->get('branch_name'); @endphp
                     <h6 class="kt-invoice__criteria">
                         <span style="color: #e27d00;">Branch:</span>
                         @foreach($branch_lists as $branch_list)
@@ -46,94 +40,21 @@
             <div class="row row-block">
                 <div class="col-lg-12">
                     @if(isset($data['is_verified']) && $data['is_verified'] == 0)
-                        {{-- <button class="btn btn-primary pull-right" id="verifyClosingDay">
+                        <button class="btn btn-primary pull-right" id="verifyClosingDay">
                             <i class="fa fa-check"></i>
                             Verify Report
-                        </button> --}}
+                        </button>
                     @else
-                        {{-- <button class="btn btn-success pull-right" disabled>
+                        <button class="btn btn-success pull-right" disabled>
                             <i class="fa fa-check"></i>
                             Report Verified
-                        </button> --}}
+                        </button>
                     @endif
                 </div>
             </div>
-            @foreach($dates as $date)
-             <h2 class="text-center">{{$date}}</h2>
-            @foreach($branch_lists as $branch_list)
-            <h2 class="text-center">{{$branch_list->branch_name}}</h2>
-
             <div class="row row-block">
                 <div class="col-lg-12">
-                    <table width="100%" class="rep_sale_invoice_datatable table bt-datatable table-bordered">
-                        <tr class="sticky-header">
-									
-                            <th class="text-center">Date</th>
-                            <th class="text-center">Session</th>
-                            <th class="text-center">User</th>
-                            <th class="text-center">Cash</th>
-                            <th class="text-center">Submitted Cash</th>
-                            <th class="text-center">Cash Diff</th>
-                            <th class="text-center">Visa</th>
-                            <th class="text-center">Submitted Visa</th>
-                            <th class="text-center">Visa Diff</th>
-                            <th class="text-center">Total</th>
-                            <th class="text-center">Total Diff</th>
-                            <th class="text-center">Diff %</th>
-                            <th class="text-center">Credit</th>
-                            <th class="text-center">Paid Orders</th>
-                            <th class="text-center">Canceled Food Items</th>
-                            <th class="text-center">Unpaid Orders</th>
-                        </tr>
-                        @php
-
-                            $query = "select branch_name,  order_date,   session_no,    user_name,     total_cash_paid,      closing_cash,     cash_diff,    total_card_paid,    closing_visa,   visa_diff,   tot_Amount,  tot_diff ,  ( tot_diff_percentage) || '%' AS tot_diff_percentage ,  total_credit,  paid_orders ,  deleted_count,  unpaid_orders  from vw_rest_closing_summ   where order_date =  to_date('".$date."', 'yyyy/mm/dd') AND BRANCH_ID  =".intval($branch_list->branch_id);
-                            $collection = \Illuminate\Support\Facades\DB::select($query);
-                          
-                        @endphp
-                        
-                        
-                        @if (empty($collection))
-                            <tr>
-                                <td colspan="18" class="text-center">No data available for this date.</td>
-                            </tr>
-                            {{-- </table>
-                             </div></div>
-                                @continue --}}
-                        @endif
-                        @foreach ($collection as $item)
-                        {{-- {{ dd($item,$item->tot_amount) }} --}}
-                            
-                        <tr class="sticky-header">
-                            <td class="text-center">{{ $item->order_date }}</td>
-                            <td class="text-center">{{ $item->session_no }}</td>
-                            <td class="text-center">{{ $item->user_name }}</td>
-                            <td class="text-center">{{ $item->total_cash_paid }}</td>
-                            <td class="text-center">{{ $item->closing_cash }}</td>
-                            <td class="text-center">{{ $item->cash_diff }}</td>
-                            <td class="text-center">{{ $item->total_card_paid }}</td>
-                            <td class="text-center">{{ $item->closing_visa }}</td>
-                            <td class="text-center">{{ $item->visa_diff }}</td>
-
-                            <td class="text-center">{{ $item->tot_amount }}</td>
-                            <td class="text-center">{{ $item->tot_diff }}</td>
-                            <td class="text-center">{{ $item->tot_diff_percentage }}</td>
-                            <td class="text-center">{{ $item->total_credit }}</td>
-                            <td class="text-center">{{ $item->paid_orders }}</td>
-                            <td class="text-center">{{ $item->deleted_count }}</td>
-                            <td class="text-center">{{ $item->unpaid_orders }}</td>
-                        </tr>
-                        @endforeach
-                    </table>
-
-                    
-                   
-                </div>
-            </div>
-            {{-- ///////////// --}}
-            <div class="row row-block">
-                <div class="col-lg-12">
-                    <table width="100%" class="rep_sale_invoice_datatable table bt-datatable table-bordered">
+                    <table width="100%" id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                         <tr class="sticky-header">
                             <th class="text-center">No</th>
                             <th class="text-center">Cashier's Name</th>
@@ -160,11 +81,9 @@
                         </tr>
                         @php
 
-                            // $query = "select distinct sales_sales_man ,sales_sales_man_name from vw_sale_sales_invoice
-                            // where (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id = ".$branch_list->branch_id;
+                            $query = "select distinct sales_sales_man ,sales_sales_man_name from vw_sale_sales_invoice
+                            where (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")";
 
-                            $query = "select distinct sales_sales_man, sales_sales_man_name from vw_sale_sales_invoice
-                            where SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id);
                             $list = \Illuminate\Support\Facades\DB::select($query);
                            // dd($list);
                                 $total_CrSale =0;
@@ -202,7 +121,7 @@
                                             $CrSaleQuery = "select sum(sales_net_amount) sales_net_amount from(
                                             select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                             where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SI' OR sales_type = 'POS' OR sales_type = 'SIC') and (sales_sales_type = '2' OR sales_sales_type = '3' OR sales_sales_type = '1') and
-                                            SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                            (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd'))  and branch_id in( ".implode(",",$data['branch_ids']).")
                                             ) abc";
                                         }
                                     }
@@ -210,7 +129,7 @@
                                         $CrSaleQuery = "select sum(sales_net_amount) sales_net_amount from(
                                         select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                         where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SI' OR sales_type = 'POS') and (sales_sales_type = '2' OR sales_sales_type = '3') and
-                                        SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                        (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd'))  and branch_id in( ".implode(",",$data['branch_ids']).")
                                         ) abc";
                                     }
                                     $CrSale = \Illuminate\Support\Facades\DB::select($CrSaleQuery);
@@ -222,7 +141,7 @@
                                     $CrSaleRQuery = "select sum(sales_net_amount) sales_net_amount from(
                                                     select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                                     where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SR' OR sales_type = 'RPOS') and (sales_sales_type = '2' OR sales_sales_type = '3') and
-                                                    SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $CrSaleR = \Illuminate\Support\Facades\DB::select($CrSaleRQuery);
                                     $CrSaleR = isset($CrSaleR[0]->sales_net_amount)?$CrSaleR[0]->sales_net_amount:0;
@@ -235,8 +154,8 @@
                                 @php
                                     $VCSaleQuery = "select sum(sales_net_amount) sales_net_amount from(
                                                     select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
-                                                    where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SI' OR sales_type = 'POS') and (sales_sales_type = '4' OR sales_sales_type = '5') and
-                                                    SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SI' OR sales_type = 'POS') and (sales_sales_type = '4' OR sales_sales_type = '5')and
+                                                    (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $VCSale = \Illuminate\Support\Facades\DB::select($VCSaleQuery);
                                     $VCSale = isset($VCSale[0]->sales_net_amount)?$VCSale[0]->sales_net_amount:0;
@@ -247,7 +166,7 @@
                                     $VCSaleRQuery = "select sum(sales_net_amount) sales_net_amount from(
                                                     select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                                     where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SR' OR sales_type = 'RPOS') and (sales_sales_type = '4' OR sales_sales_type = '5') and
-                                                    SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $VCSaleR = \Illuminate\Support\Facades\DB::select($VCSaleRQuery);
                                     $VCSaleR = isset($VCSaleR[0]->sales_net_amount)?$VCSaleR[0]->sales_net_amount:0;
@@ -262,7 +181,7 @@
                                         $CaSaleQuery = "select sum(sales_net_amount) sales_net_amount from(
                                                         select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                                         where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SI' OR sales_type = 'POS') and sales_sales_type = '1' and
-                                                        SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                        (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")
                                                     ) abc";
                                         $CaSale = \Illuminate\Support\Facades\DB::select($CaSaleQuery);
                                         $CaSale = isset($CaSale[0]->sales_net_amount)?$CaSale[0]->sales_net_amount:0;
@@ -273,7 +192,7 @@
                                     $CaSaleRQuery = "select sum(sales_net_amount) sales_net_amount from(
                                                     select distinct sales_id , sales_net_amount from vw_sale_sales_invoice
                                                     where sales_sales_man = '".$saleData->sales_sales_man."' and (sales_type = 'SR' OR sales_type = 'RPOS') and sales_sales_type = '1' and
-                                                    SALES_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    (SALES_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $CaSaleR = \Illuminate\Support\Facades\DB::select($CaSaleRQuery);
                                     $CaSaleR = isset($CaSaleR[0]->sales_net_amount)?$CaSaleR[0]->sales_net_amount:0;
@@ -291,7 +210,7 @@
                                     $CrStQuery = "select sum(stock_dtl_total_amount) stock_dtl_total_amount from(
                                                     select stock_id , stock_dtl_total_amount from vw_inve_stock
                                                     where stock_user_id = '".$saleData->sales_sales_man."' and (stock_code_type = 'st') and (sales_sales_type = '2' OR sales_sales_type = '3') and
-                                                    STOCK_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    (STOCK_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd'))  and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $CrSt = \Illuminate\Support\Facades\DB::selectOne($CrStQuery);
                                     $CrSt = isset($CrSt->stock_dtl_total_amount)?$CrSt->stock_dtl_total_amount:0;
@@ -302,7 +221,7 @@
                                     $CaStQuery = "select sum(stock_dtl_total_amount) stock_dtl_total_amount from(
                                                     select stock_id , stock_dtl_total_amount from vw_inve_stock
                                                     where stock_user_id = '".$saleData->sales_sales_man."' and (stock_code_type = 'st') and (sales_sales_type = '1') and
-                                                    STOCK_DATE = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "
+                                                    (STOCK_DATE between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd'))  and branch_id in( ".implode(",",$data['branch_ids']).")
                                                 ) abc";
                                     $CaSt = \Illuminate\Support\Facades\DB::selectOne($CaStQuery);
                                     $CaSt = isset($CaSt->stock_dtl_total_amount)?$CaSt->stock_dtl_total_amount:0;
@@ -314,7 +233,7 @@
                                 {{--Collection--}}
                                 @php
                                     $ColctionQuery = "select sum(day_amount) amount from vw_sale_day where day_payment_handover_received = '".$saleData->sales_sales_man."' and day_case_type = 'payment-received'
-                                                    and day_date = to_date('".$date."', 'yyyy/mm/dd') and branch_id = " . intval($branch_list->branch_id) . "";
+                                                    and (day_date between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd')) and branch_id in( ".implode(",",$data['branch_ids']).")";
                                     $Colction = \Illuminate\Support\Facades\DB::select($ColctionQuery);
                                     $ColctionAmt = isset($Colction[0]->amount)?$Colction[0]->amount:0;
                                 @endphp
@@ -381,7 +300,7 @@
                 <div class="col-lg-12">
                     <div class="row">
                         <div class="col-lg-12">
-                                <table class="rep_sale_invoice_datatable table bt-datatable table-bordered">
+                            <table id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                                 <tr>
                                     <th width="10%" class="text-center">SN</th>
                                     <th width="25%" class="text-left">Account Name</th>
@@ -390,8 +309,8 @@
                                 </tr>
                                 @php
                                     $CashRece = "select voucher_no,voucher_id, voucher_sr_no ,voucher_credit,chart_name , voucher_descrip from vw_acco_voucher
-                                                    where voucher_type = 'crv' and voucher_credit > 0 and voucher_date = to_date('".$date."', 'yyyy/mm/dd')
-                                                     and branch_id = " . intval($branch_list->branch_id) . "";
+                                                    where voucher_type = 'crv' and voucher_credit > 0 and (voucher_date between to_date('".$data['only_date']."','yyyy/mm/dd') and to_date('".$data['only_date']."','yyyy/mm/dd'))
+                                                     and branch_id in( ".implode(",",$data['branch_ids']).")";
                                     $CashReceData = \Illuminate\Support\Facades\DB::select($CashRece);
                                     $tot_CashRece = 0;
                                 @endphp
@@ -431,7 +350,7 @@
                 <div class="col-lg-12">
                     <div class="row">
                         <div class="col-lg-12">
-                            <table class="rep_sale_invoice_datatable table bt-datatable table-bordered">
+                            <table id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                                 <tr>
                                     <th width="10%" class="text-center">SN</th>
                                     <th width="25%" class="text-left">Account Name</th>
@@ -440,8 +359,8 @@
                                 </tr>
                                 @php
                                     $CashPay = "select voucher_no,voucher_id, voucher_sr_no ,voucher_debit,chart_name , voucher_descrip from vw_acco_voucher
-                                                    where voucher_type = 'cpv' and voucher_debit > 0 and voucher_date = to_date('".$date."', 'yyyy/mm/dd')
-                                                     and branch_id = " . intval($branch_list->branch_id) . "";
+                                                    where voucher_type = 'cpv' and voucher_debit > 0 and (voucher_date between to_date('".$data['only_date']."','yyyy/mm/dd') and to_date('".$data['only_date']."','yyyy/mm/dd'))
+                                                     and branch_id in( ".implode(",",$data['branch_ids']).")";
                                     $CashPayData = \Illuminate\Support\Facades\DB::select($CashPay);
                                     $tot_CashPay = 0;
                                 @endphp
@@ -481,7 +400,7 @@
                 <div class="col-lg-12">
                     <div class="row">
                         <div class="col-lg-12">
-                            <table class="rep_sale_invoice_datatable table bt-datatable table-bordered">
+                            <table id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                                 <tr class="total">
                                     <td class="text-left">Notes</td>
                                     @php
@@ -494,7 +413,7 @@
                                     @endforeach
                                 </tr>
                                 @php
-                                    $Bank_dist = \App\Models\TblSaleBankDistribution::with('distribution_dtl')->whereRaw("bd_date = to_date('".$date."', 'yyyy/mm/dd')")->where('branch_id', intval($branch_list->branch_id))->orderby('bd_code','ASC')->get();
+                                    $Bank_dist = \App\Models\TblSaleBankDistribution::with('distribution_dtl')->whereBetween('bd_date',[$data['only_date'],$data['only_date']])->whereIn('branch_id',$data['branch_ids'])->orderby('bd_code','ASC')->get();
                                 @endphp
                                 @foreach($Bank_dist as $Bank_Dtls)
                                     @php
@@ -568,8 +487,8 @@
                     @php
                         $bd_qry = "select bd_id,bd_code,bd_date,bank_id,bank_name,sum(bd_dtl_amount) amount,document_verified_status
                                     from vw_sale_bank_distribution
-                                    where bd_date = to_date('".$date."', 'yyyy/mm/dd')
-                                    AND branch_id = " . intval($branch_list->branch_id) . "
+                                    where (bd_date between to_date('".$data['from_date']."','yyyy/mm/dd') and to_date('".$data['to_date']."','yyyy/mm/dd'))
+                                    AND branch_id IN (".implode(",",$data['branch_ids']).")
                                     group by(bd_id,bd_code,bd_date,bank_id,bank_name,document_verified_status)
                                     order by bd_date";
                         $bd_data = \Illuminate\Support\Facades\DB::select($bd_qry);
@@ -627,7 +546,7 @@
                 <div class="col-lg-12">
                     <div class="row">
                         <div class="col-lg-3">
-                            <table class="rep_sale_invoice_datatable table bt-datatable table-bordered">
+                            <table id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                                 <tr>
                                     <td class="text-left">Collection </td>
                                     <td class="text-right">{{number_format($total_ColctionAmt,3)}}</td>
@@ -710,8 +629,6 @@
                 </div>
             </div>
         </div>
-        @endforeach
-        @endforeach
         <div class="kt-portlet__foot sale_invoice_footer" style="background: #f7f8fa">
             <div class="row">
                 <div class="col-lg-12 kt-align-right">
@@ -835,7 +752,7 @@
     @if($data['form_file_type'] == 'xls')
         <script>
             $(document).ready(function() {
-                ".rep_sale_invoice_datatable").table2excel({
+                $("#rep_sale_invoice_datatable").table2excel({
                     // exclude: ".noExport",
                     filename: "report.xls",
                 });

@@ -1129,6 +1129,9 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('form/{id?}','Accounts\BudgetController@store');
             Route::post('delete/{id}','Accounts\BudgetController@destroy');
         });
+
+
+        Route::get('/get-voucher-code','Accounts\VoucherController@getVoucherCode')->name('voucher.get-code');
         Route::prefix('accounts/{type}')->group(function () {
             // jv (journal) // rv (cash receipt voucher,bank receipt voucher) // pv (cash payment voucher,bank payment voucher)
             Route::get('form/{id?}','Accounts\VoucherController@create');
