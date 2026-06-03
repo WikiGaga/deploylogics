@@ -125,12 +125,13 @@ class VoucherController extends Controller
         ];
     }
 
-    protected function syncAccountsVoucherStagingRows($master, string $voucherId, string $type): void
+    protected function syncAccountsVoucherStagingRows($request, $master, string $voucherId, string $type): void
     {
         $freshMaster = TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
-            ->where(Utilities::currentBCB())
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $request->new_branch_id)
             ->first();
 
         if (!$freshMaster) {
@@ -145,7 +146,8 @@ class VoucherController extends Controller
 
         TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
-            ->where(Utilities::currentBCB())
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $request->new_branch_id)
             ->update([
                 'current_stg_id' => $freshMaster->current_stg_id,
                 'staging_apply' => $freshMaster->staging_apply,
@@ -195,7 +197,7 @@ class VoucherController extends Controller
     }
 
     protected function processAccountsVoucherWorkflowOnly(Request $request, $menuDtlId, $formId, $type, $existingMaster): array
-    {
+    { 
         $wasInStaging = !empty($existingMaster->current_stg_id) && (int) ($existingMaster->posted ?? 0) === 0;
         $stagingService = $this->getStagingService();
         $criteriaApplies = $stagingService->shouldUseStagingForDocument($menuDtlId, $formId, $existingMaster, $wasInStaging, false);
@@ -203,7 +205,7 @@ class VoucherController extends Controller
 
         if ($criteriaApplies || $stagingEnrolled) {
             $this->handleStaging($request, $menuDtlId, $formId, $existingMaster, false, $this->voucherStagingNotificationOptions($type));
-            $this->syncAccountsVoucherStagingRows($existingMaster, $formId, $type);
+            $this->syncAccountsVoucherStagingRows($request,$existingMaster, $formId, $type);
         }
 
         $data = array_merge([], Utilities::returnJsonEditForm());
@@ -255,12 +257,12 @@ class VoucherController extends Controller
             'posted_when_exempt' => 0,
             'stg_log_posted_when_exempt' => 0,
             'preserved_staging' => $preservedStaging,
-            'sync_after_save' => function ($model) use ($voucherId, $voucherType) {
-                $this->syncAccountsVoucherStagingRows($model, $voucherId, $voucherType);
+            'sync_after_save' => function ($model) use ($voucherId, $voucherType,$request) {
+                $this->syncAccountsVoucherStagingRows($request, $model, $voucherId, $voucherType);
             },
         ]);
 
-        $this->syncAccountsVoucherStagingRows($master, $formId, $type);
+        $this->syncAccountsVoucherStagingRows($request, $master, $formId, $type);
     }
 
     public function getVoucherCode(Request $request)
