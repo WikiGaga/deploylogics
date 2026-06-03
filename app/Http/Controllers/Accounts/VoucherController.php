@@ -45,7 +45,7 @@ use App\Traits\HasStaging;
 class VoucherController extends Controller
 {
     use HasStaging;
-
+    private $branch_id=null;
     public $menu_id = '';
     /**
      * Display a listing of the resource.
@@ -79,7 +79,8 @@ class VoucherController extends Controller
         $master = TblAccoVoucher::where('voucher_id', $id)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
-            ->where(Utilities::currentBCB())
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $this->branch_id)
             ->first();
         $data['redirect'] = $this->documentFormStayRedirect('/accounts/' . $type, $id);
     }
@@ -160,13 +161,15 @@ class VoucherController extends Controller
         $master = TblAccoVoucher::where('voucher_id', $voucherId)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
-            ->where(Utilities::currentBCB())
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $this->branch_id)
             ->first(['staging_apply', 'current_stg_id', 'posted']);
 
         if (!$master) {
             $master = TblAccoVoucher::where('voucher_id', $voucherId)
                 ->where('voucher_type', $type)
-                ->where(Utilities::currentBCB())
+                ->where(Utilities::currentBC())
+                ->where('branch_id', $this->branch_id)
                 ->first(['staging_apply', 'current_stg_id', 'posted']);
         }
 
@@ -223,7 +226,8 @@ class VoucherController extends Controller
         $existingMaster = TblAccoVoucher::where('voucher_id', $id)
             ->where('voucher_type', $type)
             ->where('voucher_sr_no', '=', '1')
-            ->where(Utilities::currentBCB())
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $request->new_branch_id)
             ->first();
 
         if (!$existingMaster) {
@@ -767,6 +771,7 @@ class VoucherController extends Controller
             'pd.*.account_id' => 'required|numeric',
         ]);
        $new_branch_id = $request->new_branch_id;
+       $this->branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
