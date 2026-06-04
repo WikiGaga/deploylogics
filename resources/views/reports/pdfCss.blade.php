@@ -20,10 +20,20 @@
     #kt_portlet_table{
         margin-bottom: 0 !important;
         border: 0;
-        table-layout: fixed;
+    }
+    table.static_report_table,
+    table#dynamic_report_table,
+    table.table-bordered,
+    table.bt-datatable {
+        width: 100%;
+        table-layout: auto;
+        border-collapse: collapse;
     }
     td, th {
         padding: 4px 5px !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
     th {
         font-size: 12px;
@@ -176,10 +186,10 @@
     }
 
     @page {
-        margin-top: 10mm;
-        margin-right: 20mm;
-        margin-bottom: 10mm;
-        margin-left: 20mm;
+        margin-top: 8mm;
+        margin-right: 8mm;
+        margin-bottom: 8mm;
+        margin-left: 8mm;
     }
 
     html, body{

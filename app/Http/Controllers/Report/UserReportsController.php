@@ -2800,6 +2800,8 @@ class UserReportsController extends Controller
          *  Generate Report
          ********/
         if($data['form_file_type'] == 'pdf'){
+            $pdfConfig = $this->buildReportPdfConfig($view);
+
             $dompdf = new Dompdf();
             $options = $dompdf->getOptions();
             $options->set('dpi', 100);
@@ -2807,14 +2809,72 @@ class UserReportsController extends Controller
             $options->set('isHtml5ParserEnabled', TRUE);
             $options->setDefaultFont('roboto');
             $dompdf->setOptions($options);
-            $dompdf->loadHtml($view,'UTF-8');
-            // (Optional) Setup the paper size and orientation
-            $dompdf->setPaper('A4', 'landscape');
-            // Render the HTML as PDF
+            $dompdf->loadHtml($pdfConfig['html'], 'UTF-8');
+            $dompdf->setPaper($pdfConfig['paper']);
             $dompdf->render();
-            // Output the generated PDF to Browser
+
             return $dompdf->stream();
         }
+    }
+
+    private function countReportTableColumns(string $html): int
+    {
+        $maxColumns = 0;
+
+        if (!preg_match_all('/<tr\b[^>]*>(.*?)<\/tr>/is', $html, $rows)) {
+            return 0;
+        }
+
+        foreach ($rows[1] as $rowHtml) {
+            if (!preg_match_all('/<t[hd]\b/i', $rowHtml, $cells)) {
+                continue;
+            }
+
+            $maxColumns = max($maxColumns, count($cells[0]));
+        }
+
+        return $maxColumns;
+    }
+
+    private function buildReportPdfConfig(string $html): array
+    {
+        $columnCount = $this->countReportTableColumns($html);
+        $a4LandscapeWidth = 841.89;
+        $a4LandscapeHeight = 595.28;
+        $columnWidthPt = 46;
+        $horizontalMarginPt = 60;
+        $maxPageWidthPt = 2400;
+
+        $requiredWidth = ($columnCount * $columnWidthPt) + $horizontalMarginPt;
+        $pageWidth = max($a4LandscapeWidth, min($requiredWidth, $maxPageWidthPt));
+
+        if ($columnCount > 10) {
+            $fontSize = max(6, (int) round(10 - (($columnCount - 10) * 0.35)));
+            $extraCss = '<style>'
+                . 'table td, table th {'
+                . ' font-size: ' . $fontSize . 'px !important;'
+                . ' padding: 2px 3px !important;'
+                . ' word-wrap: break-word !important;'
+                . ' overflow-wrap: break-word !important;'
+                . ' white-space: normal !important;'
+                . '}'
+                . '</style>';
+            $html = $this->injectReportPdfCss($html, $extraCss);
+        }
+
+        return [
+            'html' => $html,
+            'paper' => [0, 0, $pageWidth, $a4LandscapeHeight],
+        ];
+    }
+
+    private function injectReportPdfCss(string $html, string $css): string
+    {
+        if (stripos($html, '</head>') !== false) {
+            return preg_replace('/<\/head>/i', $css . '</head>', $html, 1);
+        }
+
+        return $css . $html;
     }
 
     public function export(Request $request)

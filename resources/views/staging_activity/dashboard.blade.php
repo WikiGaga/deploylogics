@@ -51,7 +51,7 @@
                                                                 <span style="margin-left:10px;display:inline-block;font-weight: 500;">{{$m_dtl['name']}}</span>
                                                             </td>
                                                             <td width="10%">
-                                                                <span class="kt-badge kt-badge--danger kt-badge--md kt-badge--rounded">{{count($m_dtl['data'])}}</span>
+                                                                <span class="kt-badge kt-badge--danger kt-badge--md kt-badge--rounded">{{ $m_dtl['count'] ?? 0 }}</span>
                                                             </td>
                                                         </tr>
                                                     @endforeach

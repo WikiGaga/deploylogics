@@ -24,7 +24,6 @@ class StagingDashboardController extends Controller
      */
     public function index()
     {
-        // dump('Staging dashboard is under maintenance. Please check back later.');
         $menus = $this->stagingService->getMenusForStagingDashboard();
         $flowsMenuDtlByMenu = [];
 
@@ -33,11 +32,17 @@ class StagingDashboardController extends Controller
                 continue;
             }
 
-            $flows = $this->stagingService->getFormFlowsForDashboard($menuDtl->menu_dtl_id);
-            if (empty($flows['all']) || empty($menuDtl->menu_dtl_table_name)) {
+            $tableName = $menuDtl->menu_dtl_table_name;
+            if (empty($tableName)) {
                 continue;
             }
 
+            $flows = $this->stagingService->getFormFlowsForDashboard($menuDtl->menu_dtl_id);
+            if (empty($flows['all'])) {
+                continue;
+            }
+
+            $flowCountsByStage = $this->getFlowStageCountsForDashboard($menuDtl->menu_dtl_id, $tableName);
             $menuId = $menuDtl->menu_id;
             if (!isset($flowsMenuDtlByMenu[$menuId])) {
                 $flowsMenuDtlByMenu[$menuId] = [
@@ -45,21 +50,15 @@ class StagingDashboardController extends Controller
                     'document_count' => []
                 ];
             }
-            // dump($flows['all']);
 
             foreach ($flows['all'] as $flow) {
                 if (!$this->stagingService->getUserAccessForDashboard($menuDtl->menu_dtl_id, $flow->stg_flows_id)) {
                     continue;
                 }
 
-                $documents = $this->stagingService->getDocumentsAtFlowStage(
-                    $menuDtl->menu_dtl_id,
-                    $flow->stg_flows_id,
-                    $menuDtl->menu_dtl_table_name,
-                    $menuDtl->menu_dtl_table_name . '_id'
-                );
-
                 $flowKey = $flow->stg_flows_id;
+                $count = $this->resolveFlowStageCount($flowCountsByStage, $flowKey);
+
                 if (!isset($flowsMenuDtlByMenu[$menuId]['data'][$flowKey])) {
                     $flowsMenuDtlByMenu[$menuId]['data'][$flowKey] = [
                         'flow' => ['stg_flows_name' => $flow->stg_flows_name],
@@ -69,15 +68,13 @@ class StagingDashboardController extends Controller
 
                 $flowsMenuDtlByMenu[$menuId]['data'][$flowKey]['rows'][$menuDtl->menu_dtl_id] = [
                     'name' => $menuDtl->menu_dtl_name,
-                    'data' => $documents->toArray()
+                    'count' => $count,
                 ];
 
-                $count = count($documents);
                 if (!isset($flowsMenuDtlByMenu[$menuId]['document_count'][$flowKey])) {
                     $flowsMenuDtlByMenu[$menuId]['document_count'][$flowKey] = 0;
                 }
                 $flowsMenuDtlByMenu[$menuId]['document_count'][$flowKey] += $count;
-
             }
         }
 
@@ -97,10 +94,89 @@ class StagingDashboardController extends Controller
         return view('staging_activity.dashboard', compact('data'));
     }
 
-    /**
-     * Get count of documents at a specific stage
-     */
-    protected function getDocumentCountAtStage($tableName, $flowId)
+    protected function getFlowStageCountsForDashboard($menuDtlId, $tableName): array
+    {
+        if (!$this->stagingService->tableHasStagingWorkflowColumns($tableName)) {
+            return [];
+        }
+
+        try {
+            $query = DB::table($tableName)
+                ->select('current_stg_id', DB::raw('count(*) as document_count'))
+                ->where('posted', 0)
+                ->where(
+                    'staging_apply',
+                    $this->stagingService->getStagingApplyEnrolledValue($menuDtlId)
+                )
+                ->whereNotNull('current_stg_id');
+
+            $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+
+            $counts = [];
+            foreach ($query->groupBy('current_stg_id')->get() as $row) {
+                $row = (array) $row;
+                $stageId = $row['current_stg_id']
+                    ?? $row['CURRENT_STG_ID']
+                    ?? null;
+                if ($stageId === null || $stageId === '') {
+                    continue;
+                }
+                $counts[(string) $stageId] = (int) (
+                    $row['document_count']
+                    ?? $row['DOCUMENT_COUNT']
+                    ?? 0
+                );
+            }
+
+            return $counts;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    protected function resolveFlowStageCount(array $flowCountsByStage, $flowId): int
+    {
+        $key = (string) $flowId;
+
+        return (int) ($flowCountsByStage[$key] ?? 0);
+    }
+
+    protected function applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query): void
+    {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'acco_voucher') === false) {
+            return;
+        }
+
+        try {
+            $cols = DB::getSchemaBuilder()->getColumnListing($tableName);
+            $hasSrNo = false;
+            foreach ($cols as $c) {
+                if (strtolower((string) $c) === 'voucher_sr_no') {
+                    $hasSrNo = true;
+                    break;
+                }
+            }
+            if ($hasSrNo) {
+                $query->where(function ($q) {
+                    $q->where('voucher_sr_no', '1')->orWhere('voucher_sr_no', 1);
+                });
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        if (!is_numeric($menuDtlId)) {
+            return;
+        }
+
+        $voucherType = config('staging.voucher_type_by_menu.' . $menuDtlId);
+        if ($voucherType !== null && $voucherType !== '') {
+            $query->where('voucher_type', $voucherType);
+        }
+    }
+
+    protected function getDocumentCountAtStage($menuDtlId, $tableName, $flowId): int
     {
         if (!$this->stagingService->tableHasStagingWorkflowColumns($tableName)) {
             return 0;
@@ -110,9 +186,14 @@ class StagingDashboardController extends Controller
             $query = DB::table($tableName)
                 ->where('current_stg_id', $flowId)
                 ->where('posted', 0)
-                ->where('staging_apply', 1);
+                ->where(
+                    'staging_apply',
+                    $this->stagingService->getStagingApplyEnrolledValue($menuDtlId)
+                );
 
-            return $query->count();
+            $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+
+            return (int) $query->count();
         } catch (\Exception $e) {
             return 0;
         }
