@@ -121,6 +121,15 @@ trait BuildsWideTablePdf
     protected function createWideTableDompdf(string $html, ?int $columnCount = null): Dompdf
     {
         $pdfConfig = $this->buildReportPdfConfig($html, $columnCount);
+        $pdfConfig['html'] = $this->injectReportPdfCss(
+            $pdfConfig['html'],
+            '<style>'
+            . '@page{margin-top:12mm;margin-right:8mm;margin-bottom:8mm;margin-left:8mm;}'
+            . '#content{padding-top:10mm !important;}'
+            . '.kt-portlet .kt-portlet__head{padding-top:4mm !important;}'
+            . 'h1.kt-invoice__title,.kt-invoice__title{margin-top:0 !important;}'
+            . '</style>'
+        );
 
         $options = new Options();
         $options->set('dpi', 100);
