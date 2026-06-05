@@ -297,12 +297,20 @@ class GRNController extends Controller
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
         $data['page_data']['pending_pr'] = TRUE;
         $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $user_branches= DB::table('tbl_soft_branch as b')
+        ->select('b.business_id','b.company_id','b.branch_id',"b.branch_name","ub.user_id")
+        ->join('tbl_soft_user_branch as ub','ub.branch_id','=','b.branch_id')
+        ->where('ub.user_id',auth()->user()->id)
+        ->get();
+
+        $data['user_branches'] = $user_branches;
+        $data['type'] = 'grn';
         if(isset($id)){
             $allowCrossBranchView = (string) $request->query('view') === '1';
             $baseQuery = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBC());
             $exists = $allowCrossBranchView
                 ? $baseQuery->exists()
-                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+                : $baseQuery->wherein('branch_id', $user_branches->pluck('branch_id'))->exists();
 
             if($exists){
                 $data['permission'] = self::$menu_dtl_id.'-edit';
@@ -312,7 +320,7 @@ class GRNController extends Controller
                     ->where('grn_id',$id)
                     ->where(Utilities::currentBC());
                 if(!$allowCrossBranchView){
-                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                    $currentQuery = $currentQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
 
@@ -351,7 +359,7 @@ class GRNController extends Controller
         }
         $data['currency'] = TblDefiCurrency::where(Utilities::currentBC())->get();
         $data['accounts'] = TblDefiExpenseAccounts::with('account')->where('expense_accounts_type','grn_acc')->where(Utilities::currentBCB())->get();
-        $data['store'] = TblDefiStore::where('store_entry_status',1)->where(Utilities::currentBCB())->get();
+        $data['store'] = TblDefiStore::where('store_entry_status',1)->where(Utilities::currentBC())->get();
         $data['payment_type'] = TblDefiPaymentType::where('payment_type_entry_status',1)
             ->where(Utilities::currentBC())->get();
         $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_entry_status',1)->where(Utilities::currentBC())->get();
@@ -540,6 +548,7 @@ class GRNController extends Controller
     {
         $data = [];$undercostItems = [];
         $validator = Validator::make($request->all(), [
+            'new_branch_id' => 'required|numeric',
             'supplier_name' => 'required',
             'supplier_id' => 'required|numeric',
             'purchase_order_id' => 'nullable|numeric',
@@ -553,6 +562,8 @@ class GRNController extends Controller
             'pd.*.product_id' => 'nullable|numeric',
             'pd.*.product_barcode_id' => 'nullable|numeric',
         ]);
+        
+       $new_branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
@@ -577,7 +588,7 @@ class GRNController extends Controller
                 $uom_id = $dtl['uom_id'];
                 if($purchase_order_id != ""){
                     $exist_barcode = false;
-                    $purchase_order_barcodes = TblPurcPurchaseOrderDtl::where('purchase_order_id',$purchase_order_id)->where(Utilities::currentBCB())->get();
+                    $purchase_order_barcodes = TblPurcPurchaseOrderDtl::where('purchase_order_id',$purchase_order_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->get();
                     foreach ($purchase_order_barcodes as $barcode){
                         if($barcode['product_id'] == $product && $barcode['uom_id'] == $uom_id && $barcode['product_barcode_id'] == $product_barcode){
                             $exist_barcode = true;
@@ -606,7 +617,7 @@ class GRNController extends Controller
                 }
             }
             if(isset($id)){
-                $grn = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBCB())->first();
+                $grn = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
                 $grn_code = $grn->grn_code;
             }else{
                 $grn = new TblPurcGrn();
@@ -663,7 +674,7 @@ class GRNController extends Controller
             $grn->grn_remarks = $request->grn_notes;
             $grn->business_id = auth()->user()->business_id;
             $grn->company_id = auth()->user()->company_id;
-            $grn->branch_id = auth()->user()->branch_id;
+            $grn->branch_id = $new_branch_id;
             $grn->grn_user_id = auth()->user()->id;
             $grn->grn_device_id = 1;
             $grn->save();
@@ -675,9 +686,9 @@ class GRNController extends Controller
             $TotalExpAmount = 0;
             $total_gross_amount = 0;
             if(isset($id)){
-                $del_Dtls = TblPurcGrnExpense::where('grn_id',$id)->where(Utilities::currentBCB())->get();
+                $del_Dtls = TblPurcGrnExpense::where('grn_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->get();
                 foreach ($del_Dtls as $del_Dtls){
-                    TblPurcGrnExpense::where('grn_expense_id',$del_Dtls->grn_expense_id)->where(Utilities::currentBCB())->delete();
+                    TblPurcGrnExpense::where('grn_expense_id',$del_Dtls->grn_expense_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
                 }
             }
             if(isset($request->pdsm)){
@@ -703,7 +714,7 @@ class GRNController extends Controller
                         $expenseDtl->grn_expense_perc = $this->addNo($expense['expense_perc']);
                         $expenseDtl->business_id = auth()->user()->business_id;
                         $expenseDtl->company_id = auth()->user()->company_id;
-                        $expenseDtl->branch_id = auth()->user()->branch_id;
+                        $expenseDtl->branch_id = $new_branch_id;
                         $expenseDtl->grn_expense_user_id = auth()->user()->id;
                         $expenseDtl->save();
 
@@ -733,9 +744,9 @@ class GRNController extends Controller
             //     return $this->jsonErrorResponse($data , trans('message.undercost') , 200);
             // }
 
-            $grn_dtls = TblPurcGrnDtl::where('grn_id',$grn->grn_id)->where(Utilities::currentBCB())->get();
+            $grn_dtls = TblPurcGrnDtl::where('grn_id',$grn->grn_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->get();
             foreach($grn_dtls as $grn_dtl){
-                TblPurcGrnDtl::where('purc_grn_dtl_id',$grn_dtl->purc_grn_dtl_id)->where(Utilities::currentBCB())->delete();
+                TblPurcGrnDtl::where('purc_grn_dtl_id',$grn_dtl->purc_grn_dtl_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
             }
             if(isset($request->pd)){
                 $sr_no = 1;
@@ -785,7 +796,7 @@ class GRNController extends Controller
                     // $grnDtl->grn_date = date('Y-m-d', strtotime($request->grn_date));
                     $grnDtl->business_id = auth()->user()->business_id;
                     $grnDtl->company_id = auth()->user()->company_id;
-                    $grnDtl->branch_id = auth()->user()->branch_id;
+                    $grnDtl->branch_id = $new_branch_id;
                     $grnDtl->tbl_purc_grn_dtl_user_id = auth()->user()->id;
                     // calculations
                     $prod_total_qty = (float)$dtl['quantity']+(float)$dtl['foc_qty'];
@@ -807,7 +818,7 @@ class GRNController extends Controller
                             $supplier_id = $request->supplier_id;
                             $business_id = auth()->user()->business_id;
                             $company_id = auth()->user()->company_id;
-                            $branch_id = auth()->user()->branch_id;
+                            $branch_id = $new_branch_id;
                             $stmt = $pdo->prepare("begin ".Utilities::getDatabaseUsername().".PRO_PURC_SUP_BATCH_INSERT(:p1, :p2, :p3, :p4, :p5, :p6); end;");
                             $stmt->bindParam(':p1', $dtl['product_id']);
                             $stmt->bindParam(':p2', $supplier_id);
@@ -851,7 +862,7 @@ class GRNController extends Controller
                         $barcodePurcRate = (float)$purc_rate * (float)$item->product_barcode_packing;
                         TblPurcProductBarcodePurchRate::where('product_barcode_id',$item->product_barcode_id)
                             ->where('product_id',$item->product_id)
-                            ->where('branch_id',auth()->user()->branch_id)->update([
+                            ->where('branch_id',$new_branch_id)->update([
                                 'product_barcode_cost_rate'=> $barcodeRate,
                                 'product_barcode_purchase_rate'=> $barcodePurcRate,
                             ]);
@@ -877,7 +888,7 @@ class GRNController extends Controller
                 }
             }
 
-            $grnTotal = TblPurcGrn::where('grn_id',$grn->grn_id)->where(Utilities::currentBCB())->first();
+            $grnTotal = TblPurcGrn::where('grn_id',$grn->grn_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
             $grnTotal->grn_total_qty = $sumOfProdTotalQty;
             $grnTotal->grn_total_amount = $total_gross_amount;
             $grnTotal->grn_total_expense_amount = $TotalExpAmount;
@@ -888,7 +899,7 @@ class GRNController extends Controller
             if(isset($id)){
                 $action = 'update';
                 $grn_id = $id;
-                $grn = TblPurcGrn::where('grn_id',$grn_id)->where(Utilities::currentBCB())->first();
+                $grn = TblPurcGrn::where('grn_id',$grn_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
                 if(!empty($grn->voucher_id)){
                     $voucher_id = $grn->voucher_id;
                 }else{
@@ -922,7 +933,7 @@ class GRNController extends Controller
                 'voucher_date'          =>  date('Y-m-d', strtotime($request->grn_date)),
                 'voucher_descrip'       =>  'Purchase: '.$grn->grn_remarks .' - Ref:'.$request->grn_bill_no,
                 'voucher_type'          =>  'GRN',
-                'branch_id'             =>  auth()->user()->branch_id,
+                'branch_id'             =>  $new_branch_id,
                 'business_id'           =>  auth()->user()->business_id,
                 'company_id'            =>  auth()->user()->company_id,
                 'voucher_user_id'       =>  auth()->user()->id,

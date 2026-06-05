@@ -7,6 +7,8 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : '';
+        $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
+        $type = $data['type'];
         if ($case == 'new') {
             $code = $data['document_code'];
             $menu_id = $data['menu_id'];
@@ -277,6 +279,10 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="row form-group-block">
+                          @include('layouts.branchSelect')
+                            
                         </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">

@@ -328,12 +328,22 @@ class PurchaseOrderController extends Controller
         $data['menu_id'] = self::$menu_dtl_id;
         $data['page_data']['pending_pr'] = TRUE;
         $data['already_exits'] = false;
+         $data['menu_dtl_id'] = self::$menu_dtl_id;
+         $user_branches= DB::table('tbl_soft_branch as b')
+        ->select('b.business_id','b.company_id','b.branch_id',"b.branch_name","ub.user_id")
+        ->join('tbl_soft_user_branch as ub','ub.branch_id','=','b.branch_id')
+        ->where('ub.user_id',auth()->user()->id)
+        ->get();
+
+        $data['user_branches'] = $user_branches;
+        $data['type'] = 'grn';
+
         if(isset($id)){
             $allowCrossBranchView = (string) $request->query('view') === '1';
             $baseQuery = TblPurcPurchaseOrder::where('purchase_order_id','LIKE',$id)->where(Utilities::currentBC());
             $exists = $allowCrossBranchView
                 ? $baseQuery->exists()
-                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+                : $baseQuery->wherein('branch_id', $user_branches->pluck('branch_id'))->exists();
 
             if($exists){
                 $data['permission'] = self::$menu_dtl_id.'-edit';
@@ -342,7 +352,7 @@ class PurchaseOrderController extends Controller
                     ->where('purchase_order_id',$id)
                     ->where(Utilities::currentBC());
                 if(!$allowCrossBranchView){
-                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
+                    $currentQuery = $currentQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
                 if(empty($data['current'])){
@@ -417,6 +427,7 @@ class PurchaseOrderController extends Controller
 
     public function post(Request $request)
     {
+        dd($request->all());
         try {
             $purchase_order_id = $request->purchase_order_id;
             if (empty($purchase_order_id)) {
@@ -434,6 +445,7 @@ class PurchaseOrderController extends Controller
 
     public function Posted(Request $request)
     {
+         dd($request->all());
         $data = [];
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
@@ -538,6 +550,7 @@ class PurchaseOrderController extends Controller
             return $this->jsonErrorResponse($data, 'Fill The Grid', 200);
         }
         $validator = Validator::make($request->all(), [
+            'new_branch_id' => 'required|numeric',
             'supplier_name' => 'required',
             'supplier_id' => 'required|numeric',
             'lpo_generation_no_id' => 'nullable|numeric',
@@ -551,10 +564,11 @@ class PurchaseOrderController extends Controller
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
         }
+        $new_branch_id = $request->new_branch_id;
         DB::beginTransaction();
         try {
             if(isset($id)){
-                $po = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                $po = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
             }else{
                 $po = new TblPurcPurchaseOrder();
                 $po->purchase_order_id = Utilities::uuid();
@@ -604,11 +618,11 @@ class PurchaseOrderController extends Controller
             $po->purchase_order_entry_status = "1";
             $po->business_id = auth()->user()->business_id;
             $po->company_id = auth()->user()->company_id;
-            $po->branch_id = auth()->user()->branch_id;
+            $po->branch_id = $new_branch_id;
             $po->purchase_order_user_id = auth()->user()->id;
 
             if(isset($id)){
-                TblPurcPurchaseOrderDtl::where('purchase_order_id',$id)->where(Utilities::currentBCB())->delete();
+                TblPurcPurchaseOrderDtl::where('purchase_order_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
             }
             if(isset($request->pd)){
                 $sr_no = 1;
@@ -644,7 +658,7 @@ class PurchaseOrderController extends Controller
                     $grandTotal += (float) $dtl->purchase_order_dtltotal_amount;
                     $dtl->business_id = auth()->user()->business_id;
                     $dtl->company_id = auth()->user()->company_id;
-                    $dtl->branch_id = auth()->user()->branch_id;
+                    $dtl->branch_id = $new_branch_id;
                     $dtl->purchase_order_dtluser_id = auth()->user()->id;
                     $dtl->save();
 

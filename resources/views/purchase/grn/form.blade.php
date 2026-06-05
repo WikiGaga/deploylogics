@@ -23,6 +23,8 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : '';
+        $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
+        $type = $data['type'];
         $length = 0;
         $currencySymbol = 'OMR';
         if ($case == 'new') {
@@ -258,7 +260,7 @@
                                                     @else
                                                         @php $grn_store = $store->store_default_value == 1 ? $store->store_id : 0 ; @endphp
                                                     @endif
-                                                    <option value="{{ $store->store_id }}"
+                                                    <option value="{{ $store->store_id }}" data-branch="{{ $store->branch_id }}"
                                                         {{ $store->store_id == $grn_store ? 'selected' : '' }}>
                                                         {{ $store->store_name }}</option>
                                                 @endforeach
@@ -267,7 +269,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                            @include('layouts.branchSelect')
                             {{-- <div class="col-lg-4">
                                 <div class="row">
                                     <label class="col-lg-6 col-form-label">Payment Type:
@@ -1122,6 +1124,42 @@
     <script src="{{ asset('js/pages/js/purchase/grn-autosave.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
+        $(document).ready(function() {
+            // 1. Keep a clone copy of all original store options in memory
+            var $storeSelect = $('#kt-select2_validate');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            // Function to filter stores based on selected branch
+            function filterStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                
+                // Reset the select element
+                $storeSelect.html('');
+
+                // Re-add the placeholder first if it exists
+                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
+                $storeSelect.append($placeholder);
+
+                // Find options matching the selected branch and append them
+                var $matchingOptions = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                
+                $storeSelect.append($matchingOptions);
+
+                // CRITICAL: Trigger Select2 change to refresh its UI display
+                $storeSelect.trigger('change.select2');
+            }
+
+            // 2. Run immediately on page load to handle initial or saved state
+            filterStores();
+
+            // 3. Run whenever the branch dropdown changes
+            $('#new_branch_id').on('change', function() {
+                filterStores();
+            });
+        });
+
         var formcase = '{{ $case }}';
         $(".expense_amount").keyup(function() {
             TotalExpenseAmount();

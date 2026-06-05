@@ -11,6 +11,7 @@
 @section('content')
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
             if($case == 'new' && isset($data['copy_entry']) && $data['copy_entry']){
                 $id = "";
                 $voucher_no = $data['voucher_no'];
@@ -77,7 +78,7 @@
                                         <div class="col-lg-6">
                                             <div class="erp_form___block">
                                                 <div class="input-group open-modal-group">
-                                                    <input type="text" id="last_voucher_no" value="{{isset($data['last_voucher_no'])?$data['last_voucher_no']:""}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','oJVVoucherHelp')}}" autocomplete="off" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
+                                                    <input type="text" id="last_voucher_no" value="{{isset($data['last_voucher_no'])?$data['last_voucher_no']:""}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','oJVVoucherHelp')}}" autocomplete="off" class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                                     <div class="input-group-append">
                                                         <span class="input-group-text btn-open-mob-help" id="getDataByVoucherNo">
                                                            GO
@@ -142,6 +143,9 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group-block row">
+                        @include('layouts.branchSelect')
+                    </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
@@ -191,7 +195,7 @@
                                                 </button>
                                             </div>
                                             <div class="erp_form__grid_th_input">
-                                                <input id="account_code" type="text" class="acc_code tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
+                                                <input id="account_code" type="text" class="acc_code tb_moveIndex open_inline__help on_click_event  form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}">
                                             </div>
                                         </th>
                                         <th scope="col">
@@ -214,7 +218,7 @@
                                                 </button>
                                             </div>
                                             <div class="erp_form__grid_th_input">
-                                                <input id="budget" type="text" class="budget_dscrp tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}">
+                                                <input id="budget" type="text" class="budget_dscrp tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}">
                                             </div>
                                         </th>
                                         <th scope="col">
@@ -268,10 +272,10 @@
                                                     <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_id]" data-id="budget_id" value="{{$dtl->budget_id}}"  class="budget_id form-control erp-form-control-sm">
                                                     <input readonly type="hidden" name="pd[{{ $loop->iteration }}][budget_branch_id]" data-id="budget_branch_id" value="{{$dtl->budget_branch_id}}"  class="budget_branch_id form-control erp-form-control-sm">
                                                 </td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_code]" data-id="account_code" value="{{$dtl->accounts->chart_code}}" title="{{$dtl->accounts->chart_code}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" class="acc_code open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][account_code]" data-id="account_code" value="{{$dtl->accounts->chart_code}}" title="{{$dtl->accounts->chart_code}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','accountsHelp')}}" class="acc_code open_inline__help on_click_event tb_moveIndex form-control erp-form-control-sm"></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][account_name]" data-id="account_name" value="{{$dtl->accounts->chart_name}}" title="{{$dtl->accounts->chart_name}}" class="acc_name form-control erp-form-control-sm" readonly></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_descrip]" data-id="voucher_descrip" value="{{$dtl->voucher_descrip}}" title="{{$dtl->voucher_descrip}}" class="moveIndex moveIndex2  form-control erp-form-control-sm" ></td>
-                                                <td><input type="text" name="pd[{{ $loop->iteration }}][budget]" data-id="budget" value="{{isset($bgt_dsc)?$bgt_dsc:''}}" title="{{isset($bgt_dsc)?$bgt_dsc:''}}"   data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}" class="budget_dscrp open_inline__help tb_moveIndex form-control erp-form-control-sm"></td>
+                                                <td><input type="text" name="pd[{{ $loop->iteration }}][budget]" data-id="budget" value="{{isset($bgt_dsc)?$bgt_dsc:''}}" title="{{isset($bgt_dsc)?$bgt_dsc:''}}"   data-url="{{action('Common\DataTableController@inlineHelpOpen','budgetHelp')}}" class="budget_dscrp open_inline__help on_click_event tb_moveIndex form-control erp-form-control-sm"></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_debit]" data-id="voucher_debit" value="{{number_format($dtl->voucher_debit,3)}}" title="{{$dtl->voucher_debit}}" class="tb_moveIndex debit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_credit]" data-id="voucher_credit" value="{{number_format($dtl->voucher_credit,3)}}" title="{{$dtl->voucher_credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][voucher_fc_debit]" data-id="voucher_fc_debit" value="{{number_format($dtl->voucher_fc_debit,3)}}" title="{{$dtl->voucher_fc_debit}}" class="tb_moveIndex fcdebit form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
@@ -399,7 +403,7 @@
 
             {
                 'id':'account_code',
-                'fieldClass':'acc_code tb_moveIndex open_inline__help',
+                'fieldClass':'acc_code tb_moveIndex open_inline__help on_click_event',
                 'message':'Enter Account Detail',
                 'require':true,
                 'readonly':false,
@@ -418,7 +422,7 @@
             },
             {
                 'id':'budget',
-                'fieldClass':'budget_dscrp tb_moveIndex open_inline__help',
+                'fieldClass':'budget_dscrp tb_moveIndex open_inline__help on_click_event',
                 'data-url' : budgetHelpUrl
             },
             {

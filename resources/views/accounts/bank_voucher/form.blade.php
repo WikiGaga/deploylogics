@@ -11,6 +11,7 @@
     //  dd($data['page_data']);
 
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
             if($case == 'new'){
                 $voucher_no = $data['voucher_no'];
                 $date =  date('d-m-Y');
@@ -66,7 +67,7 @@
                         <div class="col-lg-4">
                             <div class="row">
                                 <div class="col-lg-6">
-                                    <div class="erp-page--title">
+                                    <div class="erp-page--title" id="voucher_no_div">
                                         {{$voucher_no}}
                                     </div>
                                 </div>
@@ -174,6 +175,7 @@
                                 </div>
                             </div>
                         </div>
+                       @include('layouts.branchSelect')
                     </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">
@@ -362,7 +364,7 @@
                                                 @else
                                                     @php $credit = $data->voucher_debit; $fc_credit = $data->voucher_debit; @endphp
                                                 @endif
-                                                <td><input type="text" data-id="voucher_credit" name="pd[{{ $loop->iteration }}][voucher_credit]" value="{{number_format($credit,3)}}" title="{{$credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber" ></td>
+                                                <td><input type="text" data-id="voucher_credit" name="pd[{{ $loop->iteration }}][voucher_credit]" value="{{number_format($credit,3)}}" title="{{$credit}}" class="tb_moveIndex credit form-control erp-form-control-sm validNumber" oninput="calculateAmountsGrid(this)"></td>
                                                 {{-- <td><input type="text" data-id="voucher_fc_credit" name="pd[{{ $loop->iteration }}][voucher_fc_credit]" value="{{number_format($fc_credit,3)}}" title="{{$fc_credit}}" class="tb_moveIndex fccredit form-control erp-form-control-sm validNumber" ></td> --}}
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][vat_perc]" data-id="vat_perc" value="{{isset($data->vat_perc)?$data->vat_perc:''}}" title="{{isset($data->vat_perc)?$data->vat_perc:''}}" class="tb_moveIndex vatperc form-control erp-form-control-sm validNumber" oninput="calculateAmountsGrid(this)"></td>
                                                 <td><input type="text" name="pd[{{ $loop->iteration }}][vat_amt]" data-id="vat_amt" value="{{isset($data->vat_amt)?$data->vat_amt:''}}" title="{{isset($data->vat_amt)?$data->vat_amt:''}}" class="tb_moveIndex vatamt form-control erp-form-control-sm validNumber" oninput="calculateVATGrid(this)"></td>
@@ -762,6 +764,8 @@
                 $('.erp_form__grid>thead>tr').find('#addData').attr('disabled',true);
             }
         }*/
+
+        
 
         $('#addData').click(function(){
             var account_id = $(this).parents('tr').find('#account_id').val();

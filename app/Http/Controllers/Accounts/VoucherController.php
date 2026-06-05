@@ -532,11 +532,15 @@ class VoucherController extends Controller
         // Bank Receive Voucher & Cash Receive Voucher
         $data = [];
         $validator = Validator::make($request->all(), [
+            'new_branch_id' => 'required|numeric',
             'currency_id' => 'required|numeric',
             'exchange_rate' => 'required|numeric',
             'cash_type' => 'required',
             'pd.*.account_id' => 'required|numeric',
         ]);
+        
+        $new_branch_id = $request->new_branch_id;
+
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
@@ -574,11 +578,11 @@ class VoucherController extends Controller
             if(isset($id)){
                 $preservedStaging = $this->captureAccountsVoucherStagingSnapshot($id, $type);
                 $voucher_id = $id;
-                $code= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_no');
+                $code= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first('voucher_no');
                 $voucher_no = $code->voucher_no;
-                $del_rvs = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->get();
+                $del_rvs = TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->get();
                 foreach ($del_rvs as $del_rv){
-                    TblAccoVoucher::where('voucher_id',$del_rv->voucher_id)->where(Utilities::currentBCB())->delete();
+                    TblAccoVoucher::where('voucher_id',$del_rv->voucher_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
                 }
             }else{
                 $voucher_id = Utilities::uuid();
@@ -638,7 +642,7 @@ class VoucherController extends Controller
 
                     $voucher->business_id = auth()->user()->business_id;
                     $voucher->company_id = auth()->user()->company_id;
-                    $voucher->branch_id = auth()->user()->branch_id;
+                    $voucher->branch_id = $new_branch_id;
                     $voucher->voucher_user_id = auth()->user()->id;
                     $voucher->save();
 
@@ -674,7 +678,7 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_notes = $notes;
                     $voucherDtl->business_id = auth()->user()->business_id;
                     $voucherDtl->company_id = auth()->user()->company_id;
-                    $voucherDtl->branch_id = auth()->user()->branch_id;
+                    $voucherDtl->branch_id = $new_branch_id;
                     $voucherDtl->voucher_user_id = auth()->user()->id;
                     $voucherDtl->save();
 
@@ -717,7 +721,7 @@ class VoucherController extends Controller
                     $voucherDtl->voucher_notes = $notes;
                     $voucherDtl->business_id = auth()->user()->business_id;
                     $voucherDtl->company_id = auth()->user()->company_id;
-                    $voucherDtl->branch_id = auth()->user()->branch_id;
+                    $voucherDtl->branch_id = $new_branch_id;
                     $voucherDtl->voucher_user_id = auth()->user()->id;
                     $voucherDtl->save();
 
@@ -730,7 +734,7 @@ class VoucherController extends Controller
                 $master = TblAccoVoucher::where('voucher_id', $form_id)
                     ->where('voucher_type', $type)
                     ->where('voucher_sr_no', '=', '1')
-                    ->where(Utilities::currentBCB())
+                    ->where(Utilities::currentBC())->where('branch_id',$new_branch_id)
                     ->first();
                 if ($master) {
                     if (isset($id)) {
@@ -1002,10 +1006,12 @@ class VoucherController extends Controller
         // journal Voucher
         $data = [];
         $validator = Validator::make($request->all(), [
+            'new_branch_id' => 'required|numeric',
             'currency_id' => 'required|numeric',
             'exchange_rate' => 'required|numeric',
             'pd.*.account_id' => 'required|numeric',
         ]);
+        $new_branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
@@ -1049,17 +1055,17 @@ class VoucherController extends Controller
                     return $this->jsonSuccessResponse($workflowData, trans('message.update'), 200);
                 }
                 $preservedStaging = $this->captureAccountsVoucherStagingSnapshot($uuid, $type);
-                $code= TblAccoVoucher::where('voucher_id',$uuid)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_no');
+                $code= TblAccoVoucher::where('voucher_id',$uuid)->where('voucher_type',$type)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first('voucher_no');
                 $voucher_no = $code->voucher_no;
-                $user= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBCB())->first('voucher_user_id');
+                $user= TblAccoVoucher::where('voucher_id',$id)->where('voucher_type',$type)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first('voucher_user_id');
                 $voucher_user_id = $user->voucher_user_id;
-                $del_jvs = TblAccoVoucher::where('voucher_id',$uuid)->where(Utilities::currentBCB())->get();
+                $del_jvs = TblAccoVoucher::where('voucher_id',$uuid)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->get();
                 foreach ($del_jvs as $del_jv){
-                    TblAccoVoucher::where('voucher_id',$del_jv->voucher_id)->where(Utilities::currentBCB())->delete();
+                    TblAccoVoucher::where('voucher_id',$del_jv->voucher_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
                 }
             }else{
                 $uuid = $this->uuid();
-                $max_voucher = TblAccoVoucher::where('voucher_type',$type)->where(Utilities::currentBCB())->max('voucher_no');
+                $max_voucher = TblAccoVoucher::where('voucher_type',$type)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->max('voucher_no');
                 $voucher_no = $this->documentCode($max_voucher,$type);
             }
 
@@ -1093,7 +1099,7 @@ class VoucherController extends Controller
                     $voucher->voucher_fc_credit = isset($dtl['voucher_fc_credit'])?$this->addNo($dtl['voucher_fc_credit']):0;
                     $voucher->business_id = auth()->user()->business_id;
                     $voucher->company_id = auth()->user()->company_id;
-                    $voucher->branch_id = auth()->user()->branch_id;
+                    $voucher->branch_id = $new_branch_id;
                     if(isset($id))
                     {
                         $voucher->update_user_id = auth()->user()->id;
@@ -1109,7 +1115,7 @@ class VoucherController extends Controller
                 $master = TblAccoVoucher::where('voucher_id', $form_id)
                     ->where('voucher_type', $type)
                     ->where('voucher_sr_no', '=', '1')
-                    ->where(Utilities::currentBCB())
+                    ->where(Utilities::currentBC())->where('branch_id',$new_branch_id)
                     ->first();
                 if ($master) {
                     if (isset($id)) {
