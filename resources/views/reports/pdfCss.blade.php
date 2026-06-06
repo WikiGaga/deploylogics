@@ -159,10 +159,10 @@
         font-family: Verdana !important;
         font-style: normal !important;
         font-weight: 400;
-        margin-top: -10px;
+        margin-top: 0;
     }
     h6{
-        margin-top: -30px;
+        margin-top: 0;
         font-weight: 400;
     }
     .kt-invoice__title {
@@ -186,7 +186,7 @@
     }
 
     @page {
-        margin-top: 8mm;
+        margin-top: 12mm;
         margin-right: 8mm;
         margin-bottom: 8mm;
         margin-left: 8mm;
@@ -200,6 +200,7 @@
     }
 
     #content{
+        padding-top: 10mm;
         padding-left: 6mm;
         padding-right: 6mm;
     }
@@ -211,6 +212,7 @@
     }
 
     .kt-portlet .kt-portlet__head{
+        padding-top: 4mm;
         padding-bottom: 10px;
         margin-bottom: 10px;
     }

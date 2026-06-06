@@ -85,6 +85,260 @@ class UserReportsController extends Controller
         return is_array($run) ? $run : null;
     }
 
+    private function getDynamicReportExportColumns($reportId): ?array
+    {
+        if (empty($reportId)) {
+            return null;
+        }
+
+        $reportTbData = TblSoftReports::with('report_styling')->where('report_id', $reportId)->first();
+        if (!$reportTbData) {
+            return null;
+        }
+
+        $elements = [];
+        $styles = $reportTbData->report_styling ?? [];
+        foreach ($styles as $style) {
+            if (($style['report_styling_column_type'] ?? '') === 'element') {
+                $elements[$style['report_styling_column_no']][$style['report_styling_key']] = $style['report_styling_value'];
+            }
+        }
+
+        if (empty($elements)) {
+            return null;
+        }
+
+        $headings = [];
+        $fieldKeys = [];
+        $columnTypes = [];
+        $decimals = [];
+        $calcIndexes = [];
+
+        foreach ($elements as $element) {
+            if (!isset($element['column_toggle']) || (int) $element['column_toggle'] !== 1) {
+                continue;
+            }
+
+            $idx = count($headings);
+            $headings[] = $element['heading_name'] ?? '';
+            $fieldKeys[] = $element['key_name'] ?? '';
+            $columnTypes[] = $element['column_type'] ?? 'varchar2';
+            $decimals[] = !empty($element['decimal']) ? (int) $element['decimal'] : 0;
+
+            if (isset($element['calc']) && (int) $element['calc'] === 1) {
+                $calcIndexes[] = $idx;
+            }
+        }
+
+        if (empty($headings)) {
+            return null;
+        }
+
+        return [
+            'headings' => $headings,
+            'fieldKeys' => $fieldKeys,
+            'columnTypes' => $columnTypes,
+            'decimals' => $decimals,
+            'calcIndexes' => $calcIndexes,
+            'showSr' => (int) ($reportTbData['report_column_sr_no'] ?? 0) === 1,
+        ];
+    }
+
+    private function getReportRowValue($row, string $fieldKey)
+    {
+        $arr = (array) $row;
+        if (array_key_exists($fieldKey, $arr)) {
+            return $arr[$fieldKey];
+        }
+
+        $target = strtolower($fieldKey);
+        foreach ($arr as $key => $value) {
+            if (strtolower((string) $key) === $target) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function formatDynamicReportExportValue($value, string $columnType, int $decimal)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        if ($columnType === 'number') {
+            return (int) $value;
+        }
+
+        if ($columnType === 'float') {
+            return number_format((float) $value, $decimal);
+        }
+
+        if ($columnType === 'date') {
+            $timestamp = strtotime((string) $value);
+            return $timestamp ? date('d-m-Y', $timestamp) : (string) $value;
+        }
+
+        return $value;
+    }
+
+    private function resolveDynamicReportColumnConfig(array $sessionData): ?array
+    {
+        if (($sessionData['report_type'] ?? '') !== 'dynamic' || empty($sessionData['report_id'])) {
+            return null;
+        }
+
+        return $this->getDynamicReportExportColumns($sessionData['report_id']);
+    }
+
+    private function buildQueryExportData(string $baseQuery, array $sessionData): array
+    {
+        $columnConfig = $this->resolveDynamicReportColumnConfig($sessionData);
+
+        if ($columnConfig) {
+            return $this->buildDynamicQueryExportData($baseQuery, $columnConfig);
+        }
+
+        return $this->buildRawQueryExportData($baseQuery);
+    }
+
+    private function buildDynamicQueryExportData(string $baseQuery, array $columnConfig): array
+    {
+        $headings = $columnConfig['headings'];
+        $fieldKeys = $columnConfig['fieldKeys'];
+        $columnTypes = $columnConfig['columnTypes'];
+        $decimals = $columnConfig['decimals'];
+        $calcIndexes = $columnConfig['calcIndexes'];
+        $showSr = $columnConfig['showSr'];
+
+        $displayHeadings = $showSr ? array_merge(['Sr.'], $headings) : $headings;
+        $rows = [];
+        $calcSums = [];
+        foreach ($calcIndexes as $calcIdx) {
+            $calcSums[$calcIdx] = 0.0;
+        }
+
+        $rowCount = 0;
+        $sr = 0;
+
+        foreach (DB::cursor($baseQuery) as $row) {
+            $sr++;
+            $rowCount++;
+            $exportRow = [];
+
+            if ($showSr) {
+                $exportRow[] = $sr;
+            }
+
+            foreach ($fieldKeys as $colIdx => $fieldKey) {
+                $rawValue = $this->getReportRowValue($row, $fieldKey);
+                $exportRow[] = $this->formatDynamicReportExportValue(
+                    $rawValue,
+                    $columnTypes[$colIdx] ?? 'varchar2',
+                    $decimals[$colIdx] ?? 0
+                );
+
+                if (in_array($colIdx, $calcIndexes, true) && is_numeric($rawValue)) {
+                    $calcSums[$colIdx] += (float) $rawValue;
+                }
+            }
+
+            $rows[] = $exportRow;
+        }
+
+        $boldRows = [1];
+
+        if (!empty($calcIndexes) && $rowCount > 0) {
+            $totalsRow = array_fill(0, count($displayHeadings), '');
+            $totalsRow[0] = 'Grand Total:';
+
+            foreach ($calcIndexes as $calcIdx) {
+                if ($calcIdx < 1) {
+                    continue;
+                }
+
+                $exportIdx = $calcIdx + ($showSr ? 1 : 0);
+                if (isset($calcSums[$calcIdx]) && $calcSums[$calcIdx] != 0) {
+                    $totalsRow[$exportIdx] = round($calcSums[$calcIdx], 3);
+                }
+            }
+
+            $rows[] = $totalsRow;
+
+            $countRow = array_fill(0, count($displayHeadings), '');
+            $countRow[0] = 'Count:';
+            $countRow[1] = $rowCount;
+            $rows[] = $countRow;
+
+            $boldRows[] = 1 + $rowCount + 1;
+            $boldRows[] = 1 + $rowCount + 2;
+        }
+
+        return [
+            'headings' => $displayHeadings,
+            'rows' => $rows,
+            'boldRows' => $boldRows,
+        ];
+    }
+
+    private function buildRawQueryExportData(string $baseQuery): array
+    {
+        $rows = [];
+        $headings = [];
+        $sums = [];
+        $rowCount = 0;
+
+        foreach (DB::cursor($baseQuery) as $row) {
+            $arr = (array) $row;
+            if (empty($headings)) {
+                $headings = array_keys($arr);
+                foreach ($headings as $h) {
+                    $sums[$h] = 0.0;
+                }
+            }
+
+            foreach ($arr as $k => $v) {
+                if (is_numeric($v)) {
+                    $sums[$k] += (float) $v;
+                }
+            }
+
+            $rows[] = array_values($arr);
+            $rowCount++;
+        }
+
+        $boldRows = [1];
+
+        if (!empty($headings)) {
+            $totalsRow = array_fill(0, count($headings), '');
+            $totalsRow[0] = 'Grand Total:';
+            for ($i = 1; $i < count($headings); $i++) {
+                $key = $headings[$i];
+                if (isset($sums[$key]) && $sums[$key] != 0) {
+                    $totalsRow[$i] = round($sums[$key], 3);
+                }
+            }
+            $rows[] = $totalsRow;
+
+            $countRow = array_fill(0, count($headings), '');
+            $countRow[0] = 'Count:';
+            $countRow[1] = $rowCount;
+            $rows[] = $countRow;
+
+            if ($rowCount > 0) {
+                $boldRows[] = 1 + $rowCount + 1;
+                $boldRows[] = 1 + $rowCount + 2;
+            }
+        }
+
+        return [
+            'headings' => $headings,
+            'rows' => $rows,
+            'boldRows' => $boldRows,
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -2865,54 +3119,12 @@ class UserReportsController extends Controller
                 );
             }
 
-            $rows = [];
-            $headings = [];
-            $sums = [];
-            $rowCount = 0;
+            $exportData = $this->buildQueryExportData($baseQuery, $data);
 
-            foreach (DB::cursor($baseQuery) as $row) {
-                $arr = (array)$row;
-                if (empty($headings)) {
-                    $headings = array_keys($arr);
-                    foreach ($headings as $h) {
-                        $sums[$h] = 0.0;
-                    }
-                }
-
-                foreach ($arr as $k => $v) {
-                    if (is_numeric($v)) {
-                        $sums[$k] += (float)$v;
-                    }
-                }
-
-                $rows[] = array_values($arr);
-                $rowCount++;
-            }
-
-            if (!empty($headings)) {
-                $totalsRow = array_fill(0, count($headings), '');
-                $totalsRow[0] = 'Grand Total:';
-                for ($i = 1; $i < count($headings); $i++) {
-                    $key = $headings[$i];
-                    if (isset($sums[$key]) && $sums[$key] != 0) {
-                        $totalsRow[$i] = round($sums[$key], 3);
-                    }
-                }
-                $rows[] = $totalsRow;
-
-                $countRow = array_fill(0, count($headings), '');
-                $countRow[0] = 'Count:';
-                $countRow[1] = $rowCount;
-                $rows[] = $countRow;
-            }
-
-            $boldRows = [1];
-            if ($rowCount > 0) {
-                $boldRows[] = 1 + $rowCount + 1;
-                $boldRows[] = 1 + $rowCount + 2;
-            }
-
-            return Excel::download(new \App\Exports\BladeExport($rows, $headings, $boldRows), 'report.xlsx');
+            return Excel::download(
+                new \App\Exports\BladeExport($exportData['rows'], $exportData['headings'], $exportData['boldRows']),
+                'report.xlsx'
+            );
         }
 
         if ($type === 'pdf') {
@@ -2950,7 +3162,9 @@ class UserReportsController extends Controller
             'Cache-Control' => 'no-store, no-cache',
         ];
 
-        return response()->streamDownload(function () use ($baseQuery) {
+        $exportData = $this->buildQueryExportData($baseQuery, $data);
+
+        return response()->streamDownload(function () use ($exportData) {
             $out = fopen('php://output', 'w');
             if ($out === false) {
                 return;
@@ -2958,26 +3172,21 @@ class UserReportsController extends Controller
 
             fwrite($out, "\xEF\xBB\xBF");
 
-            $wroteHeader = false;
-            foreach (DB::cursor($baseQuery) as $row) {
-                $arr = (array)$row;
+            if (!empty($exportData['headings'])) {
+                fputcsv($out, $exportData['headings']);
+            } else {
+                fputcsv($out, []);
+            }
 
-                if (!$wroteHeader) {
-                    fputcsv($out, array_keys($arr));
-                    $wroteHeader = true;
-                }
-
+            foreach ($exportData['rows'] as $row) {
                 $values = array_map(function ($v) {
                     if (is_null($v)) return '';
                     if (is_bool($v)) return $v ? '1' : '0';
-                    if (is_scalar($v)) return (string)$v;
+                    if (is_scalar($v)) return (string) $v;
                     return json_encode($v);
-                }, array_values($arr));
+                }, $row);
 
                 fputcsv($out, $values);
-            }
-            if (!$wroteHeader) {
-                fputcsv($out, []);
             }
 
             fclose($out);
