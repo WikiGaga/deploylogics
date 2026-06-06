@@ -1011,6 +1011,7 @@ class VoucherController extends Controller
             'exchange_rate' => 'required|numeric',
             'pd.*.account_id' => 'required|numeric',
         ]);
+        
         $new_branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
