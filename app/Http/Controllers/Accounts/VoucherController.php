@@ -279,12 +279,42 @@ class VoucherController extends Controller
         $type = $request->get('voucher_type');
         $new_branch_id = $request->get('branch_id');
 
-        $max_voucher = TblAccoVoucher::where('voucher_type',$type)
-        ->where(Utilities::currentBC())
-        ->where('branch_id', $new_branch_id)
-        ->max('voucher_no');
+        if($type=='purchase_order' || $type=='grn'){
 
-        $code = $this->documentCode($max_voucher,$type);
+            if($type=='grn'){
+
+                $doc_data = [
+                    'biz_type'          => 'branch',
+                    'model'             => 'TblPurcGrn',
+                    'code_field'        => 'grn_code',
+                    'code_prefix'       => strtoupper('grn'),
+                    'code_type_field'   => 'grn_type',
+                    'code_type'         => strtoupper('grn'),
+                ];
+
+            }elseif($type=='purchase_order'){
+                
+                $doc_data = [
+                    'biz_type'          => 'branch',
+                    'model'             => 'TblPurcPurchaseOrder',
+                    'code_field'        => 'purchase_order_code',
+                    'code_prefix'       => strtoupper('po'),
+                    'branch_id'         => $new_branch_id 
+                ];
+            }
+
+            $code = Utilities::documentCode($doc_data);
+
+        }else{
+            $max_voucher = TblAccoVoucher::where('voucher_type',$type)
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $new_branch_id)
+            ->max('voucher_no');
+
+            $code = $this->documentCode($max_voucher,$type);
+
+        }
+       
 
         // Return the code back to JavaScript
         return response()->json(['code' => $code]);

@@ -67,7 +67,7 @@
                         <div class="col-lg-12">
                             <div class="row">
                                 <div class="col-lg-6">
-                                    <div class="erp-page--title">
+                                    <div class="erp-page--title" id="voucher_no_div">
                                         {{$voucher_no}}
                                     </div>
                                 </div>
