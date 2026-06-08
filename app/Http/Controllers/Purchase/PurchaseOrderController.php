@@ -355,6 +355,7 @@ class PurchaseOrderController extends Controller
                     $currentQuery = $currentQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
+                
                 if(empty($data['current'])){
                     abort('404');
                 }
@@ -427,13 +428,13 @@ class PurchaseOrderController extends Controller
 
     public function post(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         try {
             $purchase_order_id = $request->purchase_order_id;
             if (empty($purchase_order_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Purchase Order id not found.'], 422);
             }
-            $row = TblPurcPurchaseOrder::where('purchase_order_id', $purchase_order_id)->where(Utilities::currentBCB())->first();
+            $row = TblPurcPurchaseOrder::where('purchase_order_id', $purchase_order_id)->where(Utilities::currentBC())->first();
             $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
             $row->posted = 1;
             $row->update();
@@ -445,21 +446,21 @@ class PurchaseOrderController extends Controller
 
     public function Posted(Request $request)
     {
-         dd($request->all());
+        
         $data = [];
         $ids = $request->data;
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblPurcPurchaseOrder::where('purchase_order_id', $id)->where(Utilities::currentBCB())->first();
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id', $id)->where(Utilities::currentBC())->first();
                     $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->exists()){
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->first();
                     $row->posted = 1;
                     $row->update();
                 }
@@ -478,15 +479,15 @@ class PurchaseOrderController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblPurcPurchaseOrder::where('purchase_order_id', $id)->where(Utilities::currentBCB())->first();
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id', $id)->where(Utilities::currentBC())->first();
                     $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'un_post_module', 'unpost');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBCB())->first();
+                if(TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->exists()){
+                    $row = TblPurcPurchaseOrder::where('purchase_order_id',$id)->where(Utilities::currentBC())->first();
                     $row->posted = 0;
                     $row->update();
                 }
@@ -504,7 +505,7 @@ class PurchaseOrderController extends Controller
             if (empty($purchase_order_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Purchase Order id not found.'], 422);
             }
-            $row = TblPurcPurchaseOrder::where('purchase_order_id', $purchase_order_id)->where(Utilities::currentBCB())->first();
+            $row = TblPurcPurchaseOrder::where('purchase_order_id', $purchase_order_id)->where(Utilities::currentBC())->first();
             $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'cancel', 'cancel');
             $row->posted = 2;
             $row->update();
@@ -1013,7 +1014,7 @@ class PurchaseOrderController extends Controller
 
     public function storeDraft(Request $request,$id = null)
     {
-        //dd($request->toArray());
+        // dd($request->toArray(),'draft');
         $data = [];
 
         $validator = Validator::make($request->all(), [
