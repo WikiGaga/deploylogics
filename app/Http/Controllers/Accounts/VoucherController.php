@@ -290,10 +290,11 @@ class VoucherController extends Controller
                     'code_prefix'       => strtoupper('grn'),
                     'code_type_field'   => 'grn_type',
                     'code_type'         => strtoupper('grn'),
+                    'branch_id'         => $new_branch_id 
                 ];
 
             }elseif($type=='purchase_order'){
-                
+
                 $doc_data = [
                     'biz_type'          => 'branch',
                     'model'             => 'TblPurcPurchaseOrder',

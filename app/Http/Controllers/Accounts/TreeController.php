@@ -33,7 +33,7 @@ class TreeController extends Controller {
        $tree = [];
        $parents = TblAccCoa::with('children')->where('chart_level','1')
            ->where(Utilities::currentBC())->orderby('chart_code')
-           ->select('chart_account_id as id','chart_code','chart_name')->get();
+           ->select('chart_account_id','chart_account_id as id','chart_code','chart_name')->get();
        // dd($parents->toArray());
        foreach ($parents as $first){
            $secondLevelArr = [];

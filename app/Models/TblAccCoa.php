@@ -22,8 +22,18 @@ class TblAccCoa extends Model
     {
         return $this->hasMany(TblAccCoaBranches::class,"chart_id");
     }
-    public function children(){
-        return $this->hasMany(self::class, 'parent_account_code', 'chart_code')->with('children')
-            ->select(['chart_account_id as id','chart_code','chart_name','parent_account_code'])->orderBy('chart_code');
+    // public function children(){
+    //     return $this->hasMany(self::class, 'parent_account_code', 'chart_code')->with('children')
+    //         ->select(['chart_account_id as id','chart_code','chart_name','parent_account_code'])->orderBy('chart_code');
+    // }
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_account_code', 'chart_code')
+            ->select([
+                'chart_account_id',
+                'chart_code',
+                'chart_name',
+                'parent_account_code'
+            ]);
     }
 }
