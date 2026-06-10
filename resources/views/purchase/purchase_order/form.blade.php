@@ -281,7 +281,7 @@
                             </div>
                         </div>
                         <div class="row form-group-block">
-                          @include('layouts.branchSelect')
+                            @include('layouts.branchSelect')
                             
                         </div>
                     <div class="row">

@@ -276,50 +276,63 @@ class VoucherController extends Controller
 
     public function getVoucherCode(Request $request)
     {
-        $type = $request->get('voucher_type');
+        $pre_code = $request->get('pre_code');
+        $code_getter_type = $request->get('code_getter_type');
         $new_branch_id = $request->get('branch_id');
 
-        if($type=='purchase_order' || $type=='grn'){
+        if($code_getter_type =='query'){
+            $max_voucher = TblAccoVoucher::where('voucher_type',$pre_code)
+            ->where(Utilities::currentBC())
+            ->where('branch_id', $new_branch_id)
+            ->max('voucher_no');
 
-            if($type=='grn'){
+            $code = $this->documentCode($max_voucher,$pre_code);
+
+        }elseif($code_getter_type=='grn'){
 
                 $doc_data = [
                     'biz_type'          => 'branch',
                     'model'             => 'TblPurcGrn',
                     'code_field'        => 'grn_code',
-                    'code_prefix'       => strtoupper('grn'),
+                    'code_prefix'       => strtoupper($pre_code),
                     'code_type_field'   => 'grn_type',
-                    'code_type'         => strtoupper('grn'),
+                    'code_type'         => strtoupper($pre_code),
                     'branch_id'         => $new_branch_id 
                 ];
+            $code = Utilities::documentCode($doc_data);
 
-            }elseif($type=='purchase_order'){
+
+        }elseif($code_getter_type=='po'){
 
                 $doc_data = [
                     'biz_type'          => 'branch',
                     'model'             => 'TblPurcPurchaseOrder',
                     'code_field'        => 'purchase_order_code',
-                    'code_prefix'       => strtoupper('po'),
+                    'code_prefix'       => strtoupper($pre_code),
                     'branch_id'         => $new_branch_id 
                 ];
-            }
-
             $code = Utilities::documentCode($doc_data);
 
-        }else{
-            $max_voucher = TblAccoVoucher::where('voucher_type',$type)
-            ->where(Utilities::currentBC())
-            ->where('branch_id', $new_branch_id)
-            ->max('voucher_no');
+        }elseif($code_getter_type=='inventry'){
 
-            $code = $this->documentCode($max_voucher,$type);
+            $doc_data = [
+                'biz_type'          => 'branch',
+                'model'             => 'TblInveStock',
+                'code_field'        => 'stock_code',
+                'code_prefix'       => strtoupper($pre_code),
+                'code_type_field'   => 'stock_code_type',
+                'code_type'         => $pre_code
+
+            ];
+            $code = Utilities::documentCode($doc_data);
 
         }
-       
+
 
         // Return the code back to JavaScript
         return response()->json(['code' => $code]);
     }
+   
 
     /**
      * Show the form for creating a new resource.
@@ -341,7 +354,8 @@ class VoucherController extends Controller
         ->get();
 
         $data['user_branches'] = $user_branches;
-
+        $data['pre_code'] = $type;
+        $data['code_getter_type'] = 'query';
 
         $data['page_data'] = [];
         $data['type'] = $type;

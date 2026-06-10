@@ -39,17 +39,20 @@
 <script>
     $(document).ready(function() {
         $('#new_branch_id').on('change', function() {
-            var voucherType = "{{ $type }}";
+            var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
+            var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
+            
             var branchId = $(this).val();
 
             // Only run the AJAX if both fields have a selected value
-            if (voucherType && branchId) {
+            if (pre_code && branchId) {
                 $.ajax({
                     url: "{{ route('voucher.get-code') }}",
                     type: "GET",
                     data: {
-                        voucher_type: voucherType,
-                        branch_id: branchId
+                        pre_code: pre_code,
+                        branch_id: branchId,
+                        code_getter_type: code_getter_type
                     },
                     success: function(response) {
                         // Replace the value of the input field with id="target"

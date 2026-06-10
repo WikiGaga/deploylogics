@@ -336,7 +336,9 @@ class PurchaseOrderController extends Controller
         ->get();
 
         $data['user_branches'] = $user_branches;
-        $data['type'] = 'purchase_order';
+        $data['type'] = 'po';
+        $data['pre_code'] = 'po';
+        $data['code_getter_type'] = 'po';
 
         if(isset($id)){
             $allowCrossBranchView = (string) $request->query('view') === '1';

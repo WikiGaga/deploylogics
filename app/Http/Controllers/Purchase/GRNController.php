@@ -305,6 +305,8 @@ class GRNController extends Controller
 
         $data['user_branches'] = $user_branches;
         $data['type'] = 'grn';
+        $data['code_getter_type'] = 'grn';
+        $data['pre_code'] = 'grn';
         if(isset($id)){
             $allowCrossBranchView = (string) $request->query('view') === '1';
             $baseQuery = TblPurcGrn::where('grn_id',$id)->where(Utilities::currentBC());

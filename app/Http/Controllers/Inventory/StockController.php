@@ -84,6 +84,15 @@ class StockController extends Controller
         //dd($locale);
         $data['page_data'] = [];
         $data['type'] = $type;
+        $user_branches= DB::table('tbl_soft_branch as b')
+        ->select('b.business_id','b.company_id','b.branch_id',"b.branch_name","ub.user_id")
+        ->join('tbl_soft_user_branch as ub','ub.branch_id','=','b.branch_id')
+        ->where('ub.user_id',auth()->user()->id)
+        ->get();
+
+        $data['user_branches'] = $user_branches;
+        $data['code_getter_type'] = 'inventry';
+
         switch ($type){
             case 'opening-stock': {
                 $data['page_data']['title'] = 'Opening Stock';
@@ -169,6 +178,8 @@ class StockController extends Controller
         }
 
         $data['form_type'] = $type;
+        $data['pre_code'] = $data['stock_code_type'];
+
         $data['page_data']['path_index'] = $this->prefixIndexPage.'stock/'.$type;
         $data['page_data']['create'] = '/stock/'.$type.$this->prefixCreatePage;
         if(isset($id)){
@@ -176,7 +187,7 @@ class StockController extends Controller
             $baseQuery = TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBC());
             $exists = $allowCrossBranchView
                 ? $baseQuery->exists()
-                : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
+                : $baseQuery->wherein('branch_id', $user_branches->pluck('branch_id'))->exists();
 
             if($exists){
                 $data['permission'] = $data['stock_menu_id'].'-edit';
@@ -190,8 +201,8 @@ class StockController extends Controller
                     ->where('stock_id',$id)
                     ->where('stock_code_type',$data['stock_code_type']);
                 if(!$allowCrossBranchView){
-                    $currentQuery = $currentQuery->where('branch_id', auth()->user()->branch_id);
-                    $auditQuery = $auditQuery->where('branch_id', auth()->user()->branch_id);
+                    $currentQuery = $currentQuery->in('branch_id', $user_branches->pluck('branch_id'));
+                    $auditQuery = $auditQuery->in('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
                 $data['current_audit'] = $auditQuery->first();
@@ -239,7 +250,7 @@ class StockController extends Controller
             $data['stock_code'] = Utilities::documentCode($doc_data);
         }
         $data['rate_types'] = config('constants.rate_type');
-        $data['store'] = TblDefiStore::where(Utilities::currentBCB())->get();
+        $data['store'] = TblDefiStore::where(Utilities::currentBC())->get();
         $data['branch'] = TblSoftBranch::where(Utilities::currentBC())->where('branch_id','!=',auth()->user()->branch_id)->get();
         $data['rate_by'] = config('constants.rate_by');
         $data['rate_types'] = config('constants.rate_type');
@@ -276,6 +287,7 @@ class StockController extends Controller
         $valid = [
             // 'stock_date' => 'required|date_format:d-m-Y',
             'store' => 'nullable|numeric',
+            // 'new_branch_id' => 'required|numeric',
             // 'store_to' => 'nullable|numeric',
             // 'pd.*.product_id' => 'nullable|numeric',
             // 'pd.*.product_barcode_id' => 'nullable|numeric',
@@ -285,6 +297,8 @@ class StockController extends Controller
             // 'pd.*.quantity' => 'nullable|numeric',
             // 'pd.*.batch_no' => 'nullable|max:20',
         ];
+          
+       $new_branch_id = $request->new_branch_id;
         if($request->stock_code_type == 'os'){
             $valid['store'] = 'required|numeric|not_in:0';
         }
@@ -310,7 +324,7 @@ class StockController extends Controller
             // dd($formType);
             if(isset($id)){
                 $stock = TblInveStock::where('stock_id',$id)->first();
-                TblAccoVoucher::where('voucher_document_id',$id)->where(Utilities::currentBCB())->delete();
+                TblAccoVoucher::where('voucher_document_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
             }else{
                 if($formType == 'str'){
                     $stockTrans = TblInveStock::where('stock_id',$request->stock_from_id)
@@ -428,7 +442,7 @@ class StockController extends Controller
 
             $stock->business_id = auth()->user()->business_id;
             $stock->company_id = auth()->user()->company_id;
-            $stock->branch_id = auth()->user()->branch_id;
+            $stock->branch_id = $new_branch_id;
             $stock->stock_user_id = auth()->user()->id;
             $stock->save();
 
@@ -527,7 +541,7 @@ class StockController extends Controller
                     $dtl->stock_dtl_expiry_date =  isset($pd['expiry_date'])?date('Y-m-d', strtotime($pd['expiry_date'])):"";
                     $dtl->business_id = auth()->user()->business_id;
                     $dtl->company_id = auth()->user()->company_id;
-                    $dtl->branch_id = auth()->user()->branch_id;
+                    $dtl->branch_id = $new_branch_id;
                     $dtl->dtl_user_id = auth()->user()->id;
                     $stock_total_qty += isset($pd['quantity'])?$this->addNo($pd['quantity']):0;
                     $stock_total_disc_amount += isset($pd['dis_amount'])?$this->addNo($pd['dis_amount']):0;
@@ -572,7 +586,7 @@ class StockController extends Controller
                                         $barcodeDtl = new TblPurcProductBarcodeDtl();
                                         $barcodeDtl->product_barcode_dtl_id = Utilities::uuid();
                                         $barcodeDtl->product_barcode_id = $pd['product_barcode_id'];
-                                        $barcodeDtl->branch_id = auth()->user()->branch_id;
+                                        $barcodeDtl->branch_id = $new_branch_id;
                                         $barcodeDtl->product_barcode_stock_limit_neg_stock = 0;
                                         $barcodeDtl->product_barcode_stock_limit_limit_apply = 0;
                                         $barcodeDtl->product_barcode_stock_limit_status = 0;
@@ -601,7 +615,7 @@ class StockController extends Controller
                     if($formType == 'str')
                     {
                         $rateupdate = false;
-                        if(TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBCB())->exists())
+                        if(TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->exists())
                         {
                             $rateupdate = true;
                         }
@@ -652,7 +666,7 @@ class StockController extends Controller
                                         $PurchRate->last_tp = $this->addNo($rate_value);
                                         $PurchRate->business_id = auth()->user()->business_id;
                                         $PurchRate->company_id = auth()->user()->company_id;
-                                        $PurchRate->branch_id = auth()->user()->branch_id;
+                                        $PurchRate->branch_id = $new_branch_id;
                                         $PurchRate->save();
                                     }
                                 }
@@ -678,7 +692,7 @@ class StockController extends Controller
                 if(isset($id)){
                     $action = 'update';
                     $stock_id = $id;
-                    $stock = TblInveStock::where('stock_id',$stock_id)->where(Utilities::currentBCB())->first();
+                    $stock = TblInveStock::where('stock_id',$stock_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
                     $voucher_id = (int)$stock->voucher_id;
                     if(empty($voucher_id)){
                         $action = 'add';
@@ -693,7 +707,7 @@ class StockController extends Controller
                 $cost_amount=0;
                 $inner_Dtls = TblInveStockDtl::where('stock_id',$id)->get();
                 foreach ($inner_Dtls as $inner_Dtl){
-                    $costamount = TblInveStockDtl::where('stock_id',$inner_Dtl->stock_id)->where(Utilities::currentBCB())->first();
+                    $costamount = TblInveStockDtl::where('stock_id',$inner_Dtl->stock_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
                     $cost_amount += $costamount->cost_amount;
                 }
                // dd($request);
@@ -1530,7 +1544,7 @@ class StockController extends Controller
             if (empty($stock_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBCB())->first();
+            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBC())->first();
             $this->guardUmDocumentAction($this->menu_id, $row, 'cancel', 'cancel');
             $row->posted = 2;
             $row->update();
@@ -1550,7 +1564,7 @@ class StockController extends Controller
             if (empty($stock_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBCB())->first();
+            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBC())->first();
             $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
             $row->posted = 1;
             $row->update();
@@ -1570,15 +1584,15 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBCB())->first();
+                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBC())->first();
                     $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->first();
                     $row->posted = 1;
                     $row->update();
                 }
@@ -1600,15 +1614,15 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBCB())->first();
+                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBC())->first();
                     $this->guardUmDocumentAction($this->menu_id, $row, 'un_post_module', 'unpost');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBCB())->first();
+                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->first();
                     $row->posted = 0;
                     $row->update();
                 }
