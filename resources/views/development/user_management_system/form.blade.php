@@ -215,52 +215,30 @@
                                                             <td>
                                                                 {{$menu_dtl->menu_dtl_name}}
                                                             </td>
-                                                            @if(count($data['permission_head']) == count($menu_dtl->permissions))
-                                                                @foreach($data['permission_head'] as $perm_head)
-                                                                    @foreach($menu_dtl->permissions as $perm)
-                                                                        @if($perm_head['name'] == $perm['display_name'])
-                                                                            @php $per = $perm; @endphp
+                                                            @for($i=0; count($data['permission_head']) > $i; $i++)
+                                                                <td>
+                                                                    @php $d_name = ''; $d_id = ''; @endphp
+                                                                    @foreach($menu_dtl->permissions as $permission)
+                                                                        @if($data['permission_head'][$i]['name'] == $permission['display_name'])
+                                                                            @php
+                                                                                $d_name = $data['permission_head'][$i]['name'];
+                                                                                $d_id = $permission['id'];
+                                                                            @endphp
+                                                                            @break
                                                                         @endif
                                                                     @endforeach
-                                                                    @if(isset($data['current']))
-                                                                        @php $haveId = in_array($per['id'], $data['current']); @endphp
-                                                                    @endif
-                                                                    @php $have = isset($haveId)? $haveId :false; @endphp
-                                                                    <td>
+                                                                    @if(!empty($d_name))
+                                                                        @if(isset($data['current']))
+                                                                            @php $haveId = in_array($d_id, $data['current']); @endphp
+                                                                        @endif
+                                                                        @php $have = isset($haveId)? $haveId :false; @endphp
                                                                         <label class="kt-checkbox kt-checkbox--bold kt-checkbox--{{ $have == true ?"success":"primary"  }}">
-                                                                            <input type="checkbox" value="{{$per['id']}}" name="permissions[]" {{ $have == true ?"checked":""  }} {{ $disabled == true ?"disabled":""  }}>
+                                                                            <input type="checkbox" value="{{$d_id}}" name="permissions[]" {{ $have == true ?"checked":""  }} {{ $disabled == true ?"disabled":""  }}>
                                                                             <span></span>
                                                                         </label>
-                                                                    </td>
-                                                                @endforeach
-                                                            @else
-                                                                @for($i=0; count($data['permission_head']) > $i; $i++)
-                                                                    <td>
-                                                                        @foreach($menu_dtl->permissions as $permission)
-                                                                            @if($data['permission_head'][$i]['name'] == $permission['display_name'])
-                                                                                @php
-                                                                                    $d_name = $data['permission_head'][$i]['name'];
-                                                                                    $d_id = $permission['id'];
-                                                                                @endphp
-                                                                                @break;
-                                                                            @else
-                                                                                @php $d_name = ""; @endphp
-                                                                            @endif
-                                                                        @endforeach
-                                                                        @if(isset($d_name) && !empty($d_name))
-                                                                            @if(isset($data['current']))
-                                                                                @php $haveId = in_array($d_id, $data['current']); @endphp
-                                                                            @endif
-                                                                            @php $have = isset($haveId)? $haveId :false; @endphp
-                                                                            <label class="kt-checkbox kt-checkbox--bold kt-checkbox--{{ $have == true ?"success":"primary"  }}">
-                                                                                <input type="checkbox" value="{{$d_id}}" name="permissions[]" {{ $have == true ?"checked":""  }} {{ $disabled == true ?"disabled":""  }}>
-                                                                                <span></span>
-                                                                            </label>
-                                                                            @php $d_name = ""; @endphp
-                                                                        @endif
-                                                                    </td>
-                                                                @endfor
-                                                            @endif
+                                                                    @endif
+                                                                </td>
+                                                            @endfor
                                                         </tr>
                                                         @endif
                                                     @endforeach
