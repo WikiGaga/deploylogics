@@ -26,7 +26,7 @@ class TblPurcPurchaseOrder extends Model
     public function po_details(){
         return $this->hasMany(TblPurcPurchaseOrderDtl::class,'purchase_order_id')
         ->with('product','barcode','uom','po')
-        ->where(Utilities::currentBCB())
+        ->where(Utilities::currentBC())
         ->orderBy('purchase_order_dtlsr_no','asc');
     }
     function supplier(){

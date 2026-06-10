@@ -632,6 +632,7 @@ class GRNController extends Controller
                     'code_prefix'       => strtoupper('grn'),
                     'code_type_field'   => 'grn_type',
                     'code_type'         => strtoupper('grn'),
+                    'branch_id'         => $new_branch_id 
                 ];
                 $grn_code = Utilities::documentCode($doc_data);
                 $grn->grn_code = $grn_code;
