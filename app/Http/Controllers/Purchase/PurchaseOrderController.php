@@ -328,8 +328,8 @@ class PurchaseOrderController extends Controller
         $data['menu_id'] = self::$menu_dtl_id;
         $data['page_data']['pending_pr'] = TRUE;
         $data['already_exits'] = false;
-         $data['menu_dtl_id'] = self::$menu_dtl_id;
-         $user_branches= DB::table('tbl_soft_branch as b')
+        $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $user_branches= DB::table('tbl_soft_branch as b')
         ->select('b.business_id','b.company_id','b.branch_id',"b.branch_name","ub.user_id")
         ->join('tbl_soft_user_branch as ub','ub.branch_id','=','b.branch_id')
         ->where('ub.user_id',auth()->user()->id)
@@ -357,6 +357,8 @@ class PurchaseOrderController extends Controller
                     $currentQuery = $currentQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
+
+                // dd($data['current']->toArray());
                 
                 if(empty($data['current'])){
                     abort('404');
@@ -579,7 +581,8 @@ class PurchaseOrderController extends Controller
                     'biz_type'          => 'branch',
                     'model'             => 'TblPurcPurchaseOrder',
                     'code_field'        => 'purchase_order_code',
-                    'code_prefix'       => strtoupper('po')
+                    'code_prefix'       => strtoupper('po'),
+                    'branch_id'         => $new_branch_id,
                 ];
                 $po->purchase_order_code = Utilities::documentCode($doc_data);
             }

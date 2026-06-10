@@ -288,7 +288,20 @@ class VoucherController extends Controller
 
             $code = $this->documentCode($max_voucher,$pre_code);
 
-        }elseif($code_getter_type=='grn'){
+        }elseif($code_getter_type=='bank_received'){
+            $doc_data = [
+                'biz_type'          => 'branch',
+                'model'             => 'TblAccoVoucher',
+                'code_field'        => 'voucher_no',
+                'code_prefix'       => strtoupper('brv'),
+                'code_type_field'   => 'voucher_type',
+                'code_type'         => 'brv',
+                'branch_id'         => $new_branch_id 
+
+            ];
+            $code = Utilities::documentCode($doc_data);
+        }
+        elseif($code_getter_type=='grn'){
 
                 $doc_data = [
                     'biz_type'          => 'branch',
@@ -321,7 +334,8 @@ class VoucherController extends Controller
                 'code_field'        => 'stock_code',
                 'code_prefix'       => strtoupper($pre_code),
                 'code_type_field'   => 'stock_code_type',
-                'code_type'         => $pre_code
+                'code_type'         => $pre_code,
+                'branch_id'         => $new_branch_id 
 
             ];
             $code = Utilities::documentCode($doc_data);
@@ -383,6 +397,7 @@ class VoucherController extends Controller
                 $data['menu_dtl_id'] = '28';
                 $data['menu_id'] = '28';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $cash_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
+                $data['code_getter_type'] = 'bank_received';
                 break;
             }
             case 'cpv': {
@@ -401,6 +416,7 @@ class VoucherController extends Controller
                 $data['menu_dtl_id'] = '29';
                 $data['menu_id'] = '29';
                 $data['acc_code']= TblAccCoa::select('chart_code','chart_name','chart_Account_id')->where('chart_level', '=',4)->where('chart_code','like', $bank_group."%")->where(Utilities::currentBC())->orderBy('chart_name')->get();
+                $data['code_getter_type'] = 'bank_received';
                 break;
             }
             case 'bpv': {
@@ -585,7 +601,7 @@ class VoucherController extends Controller
         ]);
         
         $new_branch_id = $request->new_branch_id;
-
+        $this->branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
@@ -637,7 +653,8 @@ class VoucherController extends Controller
                     'code_field'        => 'voucher_no',
                     'code_prefix'       => strtoupper($voucher_type),
                     'code_type_field'   => 'voucher_type',
-                    'code_type'         => $voucher_type
+                    'code_type'         => $voucher_type,
+                    'branch_id'         => $new_branch_id
 
                 ];
                 $voucher_no = Utilities::documentCode($doc_data);
@@ -1058,6 +1075,7 @@ class VoucherController extends Controller
         ]);
         
         $new_branch_id = $request->new_branch_id;
+        $this->branch_id = $request->new_branch_id;
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);

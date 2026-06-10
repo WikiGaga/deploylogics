@@ -89,7 +89,7 @@ class Utilities
         $business_id = isset($doc_data['business_id'])?$doc_data['business_id']:auth()->user()->business_id;
         $company_id = isset($doc_data['company_id'])?$doc_data['company_id']:auth()->user()->company_id;
         $branch_id = isset($doc_data['branch_id'])?$doc_data['branch_id']:auth()->user()->branch_id;
-//dd($business_id.','.$company_id.','.$branch_id);
+        //dd($business_id.','.$company_id.','.$branch_id);
         if(isset($doc_data['code_type_field']) && isset($doc_data['code_type'])){
             $code_type_field = $doc_data['code_type_field'];
             $code_type = $doc_data['code_type'];
