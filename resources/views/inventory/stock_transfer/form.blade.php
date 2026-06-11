@@ -8,6 +8,8 @@
     <!--begin::Form-->
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
+
             if($case == 'view'){
                 $case = 'edit';
             }
@@ -111,10 +113,10 @@
                             <label class="col-lg-6 erp-col-form-label">Store From:<span class="required">*</span></label>
                             <div class="col-lg-6">
                                 <div class="erp-select2">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" name="store">
+                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
                                         @php $storeid = isset($store_id)?$store_id:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -233,7 +235,7 @@
                     </div>
                 </div>--}}
                 <div class="row form-group-block">
-                    <div class="col-lg-6">
+                    <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-4 erp-col-form-label">GRN No:</label>
                             <div class="col-lg-8">
@@ -267,7 +269,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2"></div>
+                    @include('layouts.branchSelect')
+                    
                     <div class="col-lg-4">
                         <div class="input-group">
                             <div class="input-group-prepend"><button type="button" class="btn btn-sm btn-label-danger btn-bold" id="tb_product_detail" style="padding: 0 15px;font-weight: 500;">Stock</button></div>
@@ -532,6 +535,42 @@
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
+        $(document).ready(function() {
+            // 1. Keep a clone copy of all original store options in memory
+            var $storeSelect = $('#store_id');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            // Function to filter stores based on selected branch
+            function filterStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                
+                // Reset the select element
+                $storeSelect.html('');
+
+                // Re-add the placeholder first if it exists
+                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
+                $storeSelect.append($placeholder);
+
+                // Find options matching the selected branch and append them
+                var $matchingOptions = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                
+                $storeSelect.append($matchingOptions);
+
+                // CRITICAL: Trigger Select2 change to refresh its UI display
+                $storeSelect.trigger('change.select2');
+            }
+
+            // 2. Run immediately on page load to handle initial or saved state
+            filterStores();
+
+            // 3. Run whenever the branch dropdown changes
+            $('#new_branch_id').on('change', function() {
+                filterStores();
+            });
+        });
+        
         var type = "{{ $type }}";
         function voucher_posted(){
             var stock_id = $('#stock_id').val();

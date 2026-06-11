@@ -201,8 +201,8 @@ class StockController extends Controller
                     ->where('stock_id',$id)
                     ->where('stock_code_type',$data['stock_code_type']);
                 if(!$allowCrossBranchView){
-                    $currentQuery = $currentQuery->in('branch_id', $user_branches->pluck('branch_id'));
-                    $auditQuery = $auditQuery->in('branch_id', $user_branches->pluck('branch_id'));
+                    $currentQuery = $currentQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
+                    $auditQuery = $auditQuery->wherein('branch_id', $user_branches->pluck('branch_id'));
                 }
                 $data['current'] = $currentQuery->first();
                 $data['current_audit'] = $auditQuery->first();
@@ -287,7 +287,7 @@ class StockController extends Controller
         $valid = [
             // 'stock_date' => 'required|date_format:d-m-Y',
             'store' => 'nullable|numeric',
-            // 'new_branch_id' => 'required|numeric',
+            'new_branch_id' => 'required|numeric',
             // 'store_to' => 'nullable|numeric',
             // 'pd.*.product_id' => 'nullable|numeric',
             // 'pd.*.product_barcode_id' => 'nullable|numeric',

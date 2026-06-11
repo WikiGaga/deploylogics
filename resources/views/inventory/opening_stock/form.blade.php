@@ -20,6 +20,7 @@
     <!--begin::Form-->
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
             if($case == 'view'){
                 $case = 'edit';
             }
@@ -91,7 +92,7 @@
                                         <option value="0">Select</option>
                                         @php $storeid = isset($storeid)?$storeid:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -137,6 +138,7 @@
                             </div>
                         </div>
                     </div>
+                        @include('layouts.branchSelect')
                 </div>
                 {{--<div class="row">
                     <div class="col-lg-12">
@@ -412,6 +414,43 @@
 
     <!--tree-->
     <script>
+
+        $(document).ready(function() {
+            // 1. Keep a clone copy of all original store options in memory
+            var $storeSelect = $('#store_id');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            // Function to filter stores based on selected branch
+            function filterStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                
+                // Reset the select element
+                $storeSelect.html('');
+
+                // Re-add the placeholder first if it exists
+                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
+                $storeSelect.append($placeholder);
+
+                // Find options matching the selected branch and append them
+                var $matchingOptions = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                
+                $storeSelect.append($matchingOptions);
+
+                // CRITICAL: Trigger Select2 change to refresh its UI display
+                $storeSelect.trigger('change.select2');
+            }
+
+            // 2. Run immediately on page load to handle initial or saved state
+            filterStores();
+
+            // 3. Run whenever the branch dropdown changes
+            $('#new_branch_id').on('change', function() {
+                filterStores();
+            });
+        });
+
         $('#store_id').change(function(event){
             $('#opening_stock_form').find('.display_stock_location>.select2').addClass('pointerEventsNone')
             var formData = {

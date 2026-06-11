@@ -8,6 +8,8 @@
     <!--begin::Form-->
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
+
             if($case == 'view'){
                 $case = 'edit';
             }
@@ -88,7 +90,7 @@
                                             @if($case == 'new' && $store->store_default_value == 1)
                                                 @php $storeid = $store->store_id @endphp
                                             @endif
-                                            <option value="{{$store->store_id}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -100,11 +102,11 @@
                             <label class="col-lg-6 erp-col-form-label text-center">Stock Location:</label>
                             <div class="col-lg-6">
                                 <div class="erp-select2 display_stock_location">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2 stock_location_id" name="stock_location_id">
+                                    <select class="moveIndex form-control erp-form-control-sm kt-select2 stock_location_id"  name="stock_location_id">
                                         <option value="0">Select</option>
                                         @if($case == 'edit')
                                             @foreach($data['display_location'] as $display_location)
-                                                <option value="{{$display_location->display_location_id}}" {{$display_location->display_location_id == $stock_location_id?'selected':''}}>{{$display_location->display_location_name_string}}</option>
+                                                <option value="{{$display_location->display_location_id}}" data-branch="{{ $store->branch_id }}" {{$display_location->display_location_id == $stock_location_id?'selected':''}}>{{$display_location->display_location_name_string}}</option>
                                             @endforeach
                                         @endif
                                     </select>
@@ -144,6 +146,7 @@
                             </div>
                         </div>
                     </div>
+                     @include('layouts.branchSelect')
                 </div>
                 <div class="row">
                     <div class="col-lg-12 text-right">
@@ -374,6 +377,42 @@
         var formcase = '{{$case}}';
     </script>
    <script>
+     $(document).ready(function() {
+            // 1. Keep a clone copy of all original store options in memory
+            var $storeSelect = $('#store_id');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            // Function to filter stores based on selected branch
+            function filterStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                
+                // Reset the select element
+                $storeSelect.html('');
+
+                // Re-add the placeholder first if it exists
+                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
+                $storeSelect.append($placeholder);
+
+                // Find options matching the selected branch and append them
+                var $matchingOptions = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                
+                $storeSelect.append($matchingOptions);
+
+                // CRITICAL: Trigger Select2 change to refresh its UI display
+                $storeSelect.trigger('change.select2');
+            }
+
+            // 2. Run immediately on page load to handle initial or saved state
+            filterStores();
+
+            // 3. Run whenever the branch dropdown changes
+            $('#new_branch_id').on('change', function() {
+                filterStores();
+            });
+        });
+
         var productHelpUrl = "{{url('/common/inline-help/productHelp')}}";
         var arr_text_Field = [
             // keys = id, fieldClass, readonly(boolean), require(boolean)
