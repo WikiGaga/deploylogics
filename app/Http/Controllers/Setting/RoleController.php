@@ -191,7 +191,16 @@ class RoleController extends Controller
                 }
             }
             // Sync permissions (works for both create and edit)
-            $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
+            // $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
+            // $role->syncPermissions($permissions);
+            // Sync permissions (works for both create and edit)
+            $permissions = ($request->has('permissions') && $request->filled('permissions')) ? (array)$request->permissions : [];
+
+            // Crucial Fix: Filter out empty strings, null values, or zeros that cause ORA-01400
+            $permissions = array_filter($permissions, function($value) {
+                return $value !== null && $value !== '';
+            });
+
             $role->syncPermissions($permissions);
 
             if($request->has('vendor_modules') && $request->filled('vendor_modules')){
