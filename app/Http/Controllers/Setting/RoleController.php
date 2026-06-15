@@ -257,8 +257,12 @@ class RoleController extends Controller
             $role->branches()->sync($roleBranches);
 
             if(isset($id)){
-                $usersWithRole = User::where('employee_role_id', $role->id)->where(Utilities::currentBC())->get();
+                $usersWithRole = User::where('employee_role_id', $role->id)
+                    ->where('user_entry_status', 1)
+                    ->where(Utilities::currentBC())
+                    ->get();
                 foreach ($usersWithRole as $user){
+                    $user->syncPermissions($permissions);
                     $primaryBranch = $user->branch_id;
                     $optionalBranchIds = DB::table('tbl_soft_user_branch')
                         ->where('user_id', $user->id)
