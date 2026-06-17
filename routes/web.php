@@ -157,6 +157,13 @@ Route::group(['middleware' => ['auth']], function () {
     Route::group(['middleware' => ['checkBranch']], function () {
         Route::get('/home', 'HomeController@index')->name('home');
         Route::get('/sale-dashboard', 'HomeController@saleDashboard');
+
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', 'NotificationController@index')->name('notifications.index');
+            Route::post('/read-all', 'NotificationController@markAllAsRead')->name('notifications.read-all');
+            Route::get('/{id}/read', 'NotificationController@markAsRead')->name('notifications.read');
+        });
+
         Route::get('/si-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storeSIVoucher');
         Route::get('/grn-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storeGRNVoucher');
         Route::get('/pr-vouch/{form}/{to}/{vouNull?}', 'Accounts\POSVoucherController@storePRVoucher');

@@ -250,8 +250,16 @@
         </div>
 
         <div class="kt-header__topbar-item dropdown">
+            <style>
+                .kt-notification__item--unread { background-color: #f6faff; }
+                .kt-notification__item--unread .kt-notification__item-title { font-weight: 600; }
+            </style>
             <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="30px,0px"
                 aria-expanded="false">
+                @php
+                    $headerNotifications = Auth::user()->notifications()->latest()->take(10)->get();
+                    $unreadCount = Auth::user()->unreadNotifications()->count();
+                @endphp
                 <span class="kt-header__topbar-icon kt-pulse kt-pulse--brand">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -261,9 +269,9 @@
                     </svg>
                     <span class="kt-pulse__ring"></span>
                 </span>
-                {{-- <span class="kt-badge kt-badge--dot kt-badge--notify kt-badge--sm kt-badge--brand">
-                    {{ Auth::user()->unreadNotifications->count() }}
-                </span> --}}
+                @if ($unreadCount > 0)
+                    <span class="kt-badge kt-badge--dot kt-badge--notify kt-badge--sm kt-badge--brand"></span>
+                @endif
             </div>
             <div class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg"
                 style="">
@@ -273,35 +281,16 @@
                         {{ __('Notifications') }}
                     </h3>
                     <div>
-                        <button type="button" class="btn btn-success btn-sm btn-font-sm">Mark All Read</button>
-                        <button type="button" class="btn btn-success btn-sm btn-font-sm" onclick="subscribeUserToPush()">View All</button>
+                        <button type="button" class="btn btn-success btn-sm btn-font-sm" onclick="markAllNotificationsRead(event)">Mark All Read</button>
+                        <a href="{{ route('notifications.index') }}" class="btn btn-success btn-sm btn-font-sm">View All</a>
                     </div>
                 </div>
                 <div class="tab-pane active show" id="topbar_notifications_notifications" role="tabpanel">
                         <div class="kt-notification kt-margin-t-10 kt-margin-b-10 kt-scroll ps ps--active-y"
                             data-scroll="true" data-height="300" data-mobile-height="200"
                             style="height: 300px; overflow: hidden;">
-                            @forelse (Auth::user()->notifications as $notification)
-                                <a href="{{ $notification->data['url'] ?? '#' }}" class="kt-notification__item">
-                                    <div class="kt-notification__item-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                <rect x="0" y="0" width="24" height="24"/>
-                                                <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
-                                                <rect fill="#000000" x="11" y="10" width="2" height="7" rx="1"/>
-                                                <rect fill="#000000" x="11" y="7" width="2" height="2" rx="1"/>
-                                            </g>
-                                        </svg>
-                                    </div>
-                                    <div class="kt-notification__item-details">
-                                        <div class="kt-notification__item-title">
-                                            {{ $notification->data['title'] ?? '-' }}
-                                        </div>
-                                        <div class="kt-notification__item-time">
-                                            {{ $notification->created_at->diffForHumans() }}
-                                        </div>
-                                    </div>
-                                </a>   
+                            @forelse ($headerNotifications as $notification)
+                                @include('notifications._item', ['notification' => $notification, 'showMessage' => false])
                             @empty
                                 <div class="center-center text-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48px" height="48px" viewBox="0 0 24 24" version="1.1">
@@ -521,6 +510,34 @@
 document.addEventListener('DOMContentLoaded', async function () {
     await syncNotificationToggleState();
 });
+
+async function markAllNotificationsRead(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const button = event.currentTarget;
+    button.disabled = true;
+
+    try {
+        const response = await fetch('{{ route('notifications.read-all') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Mark all read failed:', error);
+    } finally {
+        button.disabled = false;
+    }
+}
 
 async function handleNotificationToggle(element) {
     const originalState = !element.checked;
