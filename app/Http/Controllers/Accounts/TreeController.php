@@ -29,60 +29,141 @@ class TreeController extends Controller {
         $tree .='</li></ul>';*/
         return view('accounts.chart_of_account_tree.treeview',compact('tree'));
     }
-    public function getAccTree(){
-       $tree = [];
-       $parents = TblAccCoa::with('children')->where('chart_level','1')
-           ->where(Utilities::currentBC())->orderby('chart_code')
-           ->select('chart_account_id','chart_account_id as id','chart_code','chart_name')->get();
-       // dd($parents->toArray());
-       foreach ($parents as $first){
-           $secondLevelArr = [];
-           foreach ($first['children'] as $secondItem){
-               $thirdLevelArr = [];
-               foreach ($secondItem['children'] as $thirdItem){
-                   $forthLevelArr = [];
-                   foreach ($thirdItem['children'] as $forthItem){
-                       $forthLevel = [
-                           "text" => "[".$forthItem->chart_code."] ".$this->strUcWords($forthItem->chart_name),
-                           "id" => $forthItem->chart_code,
-                           "main_id" => $forthItem->id,
-                           "parent_main_id" => $thirdItem->id,
-                           "level" => 4,
-                       ];
-                       array_push($forthLevelArr, $forthLevel);
-                   }
-                   $thirdLevel = [
-                       "text" => "[".$thirdItem->chart_code."] ".$this->strUcWords($thirdItem->chart_name),
-                       "id" => $thirdItem->chart_code,
-                       "main_id" => $thirdItem->id,
-                       "level" => 3,
-                       "parent_main_id" => $secondItem->id,
-                       "children" => $forthLevelArr
-                   ];
-                   array_push($thirdLevelArr, $thirdLevel);
-               }
-               $secondLevel = [
-                   "text" => "[".$secondItem->chart_code."] ".$this->strUcWords($secondItem->chart_name),
-                   "id" => $secondItem->chart_code,
-                   "main_id" => $secondItem->id,
-                   "level" => 2,
-                   "parent_main_id" => $first->id,
-                   "children" => $thirdLevelArr
-               ];
-               array_push($secondLevelArr, $secondLevel);
-           }
-           $firstLevel = [
-               "text" => "[".$first->chart_code."] ".$this->strUcWords($first->chart_name),
-               "id" => $first->chart_code,
-               "main_id" => $first->id,
-               "level" => 1,
-               "children" => $secondLevelArr
-           ];
-           array_push($tree, $firstLevel);
-       }
-       $newTree = mb_convert_encoding($tree, "UTF-8", "auto");
-       return response()->json($newTree);
-   }
+    // public function getAccTree(){
+    //    $tree = [];
+    //    $parents = TblAccCoa::with('children')->where('chart_level','1')
+    //        ->where(Utilities::currentBC())->orderby('chart_code')
+    //        ->select('chart_account_id','chart_account_id as id','chart_code','chart_name')->get();
+    //    // dd($parents->toArray());
+    //    foreach ($parents as $first){
+    //        $secondLevelArr = [];
+    //        foreach ($first['children'] as $secondItem){
+    //            $thirdLevelArr = [];
+    //            foreach ($secondItem['children'] as $thirdItem){
+    //                $forthLevelArr = [];
+    //                foreach ($thirdItem['children'] as $forthItem){
+    //                    $forthLevel = [
+    //                        "text" => "[".$forthItem->chart_code."] ".$this->strUcWords($forthItem->chart_name),
+    //                        "id" => $forthItem->chart_code,
+    //                        "main_id" => $forthItem->id,
+    //                        "parent_main_id" => $thirdItem->id,
+    //                        "level" => 4,
+    //                    ];
+    //                    array_push($forthLevelArr, $forthLevel);
+    //                }
+    //                $thirdLevel = [
+    //                    "text" => "[".$thirdItem->chart_code."] ".$this->strUcWords($thirdItem->chart_name),
+    //                    "id" => $thirdItem->chart_code,
+    //                    "main_id" => $thirdItem->id,
+    //                    "level" => 3,
+    //                    "parent_main_id" => $secondItem->id,
+    //                    "children" => $forthLevelArr
+    //                ];
+    //                array_push($thirdLevelArr, $thirdLevel);
+    //            }
+    //            $secondLevel = [
+    //                "text" => "[".$secondItem->chart_code."] ".$this->strUcWords($secondItem->chart_name),
+    //                "id" => $secondItem->chart_code,
+    //                "main_id" => $secondItem->id,
+    //                "level" => 2,
+    //                "parent_main_id" => $first->id,
+    //                "children" => $thirdLevelArr
+    //            ];
+    //            array_push($secondLevelArr, $secondLevel);
+    //        }
+    //        $firstLevel = [
+    //            "text" => "[".$first->chart_code."] ".$this->strUcWords($first->chart_name),
+    //            "id" => $first->chart_code,
+    //            "main_id" => $first->id,
+    //            "level" => 1,
+    //            "children" => $secondLevelArr
+    //        ];
+    //        array_push($tree, $firstLevel);
+    //    }
+    //    $newTree = mb_convert_encoding($tree, "UTF-8", "auto");
+    //    return response()->json($newTree);
+    // }
+
+    public function getAccTree()
+    {
+        $tree = [];
+
+        $parents = TblAccCoa::with([
+            // Level 2
+            'children' => function ($q) {
+                $q->orderBy('chart_code');
+            },
+            // Level 3
+            'children.children' => function ($q) {
+                $q->orderBy('chart_code');
+            },
+            // Level 4
+            'children.children.children' => function ($q) {
+                $q->orderBy('chart_code');
+            },
+        ])
+        ->where('chart_level', '1')
+        ->where(Utilities::currentBC())
+        ->orderBy('chart_code')
+        ->select([
+            'chart_account_id',
+            'chart_account_id as id',
+            'chart_code',
+            'chart_name',
+        ])
+        ->get();
+
+        foreach ($parents as $first) {
+            $secondLevelArr = [];
+
+            foreach ($first->children as $secondItem) {
+                $thirdLevelArr = [];
+
+                foreach ($secondItem->children as $thirdItem) {
+                    $forthLevelArr = [];
+
+                    foreach ($thirdItem->children as $forthItem) {
+                        $forthLevelArr[] = [
+                            'text'          => '[' . $forthItem->chart_code . '] ' . $this->strUcWords($forthItem->chart_name),
+                            'id'            => $forthItem->chart_code,
+                            'main_id'       => $forthItem->id,         // works because of 'chart_account_id as id'
+                            'parent_main_id'=> $thirdItem->id,
+                            'level'         => 4,
+                        ];
+                    }
+
+                    $thirdLevelArr[] = [
+                        'text'          => '[' . $thirdItem->chart_code . '] ' . $this->strUcWords($thirdItem->chart_name),
+                        'id'            => $thirdItem->chart_code,
+                        'main_id'       => $thirdItem->id,
+                        'parent_main_id'=> $secondItem->id,
+                        'level'         => 3,
+                        'children'      => $forthLevelArr,
+                    ];
+                }
+
+                $secondLevelArr[] = [
+                    'text'          => '[' . $secondItem->chart_code . '] ' . $this->strUcWords($secondItem->chart_name),
+                    'id'            => $secondItem->chart_code,
+                    'main_id'       => $secondItem->id,
+                    'parent_main_id'=> $first->id,
+                    'level'         => 2,
+                    'children'      => $thirdLevelArr,
+                ];
+            }
+
+            $tree[] = [
+                'text'     => '[' . $first->chart_code . '] ' . $this->strUcWords($first->chart_name),
+                'id'       => $first->chart_code,
+                'main_id'  => $first->id,
+                'level'    => 1,
+                'children' => $secondLevelArr,
+            ];
+        }
+
+        $newTree = mb_convert_encoding($tree, 'UTF-8', 'auto');
+        return response()->json($newTree);
+    }
     public function childView($parent){
             $childs = TblAccCoa::where('chart_level','2')->where(Utilities::currentBC())->where('parent_account_code',$parent->chart_code)->get();
             $childTree = '';

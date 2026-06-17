@@ -15,6 +15,7 @@ class TblAccCoa extends Model
     public function childs() {
         return $this->hasMany(static::class,'parent_account_code','chart_code') ;
     }
+
     public function childs_chequebook() {
         return $this->hasMany(TblAccoChequeBook::class,'chart_account_id','chart_account_id') ;
     }
@@ -26,14 +27,16 @@ class TblAccCoa extends Model
     //     return $this->hasMany(self::class, 'parent_account_code', 'chart_code')->with('children')
     //         ->select(['chart_account_id as id','chart_code','chart_name','parent_account_code'])->orderBy('chart_code');
     // }
-    public function children()
+       public function children()
     {
         return $this->hasMany(self::class, 'parent_account_code', 'chart_code')
             ->select([
                 'chart_account_id',
+                'chart_account_id as id',
                 'chart_code',
                 'chart_name',
-                'parent_account_code'
-            ]);
+                'parent_account_code',
+            ])
+            ->orderBy('chart_code');
     }
 }
