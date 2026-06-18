@@ -442,6 +442,13 @@ class Utilities
        // $this->getDataSession = Session::get('dataSession');
     }
 
+    public static function getConfigBranch($branchId)
+    {
+        return TblDefiConfigBranches::where(self::currentBC())
+            ->where('acc_branch_id', $branchId)
+            ->first();
+    }
+
     public static function getDatabaseUsername(){
         $databaseName = Config::get('database.connections');
 

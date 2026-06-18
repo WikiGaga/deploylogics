@@ -38,11 +38,18 @@
 @parent {{-- This preserves any other scripts on the page --}}
 <script>
     $(document).ready(function() {
+        function syncFormBranchField(branchId) {
+            $('input[name="branch"]').val(branchId);
+        }
+
+        syncFormBranchField($('#new_branch_id').val());
+
         $('#new_branch_id').on('change', function() {
             var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
             var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
             
             var branchId = $(this).val();
+            syncFormBranchField(branchId);
 
             // Only run the AJAX if both fields have a selected value
             if (pre_code && branchId) {

@@ -281,6 +281,7 @@ class HomeController extends Controller
         DB::beginTransaction();
         try {
             session(['user_branch' => $request->branches]);
+            Utilities::addSession('branchStore');
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);

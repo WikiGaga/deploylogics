@@ -411,7 +411,7 @@ class StockController extends Controller
                 $stock->stock_store_from_id =  isset($request->store)?$request->store:"";
                 $stock->stock_store_to_id =  isset($request->store_to)?$request->store_to:"";
                 $stock->stock_branch_from_id =  isset($request->branch_from_id)?$request->branch_from_id:"";
-                $stock->stock_branch_to_id =  isset($request->branch)?$request->branch:"";
+                $stock->stock_branch_to_id =  $new_branch_id;
             }
             if($formType == 'st')
             {
@@ -420,7 +420,7 @@ class StockController extends Controller
 
                 $stock->stock_store_from_id =  isset($request->store)?$request->store:"";
                 $stock->stock_store_to_id =  isset($store_to)?$store_to:"";
-                $stock->stock_branch_from_id =  isset($request->branch)?$request->branch:"";
+                $stock->stock_branch_from_id =  $new_branch_id;
                 $stock->stock_branch_to_id =  isset($request->branch_to)?$request->branch_to:"";
             }
             $stock->sales_sales_type =  isset($request->sales_sales_type)?$request->sales_sales_type:"";
@@ -714,32 +714,52 @@ class StockController extends Controller
                 $where_clause = '';
                 switch ($formType) {
                     case "st":
-                        //$Newaccount = TblDefiConfigBranches::where(Utilities::currentB())->where('acc_branch_id',$request->branch_to)->first();
-                        $Newaccount = TblDefiConfigBranches::where('acc_branch_id',$request->branch_to)->first();
+                        $fromConfig = Utilities::getConfigBranch($new_branch_id);
+                        $Newaccount = Utilities::getConfigBranch($request->branch_to);
 
-                        $stock_income = Session::get('dataSession')->stock_transfer_income;
-                        $stock_account = Session::get('dataSession')->stock_transfer_stock;
+                        if (empty($fromConfig)) {
+                            DB::rollback();
+                            return $this->jsonErrorResponse($data, 'Stock transfer accounts not configured for the selected branch.', 200);
+                        }
+                        if (empty($Newaccount)) {
+                            DB::rollback();
+                            return $this->jsonErrorResponse($data, 'Stock transfer accounts not configured for the destination branch.', 200);
+                        }
+
+                        $stock_income = $fromConfig->stock_transfer_income;
+                        $stock_account = $fromConfig->stock_transfer_stock;
                         $stock_branch_account = $Newaccount->stock_transfer_branch;
-                        $stock_vat_account = Session::get('dataSession')->stock_transfer_vat;
-                        $stock_disc_account = Session::get('dataSession')->stock_transfer_discount;
+                        $stock_vat_account = $fromConfig->stock_transfer_vat;
+                        $stock_disc_account = $fromConfig->stock_transfer_discount;
                         if(isset($request->sales_sales_type) && $request->sales_sales_type == 1){
-                            $stock_cash_account = Session::get('dataSession')->stock_transfer_cash;
+                            $stock_cash_account = $fromConfig->stock_transfer_cash;
                         }else{
                             $branch_account_code = TblSoftBranch::where('branch_id',$request->branch_to)->first('branch_account_code');
                             $stock_cash_account = $branch_account_code->branch_account_code;
                         }
                         break;
                     case "str":
-                        $Newaccount = TblDefiConfigBranches::where('acc_branch_id',$request->branch_from_id)->first();
+                        $receiveConfig = Utilities::getConfigBranch($new_branch_id);
+                        $Newaccount = Utilities::getConfigBranch($request->branch_from_id);
+
+                        if (empty($receiveConfig)) {
+                            DB::rollback();
+                            return $this->jsonErrorResponse($data, 'Stock receive accounts not configured for the selected branch.', 200);
+                        }
+                        if (empty($Newaccount)) {
+                            DB::rollback();
+                            return $this->jsonErrorResponse($data, 'Stock transfer accounts not configured for the source branch.', 200);
+                        }
+
                         $stock_income="";
-                        $stock_account = Session::get('dataSession')->store_receive_stock;
-                        $stock_branch_account = $Newaccount->stock_transfer_branch;//Session::get('dataSession')->stock_receive_branch;
-                        $stock_vat_account = Session::get('dataSession')->stock_receive_vat;
-                        $stock_disc_account = Session::get('dataSession')->stock_receive_discount;
+                        $stock_account = $receiveConfig->store_receive_stock;
+                        $stock_branch_account = $Newaccount->stock_transfer_branch;
+                        $stock_vat_account = $receiveConfig->stock_receive_vat;
+                        $stock_disc_account = $receiveConfig->stock_receive_discount;
                         if(isset($request->sales_sales_type) && $request->sales_sales_type == 1){
-                            $stock_cash_account = Session::get('dataSession')->stock_receive_cash;
+                            $stock_cash_account = $receiveConfig->stock_receive_cash;
                         }else{
-                            $branch_account_code = TblSoftBranch::where('branch_id',$request->branch)->first('branch_account_code');
+                            $branch_account_code = TblSoftBranch::where('branch_id',$new_branch_id)->first('branch_account_code');
                             $stock_cash_account = $branch_account_code->branch_account_code;
                         }
                         break;
@@ -765,7 +785,7 @@ class StockController extends Controller
                     'voucher_no'            =>  $stock->stock_code,
                     'voucher_date'          =>  date('Y-m-d', strtotime($request->stock_date)),
                     'voucher_type'          =>  strtoupper($formType),
-                    'branch_id'             =>  auth()->user()->branch_id,
+                    'branch_id'             =>  $new_branch_id,
                     'business_id'           =>  auth()->user()->business_id,
                     'company_id'            =>  auth()->user()->company_id,
                     'voucher_user_id'       =>  auth()->user()->id
