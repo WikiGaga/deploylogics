@@ -8,7 +8,7 @@
         @csrf
         <!--begin::Title-->
             <div class="pb-4 pt-lg-0 pt-5 text-center">
-                <img src="{{ asset('images/malek-al-pizza.png') }}" class="max-h-70px mb-5" alt="" style="width: 250px; padding-bottom: 30px;"/>
+                <img src="{{ asset('images/logo.jpg') }}" class="max-h-70px mb-5" alt="" style="width: 250px; padding-bottom: 30px;"/>
                 {{-- <h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg text-center">Login</h3> --}}
                 {{--<span class="text-muted font-weight-bold font-size-h4">New Here? <a href="javascript:;" id="kt_login_signup" class="text-primary font-weight-bolder">Create an Account</a></span>--}}
             </div>

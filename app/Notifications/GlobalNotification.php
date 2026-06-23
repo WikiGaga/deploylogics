@@ -94,7 +94,7 @@ class GlobalNotification extends Notification
     {
         return (new WebPushMessage)
         ->title($this->getTitle())
-        ->icon('/images/malek-al-pizza.png')
+        ->icon('/images/logo.jpg')
         ->body($this->getMessage())
         ->data([
             'url' => url($this->url),
