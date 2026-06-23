@@ -11,6 +11,7 @@ use App\Models\TblSoftMenuDtl;
 use App\Models\TblStgFlows;
 use App\Models\User;
 use App\Models\Role;
+use App\Library\Utilities;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -1161,8 +1162,27 @@ class StagingService
             ->where('staging_apply', $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId));
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
+        $this->scopeAccessibleBranches($tableName, $documents);
 
         return $documents->get();
+    }
+
+    public function scopeAccessibleBranches($tableName, $query, ?array $branchIds = null): void
+    {
+        $branchIds = $branchIds ?? Utilities::userAccessibleBranchIds();
+        if (empty($branchIds)) {
+            return;
+        }
+
+        try {
+            $cols = array_map('strtolower', DB::getSchemaBuilder()->getColumnListing($tableName));
+            if (!in_array('branch_id', $cols, true)) {
+                return;
+            }
+            $query->whereIn('branch_id', $branchIds);
+        } catch (\Throwable $e) {
+            return;
+        }
     }
 
     public function getFlowStageCounts($formNameOrMenuDtlId, $tableName)

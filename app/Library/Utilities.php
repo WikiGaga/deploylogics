@@ -285,6 +285,47 @@ class Utilities
         return $optional_branch;
     }
 
+    public static function userAccessibleBranchIds($id = null): array
+    {
+        $userId = $id ?? Auth()->user()->id;
+        $ids = DB::table('tbl_soft_user_branch')
+            ->where('user_id', $userId)
+            ->pluck('branch_id')
+            ->map(function ($branchId) {
+                return (string) $branchId;
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($ids)) {
+            return $ids;
+        }
+
+        $default = self::getDefaultBranches($userId);
+        if ($default && isset($default->branch_id)) {
+            return [(string) $default->branch_id];
+        }
+
+        $user = Auth()->user();
+        if ($user && isset($user->branch_id) && $user->branch_id !== null && $user->branch_id !== '') {
+            return [(string) $user->branch_id];
+        }
+
+        return [];
+    }
+
+    public static function documentBranchIsUserAccessible($branchId, $userId = null): bool
+    {
+        if ($branchId === null || $branchId === '') {
+            return true;
+        }
+
+        $accessible = self::userAccessibleBranchIds($userId);
+
+        return in_array((string) $branchId, $accessible, true);
+    }
+
     public static function getRoleBranches($roleId)
     {
         return DB::table('tbl_soft_role_branch')

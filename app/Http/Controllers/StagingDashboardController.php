@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\StagingService;
+use App\Library\Utilities;
 use App\Models\TblSoftBranch;
 use App\Models\TblSoftMenu;
 use App\Models\TblSoftMenuDtl;
@@ -111,6 +112,7 @@ class StagingDashboardController extends Controller
                 ->whereNotNull('current_stg_id');
 
             $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
             $counts = [];
             foreach ($query->groupBy('current_stg_id')->get() as $row) {
@@ -192,6 +194,7 @@ class StagingDashboardController extends Controller
                 );
 
             $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
             return (int) $query->count();
         } catch (\Exception $e) {
@@ -337,11 +340,7 @@ class StagingDashboardController extends Controller
             return '#';
         }
         $href = url($path . $documentId);
-        $userBranchId = auth()->user()->branch_id ?? null;
-        if ($documentBranchId === null || $documentBranchId === '') {
-            return $href;
-        }
-        if ((string) $documentBranchId === (string) $userBranchId) {
+        if ($documentBranchId === null || $documentBranchId === '' || Utilities::documentBranchIsUserAccessible($documentBranchId)) {
             return $href;
         }
         $sep = strpos($href, '?') !== false ? '&' : '?';
