@@ -210,7 +210,7 @@ class StockController extends Controller
                     abort('404');
                 }
 
-                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                if(Utilities::documentBranchIsUserAccessible($data['current']->branch_id)){
                     $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
                     $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
