@@ -1394,6 +1394,14 @@ class UserReportsController extends Controller
                     }
                     $data['specific_purchase_type'] = $specific_purchase_type;
                 }
+
+                if($data['report_case'] == 'rest-food-discount-wise'){
+                    $data['key'] = 'rest-food-discount-wise';
+                    $data['page_title'] = 'Rest Food Discount Wise';
+                    $data['to_date'] = date('Y-m-d', strtotime($to_date)); //for oracle db like 2020-04-16
+                    $data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
+                }
+
                 if($data['report_case'] == 'item_wise_purchase_summary'){
                     $data['key'] = 'item_wise_purchase_summary';
                     $data['page_title'] = 'Item Wise Purchase Summary';
@@ -2529,7 +2537,7 @@ class UserReportsController extends Controller
             }
 
             // Sale Reports
-            $sale_reports = ['payment_mode_wise_sale','product_price_comparison','sale_analysis',
+            $sale_reports = ['rest-food-discount-wise','payment_mode_wise_sale','product_price_comparison','sale_analysis',
             'monthly_sale_pur_summ','pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','product-wise-sales','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
@@ -2625,6 +2633,14 @@ class UserReportsController extends Controller
                     $data['date_time_to'] = date('Y-m-d H:i', strtotime($date_to)); //for oracle db like 2020-04-16
                     $data['date_time_from'] = date('Y-m-d H:i', strtotime($date_from)); //for oracle db like 2020-04-16
                 }
+
+                if($data['report_case'] == 'rest-food-discount-wise'){
+                    $data['key'] = 'rest-food-discount-wise';
+                    $data['page_title'] = 'Rest Food Discount Wise';
+                    $data['date_from'] = date('Y-m-d', strtotime($date_from)); //for oracle db like 2020-04-16
+                    $data['date_to'] = date('Y-m-d', strtotime($date_to)); //for oracle db like 2020-04-16
+                }
+
                 if($data['report_case'] == 'product-wise-sales'){
                     $data['key'] = 'product-wise-sales';
                     $data['page_title'] = 'Product Wise Sales Report';
@@ -2917,11 +2933,10 @@ class UserReportsController extends Controller
             abort(404, 'Report session not found.');
         }
         // dump($data );
-
         // Backward compatibility: existing blades read Session::get('data')
         Session::put('data', $data);
 
-        // dump($data );
+        // dd($data );
 
         $requestedFileType = request('form_file_type');
         if (!empty($requestedFileType)) {
@@ -2984,7 +2999,6 @@ class UserReportsController extends Controller
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
 
-            // dd($data);
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.static_reports.'.$data['key'], compact('data'))->render();
@@ -3039,7 +3053,7 @@ class UserReportsController extends Controller
              *  Sale Report
              ********/
 
-            $sale_keys = ['payment_mode_wise_sale','product_price_comparison','sale_analysis','monthly_sale_pur_summ'
+            $sale_keys = ['rest-food-discount-wise','payment_mode_wise_sale','product_price_comparison','sale_analysis','monthly_sale_pur_summ'
             ,'pos_session_short_and_excess','sale_report','sale_orders_report','pos_closing_report','product-wise-sales','category_wise_profit',
             'sub_category_wise_profit','product_wise_profit','reward_point_ledger','reward_point_summary','product_rate_list','central_rate_items',];
 
