@@ -253,19 +253,26 @@
             <style>
                 .kt-notification__item--unread { background-color: #f6faff; }
                 .kt-notification__item--unread .kt-notification__item-title { font-weight: 600; }
-                .kt-header__topbar-item--notifications .kt-header__topbar-wrapper { position: relative; }
-                .kt-header__topbar-item--notifications .kt-badge.kt-badge--notify {
-                    min-width: 18px;
-                    height: 18px;
-                    line-height: 18px;
-                    padding: 0 5px;
-                    font-size: 10px;
-                    font-weight: 600;
-                    text-align: center;
-                    margin-left: 0;
+                .kt-header__topbar-item--notifications .kt-header__topbar-wrapper {
+                    position: relative;
+                }
+                .kt-header__topbar-item--notifications .header-notify-count {
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
                     left: auto;
-                    right: 2px;
-                    top: 8px;
+                    margin-left: 0;
+                    min-width: 16px;
+                    height: 16px;
+                    line-height: 16px;
+                    padding: 0 4px;
+                    font-size: 9px;
+                    font-weight: 700;
+                    border-radius: 10px;
+                    text-align: center;
+                    z-index: 2;
+                    box-shadow: 0 0 0 2px #fff;
+                    pointer-events: none;
                 }
             </style>
             <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="30px,0px"
@@ -284,7 +291,7 @@
                     <span class="kt-pulse__ring"></span>
                 </span>
                 @if ($unreadCount > 0)
-                    <span class="kt-badge kt-badge--notify kt-badge--sm kt-badge--brand kt-badge--rounded">
+                    <span class="kt-badge kt-badge--brand header-notify-count">
                         {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                     </span>
                 @endif
