@@ -249,10 +249,24 @@
             </label>
         </div>
 
-        <div class="kt-header__topbar-item dropdown">
+        <div class="kt-header__topbar-item kt-header__topbar-item--notifications dropdown">
             <style>
                 .kt-notification__item--unread { background-color: #f6faff; }
                 .kt-notification__item--unread .kt-notification__item-title { font-weight: 600; }
+                .kt-header__topbar-item--notifications .kt-header__topbar-wrapper { position: relative; }
+                .kt-header__topbar-item--notifications .kt-badge.kt-badge--notify {
+                    min-width: 18px;
+                    height: 18px;
+                    line-height: 18px;
+                    padding: 0 5px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    text-align: center;
+                    margin-left: 0;
+                    left: auto;
+                    right: 2px;
+                    top: 8px;
+                }
             </style>
             <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="30px,0px"
                 aria-expanded="false">
@@ -270,7 +284,9 @@
                     <span class="kt-pulse__ring"></span>
                 </span>
                 @if ($unreadCount > 0)
-                    <span class="kt-badge kt-badge--dot kt-badge--notify kt-badge--sm kt-badge--brand"></span>
+                    <span class="kt-badge kt-badge--notify kt-badge--sm kt-badge--brand kt-badge--rounded">
+                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                    </span>
                 @endif
             </div>
             <div class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg"
