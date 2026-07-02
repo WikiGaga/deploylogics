@@ -604,6 +604,7 @@ function barcodeCommonData(tr, response, formData) {
     tr.find('.product_arabic_name').val(product['product_arabic_name']);
     tr.find('.pd_uom').val(uom_name);
     tr.find('.pd_packing').val(barcode['product_barcode_packing']);
+    tr.find('.pd_variant').val(barcode['product_barcode_variant']);
     tr.find('input.tblGridCal_sale_rate').val(tbl_purc_rate['sale_rate']);
     tr.find('input.tblGridCal_cost_rate').val(tbl_purc_rate['product_barcode_cost_rate']);
     tr.find('input.central_rate').val(central_rate);
