@@ -162,34 +162,36 @@ class POSDiscountController extends Controller
      */
     public function destroy($id)
     {
-            $data = [];
-            DB::beginTransaction();
-            try{
-                if(TblPosDiscountType::where('id','LIKE',$id)->exists()){
-                    $setting = TblPosDiscountType::where('id',$id)->first();
-                    
-                    if($setting->id == 1){
-                        return $this->jsonErrorResponse($data, 'Default discount type cannot be deleted.', 200);
-                    }
+        return $this->jsonErrorResponse([], 'Not Allowed to delete.', 400);
 
-                    $setting->delete();
-                }else{
-                    abort('404');
+        $data = [];
+        DB::beginTransaction();
+        try{
+            if(TblPosDiscountType::where('id','LIKE',$id)->exists()){
+                $setting = TblPosDiscountType::where('id',$id)->first();
+                
+                if($setting->id == 1){
+                    return $this->jsonErrorResponse($data, 'Default discount type cannot be deleted.', 200);
                 }
-            }catch (QueryException $e) {
-                DB::rollback();
-                return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-            } catch (ModelNotFoundException $e) {
-                DB::rollback();
-                return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-            } catch (ValidationException $e) {
-                DB::rollback();
-                return $this->jsonErrorResponse($data, $e->getMessage(), 200);
-            } catch (Exception $e) {
-                DB::rollback();
-                return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+
+                $setting->delete();
+            }else{
+                abort('404');
             }
-            DB::commit();
-            return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
+        }catch (QueryException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ValidationException $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+        DB::commit();
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 }

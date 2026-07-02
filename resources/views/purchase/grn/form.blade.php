@@ -344,6 +344,7 @@
                                                 __('message.product_name'),
                                                 __('message.product_arabic_name'),
                                                 __('message.uom'),
+                                                __('message.variant'),
                                                 __('message.packing'),
                                                 __('message.sup_barcode'),
                                                 __('message.qty'),
@@ -445,6 +446,9 @@
                                                 <div class="erp_form__grid_th_title">{{ __('message.uom') }}</div>
                                             </th>
                                             <th scope="col">
+                                                <div class="erp_form__grid_th_title">{{ __('message.variant') }}</div>
+                                            </th>
+                                            <th scope="col">
                                                 <div class="erp_form__grid_th_title">{{ __('message.packing') }}</div>
                                             </th>
                                             <th scope="col">
@@ -544,6 +548,12 @@
                                                             class="pd_uom tb_moveIndex form-control erp-form-control-sm">
                                                             <option value="">{{ __('message.select') }}</option>
                                                         </select>
+                                                    </div>
+                                                </th>
+                                                <th scope="col">
+                                                    <div class="erp_form__grid_th_input">
+                                                        <input id="pd_variant" readonly type="text"
+                                                            class="pd_variant form-control erp-form-control-sm">
                                                     </div>
                                                 </th>
                                                 <th scope="col">
@@ -739,6 +749,11 @@
                                                                 </option>
                                                             </select>
                                                         </td>
+                                                        <td><input type="text" data-id="pd_variant"
+                                                                name="pd[{{ $loop->iteration }}][pd_variant]"
+                                                                value="{{ isset($dtl->barcode->product_barcode_variant) ? $dtl->barcode->product_barcode_variant : '' }}"
+                                                                class="pd_variant form-control erp-form-control-sm" readonly>
+                                                        </td>
                                                         <td><input type="text" data-id="pd_packing"
                                                                 name="pd[{{ $loop->iteration }}][pd_packing]"
                                                                 value="{{ isset($dtl->barcode->product_barcode_packing) ? $dtl->barcode->product_barcode_packing : '' }}"
@@ -842,6 +857,7 @@
 
                                         <tbody class="erp_form__grid_body_total">
                                             <tr>
+                                                <td></td>
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
@@ -1307,6 +1323,11 @@
                                     '</select>' +
                                     '</td>' +
                                     '<td><input type="text" name="pd[' + total_length +
+                                    '][variant]" data-id="variant" value="' + notNull(row[
+                                        'purchase_order_dtlvariant']) + '" title="' + notNull(row[
+                                        'purchase_order_dtlvariant']) +
+                                    '" class="pd_variant form-control erp-form-control-sm" readonly></td>' +
+                                    '<td><input type="text" name="pd[' + total_length +
                                     '][packing]" data-id="packing" value="' + notNull(row[
                                         'purchase_order_dtlpacking']) + '" title="' + notNull(row[
                                         'purchase_order_dtlpacking']) +
@@ -1413,6 +1434,11 @@
                 'id': 'pd_uom',
                 'fieldClass': 'pd_uom field_readonly',
                 'type': 'select'
+            },
+            {
+                'id': 'pd_variant',
+                'fieldClass': 'pd_variant',
+                'readonly': true
             },
             {
                 'id': 'pd_packing',
