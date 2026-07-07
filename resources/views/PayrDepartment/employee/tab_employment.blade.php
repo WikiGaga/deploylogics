@@ -193,7 +193,7 @@
             <label class="col-lg-6 erp-col-form-label">Branch Contract:</label>
             <div class="col-lg-6">
                 <div class="erp-select2">
-                    <select class="form-control kt-select2 erp-form-control-sm" name="branch_contract_id">
+                    <select class="form-control kt-select2 erp-form-control-sm" name="branch_contract_id" id="kt_select2_1">
                         <option value="0">Select</option>
                         @foreach($data['branch'] as $branch)
                             <option value="{{$branch->branch_id}}" {{ $branch->branch_id == $branch_contract_id ? 'selected' : '' }}>{{ucfirst(strtolower($branch->branch_name))}}</option>
@@ -239,6 +239,34 @@
                 </div>
             </div>
         </div>
+    </div>
+    {{-- ///////// --}}
+    <div class="col-lg-6">
+    <div class="row">
+        <label class="col-lg-6 erp-col-form-label">
+            Optional Branches:
+            <span class="ml-2" style="font-weight: normal;">
+                <label class="kt-checkbox kt-checkbox--brand mb-0">
+                    <input type="checkbox" id="optional_branches_select_all"> Select all
+                    <span></span>
+                </label>
+            </span>
+        </label>
+        <div class="col-lg-6">
+            <div class="erp-select2">
+                @php $col = []; @endphp
+                @foreach($data['pivot_optional_branch'] as $optional_branch)
+                    @php  array_push($col,$optional_branch->branch_id); @endphp
+                @endforeach
+                <select class="form-control kt-select2 erp-form-control-sm tag-select2" id="optional_branches_select" multiple name="optional_branches[]">
+                    <option value="">Select</option>
+                    @foreach($data['branch'] as $branch)
+                        <option value="{{$branch->branch_id}}" {{ (in_array($branch->branch_id, $col)) ? 'selected' : '' }}>{{$branch->branch_name}}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
     </div>
 </div>{{-- /row --}}
 <div class="row form-group-block">

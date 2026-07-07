@@ -73,6 +73,7 @@ class EmployeeController extends Controller
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
         $data['page_data']['create'] = '/'.self::$redirect_url.$this->prefixCreatePage;
+        $data['pivot_optional_branch'] = [];
         if(isset($id)){
             if(TblHrEmployee::where('employee_id','LIKE',$id)->exists()){
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
@@ -82,6 +83,11 @@ class EmployeeController extends Controller
                 $data['local_cities'] = $this->CityCurrent($data['current']->employee_local_country_id,true);
                 $data['permanent_cities'] = $this->CityCurrent($data['current']->employee_permanent_country_id,true);
                 $data['employee_allowance'] = DB::table('Tbl_hr_employee_allowance')->where('employee_id',$id)->get();
+                $data['pivot_optional_branch']  = DB::table('tbl_payr_employee_branch')
+                ->where('employee_id', $id)
+                ->where('default_branch', 0)
+                ->get();
+       
 
             }else{
                 abort('404');
@@ -245,6 +251,30 @@ class EmployeeController extends Controller
             $employee->termination_status_id = $request->termination_status_id;
             
             $employee->save();
+            // 1. Get and filter the branches to remove the default one right away
+            $optionalBranches = array_filter((array) $request->optional_branches, function($branchId) use ($request) {
+                return $branchId != $request->branch_contract_id;
+            });
+
+            // 2. Map them into the exact database row structure
+            $branchesToInsert = array_map(function($branchId) use ($employee) {
+                return [
+                    'employee_id'    => $employee->employee_id,
+                    'branch_id'      => $branchId,
+                    'default_branch' => 0,
+                ];
+            }, $optionalBranches);
+
+            // 3. Add the single default branch row onto the end of our insert list
+            $branchesToInsert[] = [
+                'employee_id'    => $employee->employee_id,
+                'branch_id'      => $employee->branch_contract_id,
+                'default_branch' => 1,
+            ];
+
+            // 4. Wipe existing records and run a single, safe bulk insert query
+            DB::table('tbl_payr_employee_branch')->where('employee_id', $employee->employee_id)->delete();
+            DB::table('tbl_payr_employee_branch')->insert($branchesToInsert);
             $employee->language()->sync($request->language_known);
 
             // Employment Grid

@@ -345,6 +345,55 @@
             $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,formData);
         });
 
+        ////////?
+        function getAllOptionalBranchIdsExcludingDefault(){
+            var defaultBranch = $('#kt_select2_1').val();
+            var all = [];
+            $('#optional_branches_select option').each(function(){
+                var val = $(this).attr('value');
+                if(!val){ return; }
+                if(String(val) === String(defaultBranch)){ return; }
+                all.push(String(val));
+            });
+            return all;
+        }
+
+        function refreshOptionalBranchesSelectAllState(){
+            var all = getAllOptionalBranchIdsExcludingDefault();
+            var selected = ($('#optional_branches_select').val() || []).map(String);
+            var isAllSelected = all.length > 0 && all.every(function(id){ return selected.indexOf(String(id)) !== -1; });
+            $('#optional_branches_select_all').prop('checked', isAllSelected);
+        }
+
+        $('#employee_role_id').on('change', function(){
+            applyRoleOptionalBranchesFromMap();
+        });
+
+        $('#kt_select2_1').on('change', function(){
+            var def = $(this).val();
+            var $opt = $('#optional_branches_select');
+            var vals = $opt.val() || [];
+            vals = vals.filter(function(id){ return String(id) !== String(def); });
+            $opt.val(vals.length ? vals : null).trigger('change');
+            refreshOptionalBranchesSelectAllState();
+        });
+
+        $('#optional_branches_select_all').on('change', function(){
+            var $opt = $('#optional_branches_select');
+            if($(this).is(':checked')){
+                $opt.val(getAllOptionalBranchIdsExcludingDefault()).trigger('change');
+            }else{
+                $opt.val(null).trigger('change');
+            }
+            refreshOptionalBranchesSelectAllState();
+        });
+
+        $('#optional_branches_select').on('change', function(){
+            refreshOptionalBranchesSelectAllState();
+        });
+        
+        refreshOptionalBranchesSelectAllState();
+
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_employee.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', 'Api\Auth\LoginController@register');
 Route::post('auth/login', 'Api\Auth\LoginController@login');
+Route::get('verify-branch/test', 'Api\Auth\LoginController@verifyBranchtest');
 Route::get('public-config', 'Api\Auth\LoginController@publicConfig');
 Route::get('whatsapp-api/{link}' , 'Api\WhatsApp\WhatsAppApiController@response');
 

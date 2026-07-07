@@ -113,17 +113,15 @@ class ApiController extends BaseController
         return $string;
     }
 
-    public function addSession(){
-        /*if(!session()->has('api_user_branch')){
-            $data = [];
-            Auth::logout();
-            return response()->json([ 'data'=>$data, 'message'=>'Please Select Branch First','status'=>'error']);
-        }*/
-
+    public function addSession($user)
+    {
         Session::forget('ApiDataSession');
+
         $config = TblDefiConfiguration::first();
+
         $dataSession = [];
-        if(!empty($config)){
+
+        if ($config) {
             $dataSession = (object)[
                 'customer_group' => $config->customer_group,
                 'sale_income' => $config->sale_income,
@@ -137,12 +135,13 @@ class ApiController extends BaseController
                 'purchase_vat' => $config->purchase_vat,
                 'bank_group' => $config->bank_group,
                 'cash_group' => $config->cash_group,
-                'user_id' => Auth()->user()->id,
-               // 'branch_id' => Session::get('api_user_branch'),
+
+                'user_id' => $user->id,
                 'company_id' => Session::get('api_user_business'),
                 'business_id' => Session::get('api_user_business'),
             ];
         }
+
         session(['ApiDataSession' => $dataSession]);
     }
 }

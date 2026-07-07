@@ -30,7 +30,9 @@ class LoginController extends ApiController
     public function __construct() {
         $this->middleware('auth:api', ['except' => ['login', 'register','publicConfig']]);
     }
-
+    // $user = auth()->user();
+    // $user = auth('api')->user();
+    // $user = Auth::guard('api')->user();
 
     //company list for login
     public function publicConfig(){
@@ -45,57 +47,122 @@ class LoginController extends ApiController
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request){
-        $data = (object)[];
+    // public function login(Request $request){
+    //     $data = (object)[];
+    //     $validator = Validator::make($request->all(), [
+    //         'email' => 'required|email',
+    //         'password' => 'required|string',
+    //         'business_id' => 'required|numeric',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return $this->ApiJsonErrorResponse($data,'Field is required');
+    //     }
+
+    //     if (! $token = auth()->attempt($validator->validated())) {
+    //         return $this->ApiJsonErrorResponse($data,'The given data was invalid');
+    //     }
+
+    //     $user = auth()->user();
+    //     if (!$user || (int) $user->user_entry_status !== 1) {
+    //         auth()->logout();
+    //         return $this->ApiJsonErrorResponse($data, 'Your account has been disabled.');
+    //     }
+
+    //     $credentials = $request->only('email', 'password','business_id');
+
+    //     if ($token = $this->guard()->attempt($credentials)) {
+    //         $data =[
+    //             'user_id' => $this->guard()->user()->id,
+    //             'access_token' => $token,
+    //             'token_type' => 'bearer',
+    //             'expires_in' => (int)$this->guard()->factory()->getTTL()
+    //         ];
+    //     }
+
+    //     if(!empty($data)){
+    //         $data['branch_list']= DB::table('tbl_soft_branch')
+    //                             ->join('tbl_soft_user_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_soft_user_branch.branch_id')
+    //                             ->select('tbl_soft_branch.branch_id as branch_id','branch_short_name')
+    //                             ->where('user_id',$this->guard()->user()->id)
+    //                             ->where('business_id',$request->business_id)
+    //                             ->where('company_id',$request->business_id)
+    //                             ->get();
+
+    //         $data['total_branches'] = count($data['branch_list']);
+    //     }
+    //     $this->addSession();
+    //     return $this->ApiJsonSuccessResponse($data,'login successfully');
+    // }
+
+    public function login(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
+            'email'       => 'required|email',
+            'password'    => 'required|string',
             'business_id' => 'required|numeric',
         ]);
 
+        // dd($request->all());
+
         if ($validator->fails()) {
-            return $this->ApiJsonErrorResponse($data,'Field is required');
+            return $this->ApiJsonErrorResponse(
+                $validator->errors(),
+                'Validation failed'
+            );
         }
 
-        if (! $token = auth()->attempt($validator->validated())) {
-            return $this->ApiJsonErrorResponse($data,'The given data was invalid');
+        $credentials = $request->only(
+            'email',
+            'password',
+            'business_id'
+        );
+
+        if (! $token = $this->guard()->attempt($credentials)) {
+            return $this->ApiJsonErrorResponse([], 'Invalid credentials');
         }
 
-        $user = auth()->user();
-        if (!$user || (int) $user->user_entry_status !== 1) {
-            auth()->logout();
-            return $this->ApiJsonErrorResponse($data, 'Your account has been disabled.');
+        $user = $this->guard()->user();
+
+        // dd($user);
+
+        if ((int)$user->user_entry_status !== 1) {
+            $this->guard()->logout();
+
+            return $this->ApiJsonErrorResponse([], 'Your account has been disabled.');
         }
 
-        $credentials = $request->only('email', 'password','business_id');
+        $data = [
+            'user_id' => $user->id,
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => $this->guard()->factory()->getTTL() * 60,
+        ];
 
-        if ($token = $this->guard()->attempt($credentials)) {
-            $data =[
-                'user_id' => $this->guard()->user()->id,
-                'access_token' => $token,
-                'token_type' => 'bearer',
-                'expires_in' => (int)$this->guard()->factory()->getTTL()
-            ];
-        }
+        $data['branch_list'] = DB::table('tbl_soft_branch')
+            ->join('tbl_soft_user_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_soft_user_branch.branch_id' )
+            ->select( 'tbl_soft_branch.branch_id', 'tbl_soft_branch.branch_short_name' )
+            ->where('user_id', $user->id)
+            ->where('business_id', $request->business_id)
+            ->where('company_id', $request->business_id)
+            ->get();
 
-        if(!empty($data)){
-            $data['branch_list']= DB::table('tbl_soft_branch')
-                                ->join('tbl_soft_user_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_soft_user_branch.branch_id')
-                                ->select('tbl_soft_branch.branch_id as branch_id','branch_short_name')
-                                ->where('user_id',$this->guard()->user()->id)
-                                ->where('business_id',$request->business_id)
-                                ->where('company_id',$request->business_id)
-                                ->get();
+        $data['total_branches'] = $data['branch_list']->count();
 
-            $data['total_branches'] = count($data['branch_list']);
-        }
-        $this->addSession();
-        return $this->ApiJsonSuccessResponse($data,'login successfully');
+        $user = $this->guard()->user();
+        $this->addSession($user);
+
+        return $this->ApiJsonSuccessResponse(
+            $data,
+            'Login successfully'
+        );
     }
 
     //attach branch to user
     public function verifyBranch(Request $request)
     {
+
+        // dd($request->all());
         $data = (object)[];
         $validator = Validator::make($request->all(), [
             'branch_id' => 'required'
@@ -103,11 +170,14 @@ class LoginController extends ApiController
         if ($validator->fails()) {
             return $this->ApiJsonErrorResponse($data,'Field is required');
         }
-        $getAllBranches = ApiUtilities::getAllBranches();
-        $arr = [];
-        foreach($getAllBranches as $branch){
-            array_push($arr,$branch->branch_id);
-        }
+        $getAllBranches = ApiUtilities::getAllBranches(auth()->id());
+        // $arr = [];
+        // foreach($getAllBranches as $branch){
+        //     array_push($arr,$branch->branch_id);
+        // }
+        $arr = collect($getAllBranches)
+        ->pluck('branch_id')
+        ->toArray();
         if (!in_array($request->branch_id,$arr)) {
             return $this->ApiJsonErrorResponse($data,'Branch Not Exist in User');
         }
@@ -153,11 +223,15 @@ class LoginController extends ApiController
         }
 
 
+        $data = $validator->validated();
+
+
+
         $user = new User();
         $user->id = Utilities::uuid();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->password = Hash::make($data['password']);
         $user->branch_id = 1;
         $user->business_id = 1;
         $user->company_id = 1;
@@ -219,12 +293,12 @@ class LoginController extends ApiController
         return Auth::guard('api');
     }
 
-    protected function createNewToken($token){
-        return $data = [
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => $this->guard()->factory()->getTTL() * 60,
-            'user' => auth()->user()
-        ];
-    }
+    // protected function createNewToken($token){
+    //     return $data = [
+    //         'access_token' => $token,
+    //         'token_type' => 'bearer',
+    //         'expires_in' => $this->guard()->factory()->getTTL() * 60,
+    //         'user' => auth()->user()
+    //     ];
+    // }
 }

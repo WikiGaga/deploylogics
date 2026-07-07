@@ -93,6 +93,7 @@ class ListingStudioController extends Controller
         $sorted =  ViewAllColumnData::select('table_name')->groupby('table_name')->get();
         $collection = collect($sorted);
         $data['table_list'] = $collection->sortBy('table_name');
+        // dd($sorted, $data['table_list']);
         $data['filter_case_list'] = TblSoftReportingFilterCase::where('reporting_filter_case_entry_status',1)->orderBy('reporting_filter_case_name')->get();
         return view('development.listing_studio.form',compact('data'));
     }
