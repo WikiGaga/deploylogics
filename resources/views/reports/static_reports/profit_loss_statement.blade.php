@@ -650,7 +650,7 @@ $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purch
 
             var formData = {
                 report_branch_ids : [{{auth()->user()->branch_id}}],
-                chart_account : account_id,
+                chart_account_multiple : [account_id],
                 date_to : from_date,
                 date_from : to_date,
                 report_case : 'accounting_ledger',
