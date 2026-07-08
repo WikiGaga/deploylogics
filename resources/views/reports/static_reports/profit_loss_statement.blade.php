@@ -90,7 +90,7 @@
             $to_date = $data['to_date'];
             $where = '';
             $where .= "(v.voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
-            $where .= " and v.business_id = ".auth()->user()->business_id." and v.branch_id in (".implode(",",$data['branch_ids']).")";
+            $where .= " and v.business_id = ".auth()->user()->business_id." and v.branch_id in (".implode(",",$data['branch_ids']).") and v.posted = 1";
             if (!empty($data['chart_account_id'])) {
                 $where .= " and v.chart_account_id in (204,32142,209)";
             }
@@ -480,7 +480,7 @@ FROM
                         $closing_data = \Illuminate\Support\Facades\DB::selectOne($closing_qry);
 
 $net_purchases_qry = "select sum(VOUCHER_DEBIT) -  sum(VOUCHER_CREDIT) net_purchase from
-      VW_ACCO_VOUCHER where   CHART_CODE like '8-%'
+      VW_ACCO_VOUCHER where   CHART_CODE like '8-%' and posted = 1
       and VOUCHER_DATE between TO_DATE('".$data['from_date']."', 'yyyy/mm/dd') and TO_DATE('".$data['to_date']."', 'yyyy/mm/dd')
       and business_id = ".auth()->user()->business_id." and  company_id = ".auth()->user()->company_id." and branch_id in (".implode(",",$data['branch_ids']).") ";
 
