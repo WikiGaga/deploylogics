@@ -1,4 +1,27 @@
 {{-- report wise criteria --}}
+@if(in_array($data['case_name'], ['grn_list', 'GRN-Register']) && !in_array('posted_wise', $data['selected_criteria']))
+    <div class="row form-group-block">
+        <div class="col-lg-3">
+            <label class="erp-col-form-label">Posted:</label>
+        </div>
+        <div class="col-lg-6" style="padding:10px;">
+            <div class="kt-radio-inline" style="float:left;">
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">
+                    <input checked type="radio" name="post_wise" value="all"> ALL
+                    <span></span>
+                </label>
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">
+                    <input type="radio" name="post_wise" value="post"> Posted
+                    <span></span>
+                </label>
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">
+                    <input type="radio" name="post_wise" value="unposted"> Un-Posted
+                    <span></span>
+                </label>
+            </div>
+        </div>
+    </div>
+@endif
 @if(in_array($data['case_name'],['supplier_wise_purchase_summary','daily_purchase','purchase_register','invoice_wise_purchase_summary']))
     <div class="row form-group-block">
         <div class="col-lg-3">

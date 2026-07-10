@@ -988,6 +988,7 @@ class UserReportsController extends Controller
             $data['voucher_types']  = isset($request->voucher_types)?$request->voucher_types:[];
             $data['all_document_type']  = isset($request->all_document_type)?$request->all_document_type:[];
             $data['all_branches']  = isset($request->all_branches)?$request->all_branches:[];
+            $data['post_wise'] = isset($request->post_wise) ? $request->post_wise : 'all';
 
 
             $f_product_group = isset($request->f_product_group)?$request->f_product_group:[];
@@ -1016,6 +1017,14 @@ class UserReportsController extends Controller
             $qry = str_replace(array("\n","\r\n","\r"), ' ', $report_tb_data['report_query']);
             // $qry = strtolower(strtoupper($qry));
             $qry = str_replace('$branch_multiple$'," in (".implode(",",$data['branch_ids']).") ",$qry);
+
+            $postWiseClause = '';
+            if($data['post_wise'] == 'post'){
+                $postWiseClause = ' and posted = 1 ';
+            }elseif($data['post_wise'] == 'unposted'){
+                $postWiseClause = ' and posted = 0 ';
+            }
+            $qry = str_replace('$post_wise$', $postWiseClause, $qry);
 
             if($data['date'] != ""){
                 $qry = str_replace('$date$',"to_date ('".$data['date']."', 'yyyy/mm/dd')",$qry);
@@ -2009,6 +2018,7 @@ class UserReportsController extends Controller
                     $data['from_date'] = date('Y-m-d', strtotime($from_date));
                     $data['supplier_ids'] = $supplier_ids;
                     $data['product_ids'] = $product_ids;
+                    $data['post_wise'] = isset($request->post_wise) ? $request->post_wise : 'all';
 
                 }
                 if($data['report_case'] == 'daily_purchase'){

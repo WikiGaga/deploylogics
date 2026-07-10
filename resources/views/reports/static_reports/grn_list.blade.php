@@ -15,6 +15,12 @@
 @section('content')
     @php
         $data = Session::get('data');
+        $post_wise = isset($data['post_wise']) ? $data['post_wise'] : 'all';
+        $post_wise_label = [
+            'all' => 'ALL',
+            'post' => 'Posted',
+            'unposted' => 'Un-Posted',
+        ];
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head" >
@@ -23,6 +29,10 @@
                 <h6 class="kt-invoice__criteria">
                     <span style="color: #e27d00;">Date:</span>
                     <span style="color: #5578eb;">{{" ".date('d-m-Y', strtotime($data['from_date']))." to ". date('d-m-Y', strtotime($data['to_date']))." "}}</span>
+                </h6>
+                <h6 class="kt-invoice__criteria">
+                    <span style="color: #e27d00;">Posted:</span>
+                    <span style="color: #5578eb;">{{ isset($post_wise_label[$post_wise]) ? $post_wise_label[$post_wise] : 'ALL' }}</span>
                 </h6>
                 @if(count($data['branch_ids']) != 0)
                     @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->get('branch_name'); @endphp
@@ -68,6 +78,7 @@
                             <th class="text-center">Disc Amount</th>
                             <th class="text-center">Vat Amount</th>
                             <th class="text-center">Net Amount</th>
+                            <th class="text-center">Status</th>
                         </tr>
                         @php
                             $grand_total_quantity = 0;
@@ -83,14 +94,28 @@
                             if(count($data['product_ids']) != 0){
                                 $where .= " and product_name in (".implode(",",$data['product_ids']).") ";
                             }
-                            $qq = "select  grn_date,grn_code, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing, branch_name,
+                            if($post_wise == 'post'){
+                                $where .= " and posted = 1 ";
+                            }elseif($post_wise == 'unposted'){
+                                $where .= " and posted = 0 ";
+                            }
+                            $qq = "select  grn_date,grn_code, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing, branch_name, posted,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_quantity * -1 ELSE tbl_purc_grn_dtl_quantity END  tbl_purc_grn_dtl_quantity ,
                                     tbl_purc_grn_dtl_rate,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_amount * -1 ELSE tbl_purc_grn_dtl_amount END  tbl_purc_grn_dtl_amount ,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_disc_amount * -1 ELSE tbl_purc_grn_dtl_disc_amount END  tbl_purc_grn_dtl_disc_amount ,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_vat_amount * -1 ELSE tbl_purc_grn_dtl_vat_amount END  tbl_purc_grn_dtl_vat_amount ,
-                                    case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_total_amount * -1 ELSE tbl_purc_grn_dtl_total_amount END  tbl_purc_grn_dtl_total_amount
-                                    from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and posted = 1 and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
+                                    case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_total_amount * -1 ELSE tbl_purc_grn_dtl_total_amount END  tbl_purc_grn_dtl_total_amount ,
+                                    CASE
+                                        WHEN POSTED = 2 THEN 'CANCEL'
+                                        WHEN POSTED = 1 THEN 'POSTED'
+                                        WHEN STAGING_APPLY = 0 THEN 'N/A'
+                                        WHEN CURRENT_STG_ID = '1' THEN 'Data Entry'
+                                        WHEN CURRENT_STG_ID = '2' THEN 'Review'
+                                        WHEN CURRENT_STG_ID = '3' THEN 'Manager Approval'
+                                        ELSE 'N/A'
+                                    END AS RECORD_STATUS
+                                    from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                     $where ORDER BY grn_date, grn_code";
                             
                             $getdata = \Illuminate\Support\Facades\DB::select($qq);
@@ -110,7 +135,7 @@
                                 $sub_total_total_amount = 0;
                             @endphp
                             <tr>
-                                <td colspan="10"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
+                                <td colspan="11"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
                             </tr>
                             @foreach($list as $k=>$invoice)
                                 @php
@@ -121,7 +146,7 @@
                                     $total_total_amount = 0;
                                 @endphp
                                 <tr>
-                                    <td colspan="10">{{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}} - {{isset($invoice[0]->branch_name)?$invoice[0]->branch_name:''}}</td>
+                                    <td colspan="11">{{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}} - {{isset($invoice[0]->branch_name)?$invoice[0]->branch_name:''}}</td>
                                 </tr>
                                 @foreach($invoice as $product)
                                     <tr>
@@ -135,13 +160,16 @@
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_disc_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_vat_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_total_amount,3)}}</td>
+                                        <td class="text-center">{{$product->record_status}}</td>
                                     </tr>
                                     @php
-                                        $total_quantity += $product->tbl_purc_grn_dtl_quantity;
-                                        $total_amount += $product->tbl_purc_grn_dtl_amount;
-                                        $total_disc_amount += $product->tbl_purc_grn_dtl_disc_amount;
-                                        $total_vat_amount += $product->tbl_purc_grn_dtl_vat_amount;
-                                        $total_total_amount += $product->tbl_purc_grn_dtl_total_amount;
+                                        if((int)$product->posted !== 2){
+                                            $total_quantity += $product->tbl_purc_grn_dtl_quantity;
+                                            $total_amount += $product->tbl_purc_grn_dtl_amount;
+                                            $total_disc_amount += $product->tbl_purc_grn_dtl_disc_amount;
+                                            $total_vat_amount += $product->tbl_purc_grn_dtl_vat_amount;
+                                            $total_total_amount += $product->tbl_purc_grn_dtl_total_amount;
+                                        }
                                     @endphp
                                 @endforeach
                                 <tr>
@@ -152,6 +180,7 @@
                                     <td class="text-right rep-font-bold">{{number_format($total_disc_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_vat_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_total_amount,3)}}</td>
+                                    <td></td>
                                 </tr>
                                 @php
                                     $sub_total_quantity += $total_quantity;
@@ -169,6 +198,7 @@
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_disc_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_vat_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
+                                <td></td>
                             </tr>
                             @php
                                 $grand_total_quantity += $sub_total_quantity;
@@ -186,6 +216,7 @@
                             <td class="text-right rep-font-bold">{{number_format($grand_total_disc_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_vat_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_total_amount,3)}}</td>
+                            <td></td>
                         </tr>
                     </table>
                 </div>
@@ -219,6 +250,5 @@
         </script>
     @endif
 @endsection
-
 
 

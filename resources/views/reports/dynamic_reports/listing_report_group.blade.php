@@ -464,6 +464,14 @@
                                                 }
                                             }
                                         @endphp
+                                        @php
+                                            $excludeFromCalc = false;
+                                            if(($data['report_case'] ?? '') === 'GRN-Register'){
+                                                $rs = $item->record_status ?? $item->RECORD_STATUS ?? null;
+                                                $ps = $item->posted ?? $item->POSTED ?? null;
+                                                $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int)$ps === 2);
+                                            }
+                                        @endphp
                                         <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif>
                                             @foreach($fieldsKeys as $key=>$fieldsKey)
                                                 @php
@@ -474,7 +482,7 @@
                                                 @elseif($column_types[$key] == 'number')
                                                     @php
                                                         $numVal = (int)$item->$fieldsKey;
-                                                        if(in_array($key,$calc)){
+                                                        if(in_array($key,$calc) && !$excludeFromCalc){
                                                             $ai_[$key] += $numVal;
                                                             $arr_item[$key] = $ai_[$key];
                                                         }
@@ -486,7 +494,7 @@
                                                 @elseif($column_types[$key] == 'float')
                                                     @php
                                                         $floatVal = (float)$item->$fieldsKey;
-                                                        if(in_array($key,$calc)){
+                                                        if(in_array($key,$calc) && !$excludeFromCalc){
                                                             $ai_[$key] += $floatVal;
                                                             $arr_item[$key] = $ai_[$key];
                                                         }
@@ -673,6 +681,14 @@
                                                         }
                                                     }
                                                 @endphp
+                                                @php
+                                                    $excludeFromCalc = false;
+                                                    if(($data['report_case'] ?? '') === 'GRN-Register'){
+                                                        $rs = $item->record_status ?? $item->RECORD_STATUS ?? null;
+                                                        $ps = $item->posted ?? $item->POSTED ?? null;
+                                                        $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int)$ps === 2);
+                                                    }
+                                                @endphp
                                                 <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif>
                                                     @foreach($fieldsKeys as $key=>$fieldsKey)
                                                         @php
@@ -683,7 +699,7 @@
                                                         @elseif($column_types[$key] == 'number')
                                                             @php
                                                                 $numVal = (int)$item->$fieldsKey;
-                                                                if(in_array($key,$calc)){
+                                                                if(in_array($key,$calc) && !$excludeFromCalc){
                                                                     $ai_[$key] += $numVal;
                                                                     $arr_item[$key] = $ai_[$key];
                                                                 }
@@ -695,7 +711,7 @@
                                                         @elseif($column_types[$key] == 'float')
                                                             @php
                                                                 $floatVal = (float)$item->$fieldsKey;
-                                                                if(in_array($key,$calc)){
+                                                                if(in_array($key,$calc) && !$excludeFromCalc){
                                                                     $ai_[$key] += $floatVal;
                                                                     $arr_item[$key] = $ai_[$key];
                                                                 }

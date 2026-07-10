@@ -496,6 +496,12 @@
                                                $dataOrderId = 'data-order-id="'.$dt->order_id.'"';
                                                $rowClass .= ' cursor-pointer order-row';
                                             }
+                                            $excludeFromCalc = false;
+                                            if(($data['report_case'] ?? '') === 'GRN-Register'){
+                                                $rs = $dt->record_status ?? $dt->RECORD_STATUS ?? null;
+                                                $ps = $dt->posted ?? $dt->POSTED ?? null;
+                                                $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int)$ps === 2);
+                                            }
                                         @endphp
                                         <tr class="{{ $rowClass }}" @if(!empty($rowStyle)) style="{{ $rowStyle }}" @endif {!! isset($dataOrderId) ? $dataOrderId : '' !!}>
                                             @if($sr == 1)
@@ -522,7 +528,7 @@
                                                     @php
                                                         $numVal = (int)$dt->$fieldsKey;
 
-                                                        if(in_array($key,$calc)){
+                                                        if(in_array($key,$calc) && !$excludeFromCalc){
                                                             //$a_{$key} += $numVal;
                                                             //$arr[$key] = $a_{$key};
                                                             $a_[$key] += $numVal;
@@ -534,7 +540,7 @@
                                                 @elseif($column_types[$key] == 'float')
                                                     @php
                                                         $floatVal = (float)$dt->$fieldsKey;
-                                                        if(in_array($key,$calc)){
+                                                        if(in_array($key,$calc) && !$excludeFromCalc){
                                                             //$a_{$key} += $floatVal;
                                                             //$arr[$key] = $a_{$key};
                                                             $a_[$key]+= $floatVal;
