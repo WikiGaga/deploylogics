@@ -78,7 +78,6 @@
                             <th class="text-center">Disc Amount</th>
                             <th class="text-center">Vat Amount</th>
                             <th class="text-center">Net Amount</th>
-                            <th class="text-center">Status</th>
                         </tr>
                         @php
                             $grand_total_quantity = 0;
@@ -135,7 +134,7 @@
                                 $sub_total_total_amount = 0;
                             @endphp
                             <tr>
-                                <td colspan="11"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
+                                <td colspan="10"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
                             </tr>
                             @foreach($list as $k=>$invoice)
                                 @php
@@ -146,7 +145,10 @@
                                     $total_total_amount = 0;
                                 @endphp
                                 <tr>
-                                    <td colspan="11">{{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}} - {{isset($invoice[0]->branch_name)?$invoice[0]->branch_name:''}}</td>
+                                    <td colspan="10">
+                                        {{$k}} {{isset($invoice[0]->supplier_name)?$invoice[0]->supplier_name:''}} - {{isset($invoice[0]->branch_name)?$invoice[0]->branch_name:''}}
+                                        <span style="float:right;font-weight:bold;">{{isset($invoice[0]->record_status)?$invoice[0]->record_status:''}}</span>
+                                    </td>
                                 </tr>
                                 @foreach($invoice as $product)
                                     <tr>
@@ -160,7 +162,6 @@
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_disc_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_vat_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_total_amount,3)}}</td>
-                                        <td class="text-center">{{$product->record_status}}</td>
                                     </tr>
                                     @php
                                         if((int)$product->posted !== 2){
@@ -180,7 +181,6 @@
                                     <td class="text-right rep-font-bold">{{number_format($total_disc_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_vat_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_total_amount,3)}}</td>
-                                    <td></td>
                                 </tr>
                                 @php
                                     $sub_total_quantity += $total_quantity;
@@ -198,7 +198,6 @@
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_disc_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_vat_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
-                                <td></td>
                             </tr>
                             @php
                                 $grand_total_quantity += $sub_total_quantity;
@@ -216,7 +215,6 @@
                             <td class="text-right rep-font-bold">{{number_format($grand_total_disc_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_vat_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_total_amount,3)}}</td>
-                            <td></td>
                         </tr>
                     </table>
                 </div>

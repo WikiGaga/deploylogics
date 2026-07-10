@@ -25,6 +25,20 @@
                 display: block;
                 margin-top: 15px;
             }
+            .dropzone .dz-preview .dz-image {
+                cursor: pointer;
+            }
+            .dropzone .dz-preview .dz-preview-file,
+            .dropzone .dz-preview .dz-download {
+                background:#ebedf2;
+                font-size: 14px;
+                text-align: center;
+                display: block;
+                cursor: pointer;
+                border: none;
+                margin-top:5px;
+                color: #5578eb;
+            }
         </style>
         <script> var db_dropzone_imgs = []; var attachments = 0; var count = 0;</script>
         {{--{{dd($data['current']->toArray())}}--}}
@@ -497,8 +511,14 @@
                                 myDropzone.emit("thumbnail", mockFile, item[2].path);
                             }
 
-                            var link = '<a class="dz-download" href="'+item[2].path+'" target="_blank" style="background:#ebedf2;font-size: 14px;text-align: center;display: block;cursor: pointer;border: none;margin-top:5px;">Download file</a>';
-                            $(mockFile['previewTemplate']).append(link)
+                            $(mockFile['previewTemplate']).attr('data-file-url', item[2].path);
+                            $(mockFile['previewTemplate']).find('.dz-image').attr({
+                                'data-file-url': item[2].path,
+                                'title': 'Click to preview'
+                            });
+                            var previewLink = '<a class="dz-preview-file" href="'+item[2].path+'" target="_blank">Preview file</a>';
+                            var link = '<a class="dz-download" href="'+item[2].path+'" target="_blank">Download file</a>';
+                            $(mockFile['previewTemplate']).append(previewLink).append(link)
                            // cd($(mockFile['previewTemplate']));
                             myDropzone.emit("complete", mockFile);
 
@@ -596,6 +616,19 @@
                 node.setAttribute('type' , 'hidden');
                 document.querySelectorAll('.document_items')[item[0]].append(node);
             });
+        }
+    });
+
+    $(document).on('click', '#upload_doc .dz-image', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var thix = $(this);
+        var url = thix.attr('data-file-url')
+            || thix.closest('.dz-preview').attr('data-file-url')
+            || thix.find('img').attr('src')
+            || thix.closest('.dz-preview').find('.dz-preview-file, .dz-download').attr('href');
+        if(url){
+            window.open(url, '_blank');
         }
     });
 </script>
