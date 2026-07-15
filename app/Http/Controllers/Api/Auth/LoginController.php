@@ -28,7 +28,7 @@ class LoginController extends ApiController
      * @return void
      */
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['login', 'register','publicConfig']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register','publicConfig','BranchList']]);
     }
     // $user = auth()->user();
     // $user = auth('api')->user();
@@ -141,7 +141,7 @@ class LoginController extends ApiController
 
         $data['branch_list'] = DB::table('tbl_soft_branch')
             ->join('tbl_soft_user_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_soft_user_branch.branch_id' )
-            ->select( 'tbl_soft_branch.branch_id', 'tbl_soft_branch.branch_short_name' )
+            ->select( 'tbl_soft_branch.branch_id', 'tbl_soft_branch.branch_short_name','tbl_soft_branch.branch_longitude','tbl_soft_branch.branch_latitude' )
             ->where('user_id', $user->id)
             ->where('business_id', $request->business_id)
             ->where('company_id', $request->business_id)
@@ -151,6 +151,7 @@ class LoginController extends ApiController
 
         $user = $this->guard()->user();
         $this->addSession($user);
+        $data['user'] = $user;
 
         return $this->ApiJsonSuccessResponse(
             $data,
@@ -158,6 +159,18 @@ class LoginController extends ApiController
         );
     }
 
+     public function BranchList(Request $request)
+    {
+
+        // dd($request->all());
+        $data = DB::table('tbl_soft_branch')
+            ->select( 'branch_id', 'branch_short_name','branch_longitude','branch_latitude','branch_mobile_no','branch_email' )
+            // ->where('business_id', $request->business_id)
+            // ->where('company_id', $request->business_id)
+            ->get();
+
+        return $this->ApiJsonSuccessResponse($data,'');
+    }
     //attach branch to user
     public function verifyBranch(Request $request)
     {
@@ -184,6 +197,8 @@ class LoginController extends ApiController
 
         return $this->ApiJsonSuccessResponse($data,'Branch Verification Successfully Done');
     }
+
+
 
     //private config
     public function privateConfig(){

@@ -79,50 +79,26 @@ class ApiHomeController extends ApiController
         public function get_employee(Request $request)
     {
 
-        // dd($request->all()) ;
-        // $validator = Validator::make($request->all(), [
-        //      'customer_id'    => 'required'
-        // ]);
-
-        // if ($validator->fails()) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Validation error',
-        //         'errors' => $validator->errors()
-        //     ], 422);
-        // }
-
-        // $bearerToken = $request->bearerToken();
-        // if (!$bearerToken) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Authorization token missing'
-        //     ], 401);
-        // }
-
-        // $user = User::where('authkey',  $bearerToken)->first();
-        // if (!$user) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Invalid or expired token'
-        //     ], 401);
-        // }
-
-        //      $Employee = DB::table('tbl_payr_employee as e')
-        //   ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.CREATED_AT")
-        //     ->where('e.employee_id', $employee_id)
-        //     ->first();
 
         $employee_id = $request->input('employee_id');
+        $branch_id = $request->input('branch_id');
 
         $Employee = DB::table('tbl_payr_employee as e')
         ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
-        ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
+        ->LEFTJOIN('tbl_defi_city as cty','cty.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
         ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
         ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
-        "e.branch_id","g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
+        "e.branch_id","g.GENDER_NAME AS GENDER","cty.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
         ->where('e.employee_id', $employee_id)
+        // ->where('e.branch_id', $branch_id)
         ->first();
+
+         $intFields = [
+            'id',
+            'branch_id',
+            'register_status',
+            // 'phone_no',
+        ];
 
         if (empty($Employee)) {
             return response()->json([
@@ -131,9 +107,25 @@ class ApiHomeController extends ApiController
             ], 404); // Use 404 Not Found HTTP status
         }
 
+         $Employee->employee_branches = DB::table('tbl_soft_branch')
+            ->join('tbl_payr_employee_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_payr_employee_branch.branch_id' )
+            ->select( 'tbl_soft_branch.branch_id', 'tbl_soft_branch.branch_short_name','tbl_soft_branch.branch_longitude','tbl_soft_branch.branch_latitude' )
+            ->where('employee_id', $employee_id)
+            ->get()->transform(function ($branch) {
+                $branch->branch_id = (int) $branch->branch_id;
+                return $branch;
+            });
+
         $Employee->id = (int) $Employee->id;
         $Employee->employee_img = "images/employee/$Employee->employee_img";
- 
+
+        foreach ($intFields as $field) {
+            if (isset($Employee->$field)) {
+                $Employee->$field = (int) $Employee->$field;
+            }
+        }
+
+
         // 3. Return the user data as a JSON response
         return response()->json([
             'success' => true,
@@ -144,37 +136,86 @@ class ApiHomeController extends ApiController
 
         public function get_all_employees(Request $request)
     {
-        
+        $branch_id = $request->input('branch_id');
+        $search = trim($request->input('search'));
+
         $Employees = DB::table('tbl_payr_employee as e')
-        ->LEFTJOIN('tbl_payr_gender as g','g.gender_id','=','e.GENDER_ID')
-        ->LEFTJOIN('tbl_defi_city as c','c.city_id','=','e.EMPLOYEE_LOCAL_CITY_ID')
-        ->LEFTJOIN('tbl_defi_country as c','c.country_id','=','e.EMPLOYEE_LOCAL_COUNTRY_ID')
-        ->select("e.EMPLOYEE_ID AS ID","e.EMPLOYEE_CODE","e.EMPLOYEE_NAME","e.EMPLOYEE_IMG","e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS","e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL","e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH","e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
-        "e.branch_id","g.GENDER_NAME AS GENDER","c.CITY_NAME AS CITY","c.COUNTRY_NAME","e.REGISTER_STATUS","ATTENDANCE_IMAGE","e.IMAGE_EMBEDED_CODE","e.CREATED_AT")
-        // ->where('employee_id', $employee_id)
-        ->get();
+            ->leftJoin('tbl_payr_gender as g', 'g.gender_id', '=', 'e.GENDER_ID')
+            ->leftJoin('tbl_defi_city as cty', 'cty.city_id', '=', 'e.EMPLOYEE_LOCAL_CITY_ID')
+            ->leftJoin('tbl_defi_country as c', 'c.country_id', '=', 'e.EMPLOYEE_LOCAL_COUNTRY_ID')
+            ->where(function ($query) use ($branch_id) {
+                $query->where('e.branch_id', $branch_id)
+                    ->orWhereExists(function ($sub) use ($branch_id) {
+                        $sub->select(DB::raw(1))
+                            ->from('tbl_payr_employee_branch epb')
+                            ->whereColumn('epb.employee_id', 'e.employee_id')
+                            ->where('epb.branch_id', $branch_id);
+                    });
+            })
+            ->select(
+                "e.EMPLOYEE_ID AS ID",
+                "e.EMPLOYEE_CODE",
+                "e.EMPLOYEE_NAME",
+                "e.EMPLOYEE_IMG",
+                "e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS",
+                "e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL",
+                "e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH",
+                "e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO",
+                "e.branch_id",
+                "g.GENDER_NAME AS GENDER",
+                "cty.CITY_NAME AS CITY",
+                "c.COUNTRY_NAME",
+                "e.REGISTER_STATUS",
+                "ATTENDANCE_IMAGE",
+                "e.IMAGE_EMBEDED_CODE",
+                "e.CREATED_AT"
+            )
+            // ->where('e.branch_id', $branch_id)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('e.EMPLOYEE_NAME', 'like', "%{$search}%")
+                    ->orWhere('e.EMPLOYEE_LOCAL_PERSONAL_EMAIL', 'like', "%{$search}%")
+                    ->orWhere('e.EMPLOYEE_CODE', 'like', "%{$search}%");
+                });
+            })
+            ->get();
 
-        foreach($Employees as $Employee){
+        $intFields = [
+            'id',
+            'branch_id',
+            'register_status',
+        ];
 
-            $Employee->id = (int) $Employee->id;
+        foreach ($Employees as $Employee) {
+
             $Employee->employee_img = "images/employee/$Employee->employee_img";
+
+            $Employee->employee_branches = DB::table('tbl_soft_branch')
+                ->join(
+                    'tbl_payr_employee_branch',
+                    'tbl_soft_branch.branch_id',
+                    '=',
+                    'tbl_payr_employee_branch.branch_id'
+                )
+                ->select(
+                    'tbl_soft_branch.branch_id',
+                    'tbl_soft_branch.branch_short_name','tbl_soft_branch.branch_longitude','tbl_soft_branch.branch_latitude'
+                )
+                ->where('employee_id', $Employee->id)
+                ->get();
+
+            foreach ($Employee->employee_branches as $branch) {
+                $branch->branch_id = (int) $branch->branch_id;
+            }
+
+            foreach ($intFields as $field) {
+                if (isset($Employee->$field)) {
+                    $Employee->$field = (int) $Employee->$field;
+                }
+            }
         }
 
-        $branch = DB::table('tbl_soft_branch')
-        ->select( 'branch_id', 'branch_longitude', 'branch_latitude')
-        ->get();
-
-        //    dd($Employee);
-
-        // if (empty($Employee)) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Employee not found.',
-        //     ], 404); // Use 404 Not Found HTTP status
-        // }
- 
-        // 3. Return the user data as a JSON response
-        return response()->json( $Employees); // Use 200 OK HTTP status
+        return response()->json($Employees);
     }
 
     public function store_attendance(Request $request)
@@ -197,7 +238,7 @@ class ApiHomeController extends ApiController
             ], 422);
         }
 
-      
+
         $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
         $data=[
@@ -214,7 +255,7 @@ class ApiHomeController extends ApiController
                 'message' => 'Employee not found.',
             ], 404); // Use 404 Not Found HTTP status
         }
- 
+
         // 3. Return the user data as a JSON response
         return response()->json([
             'success' => true,
@@ -321,9 +362,9 @@ class ApiHomeController extends ApiController
 
                 // Use native move() instead of Intervention Image to bypass permission locks
                 $image->move($destinationPath, $filename);
-                
+
                 $attendance_image = $filename;
-                
+
             } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
@@ -334,7 +375,7 @@ class ApiHomeController extends ApiController
 
         // 4. Update Database
         $data = [
-            'attendance_image'   => $attendance_image, 
+            'attendance_image'   => $attendance_image,
             'image_embeded_code' => $request->image_embeded_code,
             'REGISTER_STATUS'    => 1,
             'updated_at'         => now()
@@ -363,6 +404,8 @@ class ApiHomeController extends ApiController
     }
     public function add_attendance(Request $request)
     {
+
+        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'emp_id'          => 'required',
             'attendance_time' => 'required',
@@ -379,7 +422,7 @@ class ApiHomeController extends ApiController
 
         // Wrap in a transaction to ensure data integrity
         return DB::transaction(function () use ($request) {
-            
+
             $employee_id = $request->input('emp_id');
             $att_date = date('Y-m-d', strtotime($request->attendance_time));
             $att_full_time = date('Y-m-d H:i:s', strtotime($request->attendance_time));
@@ -424,7 +467,7 @@ class ApiHomeController extends ApiController
             $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
             // 3. Insert into Attendance Detail
             $detail_data = [
-                'id'=>$p_id, 
+                'id'=>$p_id,
                 'emp_id'          => $employee_id,
                 'attendance_date' => $att_date,
                 'attendance_time' => $att_full_time,
@@ -443,6 +486,103 @@ class ApiHomeController extends ApiController
                 'type'    => $request->attendance_type,
                 'time'    => $att_full_time
             ], 200);
+        });
+    }
+
+   public function add_bulk_attendance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            '*.attendance_time' => 'required|date',
+            '*.attendance_type' => 'required|in:Check-In,Check-Out',
+            '*.employees'       => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($request) {
+
+            $success = [];
+            $failed = [];
+
+            foreach ($request->all() as $attendance) {
+
+                $employeeId = $attendance['employees'];
+                $attendanceTime = date('Y-m-d H:i:s', strtotime($attendance['attendance_time']));
+                $attendanceDate = date('Y-m-d', strtotime($attendance['attendance_time']));
+
+                $employee = DB::table('tbl_payr_employee')
+                    ->where('employee_id', $employeeId)
+                    ->first();
+
+                if (!$employee) {
+                    $failed[] = [
+                        'employee_id' => $employeeId,
+                        'message' => 'Employee not found.'
+                    ];
+                    continue;
+                }
+
+                $header = DB::table('Tbl_hr_attendence')
+                    ->where('att_date', $attendanceDate)
+                    ->first();
+
+                if (!$header) {
+
+                    $attId = DB::table('Tbl_hr_attendence')->max('id') + 1;
+
+                    $maxVoucher = TblHrEmployeeAttendance::max('att_no');
+                    $attNo = $this->documentCode($maxVoucher, 'ATT');
+
+                    DB::table('Tbl_hr_attendence')->insert([
+                        'id' => $attId,
+                        'att_no' => $attNo,
+                        'att_date' => $attendanceDate,
+                        'business_id' => $employee->business_id,
+                        'company_id' => $employee->company_id,
+                        'branch_id' => $employee->branch_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $attId = $header->id;
+                }
+
+                $detailId = DB::table('Tbl_hr_attendence_dtl')->max('id') + 1;
+
+                DB::table('Tbl_hr_attendence_dtl')->insert([
+                    'id' => $detailId,
+                    'emp_id' => $employeeId,
+                    'attendance_date' => $attendanceDate,
+                    'attendance_time' => $attendanceTime,
+                    'attendance_type' => $attendance['attendance_type'],
+                    'shift_id' => 1,
+                    'att_id' => $attId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $success[] = [
+                    'employee_id' => $employeeId,
+                    'attendance_type' => $attendance['attendance_type'],
+                    'attendance_time' => $attendanceTime,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk attendance processed successfully.',
+                'total_received' => count($request->all()),
+                'successful' => count($success),
+                'failed' => count($failed),
+                'success_records' => $success,
+                'failed_records' => $failed,
+            ]);
         });
     }
 

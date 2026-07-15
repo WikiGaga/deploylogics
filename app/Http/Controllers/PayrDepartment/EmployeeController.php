@@ -87,7 +87,7 @@ class EmployeeController extends Controller
                 ->where('employee_id', $id)
                 ->where('default_branch', 0)
                 ->get();
-       
+
 
             }else{
                 abort('404');
@@ -123,7 +123,7 @@ class EmployeeController extends Controller
         $data['form_type'] = 'employee';
         $data['menu_id'] = self::$menu_dtl_id;
         // dd($data['gender'],$this->currentBusinessCompanyBranch);
-        
+
         return view('PayrDepartment.employee.form',compact('data'));
     }
 
@@ -144,9 +144,9 @@ class EmployeeController extends Controller
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
         }
-        if($request->register==1){
-         return $this->jsonErrorResponse([], 'You Did not Register Employee Face from Web', 401);
-        }
+        // if($request->register==1){
+        //  return $this->jsonErrorResponse([], 'You Did not Register Employee Face from Web', 401);
+        // }
         DB::beginTransaction();
         try{
             if(isset($id)){
@@ -162,13 +162,13 @@ class EmployeeController extends Controller
             $employee->employee_fh_name = $request->employee_fh_name;
             // $employee->register_status = $request->register_status;
 
-            
+
             if($request->register==0){
                 $employee->register_status = 0;
                 $employee->attendance_image = null;
                 $employee->image_embeded_code = null;
             }
-            
+
             $employee->employee_date = isset($request->employee_date) ? date('Y-m-d', strtotime($request->employee_date)) : date('Y-m-d' , time());
             if($request->hasFile('employee_img'))
             {
@@ -238,18 +238,18 @@ class EmployeeController extends Controller
                 // $employee->employee_probation_upto = date('Y-m-d', strtotime($request->employee_probation_upto));
             $employee->employee_contract_renewal_date = date('Y-m-d', strtotime($request->employee_contract_renewal_date));
             $employee->employee_contract_renewal_upto = date('Y-m-d', strtotime($request->employee_contract_renewal_upto));
-        
+
             $employee->employee_entry_status = isset($request->employee_entry_status)?1:0;
             $employee->employee_user_id = auth()->user()->id;
             $employee->business_id = auth()->user()->business_id;
             $employee->company_id = auth()->user()->company_id;
-            $employee->branch_id = auth()->user()->branch_id;
+            $employee->branch_id = $request->branch_contract_id; //auth()->user()->branch_id;
             // Termination Tab
             $employee->employee_termination_date = date('Y-m-d', strtotime($request->employee_termination_date));
             $employee->termination_type_id = $request->termination_type_id;
             $employee->employee_leaving_reason = $request->employee_leaving_reason;
             $employee->termination_status_id = $request->termination_status_id;
-            
+
             $employee->save();
             // 1. Get and filter the branches to remove the default one right away
             $optionalBranches = array_filter((array) $request->optional_branches, function($branchId) use ($request) {
@@ -324,7 +324,7 @@ class EmployeeController extends Controller
                     ]);
                 }
             }
-            
+
             // Educational Grid
             if(isset($id)){
                 $dtls = TblHrEmployeeEducational::where('employee_id',$id)->get();

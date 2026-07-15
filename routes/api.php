@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', 'Api\Auth\LoginController@register');
 Route::post('auth/login', 'Api\Auth\LoginController@login');
+
+Route::get('branches-list', 'Api\Auth\LoginController@BranchList');
 Route::get('verify-branch/test', 'Api\Auth\LoginController@verifyBranchtest');
 Route::get('public-config', 'Api\Auth\LoginController@publicConfig');
 Route::get('whatsapp-api/{link}' , 'Api\WhatsApp\WhatsAppApiController@response');
@@ -28,11 +30,7 @@ Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@s
 
 Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 
-Route::get('get_employee', 'Api\ApiHomeController@get_employee');
-Route::get('get_all_employees', 'Api\ApiHomeController@get_all_employees');
-Route::post('store_attendance', 'Api\ApiHomeController@store_attendance');
-Route::post('update_employee_face', 'Api\ApiHomeController@update_employee_face');
-Route::post('add_attendance', 'Api\ApiHomeController@add_attendance');
+
 
 Route::group(['middleware'=>['auth:api']], function () {
 
@@ -47,6 +45,13 @@ Route::group(['middleware'=>['auth:api']], function () {
         Route::post('refresh', 'Api\Auth\LoginController@refresh');
         Route::get('logout', 'Api\Auth\LoginController@logout');
     });
+
+    Route::get('get_employee', 'Api\ApiHomeController@get_employee');
+    Route::get('get_all_employees', 'Api\ApiHomeController@get_all_employees');
+    Route::post('store_attendance', 'Api\ApiHomeController@store_attendance');
+    Route::post('update_employee_face', 'Api\ApiHomeController@update_employee_face');
+    Route::post('add_attendance', 'Api\ApiHomeController@add_attendance');
+    Route::post('add_bulk_attendance', 'Api\ApiHomeController@add_bulk_attendance');
 
     Route::prefix('listing')->group(function () {
         Route::get('grn','Api\Common\ListingController@GRNList');

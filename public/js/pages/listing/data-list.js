@@ -5,6 +5,29 @@ var inline_filter_data = {};
 var KTDatatableRemoteAjaxDemo = function() {
     // Private functions
 
+    function normalizeRow(row) {
+        Object.keys(row).forEach(function (key) {
+            var value = row[key];
+            if (typeof value === 'string') {
+                // .12 -> 0.12
+                if (/^\.\d+$/.test(value)) {
+                    value = '0' + value;
+                    row[key] = value;
+                }
+                // -.12 -> -0.12
+                else if (/^-\.\d+$/.test(value)) {
+                    value = '-0' + value.substring(1);
+                    row[key] = value;
+                }
+                // Format numeric decimal strings to exactly 3 decimal places (e.g. 0.12 -> 0.120)
+                if (/^-?\d+\.\d+$/.test(value)) {
+                    row[key] = parseFloat(value).toFixed(3);
+                }
+            }
+        });
+        return row;
+    }
+
     // basic demo
     var demo = function() {
         localStorage.removeItem('ajax_data-1-meta');
@@ -95,6 +118,11 @@ var KTDatatableRemoteAjaxDemo = function() {
                             var dataSet = raw;
                             if (typeof raw.data !== 'undefined') {
                                 dataSet = raw.data;
+                            }
+                            if (Array.isArray(dataSet)) {
+                                dataSet = dataSet.map(function(row) {
+                                    return normalizeRow(row);
+                                });
                             }
                             return dataSet;
                         },
