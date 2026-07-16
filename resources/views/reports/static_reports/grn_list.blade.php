@@ -70,6 +70,7 @@
                         <tr class="sticky-header">
                             <th class="text-center">Sales Type</th>
                             <th class="text-left">Product Name</th>
+                            <th class="text-left">Product Arabic Name</th>
                             <th class="text-center">UOM</th>
                             <th class="text-center">Packing</th>
                             <th class="text-center">Quantity</th>
@@ -77,6 +78,7 @@
                             <th class="text-center">Amount</th>
                             <th class="text-center">Disc Amount</th>
                             <th class="text-center">Vat Amount</th>
+                            <th class="text-center">Vat Percentage</th>
                             <th class="text-center">Net Amount</th>
                         </tr>
                         @php
@@ -84,6 +86,7 @@
                             $grand_total_amount = 0;
                             $grand_total_disc_amount = 0;
                             $grand_total_vat_amount = 0;
+                            $grand_total_vat_percent = 0;
                             $grand_total_total_amount = 0;
 
                             $where = "";
@@ -98,7 +101,7 @@
                             }elseif($post_wise == 'unposted'){
                                 $where .= " and posted = 0 ";
                             }
-                            $qq = "select  grn_date,grn_code, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing, branch_name, posted,
+                            $qq = "select  grn_date,grn_code, supplier_name, product_name,product_arabic_name, tbl_purc_grn_dtl_vat_percent, uom_name, tbl_purc_grn_dtl_packing, branch_name, posted,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_quantity * -1 ELSE tbl_purc_grn_dtl_quantity END  tbl_purc_grn_dtl_quantity ,
                                     tbl_purc_grn_dtl_rate,
                                     case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_amount * -1 ELSE tbl_purc_grn_dtl_amount END  tbl_purc_grn_dtl_amount ,
@@ -116,7 +119,7 @@
                                     END AS RECORD_STATUS
                                     from vw_purc_grn where branch_id in (".implode(",",$data['branch_ids']).") and (grn_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') )
                                     $where ORDER BY grn_date, grn_code";
-                            
+
                             $getdata = \Illuminate\Support\Facades\DB::select($qq);
                             $list = [];
                             foreach ($getdata as $row)
@@ -131,6 +134,7 @@
                                 $sub_total_amount = 0;
                                 $sub_total_disc_amount = 0;
                                 $sub_total_vat_amount = 0;
+                                $sub_total_vat_percent = 0;
                                 $sub_total_total_amount = 0;
                             @endphp
                             <tr>
@@ -142,6 +146,7 @@
                                     $total_amount = 0;
                                     $total_disc_amount = 0;
                                     $total_vat_amount = 0;
+                                    $total_vat_percent = 0;
                                     $total_total_amount = 0;
                                 @endphp
                                 <tr>
@@ -154,13 +159,15 @@
                                     <tr>
                                         <td></td>
                                         <td>{{$product->product_name}}</td>
+                                        <td>{{$product->product_arabic_name}}</td>
                                         <td class="text-center">{{$product->uom_name}}</td>
                                         <td class="text-center">{{$product->tbl_purc_grn_dtl_packing}}</td>
-                                        <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_quantity)}}</td>
+                                        <td class="text-right">{{$product->tbl_purc_grn_dtl_quantity}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_rate,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_disc_amount,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_vat_amount,3)}}</td>
+                                        <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_vat_percent,3)}}</td>
                                         <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_total_amount,3)}}</td>
                                     </tr>
                                     @php
@@ -169,17 +176,19 @@
                                             $total_amount += $product->tbl_purc_grn_dtl_amount;
                                             $total_disc_amount += $product->tbl_purc_grn_dtl_disc_amount;
                                             $total_vat_amount += $product->tbl_purc_grn_dtl_vat_amount;
+                                            $total_vat_percent += $product->tbl_purc_grn_dtl_vat_percent;
                                             $total_total_amount += $product->tbl_purc_grn_dtl_total_amount;
                                         }
                                     @endphp
                                 @endforeach
                                 <tr>
-                                    <td colspan="4" class="rep-font-bold">Total:</td>
-                                    <td class="text-right rep-font-bold">{{number_format($total_quantity)}}</td>
+                                    <td colspan="5" class="rep-font-bold">Total:</td>
+                                    <td class="text-right rep-font-bold">{{$total_quantity}}</td>
                                     <td class="text-right rep-font-bold"></td>
                                     <td class="text-right rep-font-bold">{{number_format($total_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_disc_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_vat_amount,3)}}</td>
+                                    <td class="text-right rep-font-bold">{{number_format($total_vat_percent,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($total_total_amount,3)}}</td>
                                 </tr>
                                 @php
@@ -187,16 +196,18 @@
                                     $sub_total_amount += $total_amount;
                                     $sub_total_disc_amount += $total_disc_amount;
                                     $sub_total_vat_amount += $total_vat_amount;
+                                    $sub_total_vat_percent += $total_vat_percent;
                                     $sub_total_total_amount += $total_total_amount;
                                 @endphp
                             @endforeach
                             <tr class="sub_total">
-                                <td colspan="4" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
-                                <td class="text-right rep-font-bold">{{number_format($sub_total_quantity)}}</td>
+                                <td colspan="5" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
+                                <td class="text-right rep-font-bold">{{$sub_total_quantity}}</td>
                                 <td class="text-right rep-font-bold"></td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_disc_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_vat_amount,3)}}</td>
+                                <td class="text-right rep-font-bold">{{number_format($sub_total_vat_percent,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
                             </tr>
                             @php
@@ -204,16 +215,18 @@
                                 $grand_total_amount += $sub_total_amount;
                                 $grand_total_disc_amount += $sub_total_disc_amount;
                                 $grand_total_vat_amount += $sub_total_vat_amount;
+                                $grand_total_vat_percent += $sub_total_vat_percent;
                                 $grand_total_total_amount += $sub_total_total_amount;
                             @endphp
                         @endforeach
                         <tr class="grand_total">
-                            <td colspan="4" class="rep-font-bold">Grand Total:</td>
-                            <td class="text-right rep-font-bold">{{number_format($grand_total_quantity)}}</td>
+                            <td colspan="5" class="rep-font-bold">Grand Total:</td>
+                            <td class="text-right rep-font-bold">{{$grand_total_quantity}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_disc_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_vat_amount,3)}}</td>
+                            <td class="text-right rep-font-bold">{{number_format($grand_total_vat_percent,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_total_amount,3)}}</td>
                         </tr>
                     </table>
