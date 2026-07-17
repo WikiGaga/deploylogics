@@ -112,6 +112,7 @@ class StagingDashboardController extends Controller
                 ->whereNotNull('current_stg_id');
 
             $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->stagingService->scopeStockDocumentByMenu($menuDtlId, $tableName, $query);
             $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
             $counts = [];
@@ -194,6 +195,7 @@ class StagingDashboardController extends Controller
                 );
 
             $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->stagingService->scopeStockDocumentByMenu($menuDtlId, $tableName, $query);
             $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
             return (int) $query->count();
@@ -226,20 +228,20 @@ class StagingDashboardController extends Controller
             54 => [
                 'path' => '/stock/opening-stock/form/',
                 'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_id'],
-                'titles' => ['Stock Code', 'ID'],
+                'cols' => ['stock_code', 'stock_date'],
+                'titles' => ['Stock Code', 'Date'],
             ],
             65 => [
                 'path' => '/stock/stock-transfer/form/',
                 'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_id'],
-                'titles' => ['Stock Code', 'ID'],
+                'cols' => ['stock_code', 'stock_date'],
+                'titles' => ['Stock Code', 'Date'],
             ],
             76 => [
                 'path' => '/stock/stock-receiving/form/',
                 'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_id'],
-                'titles' => ['Stock Code', 'ID'],
+                'cols' => ['stock_code', 'stock_date'],
+                'titles' => ['Stock Code', 'Date'],
             ],
             31 => [
                 'path' => '/accounts/jv/form/',

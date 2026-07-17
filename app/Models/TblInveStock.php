@@ -9,6 +9,12 @@ class TblInveStock extends Model
     protected $table = 'tbl_inve_stock';
     protected $primaryKey = 'stock_id';
 
+    protected $fillable = [
+        'current_stg_id',
+        'staging_apply',
+        'posted',
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }

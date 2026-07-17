@@ -131,6 +131,7 @@ class StagingService
             ->where('posted', 0);
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
 
         $result = $query->exists();
         $this->dashboardCache['has_enrolled'][$key] = (bool) $result;
@@ -204,6 +205,7 @@ class StagingService
             ->whereNotNull('current_stg_id');
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
 
         $ids = $query->distinct()
             ->pluck('current_stg_id')
@@ -1162,6 +1164,7 @@ class StagingService
             ->where('staging_apply', $this->getStagingApplyEnrolledValue($formNameOrMenuDtlId));
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
+        $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $documents);
         $this->scopeAccessibleBranches($tableName, $documents);
 
         return $documents->get();
@@ -1202,10 +1205,41 @@ class StagingService
                 ->where('staging_apply', $enrolledValue);
 
             $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $count);
+            $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $count);
 
             $counts[$flow->stg_flows_id] = $count->count();
         }
 
         return $counts;
+    }
+
+    /**
+     * Stock menus (Opening Stock, Transfer, Receiving, etc.) share tbl/vw_inve_stock.
+     * Scope dashboard/document queries to the menu's own documents via stock_menu_id.
+     */
+    public function scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $query): void
+    {
+        if (!is_numeric($formNameOrMenuDtlId)) {
+            return;
+        }
+
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'inve_stock') === false) {
+            return;
+        }
+
+        $pk = config('staging.document_primary_keys_by_menu.' . $formNameOrMenuDtlId);
+        if ($pk !== 'stock_id') {
+            return;
+        }
+
+        try {
+            $cols = array_map('strtolower', DB::getSchemaBuilder()->getColumnListing($tableName));
+            if (in_array('stock_menu_id', $cols, true)) {
+                $query->where('stock_menu_id', $formNameOrMenuDtlId);
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
     }
 }

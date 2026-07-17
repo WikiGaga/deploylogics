@@ -282,6 +282,7 @@ class StockController extends Controller
     public function store(Request $request,$type, $id = null)
     {
         // dd($request);
+        $this->menu_id = $this->resolveStockMenuIdFromType($type);
         $data = [];
         $errData = [];
         $valid = [
@@ -297,7 +298,7 @@ class StockController extends Controller
             // 'pd.*.quantity' => 'nullable|numeric',
             // 'pd.*.batch_no' => 'nullable|max:20',
         ];
-          
+
        $new_branch_id = $request->new_branch_id;
         if($request->stock_code_type == 'os'){
             $valid['store'] = 'required|numeric|not_in:0';
@@ -315,7 +316,12 @@ class StockController extends Controller
                 return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
             }
         }
-        if(empty($request->pd)){
+        $stagingActionCode = strtolower(str_replace([' ', '-'], '_', trim((string) $request->input('staging_action_code', ''))));
+        $isWorkflowStagingAction = in_array($stagingActionCode, [
+            'forward', 'send_forward', 'back', 'send_back', 'sendback', 'post', 'cancel', 'un_post', 'unpost',
+        ], true);
+
+        if(empty($request->pd) && !$isWorkflowStagingAction){
             return $this->returnjsonerror("Please Enter Product Detail",201);
         }
         DB::beginTransaction();
@@ -324,7 +330,6 @@ class StockController extends Controller
             // dd($formType);
             if(isset($id)){
                 $stock = TblInveStock::where('stock_id',$id)->first();
-                TblAccoVoucher::where('voucher_document_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
             }else{
                 if($formType == 'str'){
                     $stockTrans = TblInveStock::where('stock_id',$request->stock_from_id)
@@ -364,16 +369,20 @@ class StockController extends Controller
                 if ($criteriaApplies) {
                     $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
                         'listing_view' => 'vw_inve_stock',
-                        'form_path' => $type . '/form',
+                        'form_path' => '/stock/' . $type . '/form',
                         'document_code_key' => 'stock_code',
                     ]);
                     $stock->save();
                 }
-                // DB::commit();
+                DB::commit();
 
                 $data = array_merge($data, Utilities::returnJsonEditForm());
                 $data['redirect'] = $this->documentFormStayRedirect('/stock/' . $type, $form_id);
                 return $this->jsonSuccessResponse($data, trans('message.update'), 200);
+            }
+
+            if(isset($id)){
+                TblAccoVoucher::where('voucher_document_id',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->delete();
             }
 
             $stock->stock_date =   date('Y-m-d', strtotime($request->stock_date));
@@ -891,7 +900,7 @@ class StockController extends Controller
             $this->finalizeDocumentStaging($request, $this->menu_id, $form_id, $stock, !isset($id), [
                 'notification' => [
                     'listing_view' => 'vw_inve_stock',
-                    'form_path' => $type . '/form',
+                    'form_path' => '/stock/' . $type . '/form',
                     'document_code_key' => 'stock_code',
                 ],
                 'posted_when_exempt' => 0,
@@ -916,7 +925,7 @@ class StockController extends Controller
 
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
-            $data['redirect'] = $this->prefixIndexPage.'stock/'.$type;
+            $data['redirect'] = $this->documentFormStayRedirect('/stock/' . $type, $form_id);
             return $this->jsonSuccessResponse($data, trans('message.update'), 200);
         }else{
             $data = array_merge($data, Utilities::returnJsonNewForm());

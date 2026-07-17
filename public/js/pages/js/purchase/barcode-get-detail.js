@@ -105,7 +105,7 @@ $(document).on('click', '.data_tbody_row', function() {
     if(caseType == 'productFormulationHelp'){
         get_product_formulation_detail(thix);
     }
-    if(form_type == 'food_recipes'){
+    if(caseType == 'FoodRecipeHelp'){
         get_food_detail(thix);
     }
     if(caseType == 'formulationEntryHelp'){
@@ -1301,6 +1301,10 @@ function get_sale_invoice_detail(tr, response, formData) {
 }
 
 function get_stock_adjustment_detail(tr, response, formData){
+    // Close inline help before any alert; SA path returns early and skips the shared cleanup.
+    $('#inLineHelp').remove();
+    $('.erp_form__grid').find('input').removeClass('open_inline__help__focus');
+
     if(response['product_exists'] == true){
         swal.fire({
             title: response['current_product']['product_barcode_barcode'],

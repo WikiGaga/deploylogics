@@ -114,17 +114,19 @@ var KTFormWidgets = function() {
                     if (prevFlow && prevFlow.value) formData.set('prev_flow_id', prevFlow.value);
                 }
 
+                // Workflow-only staging actions should not be blocked by grid rate checks
+                var stagingWorkflowOnly = warnCodes.indexOf(stagingCode) !== -1;
                 var validate_form = ['str', 'st'];
                 var form_type = $('#form_type').val();
                 var ajaxValidate = 1;
                 var title_msg = '';
                 var title_text = '';
-                if ($('#product_barcode_id').val()) {
+                if (!stagingWorkflowOnly && $('#product_barcode_id').val()) {
                     ajaxValidate = 0;
                     title_msg = js_msg.entry_is_exits
                     title_text = js_msg.are_you_sure_to_save_without_it
                 }
-                if (validate_form.includes(form_type)) {
+                if (!stagingWorkflowOnly && validate_form.includes(form_type)) {
                     $('.erp_form__grid_body>tr').each(function() {
                         if ($(this).find('.tblGridCal_purc_rate').val() == 0 && form_type == 'st') {
                             ajaxValidate = 0;
