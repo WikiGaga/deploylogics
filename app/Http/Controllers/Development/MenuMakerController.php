@@ -108,16 +108,23 @@ class MenuMakerController extends Controller
             $menu->branch_id = auth()->user()->branch_id;
             $menu->save();
 
+            $request_views_action=(array)$request->views_action;
             if(isset($id)){
                 $menu_permissions_arr = [];
                 $menu_permissions = Permission::where('menu_dtl_id', $id)->get();
                 foreach ($menu_permissions as $permission){
+
                     array_push($menu_permissions_arr, $permission->display_name);
 
-                    $has = in_array($permission->display_name, $request->views_action);
+
+                    $has = in_array($permission->display_name, $request_views_action);
+
+                    // dd($menu_permissions, $permission->display_name, $request_views_action);
+
+
                     if($has == false){
                         $user_permission = PermissionUser::where('permission_id',$permission->id)->exists();
-                        if($user_permission == true){
+                        if($user_permission == true && $permission->menu_id != 10){
                             return $this->jsonErrorResponse($data, trans('message.user_has_permission'), 200);
                         }else{
                             $del_permissions = Permission::where('id', $permission->id)->first();
@@ -127,9 +134,9 @@ class MenuMakerController extends Controller
                 }
             }
 
-            // dd($request->views_action);
-            if(isset($request->views_action)){
-                foreach ($request->views_action as $views_action){
+
+            if(isset($request_views_action)){
+                foreach ($request_views_action as $views_action){
                     if(isset($id)){
                         $has = in_array($views_action, $menu_permissions_arr);
                         if($has == true){

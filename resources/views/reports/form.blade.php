@@ -43,14 +43,25 @@
                                 @endif
                             </h3>
                         </div>
-                        <div class="kt-portlet__head-toolbar">
-                            <div class="input-group date">
+                        <div class="kt-portlet__head-toolbar d-flex align-items-center">
+                            <div class="input-group date mr-3" style="width: auto;">
                                 <input type="text" name="report_date" class="form-control erp-form-control-sm c-date-p" readonly value="{{$date}}" id="kt_datepicker_3" />
                                 <div class="input-group-append">
                                     <span class="input-group-text">
                                         <i class="la la-calendar"></i>
                                     </span>
                                 </div>
+                            </div>
+                            <div class="kt-checkbox-inline">
+                                <label class="kt-checkbox kt-checkbox--bold kt-checkbox--brand mb-0">
+                                    @if($case == 'edit')
+                                        @php $entry_status = isset($data['current']->report_entry_status) ? $data['current']->report_entry_status : ""; @endphp
+                                        <input type="checkbox" name="report_entry_status" value="1" {{$entry_status == 1 ? "checked" : ""}}> Active
+                                    @else
+                                        <input type="checkbox" name="report_entry_status" value="1" checked> Active
+                                    @endif
+                                    <span></span>
+                                </label>
                             </div>
                         </div>
                     </div>

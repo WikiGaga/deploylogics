@@ -116,7 +116,7 @@ class ReportsController extends Controller
             $report->report_static_dynamic = $request->report_static_dynamic;
             $report->parent_menu_id = $request->menu_dtl_id;
             $report->report_date = $request->report_date;
-            $report->report_entry_status = 1;
+            $report->report_entry_status = isset($request->report_entry_status) ? 1 : 0;
             $report->business_id = auth()->user()->business_id;
             $report->company_id = auth()->user()->company_id;
             $report->branch_id = auth()->user()->branch_id;

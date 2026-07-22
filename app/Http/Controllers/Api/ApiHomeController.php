@@ -410,6 +410,7 @@ class ApiHomeController extends ApiController
             'emp_id'          => 'required',
             'attendance_time' => 'required',
             'attendance_type' => 'required', // e.g., 'Check-In' or 'Check-Out'
+            'branch_id' => 'required', // e.g., 'Check-In' or 'Check-Out'
         ]);
 
         if ($validator->fails()) {
@@ -456,7 +457,7 @@ class ApiHomeController extends ApiController
                     'att_no'    => $att_no,
                     'business_id' => $employee->business_id,
                     'company_id'  => $employee->company_id,
-                    'branch_id'   => $employee->branch_id,
+                    'branch_id'   => $request->branch_id,
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
@@ -472,6 +473,7 @@ class ApiHomeController extends ApiController
                 'attendance_date' => $att_date,
                 'attendance_time' => $att_full_time,
                 'attendance_type' => $request->attendance_type,
+                'branch_id' => $request->branch_id,
                 'shift_id'        => 1,
                 'att_id'          => $att_id,
                 'created_at'      => now(),
@@ -495,6 +497,7 @@ class ApiHomeController extends ApiController
             '*.attendance_time' => 'required|date',
             '*.attendance_type' => 'required|in:Check-In,Check-Out',
             '*.employees'       => 'required|numeric',
+            '*.branch_id'       => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -545,7 +548,7 @@ class ApiHomeController extends ApiController
                         'att_date' => $attendanceDate,
                         'business_id' => $employee->business_id,
                         'company_id' => $employee->company_id,
-                        'branch_id' => $employee->branch_id,
+                        'branch_id' => $attendance['branch_id'],
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -561,6 +564,7 @@ class ApiHomeController extends ApiController
                     'attendance_date' => $attendanceDate,
                     'attendance_time' => $attendanceTime,
                     'attendance_type' => $attendance['attendance_type'],
+                    'branch_id' => $attendance['branch_id'],
                     'shift_id' => 1,
                     'att_id' => $attId,
                     'created_at' => now(),
@@ -600,6 +604,82 @@ class ApiHomeController extends ApiController
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
 
         return $R * $c; // Distance in meters
+    }
+
+////////////////
+
+ public function get_app_version(Request $request)
+    {
+
+        $app_version = DB::table('tbl_app_version')
+            ->select('id', 'app_name', 'app_version', 'app_url')
+            ->where('app_name', 'malik pizza hr')
+            ->first();
+
+        if ($app_version) {
+            return response()->json([
+                'app_name' => $app_version->app_name,
+                'app_version' => $app_version->app_version,
+                'app_url' => $app_version->app_url,
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active app version found.',
+                'data' => null
+            ], 404);
+        }
+
+    }
+
+    public function store_app_version(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'app_name' => 'required|string|max:255',
+            'app_version' => 'required|string|max:50',
+            'app_url' => 'required|string|max:50'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = [
+            'app_name' => $request->input('app_name'),
+            'app_version' => $request->input('app_version'),
+            'app_url' => $request->input('app_url')
+        ];
+
+        try {
+            if(DB::table('tbl_app_version')->where('app_name', $data['app_name'])->exists()){
+                DB::table('tbl_app_version')
+                    ->where('app_name', $data['app_name'])
+                    ->update($data);
+            } else {
+                $p_id=DB::table('tbl_app_version')->max('id') +1;
+                $data['id'] = $p_id;
+                // dd($data);
+                DB::table('tbl_app_version')->insert($data);
+
+            }
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'App version stored successfully.',
+                'data' => $data
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to store app version: ' . $e->getMessage(),
+            ], 500);
+        }
+
     }
 
 
@@ -678,6 +758,285 @@ class ApiHomeController extends ApiController
     public function destroy($id)
     {
         //
+    }
+
+    /////////////////////
+
+    // public function markAttendance(Request $request)
+    // {
+
+    //     // ✅ Attendance embedding from request
+    //     // $attendanceEmbedding = $request->input('embedding'); // must be array
+    //     $attendanceEmbedding = DB::table('tbl_payr_employee')
+    //     ->where('employee_id', 12123325261244)
+    //     ->value('image_embeded_code');
+
+    //     $attendanceEmbedding = json_decode($attendanceEmbedding, true);
+
+    //     // $attendanceEmbedding = $attendanceEmbedding['Front'] ?? null;
+    //     $attendanceEmbedding = $attendanceEmbedding['Right'] ?? null;
+
+
+    //     if (!is_array($attendanceEmbedding)) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Invalid embedding format'
+    //         ], 400);
+    //     }
+
+    //     $threshold = 0.70; // ✅ Recommended threshold
+
+    //     $employees = DB::table('tbl_payr_employee')
+    //     ->select('employee_id', 'employee_name', 'image_embeded_code')
+    //     // ->wherenotin('employee_id', [12123325261244,80162126161151,19221126161100])
+    //     ->wherenotin('employee_id', [12123325261244,19221126161100])
+    //     ->get();
+
+    //     $bestMatch = null;
+    //     $highestSimilarity = 0;
+
+    //     foreach ($employees as $employee) {
+
+    //         $storedEmbeddings = json_decode($employee->image_embeded_code, true);
+
+    //         if (!is_array($storedEmbeddings)) {
+    //             continue;
+    //         }
+
+    //        foreach ($storedEmbeddings as $embedding) {
+
+    //             $similarity = $this->cosineSimilarity($attendanceEmbedding, $embedding);
+
+    //             if ($similarity > $highestSimilarity) {
+    //                 $highestSimilarity = $similarity;
+    //                 $bestMatch = $employee;
+    //             }
+    //         }
+    //     }
+
+    //     $matchPercentage = round($highestSimilarity * 100, 2);
+
+    //     if ($highestSimilarity >= $threshold && $bestMatch) {
+
+    //         // ✅ Mark attendance logic here if needed
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'employee_id' => $bestMatch->employee_id,
+    //             'employee_name' => $bestMatch->employee_name,
+    //             'similarity_score' => $highestSimilarity,
+    //             'match_percentage' => $matchPercentage . '%',
+    //             'message' => 'Employee identified successfully'
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'status' => false,
+    //         'match_percentage' => $matchPercentage . '%',
+    //         'message' => 'No matching employee found'
+    //     ], 404);
+    // }
+
+
+    /**
+     * ✅ Cosine Similarity Function
+     */
+        // private function cosineSimilarity(array $a, array $b): float
+        // {
+        //     $dotProduct = 0.0;
+        //     $normA = 0.0;
+        //     $normB = 0.0;
+
+        //     $length = min(count($a), count($b));
+
+        //     for ($i = 0; $i < $length; $i++) {
+
+        //         $valA = (float) $a[$i];
+        //         $valB = (float) $b[$i];
+
+        //         $dotProduct += $valA * $valB;
+        //         $normA += $valA * $valA;
+        //         $normB += $valB * $valB;
+        //     }
+
+        //     if ($normA == 0 || $normB == 0) {
+        //         return 0;
+        //     }
+
+        //     return $dotProduct / (sqrt($normA) * sqrt($normB));
+        // }
+    // private function cosineSimilarity(array $a, array $b): float
+    // {
+    //     $dotProduct = 0.0;
+    //     $normA = 0.0;
+    //     $normB = 0.0;
+
+    //     $length = min(count($a), count($b));
+
+    //     for ($i = 0; $i < $length; $i++) {
+    //         $dotProduct += $a[$i] * $b[$i];
+    //         $normA += $a[$i] * $a[$i];
+    //         $normB += $b[$i] * $b[$i];
+    //     }
+
+    //     if ($normA == 0 || $normB == 0) {
+    //         return 0;
+    //     }
+
+    //     return $dotProduct / (sqrt($normA) * sqrt($normB));
+    // }
+
+
+
+
+ public function markAttendance(Request $request)
+    {
+        /*
+        =====================================================
+        ✅ STEP 1: Get Attendance Embedding (from request)
+        =====================================================
+        Expected JSON:
+        {
+            "embedding": [0.123, 0.456, ...]
+        }
+        */
+
+        // $attendanceEmbedding = $request->input('embedding');
+
+         $attendanceEmbedding = DB::table('tbl_payr_employee')
+        ->where('employee_id', 12123325261244)
+        ->value('image_embeded_code');
+
+        $attendanceEmbedding = json_decode($attendanceEmbedding, true);
+
+        $attendanceEmbedding = $attendanceEmbedding['Front'] ?? null;
+        // $attendanceEmbedding = $attendanceEmbedding['Right'] ?? null;
+
+        if (!is_array($attendanceEmbedding)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid embedding format'
+            ], 400);
+        }
+
+        // ✅ Recommended threshold for MobileFaceNet
+        $threshold = 0.85;
+
+        /*
+        =====================================================
+        ✅ STEP 2: Fetch All Employees
+        image_embeded_code format:
+        [
+            [....],   // front
+            [....],   // left
+            [....],   // right
+            ...
+        ]
+        =====================================================
+        */
+
+        $employees = DB::table('tbl_payr_employee')
+            ->select('employee_id', 'employee_name', 'image_embeded_code')
+            ->wherenotin('employee_id', [12123325261244,19221126161100])
+            ->get();
+
+        $bestMatch = null;
+        $highestSimilarity = 0;
+
+        /*
+        =====================================================
+        ✅ STEP 3: Compare With Each Employee
+        =====================================================
+        */
+
+        foreach ($employees as $employee) {
+
+            $storedEmbeddings = json_decode($employee->image_embeded_code, true);
+
+            if (!is_array($storedEmbeddings)) {
+                continue;
+            }
+
+            // ✅ Compare attendance embedding with all 7 angles
+            foreach ($storedEmbeddings as $storedEmbedding) {
+
+                if (!is_array($storedEmbedding)) {
+                    continue;
+                }
+
+                $similarity = $this->cosineSimilarity(
+                    $attendanceEmbedding,
+                    $storedEmbedding
+                );
+
+                // ✅ Use MAX similarity (Most Accurate)
+                if ($similarity > $highestSimilarity) {
+                    $highestSimilarity = $similarity;
+                    $bestMatch = $employee;
+                }
+            }
+        }
+
+        $matchPercentage = round($highestSimilarity * 100, 2);
+
+        /*
+        =====================================================
+        ✅ STEP 4: Check Threshold
+        =====================================================
+        */
+
+        if ($highestSimilarity >= $threshold && $bestMatch) {
+
+            // ✅ Here you can insert attendance record
+
+            return response()->json([
+                'status' => true,
+                'employee_id' => $bestMatch->employee_id,
+                'employee_name' => $bestMatch->employee_name,
+                'similarity_score' => $highestSimilarity,
+                'match_percentage' => $matchPercentage . '%',
+                'message' => 'Employee identified successfully'
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'similarity_score' => $highestSimilarity,
+            'match_percentage' => $matchPercentage . '%',
+            'message' => 'No matching employee found'
+        ], 404);
+    }
+
+
+//     /*
+//     =====================================================
+//     ✅ COSINE SIMILARITY FUNCTION (Safe Version)
+//     =====================================================
+//     */
+
+    private function cosineSimilarity(array $a, array $b): float
+    {
+        $dotProduct = 0.0;
+        $normA = 0.0;
+        $normB = 0.0;
+
+        $length = min(count($a), count($b));
+
+        for ($i = 0; $i < $length; $i++) {
+
+            $valA = (float) $a[$i];
+            $valB = (float) $b[$i];
+
+            $dotProduct += $valA * $valB;
+            $normA += $valA * $valA;
+            $normB += $valB * $valB;
+        }
+
+        if ($normA == 0 || $normB == 0) {
+            return 0;
+        }
+
+        return $dotProduct / (sqrt($normA) * sqrt($normB));
     }
 
 }
