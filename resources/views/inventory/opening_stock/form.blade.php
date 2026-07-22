@@ -322,22 +322,13 @@
         var type = "{{ $type }}";
         function voucher_posted(){
             var stock_id = $('#stock_id').val();
-            if(!stock_id){
-                toastr.error('Stock id not found');
-                return;
-            }
-            $.ajax({
-                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                type:'POST',
-                url: '/stock/' + type + '/post',
-                dataType: 'json',
-                data: { stock_id: stock_id },
-                success: function(response, textStatus, xhr) {
-                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
-                },
-                error: function(xhr) {
-                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
-                }
+            erpVoucherPostedUpdateThenPost({
+                documentId: stock_id,
+                idMissingMsg: 'Stock id not found',
+                postUrl: '/stock/' + type + '/post',
+                postData: { stock_id: stock_id },
+                form: '#opening_stock_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('54-edit') || auth()->user()->isAbleTo('54-create'))) ? 'true' : 'false' }}
             });
         }
 

@@ -1,7 +1,20 @@
 @extends('layouts.layout')
-@section('title', 'Stock Transfer')
+@section('title', 'Stock Distribution')
 
 @section('pageCSS')
+<style>
+    #stock_distribution_form tbody.erp_form__grid_body > tr > td:last-child {
+        z-index: 4;
+        min-width: 96px;
+        background: #ddd;
+    }
+    #stock_distribution_form .erp_form__grid_body .btn-group .gridBtn {
+        cursor: pointer !important;
+    }
+    #stock_distribution_form .erp_form__grid_body td:first-child > i.fa-arrows-alt-v {
+        cursor: move;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -44,7 +57,7 @@
             $form_type = $data['stock_code_type'];
     @endphp
     @permission($data['permission'])
-    <form id="stock_transfer_form" class="stock_form kt-form" method="post" action="{{ action('Inventory\StockController@store', [$type,$id]) }}">
+    <form id="stock_distribution_form" class="stock_form kt-form" method="post" action="{{ action('Inventory\StockController@store', [$type,$id]) }}">
     @csrf
     <input type="hidden" name="stock_code_type" value='{{$data['stock_code_type']}}' id="form_type">
     <input type="hidden" name="stock_menu_id" value='{{$data['stock_menu_id']}}'>
@@ -94,16 +107,27 @@
                     </div>
                     <div class="col-lg-4">
                         <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">To Transfer Branch:</label>
+                            <label class="col-lg-6 erp-col-form-label">Select Branch:</label>
                             <div class="col-lg-6">
                                 <div class="erp-select2">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" name="branch_to">
-                                        <option value="0">Select</option>
-                                        @php $transfer_to = isset($branch_to)?$branch_to:'' @endphp
-                                        @foreach($data['branch'] as $branch)
-                                            <option value="{{$branch->branch_id}}" {{$branch->branch_id == $transfer_to?'selected':''}}>{{$branch->branch_name}}</option>
-                                        @endforeach
-                                    </select>
+                                    @if($case == 'new')
+                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="new_branch_id" name="new_branch_id" required>
+                                            @foreach($user_branches as $branch)
+                                                <option value="{{$branch->branch_id}}" {{auth()->user()->branch_id == $branch->branch_id ? 'selected' : ''}}>
+                                                    {{$branch->branch_name}}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="new_branch_id" name="" disabled>
+                                            @foreach($user_branches as $branch)
+                                                <option value="{{$branch->branch_id}}" {{$data['current']->branch_id == $branch->branch_id ? 'selected' : ''}}>
+                                                    {{$branch->branch_name}}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" name="new_branch_id" value="{{ $data['current']->branch_id }}">
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -236,42 +260,6 @@
                 </div>--}}
                 <div class="row form-group-block">
                     <div class="col-lg-4">
-                        <div class="row">
-                            <label class="col-lg-4 erp-col-form-label">GRN No:</label>
-                            <div class="col-lg-8">
-                                <div class="erp_form___block">
-                                    <div class="input-group open-modal-group">
-                                        <div class="input-group-prepend">
-                                            @if($case == 'new')
-                                                <span class="input-group-text btn-minus-selected-data">
-                                                <i class="la la-minus-circle"></i>
-                                            </span>
-                                            @endif
-                                        </div>
-                                        @if($case == 'new')
-                                            <input type="text" value="{{isset($grn_from_code)?$grn_from_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','grnHelp')}}" id="ref_grn_code" name="grn_code" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
-                                        @else
-                                            <input type="text" value="{{isset($grn_from_code)?$grn_from_code:''}}" id="ref_grn_code" name="grn_code" class="readonly form-control erp-form-control-sm moveIndex" placeholder="Enter here">
-                                        @endif
-                                        <input type="hidden" id="ref_grn_id" name="grn_id" value="{{isset($grn_from_id)?$grn_from_id:''}}"/>
-                                        <div class="input-group-append">
-                                            <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
-                                                <i class="la la-search"></i>
-                                            </span>
-                                            @if($case == 'new')
-                                                <span class="input-group-text group-input-btn" id="getGRNRequestData">
-                                                    GO
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @include('layouts.branchSelect')
-                    
-                    <div class="col-lg-4">
                         <div class="input-group">
                             <div class="input-group-prepend"><button type="button" class="btn btn-sm btn-label-danger btn-bold" id="tb_product_detail" style="padding: 0 15px;font-weight: 500;">Stock</button></div>
                             <input type="text" class="form-control erp-form-control-sm" value="0" id="current_product_stock" readonly style="font-size: 18px;background: rgba(253, 57, 122, 0.1);color: #fd397a;font-weight: 500;text-align: center;">
@@ -289,7 +277,7 @@
                                 </button>
                                 @php
                                     $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Demand Qty','Qty',
-                                    'Sale Rate','Rate','Amount','Disc Percent','Disc Amt','VAT Percent','VAT Amt','Gross Amt'];
+                                    'Sale Rate','Rate','Amount','Disc Percent','Disc Amt','VAT Percent','VAT Amt','Gross Amt','To Branch','To Store'];
                                 @endphp
                                 <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                     @foreach($headings as $key=>$heading)
@@ -431,7 +419,29 @@
                                             <input id="gross_amount" readonly type="text" class="tblGridCal_gross_amount validNumber form-control erp-form-control-sm">
                                         </div>
                                     </th>
-                                    <th scope="col" width="48">
+                                    <th scope="col" style="min-width:180px;width:180px;">
+                                        <div class="erp_form__grid_th_title">To Branch</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <select id="branch_to" data-id="branch_to" class="branch_to sd_branch_to form-control erp-form-control-sm">
+                                                <option value="0">Select</option>
+                                                @foreach($data['transfer_branches'] as $branch)
+                                                    <option value="{{$branch->branch_id}}">{{$branch->branch_name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </th>
+                                    <th scope="col" style="min-width:180px;width:180px;">
+                                        <div class="erp_form__grid_th_title">To Store</div>
+                                        <div class="erp_form__grid_th_input">
+                                            <select id="store_to" data-id="store_to" class="store_to sd_store_to form-control erp-form-control-sm">
+                                                <option value="0">Select</option>
+                                                @foreach($data['store'] as $store)
+                                                    <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}">{{$store->store_name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </th>
+                                    <th scope="col" style="min-width:96px;width:96px;">
                                         <div class="erp_form__grid_th_title">Action</div>
                                         <div class="erp_form__grid_th_btn">
                                             <button type="button" id="addData" class="tb_moveIndex tb_moveIndexBtn erp_form__grid_newBtn btn btn-primary btn-sm">
@@ -483,8 +493,27 @@
                                             <td><input type="text" data-id="vat_perc" name="pd[{{$loop->iteration}}][vat_perc]" value="{{number_format($dtl->stock_dtl_vat_percent,2,'.','')}}" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                             <td><input type="text" data-id="vat_amount" name="pd[{{$loop->iteration}}][vat_amount]" value="{{number_format($dtl->stock_dtl_vat_amount,3,'.','')}}" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                             <td><input type="text" readonly data-id="gross_amount" name="pd[{{$loop->iteration}}][gross_amount]" value="{{number_format($dtl->stock_dtl_total_amount,3,'.','')}}" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>
-                                            <td class="text-center">
+                                            <td style="min-width:180px;">
+                                                @php $row_branch_to = isset($dtl->stock_dtl_branch_to_id)?$dtl->stock_dtl_branch_to_id:''; @endphp
+                                                <select class="branch_to sd_branch_to form-control erp-form-control-sm" data-id="branch_to" name="pd[{{$loop->iteration}}][branch_to]">
+                                                    <option value="0">Select</option>
+                                                    @foreach($data['transfer_branches'] as $branch)
+                                                        <option value="{{$branch->branch_id}}" {{$branch->branch_id == $row_branch_to?'selected':''}}>{{$branch->branch_name}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td style="min-width:180px;">
+                                                @php $row_store_to = isset($dtl->stock_dtl_store_to_id)?$dtl->stock_dtl_store_to_id:''; @endphp
+                                                <select class="store_to sd_store_to form-control erp-form-control-sm" data-id="store_to" name="pd[{{$loop->iteration}}][store_to]">
+                                                    <option value="0">Select</option>
+                                                    @foreach($data['store'] as $store)
+                                                        <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $row_store_to?'selected':''}}>{{$store->store_name}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td class="text-center sd-grid-action-cell">
                                                 <div class="btn-group btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-info gridBtn copyRowToHeader" title="Copy to edit row"><i class="la la-copy"></i></button>
                                                     <button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button>
                                                 </div>
                                             </td>
@@ -543,7 +572,7 @@
             // Function to filter stores based on selected branch
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
-                
+
                 // Reset the select element
                 $storeSelect.html('');
 
@@ -555,7 +584,7 @@
                 var $matchingOptions = $allStoreOptions.filter(function() {
                     return $(this).attr('data-branch') == selectedBranchId;
                 });
-                
+
                 $storeSelect.append($matchingOptions);
 
                 // CRITICAL: Trigger Select2 change to refresh its UI display
@@ -570,7 +599,37 @@
                 filterStores();
             });
         });
-        
+
+        function syncSdFormBranchField(branchId) {
+            $('input[name="branch"]').val(branchId);
+        }
+        syncSdFormBranchField($('#new_branch_id').val());
+        $('#new_branch_id').on('change', function() {
+            var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
+            var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
+            var branchId = $(this).val();
+            syncSdFormBranchField(branchId);
+            if (pre_code && branchId) {
+                $.ajax({
+                    url: "{{ route('voucher.get-code') }}",
+                    type: "GET",
+                    data: {
+                        pre_code: pre_code,
+                        branch_id: branchId,
+                        code_getter_type: code_getter_type
+                    },
+                    success: function(response) {
+                        $('#voucher_no_div').text(response.code);
+                    },
+                    error: function(xhr) {
+                        console.error("Something went wrong fetching the voucher code:", xhr.responseText);
+                    }
+                });
+            } else {
+                $('#voucher_no_div').text('');
+            }
+        });
+
         var type = "{{ $type }}";
         function voucher_posted(){
             var stock_id = $('#stock_id').val();
@@ -579,8 +638,8 @@
                 idMissingMsg: 'Stock Transfer id not found',
                 postUrl: '/stock/' + type + '/post',
                 postData: { stock_id: stock_id },
-                form: '#stock_transfer_form',
-                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('65-edit') || auth()->user()->isAbleTo('65-create'))) ? 'true' : 'false' }}
+                form: '#stock_distribution_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('359-edit') || auth()->user()->isAbleTo('359-create'))) ? 'true' : 'false' }}
             });
         }
 
@@ -714,9 +773,6 @@
             }
         });
 
-        function funcAfterAddRow(){
-
-        }
         var formcase = '{{$case}}';
     </script>
     <script>
@@ -790,6 +846,20 @@
                 'id':'gross_amount',
                 'fieldClass':'tblGridCal_gross_amount validNumber',
                 'readonly':true
+            },
+            {
+                'id':'branch_to',
+                'fieldClass':'branch_to sd_branch_to',
+                'type':'select',
+                'require':true,
+                'message':'Please select To Branch'
+            },
+            {
+                'id':'store_to',
+                'fieldClass':'store_to sd_store_to',
+                'type':'select',
+                'require':true,
+                'message':'Please select To Store'
             },
         ];
         var arr_hidden_field = ['product_id','product_barcode_id','uom_id','grn_qty','dis_perc','dis_amount','after_dis_amount','gst_perc','gst_amount','fed_perc','fed_amount','spec_disc_perc','spec_disc_amount','gross_amount','net_amount','unit_price'];
@@ -1039,6 +1109,7 @@
         </script>
 
     @yield('summary_total_pageJS')
+    <script src="{{ asset('js/pages/js/inventory/stock_distribution.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>

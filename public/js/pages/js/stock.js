@@ -116,7 +116,7 @@ var KTFormWidgets = function() {
 
                 // Workflow-only staging actions should not be blocked by grid rate checks
                 var stagingWorkflowOnly = warnCodes.indexOf(stagingCode) !== -1;
-                var validate_form = ['str', 'st'];
+                var validate_form = ['str', 'st', 'sd'];
                 var form_type = $('#form_type').val();
                 var ajaxValidate = 1;
                 var title_msg = '';

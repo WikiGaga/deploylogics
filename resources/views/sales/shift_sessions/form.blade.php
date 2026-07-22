@@ -207,22 +207,13 @@
     <script>
         function voucher_posted() {
             var session_id = $('#form_id').val();
-            if (!session_id) {
-                toastr.error('Session id not found');
-                return;
-            }
-            $.ajax({
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                type: 'POST',
-                url: '/shift_sessions/post',
-                dataType: 'json',
-                data: { session_id: session_id },
-                success: function (response, textStatus, xhr) {
-                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
-                },
-                error: function (xhr) {
-                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
-                }
+            erpVoucherPostedUpdateThenPost({
+                documentId: session_id,
+                idMissingMsg: 'Session id not found',
+                postUrl: '/shift_sessions/post',
+                postData: { session_id: session_id },
+                form: '#shift_sessions_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('354-edit') || auth()->user()->isAbleTo('354-create'))) ? 'true' : 'false' }}
             });
         }
 

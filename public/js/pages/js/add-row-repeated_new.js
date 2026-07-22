@@ -60,7 +60,7 @@ function addData(){
 
             var new_product_id = $("#product_barcode_id").val();
             if(product_arr.includes(new_product_id)){
-                if(form_type == 'sa'){barcodeFound = 0;}else{barcodeFound = 1;}
+                if(form_type == 'sa' || form_type == 'sd'){barcodeFound = 0;}else{barcodeFound = 1;}
             }
         }
         if(data_po_multi){
@@ -114,6 +114,19 @@ function addRowData(thix){
             return false;
         }
     }
+    var form_type_check = $('#form_type').val();
+    if(form_type_check == 'sd'){
+        var branchToVal = $('#branch_to').val();
+        var storeToVal = $('#store_to').val();
+        if(!branchToVal || branchToVal == '0'){
+            alert('Please select To Branch');
+            return false;
+        }
+        if(!storeToVal || storeToVal == '0'){
+            alert('Please select To Store');
+            return false;
+        }
+    }
     if(form_name == 'lpo_generation'){
         var total_length = $('tr.product_tr_no').length + 1;
     }else{
@@ -149,9 +162,11 @@ function addRowData(thix){
             if(name == 'stock_location'){
                 var index = $('#'+name).parent().parent().parent().index();
             }else{
-                var index = headerTr.find('#'+name).parent().parent().index();
+                var index = headerTr.find('#'+name).closest('th').index();
             }
             var clone = $('#'+name).clone();
+            clone.removeAttr('id').removeClass('select2-hidden-accessible').removeAttr('data-select2-id').removeAttr('aria-hidden').removeAttr('tabindex').css('display','');
+            clone.find('option').removeAttr('data-select2-id');
             var classes = text_Fields[i]['fieldClass'] + ' form-control erp-form-control-sm';
             if(text_Fields[i]['convertType'] == 'input'){
                 if(text_Fields[i]['getVal'] == 'text'){
@@ -163,7 +178,7 @@ function addRowData(thix){
                 var hide = text_Fields[i]['skip']==true?'d-none':'';
                 tds += '<td class="'+hide+'"><input type="text" name="pd['+total_length+']['+name+']" data-id="'+name+'" value="'+selected_val+'" title="'+selected_val+'" class="form-control erp-form-control-sm '+classes+'" '+readonly+'></td>';
             }else{
-                var selected_val = thix.parents('tr').find('select#'+name).val();
+                var selected_val = $('#'+name).val();
                 tds += '<td><div class="erp-select2"></div></td>';
                 var arrOptions = {
                     "name": name,
@@ -206,7 +221,12 @@ function addRowData(thix){
         var inputClass = radio_Fields[i]['inputClass'];
         tds += '<td class="text-center"><label class="kt-radio '+labelClass+'"><input type="radio" class="'+inputClass+'" id="'+id+'" data-id="'+id+'" value="'+val+'" name="pd['+total_length+'][action]" '+checked+'><span></span></label></td>';
     }
-    var td_and_action_btn = tds + '<td class="text-center"><div class="btn-group btn-group btn-group-sm" role="group"><button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>';
+    var actionCellClass = $('#form_type').val() == 'sd' ? ' sd-grid-action-cell' : '';
+    var td_and_action_btn = tds + '<td class="text-center'+actionCellClass+'"><div class="btn-group btn-group btn-group-sm" role="group">';
+    if($('#form_type').val() == 'sd'){
+        td_and_action_btn += '<button type="button" class="btn btn-info gridBtn copyRowToHeader" title="Copy to edit row"><i class="la la-copy"></i></button>';
+    }
+    td_and_action_btn += '<button type="button" class="btn btn-danger gridBtn delData"><i class="la la-trash"></i></button></div></td>';
 
     if(form_name == 'lpo_generation'){
         currentTable.find('.erp_form__grid_body').append('<tr class="product_tr_no new-row">'+ td_and_action_btn  +'</tr>');
@@ -244,9 +264,9 @@ function addRowData(thix){
             "placeholder": "dd-mm-yyyy",
         });
     }
-    // if(typeof funcAfterAddRow !== undefined){
-    //     funcAfterAddRow();
-    // }
+    if(typeof funcAfterAddRow === 'function'){
+        funcAfterAddRow();
+    }
 }
 function formClear(){
     $('.erp_form__grid_header').find('input').val("");
@@ -311,13 +331,22 @@ function updateKeys(){
     }
 }
 function table_td_sortable(){
-    $( ".erp_form__grid_body" ).sortable({
-        handle: ".handle",
+    var $body = $( ".erp_form__grid_body" );
+    if ($body.hasClass('ui-sortable')) {
+        $body.sortable('destroy');
+    }
+    var isSdForm = $('#form_type').val() === 'sd';
+    var sortableOptions = {
+        handle: isSdForm ? 'td:first-child > i.fa-arrows-alt-v' : '.handle',
         update: function (e,ui) {
             table_td_sortableInit();
         }
-    });
-    $( ".erp_form__grid_body>tr" ).disableSelection();
+    };
+    if (isSdForm) {
+        sortableOptions.cancel = 'input, textarea, button, select, option, a, .gridBtn';
+    }
+    $body.sortable(sortableOptions);
+    $body.find('>tr').disableSelection();
 }
 function datePicker(){
     var arrows;

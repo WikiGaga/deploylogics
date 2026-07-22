@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Events\PusherNotifyEvent;
 use App\Traits\BuildsWideTablePdf;
+use App\Traits\ExportsReportCsv;
 
 class GenerateReport implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels, BuildsWideTablePdf;
+    use InteractsWithQueue, Queueable, SerializesModels, BuildsWideTablePdf, ExportsReportCsv;
 
     private $qry;
     private $fileName;
@@ -63,25 +64,22 @@ class GenerateReport implements ShouldQueue
     private function generateCsv($results)
     {
         $filePath = storage_path('app/reports/' . $this->fileName);
-
-        // Open a file pointer
         $file = fopen($filePath, 'w');
 
-        // Write the headers (adjust as needed for your query columns)
+        $headings = [];
+        $rows = [];
+
         if (count($results) > 0) {
-            fputcsv($file, array_keys((array) $results[0]));
+            $headings = array_keys((array) $results[0]);
+            foreach ($results as $row) {
+                $rows[] = array_values((array) $row);
+            }
         }
 
-        // Write the data
-        foreach ($results as $row) {
-            fputcsv($file, (array) $row);
-        }
-
+        $this->writeReportCsv($file, $headings, $rows);
         fclose($file);
 
-        // Save the file
         Storage::disk('local')->put('reports/' . $this->fileName, file_get_contents($filePath));
-
     }
 
     // private function generatePdf($results)

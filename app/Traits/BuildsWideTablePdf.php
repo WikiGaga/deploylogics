@@ -2,11 +2,35 @@
 
 namespace App\Traits;
 
+use ArPHP\I18N\Arabic;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 trait BuildsWideTablePdf
 {
+    protected function applyArabicGlyphsToHtml(string $html): string
+    {
+        $arabic = new Arabic();
+        $positions = $arabic->arIdentify($html);
+
+        for ($i = count($positions) - 1; $i >= 0; $i -= 2) {
+            $start = $positions[$i - 1];
+            $length = $positions[$i] - $start;
+            $segment = substr($html, $start, $length);
+            $shaped = $arabic->utf8Glyphs($segment);
+            $html = substr_replace($html, $shaped, $start, $length);
+        }
+
+        return $html;
+    }
+
+    protected function prepareReportHtmlForPdf(string $html): string
+    {
+        $html = $this->applyArabicGlyphsToHtml($html);
+        $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+
+        return $html;
+    }
     protected function countReportTableColumns(string $html): int
     {
         $maxColumns = 0;
@@ -73,7 +97,7 @@ trait BuildsWideTablePdf
     protected function buildListingTablePdfHtml(array $results, string $title = 'Report'): string
     {
         $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
-            . 'body{font-family:Verdana,sans-serif;font-size:10px;margin:0;padding:0;color:#000;}'
+            . 'body{font-family:"dejavu sans",sans-serif;font-size:10px;margin:0;padding:0;color:#000;}'
             . 'table{width:100%;border-collapse:collapse;table-layout:auto;page-break-inside:auto;}'
             . 'thead{display:table-header-group;}'
             . 'td,th{padding:4px 5px;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;border:1px solid #ccc;}'
@@ -121,14 +145,16 @@ trait BuildsWideTablePdf
     protected function createWideTableDompdf(string $html, ?int $columnCount = null): Dompdf
     {
         $pdfConfig = $this->buildReportPdfConfig($html, $columnCount);
-        $pdfConfig['html'] = $this->injectReportPdfCss(
-            $pdfConfig['html'],
-            '<style>'
-            . '@page{margin-top:12mm;margin-right:8mm;margin-bottom:8mm;margin-left:8mm;}'
-            . '#content{padding-top:10mm !important;}'
-            . '.kt-portlet .kt-portlet__head{padding-top:4mm !important;}'
-            . 'h1.kt-invoice__title,.kt-invoice__title{margin-top:0 !important;}'
-            . '</style>'
+        $pdfConfig['html'] = $this->prepareReportHtmlForPdf(
+            $this->injectReportPdfCss(
+                $pdfConfig['html'],
+                '<style>'
+                . '@page{margin-top:12mm;margin-right:8mm;margin-bottom:8mm;margin-left:8mm;}'
+                . '#content{padding-top:10mm !important;}'
+                . '.kt-portlet .kt-portlet__head{padding-top:4mm !important;}'
+                . 'h1.kt-invoice__title,.kt-invoice__title{margin-top:0 !important;}'
+                . '</style>'
+            )
         );
 
         $options = new Options();
@@ -136,7 +162,7 @@ trait BuildsWideTablePdf
         $options->set('isPhpEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
-        $options->setDefaultFont('roboto');
+        $options->setDefaultFont('dejavu sans');
 
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($pdfConfig['html'], 'UTF-8');

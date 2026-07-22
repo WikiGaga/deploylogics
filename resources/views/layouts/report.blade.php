@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" id="htmlRoot">
+@php
+    $isPdfExport = isset($data['form_file_type']) && $data['form_file_type'] == 'pdf';
+@endphp
 
 <!-- begin::Head -->
 <head>
@@ -9,12 +12,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    {{--<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    --}}<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    @yield('pageCSS')
-    @if(isset($data['form_file_type']) && $data['form_file_type'] == 'pdf')
-        @include('reports.pdfCss')
+    @if(!$isPdfExport)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     @endif
+    @yield('pageCSS')
+    @if($isPdfExport)
+        @include('reports.pdfCss')
+    @else
     <!--begin::Global Theme Styles(used by all pages) -->
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
@@ -25,7 +29,9 @@
     <link href="{{ asset('css/report.css') }}" rel="stylesheet" type="text/css" />
     <!-- RTL CSS - loaded dynamically based on user preference -->
     <link href="{{ asset('css/rtl.css') }}" rel="stylesheet" type="text/css" id="rtlStylesheet" disabled />
+    @endif
 
+    @if(!$isPdfExport)
     <script>
         (function() {
             var rtlEnabled = localStorage.getItem('rtl_enabled') === 'true';
@@ -103,9 +109,11 @@
             }
         }
     </style>
+    @endif
 </head>
 
 <body>
+@if(!$isPdfExport)
 @include('elements/popup')
 <!-- Order Details Modal -->
 <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true" data-keyboard="false">
@@ -191,12 +199,14 @@
     </div>
 </div>
 @include('reports.template.download_btn')
+@endif
 
 <div id="content">
     @yield('content')
 </div>
 
 </body>
+@if(!$isPdfExport)
 @yield('pageJS')
 <script>
     var KTAppOptions = {
@@ -288,6 +298,7 @@
         if(typeUpper == 'OS'){path = '/stock/opening-stock/form/'+id+viewParam;}
         if(typeUpper == 'EI'){path = '/stock/expired-items/form/'+id+viewParam;}
         if(typeUpper == 'ST'){path = '/stock/stock-transfer/form/'+id+viewParam;}
+        if(typeUpper == 'SD'){path = '/stock/stock-distribution/form/'+id+viewParam;}
         if(typeUpper == 'STR'){path = '/stock/stock-receiving/form/'+id+viewParam;}
         if(typeUpper == 'SA'){path = '/stock/stock-adjustment/form/'+id+viewParam;}
         if(typeUpper == 'SP'){path = '/stock/sample-items/form/'+id+viewParam;}
@@ -616,4 +627,5 @@ document.addEventListener('DOMContentLoaded', function() {
     applyRTLFormLayout();
 });
 </script>
+@endif
 </html>

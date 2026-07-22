@@ -700,22 +700,13 @@
     <script>
         function voucher_posted(){
             var purchase_order_id = $('#purchase_order_id').val();
-            if(!purchase_order_id){
-                toastr.error('Purchase Order id not found');
-                return;
-            }
-            $.ajax({
-                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                type:'POST',
-                url: '/purchase-order/post',
-                dataType: 'json',
-                data: { purchase_order_id: purchase_order_id },
-                success: function(response, textStatus, xhr) {
-                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
-                },
-                error: function(xhr) {
-                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
-                }
+            erpVoucherPostedUpdateThenPost({
+                documentId: purchase_order_id,
+                idMissingMsg: 'Purchase Order id not found',
+                postUrl: '/purchase-order/post',
+                postData: { purchase_order_id: purchase_order_id },
+                form: '#purchase_order_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('38-edit') || auth()->user()->isAbleTo('38-create'))) ? 'true' : 'false' }}
             });
         }
 

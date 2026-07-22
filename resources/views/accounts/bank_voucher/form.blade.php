@@ -632,28 +632,13 @@
     <script>
         function voucher_posted() {
             var voucher_id = $('#form_id').val();
-            if (!voucher_id) {
-                toastr.error('Voucher id not found');
-                return;
-            }
-            $.ajax({
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                type: 'POST',
-                url: '/accounts/bpv/post',
-                dataType: 'json',
-                data: { voucher_id: voucher_id },
-                success: function (response) {
-                    if (response['status'] == 'success') {
-                        toastr.success('Successfully Posted..!');
-                        location.reload();
-                    } else {
-                        toastr.error(response['message'] || 'Unable to post');
-                    }
-                },
-                error: function (xhr) {
-                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to post';
-                    toastr.error(msg);
-                }
+            erpVoucherPostedUpdateThenPost({
+                documentId: voucher_id,
+                idMissingMsg: 'Voucher id not found',
+                postUrl: "{{ action('Accounts\\VoucherController@post', ['type' => $type]) }}",
+                postData: { voucher_id: voucher_id },
+                form: '#voucher_form',
+                canUpdate: {{ (auth()->check() && isset($data['menu_dtl_id']) && (auth()->user()->isAbleTo($data['menu_dtl_id'].'-edit') || auth()->user()->isAbleTo($data['menu_dtl_id'].'-create'))) ? 'true' : 'false' }}
             });
         }
 

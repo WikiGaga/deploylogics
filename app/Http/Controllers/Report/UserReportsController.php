@@ -48,11 +48,13 @@ use App\Models\TblSoftReportStaticCriteria;
 use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Traits\BuildsWideTablePdf;
+use App\Traits\ExportsReportCsv;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserReportsController extends Controller
 {
     use BuildsWideTablePdf;
+    use ExportsReportCsv;
 
     public static $page_title = 'Reporting';
     //public static $redirect_url = 'user-report';
@@ -172,7 +174,7 @@ class UserReportsController extends Controller
         }
 
         if ($columnType === 'float') {
-            return number_format((float) $value, $decimal);
+            return $this->formatReportExportNumber($value, $decimal);
         }
 
         if ($columnType === 'date') {
@@ -268,7 +270,10 @@ class UserReportsController extends Controller
 
             $countRow = array_fill(0, count($displayHeadings), '');
             $countRow[0] = 'Count:';
-            $countRow[1] = $rowCount;
+            $countColumnIndex = $showSr ? 2 : 1;
+            if ($countColumnIndex < count($displayHeadings)) {
+                $countRow[$countColumnIndex] = $rowCount;
+            }
             $rows[] = $countRow;
 
             $boldRows[] = 1 + $rowCount + 1;
@@ -3180,11 +3185,6 @@ class UserReportsController extends Controller
         @set_time_limit(0);
 
         $fileName = 'report_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
-            'Cache-Control' => 'no-store, no-cache',
-        ];
 
         $exportData = $this->buildQueryExportData($baseQuery, $data);
 
@@ -3194,27 +3194,9 @@ class UserReportsController extends Controller
                 return;
             }
 
-            fwrite($out, "\xEF\xBB\xBF");
-
-            if (!empty($exportData['headings'])) {
-                fputcsv($out, $exportData['headings']);
-            } else {
-                fputcsv($out, []);
-            }
-
-            foreach ($exportData['rows'] as $row) {
-                $values = array_map(function ($v) {
-                    if (is_null($v)) return '';
-                    if (is_bool($v)) return $v ? '1' : '0';
-                    if (is_scalar($v)) return (string) $v;
-                    return json_encode($v);
-                }, $row);
-
-                fputcsv($out, $values);
-            }
-
+            $this->writeReportCsv($out, $exportData['headings'] ?? [], $exportData['rows'] ?? []);
             fclose($out);
-        }, $fileName, $headers);
+        }, $fileName, $this->reportCsvResponseHeaders($fileName));
     }
 
     public function getOrderDetails(Request $request)
@@ -3433,11 +3415,6 @@ class UserReportsController extends Controller
         [$fieldsKeys, $rows] = $this->getInventoryGroupingExportRows($key, $list);
 
         $fileName = 'report_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
-            'Cache-Control' => 'no-store, no-cache',
-        ];
 
         return response()->streamDownload(function () use ($rows, $fieldsKeys) {
             $out = fopen('php://output', 'w');
@@ -3445,15 +3422,9 @@ class UserReportsController extends Controller
                 return;
             }
 
-            fwrite($out, "\xEF\xBB\xBF");
-
-            fputcsv($out, $fieldsKeys);
-            foreach ($rows as $row) {
-                fputcsv($out, $row);
-            }
-
+            $this->writeReportCsv($out, $fieldsKeys, $rows);
             fclose($out);
-        }, $fileName, $headers);
+        }, $fileName, $this->reportCsvResponseHeaders($fileName));
     }
 
     private function getInventoryGroupingExportRows($key, $list): array

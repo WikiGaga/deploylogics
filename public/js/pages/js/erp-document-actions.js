@@ -124,8 +124,88 @@
         return $.ajax(ajaxOpts);
     }
 
+    /**
+     * UM Post: optionally save the form first (when user can update), then post.
+     * options: {
+     *   documentId, idMissingMsg, postUrl, postData,
+     *   form (selector|element), canUpdate (bool),
+     *   successMsg, errorMsg, updateErrorMsg
+     * }
+     */
+    function erpVoucherPostedUpdateThenPost(options) {
+        var opts = options || {};
+        var documentId = opts.documentId;
+        if (!documentId) {
+            if (typeof toastr !== 'undefined') {
+                toastr.error(opts.idMissingMsg || 'Document id not found');
+            }
+            return;
+        }
+
+        function doPost() {
+            erpDocumentAjax({
+                url: opts.postUrl,
+                data: opts.postData || {},
+                successMsg: opts.successMsg || 'Successfully Posted.',
+                errorMsg: opts.errorMsg || 'Unable to post.'
+            });
+        }
+
+        var canUpdate = !!opts.canUpdate;
+        var form = null;
+        if (opts.form) {
+            form = (opts.form && opts.form.nodeType === 1)
+                ? opts.form
+                : $(opts.form).get(0);
+        }
+
+        if (canUpdate && form && $('#btn-update-entry').length) {
+            if (typeof $(form).valid === 'function' && !$(form).valid()) {
+                return;
+            }
+            var formData = new FormData(form);
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                url: form.action,
+                type: form.method || 'POST',
+                dataType: 'json',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(response, textStatus, xhr) {
+                    if (response && response.status === 'error') {
+                        erpDocumentAjaxDone(response, xhr, {
+                            errorMsg: opts.updateErrorMsg || 'Unable to update before post.',
+                            reload: false
+                        });
+                        return;
+                    }
+                    if (!erpDocumentAjaxIsSuccess(response) && !(xhr.status >= 200 && xhr.status < 300 && !response)) {
+                        erpDocumentAjaxDone(response, xhr, {
+                            errorMsg: opts.updateErrorMsg || 'Unable to update before post.',
+                            reload: false
+                        });
+                        return;
+                    }
+                    doPost();
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(erpParseAjaxJson(xhr), xhr, {
+                        errorMsg: opts.updateErrorMsg || 'Unable to update before post.',
+                        reload: false
+                    });
+                }
+            });
+            return;
+        }
+
+        doPost();
+    }
+
     window.erpDocumentAjaxMessage = erpDocumentAjaxMessage;
     window.erpDocumentAjaxDone = erpDocumentAjaxDone;
     window.erpFormAjaxDone = erpFormAjaxDone;
     window.erpDocumentAjax = erpDocumentAjax;
+    window.erpVoucherPostedUpdateThenPost = erpVoucherPostedUpdateThenPost;
 })(window, jQuery);

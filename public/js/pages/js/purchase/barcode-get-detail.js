@@ -656,7 +656,7 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.arabic_name').val(product['product_arabic_name']);
     }
     // Product Rate
-    var for_sale_rate_cate = ['barcode_labels', 'barcode_price_tag', 'ist', 'st', 'sup_prod_reg' , 'brochure','sales_quotation','request_quotation','request_order'];
+    var for_sale_rate_cate = ['barcode_labels', 'barcode_price_tag', 'ist', 'st', 'sd', 'sup_prod_reg' , 'brochure','sales_quotation','request_quotation','request_order'];
     if (for_sale_rate_cate.includes(form_type) && current_sale_rate != null) {
         rate = current_sale_rate['product_barcode_sale_rate_rate'];
     }
@@ -709,7 +709,7 @@ function barcodeCommonData(tr, response, formData) {
 
     var amount = (parseFloat(default_qty) * parseFloat(rate));
 
-    var for_purc_rate = ['st', 'ist', 'str', 'sup_prod_reg'];
+    var for_purc_rate = ['st', 'sd', 'ist', 'str', 'sup_prod_reg'];
     if (for_purc_rate.includes(formData.form_type)) {
         if (formData.form_type == 'ist' || formData.form_type == 'sup_prod_reg') {
             var purc_rate = tbl_purc_rate['product_barcode_purchase_rate'];
@@ -719,7 +719,7 @@ function barcodeCommonData(tr, response, formData) {
             var purc_rate = calc_rate.rate; // Use calculated rate with percentage applied
         }
         // For stock transfer, update the rate field with calculated rate
-        if (formData.form_type == 'st') {
+        if (formData.form_type == 'st' || formData.form_type == 'sd') {
             tr.find('.tblGridCal_rate').val(notNullEmpty(purc_rate, 3));
         } else {
             tr.find('.tblGridCal_purc_rate').val(notNullEmpty(purc_rate, 3));
@@ -730,7 +730,7 @@ function barcodeCommonData(tr, response, formData) {
     tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
 
     // vat perc and vat amount apply
-    var vatApply = ['purc_order', 'grn', 'purc_return', 'sale_invoice', 'sales_quotation', 'sale_return', 'st', 'str', 'consumer_protection', 'sup_prod_reg', 'sales_fee','barcode_price_tag','barcode_labels'];
+    var vatApply = ['purc_order', 'grn', 'purc_return', 'sale_invoice', 'sales_quotation', 'sale_return', 'st', 'sd', 'str', 'consumer_protection', 'sup_prod_reg', 'sales_fee','barcode_price_tag','barcode_labels'];
     if (vatApply.includes(form_type)) {
         var vatPerc = 0;
         for (var i = 0; i < barcode_dtl.length; i++) {
@@ -898,7 +898,7 @@ function barcodeCommonData(tr, response, formData) {
     if (form_type == 'change_rate') {
         setProductChangeRate(tr, response, formData)
     }
-    if(form_type == 'st'){
+    if(form_type == 'st' || form_type == 'sd'){
         var sale_rate = !valueEmpty(tbl_purc_rate['sale_rate'])?tbl_purc_rate['sale_rate']:0;
         tr.find('.tblGridSale_rate').val(sale_rate);
         // Calculate rate based on rate_type and rate_perc
@@ -907,6 +907,7 @@ function barcodeCommonData(tr, response, formData) {
         var store_stock = !valueEmpty(response['store_stock'])?response['store_stock']:0;
         $('#current_product_stock').val(store_stock);
 
+        if(form_type == 'st'){
         var grn_qty = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity']:0;
         var unit_price = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_rate'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_rate']:0;
         var discount_perc = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_disc_percent'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_disc_percent']:0;
@@ -934,6 +935,7 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.tblGridCal_spec_disc_amount').val(spec_disc_amount);
         tr.find('.tblGridCal_gross_amount').val(gross_amount);
         tr.find('.tblGridCal_net_amount').val(net_amount);
+        }
     }
     if(form_type == 'os'){
         var sale_rate = !valueEmpty(tbl_purc_rate['product_barcode_cost_rate'])?tbl_purc_rate['product_barcode_cost_rate']:0;

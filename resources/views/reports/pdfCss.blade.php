@@ -1,26 +1,39 @@
 <style>
-    /*
-     font-family: Verdana !important;
-     font-weight: 400,700
-     font-style: normal,bold
-   */
-    /* Styles go here */
-    body{
-        font-family: Verdana !important;
-        font-style: normal;
-        color: #646c9a;
-        height: 100%;
-        margin: 0px;
-        padding: 0px;
-        font-size: 13px;
-        -ms-text-size-adjust: 100%;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+    @font-face {
+        font-family: 'NotoSansArabic';
+        src: url('{{ str_replace('\\', '/', public_path('NotoSansArabic/NotoSansArabic-Regular.ttf')) }}') format('truetype');
     }
-    #kt_portlet_table{
+
+    body,
+    table,
+    td,
+    th,
+    h1,
+    h6 {
+        font-family: "dejavu sans", "NotoSansArabic", sans-serif !important;
+        font-style: normal;
+    }
+
+    .arabic-text {
+        font-family: "dejavu sans", "NotoSansArabic", sans-serif !important;
+        direction: rtl;
+        unicode-bidi: embed;
+        text-align: right;
+    }
+
+    body {
+        color: #333;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        font-size: 10px;
+    }
+
+    #kt_portlet_table {
         margin-bottom: 0 !important;
         border: 0;
     }
+
     table.static_report_table,
     table#dynamic_report_table,
     table.table-bordered,
@@ -29,205 +42,199 @@
         table-layout: auto;
         border-collapse: collapse;
     }
+
     td, th {
-        padding: 4px 5px !important;
+        padding: 3px 4px !important;
         word-wrap: break-word;
         overflow-wrap: break-word;
         white-space: normal;
-    }
-    th {
-        font-size: 12px;
-        color: #777676 !important;
-    }
-    td {
-        font-size: 10px;
-        color: #000000 !important;
-        /*color: #777676 !important;*/
-    }
-    .table-bordered {
-        border: 1px solid #bbbbbb !important;
-        border-spacing:0;
-        /* border: 1px solid #777777 !important;*/
-    }
-    .table tr th {
-        border-bottom: 1px solid #c7c7c7 !important;
-        cursor: pointer;
-    }
-    .table tr th,
-    .table tr td{
-        border-right: 1px solid #ebedf2 !important;
-    }
-    tr:nth-child(even)>td {
-        border-bottom: 1px solid #c7c7c7 !important;
-    }
-    tr:nth-child(odd)>td{
-        border-bottom: 1px solid #ead8b1 !important;
+        vertical-align: top;
     }
 
-    table#rep_sale_invoice_datatable {
-        border: 0 !important;
+    th {
+        font-size: 9px;
+        color: #333 !important;
+        background-color: #e8eaf6 !important;
+        font-weight: bold;
     }
-    table#rep_sale_invoice_datatable tr>th:first-child,
-    table#rep_sale_invoice_datatable tr>td:first-child {
-        border-left: 0 !important;
+
+    td {
+        font-size: 9px;
+        color: #000 !important;
     }
-    table#rep_sale_invoice_datatable tr>th:last-child,
-    table#rep_sale_invoice_datatable tr>td:last-child {
-        border-right: 0 !important;
+
+    .table-bordered {
+        border: 1px solid #999 !important;
+        border-spacing: 0;
     }
-    table#rep_sale_invoice_datatable tr>th{
-        border-top: 1.5px solid #777777 !important;
-        border-bottom: 1.5px solid #777777 !important;
-        cursor: default;
+
+    .table tr th,
+    .table tr td {
+        border: 1px solid #ccc !important;
     }
-    table#rep_sale_invoice_datatable .total>td{
-        border-top: 1px solid #000000 !important;
-        border-bottom: 1px solid #000000 !important;
+
+    tr:nth-child(even) > td {
+        background-color: #f9f9f9;
     }
-    table#dynamic_report_table .sub_total>td,
-    table#rep_sale_invoice_datatable .sub_total>td{
-        border-bottom: 1px solid #000000 !important;
+
+    table#dynamic_report_table .sub_total > td,
+    table#rep_sale_invoice_datatable .sub_total > td {
+        border-bottom: 1px solid #000 !important;
+        font-weight: bold;
     }
-    table#dynamic_report_table .grand_total>td,
-    table#rep_sale_invoice_datatable .grand_total>td{
-        border-bottom: 2px solid #969696 !important;
-        border-top: 2px solid #cecece !important;
-        background-color: #f7f8fa;
-        font-size: 15px;
+
+    table#dynamic_report_table .grand_total > td,
+    table#rep_sale_invoice_datatable .grand_total > td {
+        border-bottom: 2px solid #666 !important;
+        border-top: 2px solid #999 !important;
+        background-color: #f0f0f0;
+        font-size: 10px;
+        font-weight: bold;
     }
-    .sale_invoice_footer{
+
+    table#dynamic_report_table tr.group_1 td,
+    table#dynamic_report_table tr.group_2 td {
+        background-color: #eceff1 !important;
+        font-weight: bold;
+    }
+
+    .sale_invoice_footer {
         background: #f7f8fa;
     }
-    .sale_invoice_footer .date{
-        color: #FE21BE;
-    }
+
     .date {
-        font-size: 12px;
-        color: #7d7d7d;
+        font-size: 10px;
+        color: #555;
     }
-    .date>span {
-        color: #000000;
+
+    .date > span {
+        color: #000;
     }
+
     .row.row-block {
-        margin: 10px 0 !important;
+        margin: 6px 0 !important;
         padding: 0 !important;
     }
 
     .kt-portlet {
-        background-color: #ffffff;
-        margin-bottom: 20px;
-        border-radius: 4px;
+        background-color: #fff;
+        margin-bottom: 0;
     }
+
     .kt-portlet .kt-portlet__head {
         position: relative;
         width: 100%;
-        border-bottom: 1px solid #ebedf2;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-        padding-bottom: 60px;
-        margin-bottom: 30px;
+        border-bottom: 1px solid #ddd;
+        padding: 8px 0 6px !important;
+        margin-bottom: 8px !important;
+        overflow: hidden;
     }
-    .kt-invoice__brand{
-        width: 80%;
+
+    .kt-invoice__brand {
+        width: 70% !important;
+        float: left;
     }
-    .kt-portlet__head-toolbar{
-        position: absolute;
-        top:0;
-        right: 0;
-        width: 18%;
+
+    .kt-portlet__head-toolbar {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        float: right;
+        width: 25% !important;
         text-align: center;
     }
-    .kt-invoice__title{
-        font-size: 32.5px;
-    }
-    .kt-invoice__criteria{
-        font-size: 13px;
-    }
-    .kt-invoice__desc{
-        color: #646c9a;
-    }
-    a{
-        text-decoration: unset;
-    }
-    h1,h6{
-        margin-block-start: 0 !important;
-        margin-block-end: 0 !important;
-        margin-inline-start: 0 !important;
-        margin-inline-end: 0 !important;
-    }
-    h1{
-        font-family: Verdana !important;
-        font-style: normal !important;
-        font-weight: 400;
-        margin-top: 0;
-    }
-    h6{
-        margin-top: 0;
-        font-weight: 400;
-    }
-    .kt-invoice__title {
-        font-family: Verdana !important;
-        font-weight: 400;
-        font-style: normal;
-    }
-    .kt-invoice__criteria,
-    .kt-invoice__desc{
-        font-weight: 400;
-    }
-    .sale_invoice_footer{
-        height: 25px;
-    }
-    .kt-align-center,.text-center{ text-align: center; }
-    .kt-align-right,.text-right{ text-align: right; }
-    .kt-align-left,.text-left{ text-align: left; }
 
-    .data_entry_header{
-        display: none;
+    .kt-invoice__title {
+        font-size: 16px !important;
+        font-weight: bold;
+        margin: 0 0 4px 0 !important;
+        line-height: 1.2;
+    }
+
+    .kt-invoice__criteria {
+        font-size: 9px;
+        margin: 2px 0;
+        line-height: 1.3;
+    }
+
+    .kt-invoice__desc {
+        color: #333;
+        font-size: 9px;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    h1, h6 {
+        margin: 0 !important;
+    }
+
+    .kt-align-center, .text-center { text-align: center; }
+    .kt-align-right, .text-right { text-align: right; }
+    .kt-align-left, .text-left { text-align: left; }
+
+    .data_entry_header,
+    .table-responsive-scroll select,
+    .pagination,
+    nav[role="navigation"],
+    .clickable-cell {
+        display: none !important;
+    }
+
+    .table-responsive-scroll {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    table#dynamic_report_table thead {
+        position: static !important;
+    }
+
+    table#dynamic_report_table thead tr th {
+        position: static !important;
+        box-shadow: none !important;
     }
 
     @page {
-        margin-top: 12mm;
+        margin-top: 10mm;
         margin-right: 8mm;
         margin-bottom: 8mm;
         margin-left: 8mm;
     }
 
-    html, body{
+    html, body {
         width: 100%;
         height: auto;
         margin: 0 !important;
         padding: 0 !important;
     }
 
-    #content{
-        padding-top: 10mm;
-        padding-left: 6mm;
-        padding-right: 6mm;
+    #content {
+        padding: 6mm 4mm 0;
     }
 
     #downloadBtn,
     .modal,
-    .modal-backdrop{
+    .modal-backdrop {
         display: none !important;
     }
 
-    .kt-portlet .kt-portlet__head{
-        padding-top: 4mm;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-    }
-
-    table{
+    table {
         page-break-inside: auto;
         border-collapse: collapse;
     }
-    thead{
+
+    thead {
         display: table-header-group;
     }
-    tfoot{
+
+    tfoot {
         display: table-footer-group;
     }
-    tr{
+
+    tr {
         page-break-inside: avoid;
         page-break-after: auto;
     }

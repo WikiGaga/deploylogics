@@ -234,6 +234,9 @@
         if(pathArr.length == 3 && pathArr[1] == 'accounts'){
             var currentPath = pathArr[1]+'/'+pathArr[2];
         }
+        if(pathArr.length == 3 && (pathArr[1] == 'stock' || pathArr[1] == 'stock-audit' || pathArr[1] == 'barcode-labels')){
+            var currentPath = pathArr[1]+'/'+pathArr[2];
+        }
 
         if(pathArr.length == 4 && (pathArr[2] == 'form' || pathArr[2] == 'edit')){
             var currentPath = pathArr[1];
@@ -271,7 +274,10 @@
                 var currentUrl = urlArr[1];
             }
             if(urlArr.length == 3 && urlArr[1] == 'accounts'){
-                var currentUrl = pathArr[1]+'/'+pathArr[2];
+                var currentUrl = urlArr[1]+'/'+urlArr[2];
+            }
+            if(urlArr.length == 3 && (urlArr[1] == 'stock' || urlArr[1] == 'stock-audit' || urlArr[1] == 'barcode-labels')){
+                var currentUrl = urlArr[1]+'/'+urlArr[2];
             }
             if(urlArr.length == 2){
                 var currentUrl = urlArr[1];

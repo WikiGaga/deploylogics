@@ -9,10 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Session;
 use App\Traits\BuildsWideTablePdf;
+use App\Traits\ExportsReportCsv;
 
 class ReportDownloadController extends Controller
 {
     use BuildsWideTablePdf;
+    use ExportsReportCsv;
 
     /**
      * Finds the generated report and forces a download.
@@ -32,28 +34,29 @@ class ReportDownloadController extends Controller
 
         if (strpos($fileName, '.csv') !== false) {
             $filename = "data.csv";
+            $headers = $this->reportCsvResponseHeaders($filename);
 
-            $headers = [
-                "Content-Type" => "text/csv",
-                "Content-Disposition" => "attachment; filename={$filename}",
-            ];
-
-            $callback = function()use ($results) {
+            $callback = function () use ($results) {
                 $handle = fopen('php://output', 'w');
-                 if (count($results) > 0) {
+                if ($handle === false) {
+                    return;
+                }
 
-                    $original_keys = array_keys((array)$results[0]);
+                $headings = [];
+                $rows = [];
 
-                    $new_keys = array_map(function($key) {
-                            return ucwords(str_replace('_', ' ', $key));
-                        }, $original_keys);
-
-                        fputcsv($handle, $new_keys);
-                    }
+                if (count($results) > 0) {
+                    $originalKeys = array_keys((array) $results[0]);
+                    $headings = array_map(function ($key) {
+                        return ucwords(str_replace('_', ' ', $key));
+                    }, $originalKeys);
 
                     foreach ($results as $row) {
-                        fputcsv($handle, (array) $row);
+                        $rows[] = array_values((array) $row);
                     }
+                }
+
+                $this->writeReportCsv($handle, $headings, $rows);
                 fclose($handle);
             };
 

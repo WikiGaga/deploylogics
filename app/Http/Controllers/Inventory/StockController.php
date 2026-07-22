@@ -110,6 +110,14 @@ class StockController extends Controller
                 $this->menu_id = '65';
                 break;
             }
+            case 'stock-distribution': {
+                $data['page_data']['title'] = 'Stock Distribution';
+                $formUrl = 'stock_distribution';
+                $data['stock_code_type'] = 'sd';
+                $data['stock_menu_id'] = '359';
+                $this->menu_id = '359';
+                break;
+            }
             case 'stock-adjustment': {
                 $data['page_data']['title'] = 'Stock Adjustment';
                 $formUrl = 'stock_adjustment';
@@ -252,6 +260,11 @@ class StockController extends Controller
         $data['rate_types'] = config('constants.rate_type');
         $data['store'] = TblDefiStore::where(Utilities::currentBC())->get();
         $data['branch'] = TblSoftBranch::where(Utilities::currentBC())->where('branch_id','!=',auth()->user()->branch_id)->get();
+        if ($type == 'stock-distribution') {
+            $data['transfer_branches'] = TblSoftBranch::where(Utilities::currentBC())->orderBy('branch_name')->get();
+        } else {
+            $data['transfer_branches'] = $data['branch'];
+        }
         $data['rate_by'] = config('constants.rate_by');
         $data['rate_types'] = config('constants.rate_type');
         $data['payment_type'] = TblDefiPaymentType::where(Utilities::currentBC())->where('payment_type_entry_status',1)->get();
@@ -300,7 +313,7 @@ class StockController extends Controller
         ];
 
        $new_branch_id = $request->new_branch_id;
-        if($request->stock_code_type == 'os'){
+        if($request->stock_code_type == 'os' || $request->stock_code_type == 'sd'){
             $valid['store'] = 'required|numeric|not_in:0';
         }
         //dd($valid);
@@ -323,6 +336,25 @@ class StockController extends Controller
 
         if(empty($request->pd) && !$isWorkflowStagingAction){
             return $this->returnjsonerror("Please Enter Product Detail",201);
+        }
+        if($request->stock_code_type == 'sd' && !$isWorkflowStagingAction && !empty($request->pd)){
+            $seen = [];
+            foreach($request->pd as $pd){
+                $productId = isset($pd['product_id']) ? $pd['product_id'] : '';
+                $branchTo = isset($pd['branch_to']) ? $pd['branch_to'] : '';
+                $storeTo = isset($pd['store_to']) ? $pd['store_to'] : '';
+                if(empty($productId) || empty($branchTo) || $branchTo == '0' || empty($storeTo) || $storeTo == '0'){
+                    return $this->returnjsonerror("Each row must have product, To Branch and To Store.",201);
+                }
+                if((int)$branchTo === (int)$new_branch_id){
+                    return $this->returnjsonerror("Destination branch cannot be same as source branch.",201);
+                }
+                $key = $productId.'_'.$branchTo.'_'.$storeTo;
+                if(isset($seen[$key])){
+                    return $this->returnjsonerror("Duplicate product with same destination branch and store is not allowed.",201);
+                }
+                $seen[$key] = true;
+            }
         }
         DB::beginTransaction();
         try{
@@ -432,6 +464,13 @@ class StockController extends Controller
                 $stock->stock_branch_from_id =  $new_branch_id;
                 $stock->stock_branch_to_id =  isset($request->branch_to)?$request->branch_to:"";
             }
+            if($formType == 'sd')
+            {
+                $stock->stock_store_from_id =  isset($request->store)?$request->store:"";
+                $stock->stock_branch_from_id =  $new_branch_id;
+                $stock->stock_store_to_id =  "";
+                $stock->stock_branch_to_id =  "";
+            }
             $stock->sales_sales_type =  isset($request->sales_sales_type)?$request->sales_sales_type:"";
             $stock->stock_rate_by =  isset($request->selected_barcode_rate)?$request->selected_barcode_rate:"";
             $stock->stock_remarks = $request->stock_remarks;
@@ -538,6 +577,13 @@ class StockController extends Controller
                     $dtl->stock_dtl_formula_qty = isset($pd['formula_qty'])?$this->addNo($pd['formula_qty']): 0;
                     $dtl->stock_dtl_batch_no =  isset($pd['batch_no'])?$pd['batch_no']:"";
                     $dtl->stock_dtl_store =  isset($pd['pd_store'])?$pd['pd_store']:"";
+                    if($formType == 'sd')
+                    {
+                        $dtl->stock_dtl_branch_to_id = isset($pd['branch_to'])?$pd['branch_to']:"";
+                        $dtl->stock_dtl_store_to_id = isset($pd['store_to'])?$pd['store_to']:"";
+                        $dtl->stock_dtl_branch_from_id = $new_branch_id;
+                        $dtl->stock_dtl_store_from_id = isset($request->store)?$request->store:"";
+                    }
                     $dtl->stock_dtl_amount =  isset($pd['amount'])?$this->addNo($pd['amount']):"";
                     $dtl->stock_dtl_disc_percent =  isset($pd['dis_perc'])?$this->addNo($pd['dis_perc']):"";
                     $dtl->stock_dtl_disc_amount =  isset($pd['dis_amount'])?$this->addNo($pd['dis_amount']):"";
@@ -1553,6 +1599,7 @@ class StockController extends Controller
         switch ($type) {
             case 'opening-stock': return '54';
             case 'stock-transfer': return '65';
+            case 'stock-distribution': return '359';
             case 'stock-adjustment': return '55';
             case 'damaged-items': return '57';
             case 'expired-items': return '58';

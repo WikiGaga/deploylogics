@@ -261,8 +261,9 @@ class ShiftSessionsController extends Controller
                     'form_path' => '/shift_sessions/form',
                     'document_code_key' => 'session_no',
                 ],
-                'posted_when_exempt' => 1,
-                'stg_log_posted_when_exempt' => 1,
+                // Non-staging save must keep draft status; posting is only via Post action.
+                'posted_when_exempt' => 0,
+                'stg_log_posted_when_exempt' => 0,
             ]);
 
             DB::commit();
@@ -305,6 +306,20 @@ class ShiftSessionsController extends Controller
                 return $this->jsonErrorResponse([], 'Posting is not supported for this record.', 422);
             }
             $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
+
+            // Persist form changes before posting when the user can update (form Post sends fields).
+            $canUpdate = auth()->check() && (
+                auth()->user()->isAbleTo(self::$menu_dtl_id.'-edit')
+                || auth()->user()->isAbleTo(self::$menu_dtl_id.'-create')
+            );
+            if ($canUpdate && ($request->has('opening_cash') || $request->has('closing_cash')
+                || $request->has('opening_visa') || $request->has('closing_visa'))) {
+                $row->opening_cash = $request->opening_cash ?? 0;
+                $row->closing_cash = $request->closing_cash;
+                $row->opening_visa = $request->opening_visa ?? 0;
+                $row->closing_visa = $request->closing_visa;
+            }
+
             $row->posted = 1;
             $row->save();
             return response()->json(['status' => 'success']);

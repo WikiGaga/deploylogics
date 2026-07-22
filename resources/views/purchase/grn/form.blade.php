@@ -1183,22 +1183,13 @@
 
         function voucher_posted() {
             var grn_id = $('#grn_id').val();
-            if (!grn_id) {
-                toastr.error('GRN id not found');
-                return;
-            }
-            $.ajax({
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                type: 'POST',
-                url: '/grn/post',
-                dataType: 'json',
-                data: { grn_id: grn_id },
-                success: function(response, textStatus, xhr) {
-                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Posted.' });
-                },
-                error: function(xhr) {
-                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to post.' });
-                }
+            erpVoucherPostedUpdateThenPost({
+                documentId: grn_id,
+                idMissingMsg: 'GRN id not found',
+                postUrl: '/grn/post',
+                postData: { grn_id: grn_id },
+                form: '#grn_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo('23-edit') || auth()->user()->isAbleTo('23-create'))) ? 'true' : 'false' }}
             });
         }
 
