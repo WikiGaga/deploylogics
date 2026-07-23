@@ -329,6 +329,58 @@
         if (!exportType) return false;
 
         var token = "{{ (string) request('token', '') }}";
+        var infoUrl = "{{ route('reports.export_info') }}";
+        if (token) {
+            infoUrl += "?token=" + encodeURIComponent(token);
+        }
+
+        var $btn = $(this);
+        if ($btn.data('exportBusy')) {
+            return false;
+        }
+
+        $.getJSON(infoUrl).done(function(info) {
+            var total = parseInt(info.total, 10);
+            var limits = info.limits || {};
+            var totalLabel = isNaN(total) ? 'unknown number of' : total.toLocaleString();
+
+            if (exportType === 'pdf' && !isNaN(total) && total > (limits.pdf || 5000)) {
+                alert('Too many rows (' + total.toLocaleString() + ') for PDF export. Maximum is ' + (limits.pdf || 5000).toLocaleString() + '. Please use Excel or CSV instead.');
+                return;
+            }
+
+            if ((exportType === 'xlsx' || exportType === 'xls') && !isNaN(total) && total > (limits.xlsx || 50000)) {
+                alert('Too many rows (' + total.toLocaleString() + ') for Excel export. Maximum is ' + (limits.xlsx || 50000).toLocaleString() + '. Please use CSV instead.');
+                return;
+            }
+
+            var confirmMsg = '';
+            if (exportType === 'csv' && !isNaN(total)) {
+                if (total >= (limits.csv_strong_warn || 200000)) {
+                    confirmMsg = 'This report has ' + totalLabel + ' rows.\n\nThe CSV download may take a long time. Keep this browser tab open until the download starts.\n\nContinue?';
+                } else if (total >= (limits.csv_warn || 50000)) {
+                    confirmMsg = 'This report has ' + totalLabel + ' rows.\n\nThe CSV download may take a few minutes. Continue?';
+                } else if (total >= 10000) {
+                    confirmMsg = 'This report has ' + totalLabel + ' rows. Continue with CSV download?';
+                }
+            }
+
+            if (confirmMsg && !window.confirm(confirmMsg)) {
+                return;
+            }
+
+            startReportExport(exportType, token, $btn);
+        }).fail(function() {
+            if (!window.confirm('Could not verify the report size. The download may take a while or fail for very large reports.\n\nContinue anyway?')) {
+                return;
+            }
+            startReportExport(exportType, token, $btn);
+        });
+
+        return false;
+    });
+
+    function startReportExport(exportType, token, $btn) {
         var url = "{{ route('reports.export') }}?type=" + encodeURIComponent(exportType);
         if (token) {
             url += "&token=" + encodeURIComponent(token);
@@ -336,21 +388,77 @@
 
         if (exportType === 'pdf') {
             window.open(url, '_blank');
-            return false;
+            return;
+        }
+
+        if ($btn && $btn.length) {
+            $btn.data('exportBusy', true);
+            var originalHtml = $btn.html();
+            $btn.data('exportOriginalHtml', originalHtml);
+            $btn.html('<span class="d-block">Preparing...</span><small class="text-muted">Please wait</small>');
         }
 
         var iframeId = 'reportExportFrame';
-        var $existing = $('#' + iframeId);
-        if ($existing.length) {
-            $existing.remove();
-        }
+        $('#' + iframeId).remove();
+
         var $iframe = $('<iframe>', {
             id: iframeId,
             src: url,
             style: 'display:none;'
         });
+
+        $iframe.on('load', function() {
+            setTimeout(function() {
+                if ($btn && $btn.length) {
+                    $btn.data('exportBusy', false);
+                    if ($btn.data('exportOriginalHtml')) {
+                        $btn.html($btn.data('exportOriginalHtml'));
+                    }
+                }
+            }, 1500);
+        });
+
         $('body').append($iframe);
-        return false;
+    }
+
+    function loadReportExportRowInfo() {
+        var $info = $('#reportExportRowInfo');
+        if (!$info.length) {
+            return;
+        }
+
+        var token = "{{ (string) request('token', '') }}";
+        var infoUrl = "{{ route('reports.export_info') }}";
+        if (token) {
+            infoUrl += "?token=" + encodeURIComponent(token);
+        }
+
+        $.getJSON(infoUrl).done(function(info) {
+            var total = info.total;
+            var limits = info.limits || {};
+
+            if (total === null || typeof total === 'undefined') {
+                $info.text('Record count unavailable for this report.');
+                return;
+            }
+
+            var text = total.toLocaleString() + ' record' + (total === 1 ? '' : 's') + ' in this report.';
+            if (total > (limits.csv_strong_warn || 200000)) {
+                text += ' Very large — use CSV and expect a long download.';
+            } else if (total > (limits.csv_warn || 50000)) {
+                text += ' Large report — CSV recommended.';
+            } else if (total > (limits.pdf || 5000)) {
+                text += ' Use Excel or CSV; PDF is limited to ' + (limits.pdf || 5000).toLocaleString() + ' rows.';
+            }
+
+            $info.text(text);
+        }).fail(function() {
+            $info.text('Record count unavailable.');
+        });
+    }
+
+    $(document).ready(function() {
+        loadReportExportRowInfo();
     });
 </script>
 <script>

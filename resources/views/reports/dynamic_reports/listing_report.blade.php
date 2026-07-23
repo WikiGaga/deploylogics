@@ -146,6 +146,58 @@
            $a_[$var] = 0;
         }
 
+        $totalLabel = 'Page Total:';
+        $countLabel = 'Page Count:';
+        $displayTotals = [];
+        $displayCount = $count_no;
+        $isLastPage = true;
+
+        if (!isset($data['report_status']) && isset($list) && is_object($list) && method_exists($list, 'lastPage')) {
+            $isLastPage = ($isAll ?? false) || ($list->currentPage() >= $list->lastPage());
+
+            if ($isLastPage) {
+                $totalLabel = 'Grand Total:';
+                $countLabel = 'Total Count:';
+                $displayCount = $total ?? $count_no;
+
+                if (count($calc) > 0 && !($isAll ?? false) && !empty($baseQuery) && $count_no < ($total ?? $count_no)) {
+                    $grandTotals = [];
+                    foreach ($calc as $var) {
+                        $grandTotals[$var] = 0;
+                    }
+
+                    foreach (DB::cursor($baseQuery) as $row) {
+                        $excludeFromCalc = false;
+                        if (($data['report_case'] ?? '') === 'GRN-Register') {
+                            $rs = $row->record_status ?? $row->RECORD_STATUS ?? null;
+                            $ps = $row->posted ?? $row->POSTED ?? null;
+                            $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int) $ps === 2);
+                        }
+
+                        if ($excludeFromCalc) {
+                            continue;
+                        }
+
+                        foreach ($calc as $key) {
+                            $fieldsKey = $fieldsKeys[$key] ?? null;
+                            if (empty($fieldsKey) || !property_exists($row, $fieldsKey)) {
+                                continue;
+                            }
+
+                            $columnType = $column_types[$key] ?? 'varchar2';
+                            if ($columnType === 'number') {
+                                $grandTotals[$key] += (int) $row->$fieldsKey;
+                            } elseif ($columnType === 'float') {
+                                $grandTotals[$key] += (float) $row->$fieldsKey;
+                            }
+                        }
+                    }
+
+                    $displayTotals = $grandTotals;
+                }
+            }
+        }
+
         $report_status = true;
     // }catch (Exception $e){
     //     $report_status = false;
@@ -566,31 +618,34 @@
                                     </tr>
                                 @endif
                                 @if(count($calc) != 0)
+                                    @php
+                                        $totalsRow = !empty($displayTotals) ? $displayTotals : $arr;
+                                    @endphp
                                     <tr class="grand_total">
                                         @if($sr == 1)
-                                            <td class="rep-font-bold">Grand Total:</td>
+                                            <td class="rep-font-bold">{{ $totalLabel }}</td>
                                             <td class="rep-font-bold"></td>
                                         @else
-                                            <td class="rep-font-bold">Grand Total:</td>
+                                            <td class="rep-font-bold">{{ $totalLabel }}</td>
                                         @endif
                                         @for($i=1; $i < count($headings); $i++)
                                             <td class="text-right rep-font-bold">
-                                                @if(isset($arr[$i]))
-                                                    {{number_format($arr[$i],3)}}
+                                                @if(isset($totalsRow[$i]))
+                                                    {{number_format($totalsRow[$i],3)}}
                                                 @endif
                                             </td>
                                         @endfor
                                     </tr>
                                      <tr class="grand_total">
                                         @if($sr == 1)
-                                            <td class="rep-font-bold">Count:</td>
+                                            <td class="rep-font-bold">{{ $countLabel }}</td>
                                             <td class="rep-font-bold"></td>
                                         @else
-                                            <td class="rep-font-bold">Count:</td>
+                                            <td class="rep-font-bold">{{ $countLabel }}</td>
                                         @endif
 
                                         <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
-                                            {{$count_no}}
+                                            {{ $displayCount }}
                                         </td>
                                     </tr>
                                 @endif

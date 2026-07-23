@@ -9,7 +9,6 @@ use App\Models\PermissionHeading;
 use App\Models\PermissionRole;
 use App\Models\PermissionUser;
 use App\Models\Role;
-use App\Models\TblSoftBranch;
 use App\Models\TblSoftMenu;
 use App\Models\User;
 use App\Models\EmployeeRole;
@@ -144,9 +143,6 @@ class RoleController extends Controller
             }
         }
 
-        $data['branches'] = TblSoftBranch::all();
-        $data['role_branches'] = isset($id) ? Utilities::getRoleBranches($id) : [];
-
         return view('setting.role.form',compact('data'));
     }
 
@@ -251,11 +247,6 @@ class RoleController extends Controller
                 }
             }
 
-            $roleBranches = $request->has('role_branches') && $request->filled('role_branches')
-                ? array_filter((array) $request->role_branches)
-                : [];
-            $role->branches()->sync($roleBranches);
-
             if(isset($id)){
                 $usersWithRole = User::where('employee_role_id', $role->id)
                     ->where('user_entry_status', 1)
@@ -263,27 +254,6 @@ class RoleController extends Controller
                     ->get();
                 foreach ($usersWithRole as $user){
                     $user->syncPermissions($permissions);
-                    $primaryBranch = $user->branch_id;
-                    $optionalBranchIds = DB::table('tbl_soft_user_branch')
-                        ->where('user_id', $user->id)
-                        ->where('default_branch', 0)
-                        ->pluck('branch_id')
-                        ->toArray();
-                    if(!empty($optionalBranchIds)){
-                        $user->userbranch()->detach($optionalBranchIds);
-                    }
-                    if(!empty($roleBranches)){
-                        $primaryStr = (string) $primaryBranch;
-                        $toAttach = [];
-                        foreach ($roleBranches as $bid){
-                            if((string) $bid !== $primaryStr){
-                                $toAttach[] = $bid;
-                            }
-                        }
-                        if(!empty($toAttach)){
-                            $user->userbranch()->attach($toAttach, ['default_branch' => 0]);
-                        }
-                    }
                 }
             }
 

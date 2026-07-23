@@ -344,6 +344,204 @@ class UserReportsController extends Controller
         ];
     }
 
+    private function countReportExportRows(string $baseQuery): int
+    {
+        if ($baseQuery === '') {
+            return 0;
+        }
+
+        $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
+        return (int) (DB::select($sqlCount)[0]->total ?? 0);
+    }
+
+    private function resolveReportExportRowTotal(array $data): ?int
+    {
+        $baseQuery = (string) ($data['qry'] ?? '');
+        if ($baseQuery !== '') {
+            return $this->countReportExportRows($baseQuery);
+        }
+
+        $list = $data['list'] ?? null;
+        if (is_array($list)) {
+            return count($list);
+        }
+
+        return null;
+    }
+
+    private function reportExportLimits(): array
+    {
+        return [
+            'pdf' => 5000,
+            'xlsx' => 50000,
+            'csv_warn' => 50000,
+            'csv_strong_warn' => 200000,
+        ];
+    }
+
+    public function exportInfo(Request $request)
+    {
+        $token = (string) $request->query('token', '');
+        $data = $this->getReportRunFromSession($token) ?? Session::get('data');
+        if (empty($data) || !is_array($data)) {
+            return response()->json(['message' => 'Report session not found.'], 404);
+        }
+
+        $total = $this->resolveReportExportRowTotal($data);
+        $limits = $this->reportExportLimits();
+
+        return response()->json([
+            'total' => $total,
+            'limits' => $limits,
+            'has_query' => !empty($data['qry']),
+        ]);
+    }
+
+    private function streamDynamicQueryCsv($handle, string $baseQuery, array $columnConfig, array $sessionData): void
+    {
+        $headings = $columnConfig['headings'];
+        $fieldKeys = $columnConfig['fieldKeys'];
+        $columnTypes = $columnConfig['columnTypes'];
+        $decimals = $columnConfig['decimals'];
+        $calcIndexes = $columnConfig['calcIndexes'];
+        $showSr = $columnConfig['showSr'];
+
+        $displayHeadings = $showSr ? array_merge(['Sr.'], $headings) : $headings;
+        $this->beginReportCsvStream($handle, $displayHeadings);
+
+        $calcSums = [];
+        foreach ($calcIndexes as $calcIdx) {
+            $calcSums[$calcIdx] = 0.0;
+        }
+
+        $rowCount = 0;
+        $sr = 0;
+
+        foreach (DB::cursor($baseQuery) as $row) {
+            $sr++;
+            $rowCount++;
+            $exportRow = [];
+
+            if ($showSr) {
+                $exportRow[] = $sr;
+            }
+
+            foreach ($fieldKeys as $colIdx => $fieldKey) {
+                $rawValue = $this->getReportRowValue($row, $fieldKey);
+                $exportRow[] = $this->formatDynamicReportExportValue(
+                    $rawValue,
+                    $columnTypes[$colIdx] ?? 'varchar2',
+                    $decimals[$colIdx] ?? 0
+                );
+
+                if (in_array($colIdx, $calcIndexes, true) && is_numeric($rawValue)) {
+                    $calcSums[$colIdx] += (float) $rawValue;
+                }
+            }
+
+            $this->putReportCsvRow($handle, $exportRow);
+
+            if ($rowCount % 500 === 0) {
+                $this->flushReportCsvStream();
+            }
+        }
+
+        if (!empty($calcIndexes) && $rowCount > 0) {
+            $totalsRow = array_fill(0, count($displayHeadings), '');
+            $totalsRow[0] = 'Grand Total:';
+
+            foreach ($calcIndexes as $calcIdx) {
+                if ($calcIdx < 1) {
+                    continue;
+                }
+
+                $exportIdx = $calcIdx + ($showSr ? 1 : 0);
+                if (isset($calcSums[$calcIdx]) && $calcSums[$calcIdx] != 0) {
+                    $totalsRow[$exportIdx] = round($calcSums[$calcIdx], 3);
+                }
+            }
+
+            $this->putReportCsvRow($handle, $totalsRow);
+
+            $countRow = array_fill(0, count($displayHeadings), '');
+            $countRow[0] = 'Total Count:';
+            $countColumnIndex = $showSr ? 2 : 1;
+            if ($countColumnIndex < count($displayHeadings)) {
+                $countRow[$countColumnIndex] = $rowCount;
+            }
+
+            $this->putReportCsvRow($handle, $countRow);
+        }
+    }
+
+    private function streamRawQueryCsv($handle, string $baseQuery): void
+    {
+        $headings = [];
+        $sums = [];
+        $rowCount = 0;
+        $headerWritten = false;
+
+        foreach (DB::cursor($baseQuery) as $row) {
+            $arr = (array) $row;
+
+            if (!$headerWritten) {
+                $headings = array_keys($arr);
+                foreach ($headings as $h) {
+                    $sums[$h] = 0.0;
+                }
+                $this->beginReportCsvStream($handle, $headings);
+                $headerWritten = true;
+            }
+
+            foreach ($arr as $k => $v) {
+                if (is_numeric($v)) {
+                    $sums[$k] += (float) $v;
+                }
+            }
+
+            $this->putReportCsvRow($handle, array_values($arr));
+            $rowCount++;
+
+            if ($rowCount % 500 === 0) {
+                $this->flushReportCsvStream();
+            }
+        }
+
+        if (!$headerWritten) {
+            $this->beginReportCsvStream($handle, []);
+            return;
+        }
+
+        if ($rowCount > 0) {
+            $totalsRow = array_fill(0, count($headings), '');
+            $totalsRow[0] = 'Grand Total:';
+            for ($i = 1; $i < count($headings); $i++) {
+                $key = $headings[$i];
+                if (isset($sums[$key]) && $sums[$key] != 0) {
+                    $totalsRow[$i] = round($sums[$key], 3);
+                }
+            }
+            $this->putReportCsvRow($handle, $totalsRow);
+
+            $countRow = array_fill(0, count($headings), '');
+            $countRow[0] = 'Total Count:';
+            $countRow[1] = $rowCount;
+            $this->putReportCsvRow($handle, $countRow);
+        }
+    }
+
+    private function streamQueryExportCsv($handle, string $baseQuery, array $sessionData): void
+    {
+        $columnConfig = $this->resolveDynamicReportColumnConfig($sessionData);
+
+        if ($columnConfig) {
+            $this->streamDynamicQueryCsv($handle, $baseQuery, $columnConfig, $sessionData);
+            return;
+        }
+
+        $this->streamRawQueryCsv($handle, $baseQuery);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -3183,18 +3381,17 @@ class UserReportsController extends Controller
         }
 
         @set_time_limit(0);
+        @ini_set('memory_limit', '512M');
 
         $fileName = 'report_' . date('Ymd_His') . '.csv';
 
-        $exportData = $this->buildQueryExportData($baseQuery, $data);
-
-        return response()->streamDownload(function () use ($exportData) {
+        return response()->streamDownload(function () use ($baseQuery, $data) {
             $out = fopen('php://output', 'w');
             if ($out === false) {
                 return;
             }
 
-            $this->writeReportCsv($out, $exportData['headings'] ?? [], $exportData['rows'] ?? []);
+            $this->streamQueryExportCsv($out, $baseQuery, $data);
             fclose($out);
         }, $fileName, $this->reportCsvResponseHeaders($fileName));
     }

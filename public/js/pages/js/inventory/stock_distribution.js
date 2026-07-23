@@ -34,6 +34,8 @@
 
         if (selectedVal && $select.find('option[value="' + selectedVal + '"]').length) {
             $select.val(String(selectedVal));
+        } else if (branchId && branchId !== '0' && $matching.length) {
+            $select.val(String($matching.first().val()));
         } else {
             $select.val('0');
         }

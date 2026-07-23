@@ -600,6 +600,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('report-create/{reportType}/static/{id?}','Report\UserReportsController@staticStore');
             Route::get('view-report','Report\UserReportsController@ViewReport')->name('reports.view_report');
             Route::get('export','Report\UserReportsController@export')->name('reports.export');
+            Route::get('export-info','Report\UserReportsController@exportInfo')->name('reports.export_info');
            // Route::get('view-report','Report\UserReportsController@ViewStaticReport')->name('reports.view_static_report');
             Route::get('get-store-by-name','Report\UserReportsController@getStoreByName');
             Route::get('get-display-location-name-string-by-name','Report\UserReportsController@getDisplayLocationNameStringByName');

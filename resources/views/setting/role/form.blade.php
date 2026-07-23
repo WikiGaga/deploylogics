@@ -55,33 +55,6 @@
                             </div>
                         </div>
                         <div class="form-group-block row">
-                            <label class="col-lg-3 erp-col-form-label">
-                                Optional Branches:
-                                <span class="ml-2" style="font-weight: normal;">
-                                    <label class="kt-checkbox kt-checkbox--brand mb-0">
-                                        <input type="checkbox" id="role_optional_branches_select_all"> Select all
-                                        <span></span>
-                                    </label>
-                                </span>
-                            </label>
-                            <div class="col-lg-6">
-                                <div class="erp-select2">
-                                    @php
-                                        $role_branches = isset($data['role_branches']) ? $data['role_branches'] : [];
-                                    @endphp
-                                    <select class="form-control kt-select2 erp-form-control-sm tag-select2" id="role_optional_branches_select" multiple name="role_branches[]">
-                                        <option value="">Select</option>
-                                        @foreach($data['branches'] as $branch)
-                                            <option value="{{$branch->branch_id}}" {{ in_array($branch->branch_id, $role_branches) ? 'selected' : '' }}>{{$branch->branch_name}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <small class="form-text text-muted">Optional branches for this role.</small>
-                            </div>
-                        </div>
-
-                        <hr>
-                        <div class="form-group-block row">
                             <div class="col-lg-12">
                                 <div class="d-flex align-items-center mb-3">
                                     <h5 class="m-0 text-capitalize erp-col-form-label">
@@ -391,39 +364,6 @@
                 }
             }
         });
-
-        function getAllRoleOptionalBranchIds(){
-            var all = [];
-            $('#role_optional_branches_select option').each(function(){
-                var val = $(this).attr('value');
-                if(!val){ return; }
-                all.push(String(val));
-            });
-            return all;
-        }
-
-        function refreshRoleOptionalBranchesSelectAllState(){
-            var all = getAllRoleOptionalBranchIds();
-            var selected = ($('#role_optional_branches_select').val() || []).map(String);
-            var isAllSelected = all.length > 0 && all.every(function(id){ return selected.indexOf(String(id)) !== -1; });
-            $('#role_optional_branches_select_all').prop('checked', isAllSelected);
-        }
-
-        $('#role_optional_branches_select_all').on('change', function(){
-            var $opt = $('#role_optional_branches_select');
-            if($(this).is(':checked')){
-                $opt.val(getAllRoleOptionalBranchIds()).trigger('change');
-            }else{
-                $opt.val(null).trigger('change');
-            }
-            refreshRoleOptionalBranchesSelectAllState();
-        });
-
-        $('#role_optional_branches_select').on('change', function(){
-            refreshRoleOptionalBranchesSelectAllState();
-        });
-
-        refreshRoleOptionalBranchesSelectAllState();
 
     </script>
 @endsection

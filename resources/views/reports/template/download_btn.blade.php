@@ -18,6 +18,9 @@
                         Download
                     </button>
                     <div class="dropdown-menu dropdown-menu-right report-export-menu">
+                        <div class="dropdown-item-text px-3 py-2 border-bottom" id="reportExportRowInfo" style="font-size: 11px; color: #6c757d; white-space: normal;">
+                            Checking record count...
+                        </div>
                         <a class="dropdown-item btnReportExport" href="javascript:void(0)" data-export="xlsx" title="Best for formatted reports in Excel">
                             <span class="d-block">Excel (XLSX)</span>
                             <small class="text-muted">Formatted layout &amp; Arabic text</small>

@@ -365,10 +365,6 @@
             $('#optional_branches_select_all').prop('checked', isAllSelected);
         }
 
-        $('#employee_role_id').on('change', function(){
-            applyRoleOptionalBranchesFromMap();
-        });
-
         $('#kt_select2_1').on('change', function(){
             var def = $(this).val();
             var $opt = $('#optional_branches_select');

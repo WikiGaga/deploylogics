@@ -86,19 +86,6 @@ class UserAccountController extends Controller
         $data['user_types'] = TblDefiConstants::where('constants_type','user_logged_type')->where('constants_status',1)->get();
 
         $data['employee_roles'] = Role::where(Utilities::currentBC())->orderBy('display_name')->get();
-        $data['role_optional_branches_map'] = [];
-        foreach ($data['employee_roles'] as $role){
-            $data['role_optional_branches_map'][(string) $role->id] = [];
-        }
-        $roleIds = $data['employee_roles']->pluck('id')->toArray();
-        if(!empty($roleIds)){
-            foreach (DB::table('tbl_soft_role_branch')->whereIn('role_id', $roleIds)->get() as $row){
-                $key = (string) $row->role_id;
-                if(array_key_exists($key, $data['role_optional_branches_map'])){
-                    $data['role_optional_branches_map'][$key][] = (int) $row->branch_id;
-                }
-            }
-        }
 
         return view('setting.UserAccount.form',compact('data'));
     }

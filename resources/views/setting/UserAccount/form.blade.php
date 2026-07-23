@@ -563,8 +563,6 @@
     <script src="{{ asset('js/pages/js/user.js') }}" type="text/javascript"></script>
 
 <script>
-var roleOptionalBranchesMap = @json($data['role_optional_branches_map'] ?? []);
-
 $(document).ready(function(){
     verification_type();
 
@@ -588,28 +586,6 @@ $(document).ready(function(){
         }
     });
 
-    function applyRoleOptionalBranchesFromMap(){
-        var roleId = $('#employee_role_id').val();
-        var $opt = $('#optional_branches_select');
-        if(!roleId){
-            $opt.val(null).trigger('change');
-            refreshOptionalBranchesSelectAllState();
-            return;
-        }
-        var branchIds = roleOptionalBranchesMap[roleId];
-        if(!branchIds || !branchIds.length){
-            $opt.val(null).trigger('change');
-            refreshOptionalBranchesSelectAllState();
-            return;
-        }
-        var defaultBranch = $('#kt_select2_1').val();
-        var filtered = branchIds.filter(function(id){
-            return String(id) !== String(defaultBranch);
-        });
-        $opt.val(filtered.map(String)).trigger('change');
-        refreshOptionalBranchesSelectAllState();
-    }
-
     function getAllOptionalBranchIdsExcludingDefault(){
         var defaultBranch = $('#kt_select2_1').val();
         var all = [];
@@ -628,10 +604,6 @@ $(document).ready(function(){
         var isAllSelected = all.length > 0 && all.every(function(id){ return selected.indexOf(String(id)) !== -1; });
         $('#optional_branches_select_all').prop('checked', isAllSelected);
     }
-
-    $('#employee_role_id').on('change', function(){
-        applyRoleOptionalBranchesFromMap();
-    });
 
     $('#kt_select2_1').on('change', function(){
         var def = $(this).val();
