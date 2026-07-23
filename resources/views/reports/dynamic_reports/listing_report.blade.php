@@ -146,54 +146,48 @@
            $a_[$var] = 0;
         }
 
-        $totalLabel = 'Page Total:';
-        $countLabel = 'Page Count:';
-        $displayTotals = [];
-        $displayCount = $count_no;
-        $isLastPage = true;
+        $grandTotals = [];
+        $isPaginated = !isset($data['report_status'])
+            && isset($list)
+            && is_object($list)
+            && method_exists($list, 'lastPage')
+            && !($isAll ?? false);
+        $isLastPage = ($isAll ?? false)
+            || !$isPaginated
+            || ($list->currentPage() >= $list->lastPage());
+        $showPageAndGrandTotals = $isPaginated && $isLastPage && $list->lastPage() > 1;
+        $showPageTotalsOnly = $isPaginated && !$isLastPage;
+        $showGrandTotalsOnly = !$isPaginated || ($isLastPage && !$showPageAndGrandTotals);
 
-        if (!isset($data['report_status']) && isset($list) && is_object($list) && method_exists($list, 'lastPage')) {
-            $isLastPage = ($isAll ?? false) || ($list->currentPage() >= $list->lastPage());
+        if ($showPageAndGrandTotals && count($calc) > 0 && !empty($baseQuery)) {
+            foreach ($calc as $var) {
+                $grandTotals[$var] = 0;
+            }
 
-            if ($isLastPage) {
-                $totalLabel = 'Grand Total:';
-                $countLabel = 'Total Count:';
-                $displayCount = $total ?? $count_no;
+            foreach (DB::cursor($baseQuery) as $row) {
+                $excludeFromCalc = false;
+                if (($data['report_case'] ?? '') === 'GRN-Register') {
+                    $rs = $row->record_status ?? $row->RECORD_STATUS ?? null;
+                    $ps = $row->posted ?? $row->POSTED ?? null;
+                    $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int) $ps === 2);
+                }
 
-                if (count($calc) > 0 && !($isAll ?? false) && !empty($baseQuery) && $count_no < ($total ?? $count_no)) {
-                    $grandTotals = [];
-                    foreach ($calc as $var) {
-                        $grandTotals[$var] = 0;
+                if ($excludeFromCalc) {
+                    continue;
+                }
+
+                foreach ($calc as $key) {
+                    $fieldsKey = $fieldsKeys[$key] ?? null;
+                    if (empty($fieldsKey) || !property_exists($row, $fieldsKey)) {
+                        continue;
                     }
 
-                    foreach (DB::cursor($baseQuery) as $row) {
-                        $excludeFromCalc = false;
-                        if (($data['report_case'] ?? '') === 'GRN-Register') {
-                            $rs = $row->record_status ?? $row->RECORD_STATUS ?? null;
-                            $ps = $row->posted ?? $row->POSTED ?? null;
-                            $excludeFromCalc = (is_string($rs) && strtoupper($rs) === 'CANCEL') || ((int) $ps === 2);
-                        }
-
-                        if ($excludeFromCalc) {
-                            continue;
-                        }
-
-                        foreach ($calc as $key) {
-                            $fieldsKey = $fieldsKeys[$key] ?? null;
-                            if (empty($fieldsKey) || !property_exists($row, $fieldsKey)) {
-                                continue;
-                            }
-
-                            $columnType = $column_types[$key] ?? 'varchar2';
-                            if ($columnType === 'number') {
-                                $grandTotals[$key] += (int) $row->$fieldsKey;
-                            } elseif ($columnType === 'float') {
-                                $grandTotals[$key] += (float) $row->$fieldsKey;
-                            }
-                        }
+                    $columnType = $column_types[$key] ?? 'varchar2';
+                    if ($columnType === 'number') {
+                        $grandTotals[$key] += (int) $row->$fieldsKey;
+                    } elseif ($columnType === 'float') {
+                        $grandTotals[$key] += (float) $row->$fieldsKey;
                     }
-
-                    $displayTotals = $grandTotals;
                 }
             }
         }
@@ -618,36 +612,66 @@
                                     </tr>
                                 @endif
                                 @if(count($calc) != 0)
-                                    @php
-                                        $totalsRow = !empty($displayTotals) ? $displayTotals : $arr;
-                                    @endphp
-                                    <tr class="grand_total">
-                                        @if($sr == 1)
-                                            <td class="rep-font-bold">{{ $totalLabel }}</td>
-                                            <td class="rep-font-bold"></td>
-                                        @else
-                                            <td class="rep-font-bold">{{ $totalLabel }}</td>
-                                        @endif
-                                        @for($i=1; $i < count($headings); $i++)
-                                            <td class="text-right rep-font-bold">
-                                                @if(isset($totalsRow[$i]))
-                                                    {{number_format($totalsRow[$i],3)}}
-                                                @endif
+                                    @if($showPageTotalsOnly || $showPageAndGrandTotals)
+                                        <tr class="grand_total">
+                                            @if($sr == 1)
+                                                <td class="rep-font-bold">Page Total:</td>
+                                                <td class="rep-font-bold"></td>
+                                            @else
+                                                <td class="rep-font-bold">Page Total:</td>
+                                            @endif
+                                            @for($i=1; $i < count($headings); $i++)
+                                                <td class="text-right rep-font-bold">
+                                                    @if(isset($arr[$i]))
+                                                        {{number_format($arr[$i],3)}}
+                                                    @endif
+                                                </td>
+                                            @endfor
+                                        </tr>
+                                        <tr class="grand_total">
+                                            @if($sr == 1)
+                                                <td class="rep-font-bold">Page Count:</td>
+                                                <td class="rep-font-bold"></td>
+                                            @else
+                                                <td class="rep-font-bold">Page Count:</td>
+                                            @endif
+                                            <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
+                                                {{ $count_no }}
                                             </td>
-                                        @endfor
-                                    </tr>
-                                     <tr class="grand_total">
-                                        @if($sr == 1)
-                                            <td class="rep-font-bold">{{ $countLabel }}</td>
-                                            <td class="rep-font-bold"></td>
-                                        @else
-                                            <td class="rep-font-bold">{{ $countLabel }}</td>
-                                        @endif
-
-                                        <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
-                                            {{ $displayCount }}
-                                        </td>
-                                    </tr>
+                                        </tr>
+                                    @endif
+                                    @if($showGrandTotalsOnly || $showPageAndGrandTotals)
+                                        @php
+                                            $grandTotalsRow = ($showPageAndGrandTotals && !empty($grandTotals)) ? $grandTotals : $arr;
+                                            $grandCount = ($showPageAndGrandTotals && isset($total)) ? $total : $count_no;
+                                        @endphp
+                                        <tr class="grand_total">
+                                            @if($sr == 1)
+                                                <td class="rep-font-bold">Grand Total:</td>
+                                                <td class="rep-font-bold"></td>
+                                            @else
+                                                <td class="rep-font-bold">Grand Total:</td>
+                                            @endif
+                                            @for($i=1; $i < count($headings); $i++)
+                                                <td class="text-right rep-font-bold">
+                                                    @if(isset($grandTotalsRow[$i]))
+                                                        {{number_format($grandTotalsRow[$i],3)}}
+                                                    @endif
+                                                </td>
+                                            @endfor
+                                        </tr>
+                                        <tr class="grand_total">
+                                            @if($sr == 1)
+                                                <td class="rep-font-bold">Total Count:</td>
+                                                <td class="rep-font-bold"></td>
+                                            @else
+                                                <td class="rep-font-bold">Total Count:</td>
+                                            @endif
+                                            <td colspan="{{ count($headings) }}" class="text-center rep-font-bold">
+                                                {{ $grandCount }}
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endif
                             </tbody>
                         </table>
