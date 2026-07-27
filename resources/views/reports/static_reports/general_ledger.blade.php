@@ -206,7 +206,7 @@
                             }else{
                                 $date_field = "AND VOUCH.voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                             }
-                            $query = "Select VOUCH.*,acc.chart_name contra_chart_name from VW_ACCO_VOUCHER_POSTED VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
+                            $query = "Select VOUCH.*,acc.chart_name contra_chart_name from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             ,TBL_ACCO_CHART_ACCOUNT acc
                             where acc.chart_account_id(+) = VOUCH.voucher_cont_acc_code
                             and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.posted = 1
@@ -245,7 +245,7 @@
                                 <td style="color:{{$color}}">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$list->voucher_date))))}}</td>
                                 <td><span style="color:{{$color}}" class="generate_report" data-id="{{$print_id}}" data-type="{{$list->voucher_type}}" data-branch-id="{{$list->branch_id}}">{{$list->voucher_no}}</span></td>
                                 <td style="color:{{$color}}">{{ $vendor_name }} <br> {{$list->contra_chart_name}}</td>
-                                <td style="color:{{$color}}">{{ $list->user_name }}</td>
+                                <td style="color:{{$color}}">{{ $list->user_name ?? '' }}</td>
                                 <td style="color:{{$color}}">{{ trim($list->voucher_descrip) }} {{ trim($list->voucher_notes) }}</td>
                                 @if($data['al_ref_acc_toggle'] == 1) <td style="color:{{$color}}">{{$list->chart_name_ref_account}}</td> @endif
                                 @if($data['al_vat_amount_toggle'] == 1) <td class="text-right" style="color:{{$color}}">{{($list->vat_amount == null)?"":number_format($list->vat_amount,3)}}</td> @endif
