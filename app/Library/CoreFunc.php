@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class CoreFunc
 {
     static function acco_opening_bal($paras){
-        $from_date = date('Y-m-d', strtotime($paras['voucher_date']));
+        $date = date('Y-m-d', strtotime('-1 day', strtotime($paras['voucher_date'])));
 
         if (!empty($paras['chart_condition'])) {
             $chart_account_condition = $paras['chart_condition'];
@@ -29,9 +29,9 @@ class CoreFunc
                     : "0";
 
         $qry = "select nvl(sum(voucher_debit) - sum(voucher_credit), 0) as opening_bal
-                from VW_ACCO_VOUCHER_POSTED
+                from tbl_acco_voucher
                 where $chart_account_condition
-                and voucher_date < to_date('" . $from_date . "', 'yyyy/mm/dd')
+                and voucher_date <= to_date('" . $date . "', 'yyyy/mm/dd')
                 and posted = 1
                 and business_id = " . auth()->user()->business_id . "
                 and company_id = " . auth()->user()->company_id . "
@@ -43,16 +43,16 @@ class CoreFunc
     }
 
     static function cash_flow_acco_opening_bal($paras){
-        $from_date = date('Y-m-d', strtotime($paras['voucher_date']));
+        $date = date('Y-m-d',(strtotime ( '-1 day' , strtotime ($paras['voucher_date']) ) ));
         if(is_array($paras['chart_account_id'])){
             $chart_account_condition = " chart_account_id in (".implode(",",$paras['chart_account_id']).") ";
         }else{
             $chart_account_condition = " chart_account_id  = " . $paras['chart_account_id'] ;
         }
 
-        $qry = "select sum(voucher_debit) - sum(voucher_credit) opening_bal from VW_ACCO_VOUCHER_POSTED
+        $qry = "select sum(voucher_debit) - sum(voucher_credit) opening_bal from tbl_acco_voucher
                 where $chart_account_condition
-                and voucher_date < to_date('".$from_date."','yyyy/mm/dd')
+                and voucher_date <= to_date('".$date."','yyyy/mm/dd')
                 and posted = 1
                 and business_id = ".auth()->user()->business_id."
                 and company_id = ".auth()->user()->company_id."
@@ -63,7 +63,7 @@ class CoreFunc
 
 
     static function acco_dispatch_opening_bal($paras){
-        $from_date = date('Y-m-d', strtotime($paras['voucher_date']));
+        $date = date('Y-m-d',(strtotime ( '-1 day' , strtotime ($paras['voucher_date']) ) ));
         if (!empty($paras['chart_condition'])) {
             $chart_account_condition = $paras['chart_condition'];
         } elseif(is_array($paras['chart_account_id'])){
@@ -72,9 +72,9 @@ class CoreFunc
             $chart_account_condition = " chart_account_id  = " . $paras['chart_account_id'] ;
         }
 
-        $qry = "select nvl(sum(voucher_debit) - sum(voucher_credit), 0) opening_bal from VW_ACCO_VOUCHER_POSTED
+        $qry = "select nvl(sum(voucher_debit) - sum(voucher_credit), 0) opening_bal from tbl_acco_voucher
                 where $chart_account_condition
-                and voucher_mode_date < to_date('".$from_date."','yyyy/mm/dd')
+                and voucher_mode_date <= to_date('".$date."','yyyy/mm/dd')
                 and posted = 1
                 and business_id = ".auth()->user()->business_id."
                 and company_id = ".auth()->user()->company_id."

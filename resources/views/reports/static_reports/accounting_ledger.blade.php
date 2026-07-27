@@ -193,7 +193,7 @@
                                 ? $data['chart_voucher_condition']
                                 : " VOUCH.chart_account_id in (".implode(",", $data['chart_account_ids']).") ";
 
-                            $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.company_id = ".auth()->user()->company_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
+                            $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
                             $where .= $where_voucher_type;
                             if($data['voucher_mode_date'] == 1){
                                 $date_field = "AND VOUCH.voucher_mode_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
