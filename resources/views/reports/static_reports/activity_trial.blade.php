@@ -238,6 +238,8 @@ FROM
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
           AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
           AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
           $chart_qry
         UNION
@@ -261,7 +263,9 @@ FROM
           VW_ACCO_VOUCHER_POSTED v,
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
-          AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+          AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
           AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
           AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
           $chart_qry) D 
@@ -356,6 +360,8 @@ FROM
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
           AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
           AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
           $chart_qry
         UNION
@@ -379,7 +385,9 @@ FROM
           VW_ACCO_VOUCHER_POSTED v,
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
-          AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+          AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
           AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
           AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
           $chart_qry) D 
@@ -475,6 +483,8 @@ FROM
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
           AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
           AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
           $chart_qry
         UNION
@@ -498,7 +508,9 @@ FROM
           VW_ACCO_VOUCHER_POSTED v,
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
-          AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+          AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
           AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
           AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
           $chart_qry) D 
@@ -593,7 +605,9 @@ FROM
           VW_ACCO_VOUCHER_POSTED v,
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
-          AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+          AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
           AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
           $chart_qry
         UNION
@@ -618,6 +632,8 @@ FROM
           tbl_acco_chart_account coa 
         WHERE v.chart_account_id = coa.chart_account_id 
           AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
           AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
           AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
           $chart_qry) D 
@@ -742,6 +758,8 @@ FROM (
                 VW_ACCO_VOUCHER_POSTED v, tbl_acco_chart_account coa
               WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
               UNION 
@@ -767,7 +785,9 @@ FROM (
               FROM 
                 VW_ACCO_VOUCHER_POSTED    v,tbl_acco_chart_account coa
               WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
-                AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+                AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
                 AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                 AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
                 $chart_qry
@@ -861,6 +881,8 @@ FROM (
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
               WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
 
@@ -887,7 +909,9 @@ FROM (
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
                 WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
-                  AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+                  AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
                   AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                   AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
                   $chart_qry
@@ -979,6 +1003,8 @@ FROM (
                 VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
               WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                 AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
                 AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                 $chart_qry
               UNION ALL
@@ -1003,7 +1029,9 @@ FROM (
               FROM 
                 VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
               WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
-                AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+                AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
                 AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                 AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
                 $chart_qry
@@ -1095,7 +1123,9 @@ FROM (
                 FROM 
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
                 WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
-                  AND v.branch_id IN (".implode(",",$data['branch_ids']).") 
+                  AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id." 
                   AND v.VOUCHER_DATE < to_date('".$data['from_date']."','yyyy/mm/dd')
                   $chart_qry
 
@@ -1121,6 +1151,8 @@ FROM (
                   VW_ACCO_VOUCHER_POSTED  v, tbl_acco_chart_account coa
                 WHERE v.chart_account_id = coa.chart_account_id AND v.posted = 1
                   AND v.branch_id IN (".implode(",",$data['branch_ids']).")
+                AND v.business_id = ".auth()->user()->business_id."
+                AND v.company_id = ".auth()->user()->company_id."
                   AND v.VOUCHER_DATE >= to_date('".$data['from_date']."','yyyy/mm/dd')
                   AND v.VOUCHER_DATE <= to_date('".$data['to_date']."','yyyy/mm/dd')
                   $chart_qry
@@ -1177,13 +1209,22 @@ FROM (
                             if(!empty($data['level_list'])){
                                 $total_chart_level = (int)$data['level_list'];
                             }else{
-                                $total_chart_level = 0;
+                                $has_level = [1 => false, 2 => false, 3 => false, 4 => false];
                                 foreach($list as $row){
-                                    if((int)$row->chart_level > $total_chart_level){
-                                        $total_chart_level = (int)$row->chart_level;
+                                    $lvl = (int)$row->chart_level;
+                                    if(isset($has_level[$lvl])){
+                                        $has_level[$lvl] = true;
                                     }
                                 }
-                                if($total_chart_level == 0){
+                                if($has_level[4]){
+                                    $total_chart_level = 4;
+                                }elseif($has_level[2]){
+                                    $total_chart_level = 2;
+                                }elseif($has_level[3]){
+                                    $total_chart_level = 3;
+                                }elseif($has_level[1]){
+                                    $total_chart_level = 1;
+                                }else{
                                     $total_chart_level = 4;
                                 }
                             }

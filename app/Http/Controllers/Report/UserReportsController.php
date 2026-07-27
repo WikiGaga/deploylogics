@@ -2047,9 +2047,9 @@ class UserReportsController extends Controller
                         $data['chart_account'] = TblAccCoa::whereIn('chart_account_id', $chart_account_multiple)->get();
                         $chart_account_ids = $this->expandChartAccountIds($chart_account_multiple);
                         $data['chart_account_ids'] = $chart_account_ids;
-                        //$data['opening_balance'] = collect(DB::select('SELECT fun_acco_opening_bal(?,?,?,?,?) AS code from dual', [$data['date'], $chart_account_id, auth()->user()->business_id, auth()->user()->company_id, auth()->user()->branch_id]))->first()->code;
-                      //  $data['opening_balance'] = collect(DB::select('SELECT fun_acco_opening_bal(?,?,?,?,?) AS code from dual', [$data['date'], $chart_account_id, auth()->user()->business_id, auth()->user()->company_id,auth()->user()->branch_id]))->first()->code;
+                        $data['chart_voucher_condition'] = $this->buildChartAccountSqlCondition($data['chart_account'], 'VOUCH');
                         $paras = [
+                            'chart_condition' => $this->buildChartAccountSqlCondition($data['chart_account'], ''),
                             'chart_account_id' => $chart_account_ids,
                             'voucher_date' => $from_date,
                             'branch_ids' => $data['branch_ids'],
@@ -2087,7 +2087,9 @@ class UserReportsController extends Controller
                         $data['chart_account'] = TblAccCoa::whereIn('chart_account_id', $chart_account_multiple)->get();
                         $chart_account_ids = $this->expandChartAccountIds($chart_account_multiple);
                         $data['chart_account_ids'] = $chart_account_ids;
+                        $data['chart_voucher_condition'] = $this->buildChartAccountSqlCondition($data['chart_account'], 'VOUCH');
                         $paras = [
+                            'chart_condition' => $this->buildChartAccountSqlCondition($data['chart_account'], ''),
                             'chart_account_id' => $chart_account_ids,
                             'voucher_date' => $from_date,
                             'branch_ids' => $data['branch_ids'],
@@ -2104,7 +2106,9 @@ class UserReportsController extends Controller
                             array_push($chart_account_ids , $value->chart_account_id);
                         }
                         $data['chart_account_ids'] = $chart_account_ids;
+                        $data['chart_voucher_condition'] = $this->buildChartAccountSqlCondition($data['chart_account'], 'VOUCH');
                         $paras = [
+                            'chart_condition' => $this->buildChartAccountSqlCondition($data['chart_account'], ''),
                             'chart_account_id' => $chart_account_ids,
                             'voucher_date' => $from_date,
                             'branch_ids' => $data['branch_ids'],
@@ -3616,6 +3620,29 @@ class UserReportsController extends Controller
             $this->writeReportCsv($out, $fieldsKeys, $rows);
             fclose($out);
         }, $fileName, $this->reportCsvResponseHeaders($fileName));
+    }
+
+    private function buildChartAccountSqlCondition($accounts, $alias = ''): string
+    {
+        $prefix = $alias !== '' ? rtrim($alias, '.') . '.' : '';
+        $parts = [];
+        foreach ($accounts as $account) {
+            $level = (int)$account->chart_level;
+            $code = $account->chart_code;
+            if ($level == 1) {
+                $parts[] = $prefix . "chart_code like '" . substr($code, 0, 1) . "%'";
+            } elseif ($level == 2) {
+                $parts[] = $prefix . "chart_code like '" . substr($code, 0, 4) . "%'";
+            } elseif ($level == 3) {
+                $parts[] = $prefix . "chart_code like '" . substr($code, 0, 7) . "%'";
+            } else {
+                $parts[] = $prefix . "chart_account_id = " . $account->chart_account_id;
+            }
+        }
+        if (count($parts) == 0) {
+            return $prefix . "chart_account_id = 0";
+        }
+        return '(' . implode(' OR ', $parts) . ')';
     }
 
     private function expandChartAccountIds($chart_account_ids): array

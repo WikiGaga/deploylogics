@@ -189,9 +189,11 @@
                                 }
                             //-----------end type--------------
 
-                            $where = " VOUCH.chart_account_id in (".implode(",", $data['chart_account_ids']).") ";
+                            $where = !empty($data['chart_voucher_condition'])
+                                ? $data['chart_voucher_condition']
+                                : " VOUCH.chart_account_id in (".implode(",", $data['chart_account_ids']).") ";
 
-                            $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
+                            $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.company_id = ".auth()->user()->company_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
                             $where .= $where_voucher_type;
                             if($data['voucher_mode_date'] == 1){
                                 $date_field = "AND VOUCH.voucher_mode_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
@@ -200,10 +202,7 @@
                             }else{
                                 $date_field = "AND VOUCH.voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                             }
-                            $query = "Select * from vw_acco_voucher where (voucher_debit <> 0 OR  voucher_credit <> 0 ) AND posted = 1 and " .$where." $date_field  order by voucher_date,voucher_no";
-
-                            // $query = "Select VOUCH.*from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
-                            $query = "Select VOUCH.*,acc.chart_name contra_chart_name from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
+                            $query = "Select VOUCH.*,acc.chart_name contra_chart_name from VW_ACCO_VOUCHER_POSTED VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             ,TBL_ACCO_CHART_ACCOUNT acc
                             where acc.chart_account_id(+) = VOUCH.voucher_cont_acc_code
                             and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.posted = 1
