@@ -222,20 +222,8 @@ class ListingAdvanceController extends Controller
      */
 
     public function getDateType($table_name,$type){
-
-        $data_type = ViewAllColumnData::where(DB::raw('lower(table_name)'),$this->strLower($table_name))
-            ->where(DB::raw('lower(column_name)'),$this->strLower($type))->where(DB::raw('lower(data_type)'),'date')->exists();
-
-        if($data_type){
-            $datetime_list = ['created_at','updated_at'];
-            if(in_array($type,$datetime_list)){
-                return 'datetime';
-            }else{
-                return 'datetime';
-            }
-        }
-
-        return 'string';
+        $columnTypeMap = $this->getColumnTypeMap($table_name);
+        return $this->resolveColumnType($columnTypeMap, (string) $type);
     }
 
     public function getTableColumns($table_name,$listing){
@@ -264,7 +252,7 @@ class ListingAdvanceController extends Controller
 
     private function getColumnTypeMap($table_name): array
     {
-        return ViewAllColumnData::query()
+        $map = ViewAllColumnData::query()
             ->select(['column_name', 'data_type'])
             ->where(DB::raw('lower(table_name)'), $this->strLower($table_name))
             ->get()
@@ -272,6 +260,23 @@ class ListingAdvanceController extends Controller
                 return [strtolower((string) $row->column_name) => strtolower((string) $row->data_type)];
             })
             ->all();
+
+        if (!empty($map)) {
+            return $map;
+        }
+
+        try {
+            $rows = DB::select(
+                'select column_name, data_type from user_tab_columns where upper(table_name) = upper(?)',
+                [$table_name]
+            );
+            foreach ($rows as $row) {
+                $map[strtolower((string) $row->column_name)] = strtolower((string) $row->data_type);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return $map;
     }
 
     private function resolveColumnType(array $columnTypeMap, string $columnName): string
@@ -282,8 +287,15 @@ class ListingAdvanceController extends Controller
         }
 
         $dataType = $columnTypeMap[$name] ?? null;
-        if ($dataType === 'date' || $dataType === 'datetime' || $dataType === 'timestamp') {
+        if ($dataType === 'date') {
+            return 'date';
+        }
+        if ($dataType === 'datetime' || (is_string($dataType) && strpos($dataType, 'timestamp') === 0)) {
             return 'datetime';
+        }
+
+        if ($dataType === null && (substr($name, -5) === '_date' || $name === 'date')) {
+            return 'date';
         }
 
         return 'string';

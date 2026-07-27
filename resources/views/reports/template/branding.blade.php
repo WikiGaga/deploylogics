@@ -2,10 +2,9 @@
     <div class="kt-invoice__logo">
         <div>
             @php
-                $path = base_path()."/public/images/".auth()->user()->branch->branch_logo;
-                $dummyLogo = true;
-                if(!file_exists($path)){
-                    $dummyLogo = true;
+                $logo = auth()->user()->branch->branch_logo;
+                $path = !empty($logo) ? base_path()."/public/images/".$logo : null;
+                if(!$path || !is_file($path)){
                     $path = base_path()."/public/assets/images/logo.png";
                 }
 

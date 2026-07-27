@@ -2045,10 +2045,7 @@ class UserReportsController extends Controller
 
                     if (isset($chart_account_multiple) && count($chart_account_multiple) > 0) {
                         $data['chart_account'] = TblAccCoa::whereIn('chart_account_id', $chart_account_multiple)->get();
-                        $chart_account_ids = [];
-                        foreach ($data['chart_account'] as $value) {
-                            array_push($chart_account_ids , $value->chart_account_id);
-                        }
+                        $chart_account_ids = $this->expandChartAccountIds($chart_account_multiple);
                         $data['chart_account_ids'] = $chart_account_ids;
                         //$data['opening_balance'] = collect(DB::select('SELECT fun_acco_opening_bal(?,?,?,?,?) AS code from dual', [$data['date'], $chart_account_id, auth()->user()->business_id, auth()->user()->company_id, auth()->user()->branch_id]))->first()->code;
                       //  $data['opening_balance'] = collect(DB::select('SELECT fun_acco_opening_bal(?,?,?,?,?) AS code from dual', [$data['date'], $chart_account_id, auth()->user()->business_id, auth()->user()->company_id,auth()->user()->branch_id]))->first()->code;
@@ -2088,10 +2085,7 @@ class UserReportsController extends Controller
 
                     if (isset($chart_account_multiple) && count($chart_account_multiple) > 0) {
                         $data['chart_account'] = TblAccCoa::whereIn('chart_account_id', $chart_account_multiple)->get();
-                        $chart_account_ids = [];
-                        foreach ($data['chart_account'] as $value) {
-                            array_push($chart_account_ids , $value->chart_account_id);
-                        }
+                        $chart_account_ids = $this->expandChartAccountIds($chart_account_multiple);
                         $data['chart_account_ids'] = $chart_account_ids;
                         $paras = [
                             'chart_account_id' => $chart_account_ids,
@@ -3622,6 +3616,40 @@ class UserReportsController extends Controller
             $this->writeReportCsv($out, $fieldsKeys, $rows);
             fclose($out);
         }, $fileName, $this->reportCsvResponseHeaders($fileName));
+    }
+
+    private function expandChartAccountIds($chart_account_ids): array
+    {
+        $chart_account_ids = array_values(array_filter((array)$chart_account_ids, function ($id) {
+            return $id !== null && $id !== '';
+        }));
+        if (count($chart_account_ids) == 0) {
+            return [];
+        }
+
+        $accounts = TblAccCoa::whereIn('chart_account_id', $chart_account_ids)->get();
+        $expanded = [];
+        foreach ($accounts as $account) {
+            $expanded[] = $account->chart_account_id;
+            $prefix = null;
+            if ((int)$account->chart_level == 1) {
+                $prefix = substr($account->chart_code, 0, 1);
+            } elseif ((int)$account->chart_level == 2) {
+                $prefix = substr($account->chart_code, 0, 4);
+            } elseif ((int)$account->chart_level == 3) {
+                $prefix = substr($account->chart_code, 0, 7);
+            }
+            if ($prefix === null || $prefix === '') {
+                continue;
+            }
+            $child_ids = TblAccCoa::where('chart_code', 'like', $prefix . '%')
+                ->where(Utilities::currentBC())
+                ->pluck('chart_account_id')
+                ->toArray();
+            $expanded = array_merge($expanded, $child_ids);
+        }
+
+        return array_values(array_unique($expanded));
     }
 
     private function getInventoryGroupingExportRows($key, $list): array

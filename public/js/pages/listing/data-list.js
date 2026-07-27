@@ -35,25 +35,28 @@ var KTDatatableRemoteAjaxDemo = function() {
         var tableUrl = table.attr('data-url');
         var dataColumns = [];
         for (var key in dataFields) {
-            if(dataFields[key]['type'] == 'string'){
+            var fieldType = dataFields[key]['type'];
+            var treatAsTemporal = fieldType == 'date' || fieldType == 'datetime'
+                || /(_date|^date|created_at|updated_at)$/i.test(key);
+            if(fieldType == 'string' && !treatAsTemporal){
                 var obj = {
                     field: key,
                     title: dataFields[key]['title'],
                 };
             }
-            if(dataFields[key]['type'] == 'date'){
+            if(treatAsTemporal){
                 var obj = {
                     field: key,
                     title: dataFields[key]['title'],
-                    template: function(row) {
-                        return funcDateFormat(row[key]);
-                    },
-                };
-            }
-            if(dataFields[key]['type'] == 'datetime'){
-                var obj = {
-                    field: key,
-                    title: dataFields[key]['title'],
+                    template: (function (fieldKey) {
+                        return function(row) {
+                            var val = row[fieldKey];
+                            if (val === undefined || val === null || val === '') {
+                                val = row[String(fieldKey).toUpperCase()];
+                            }
+                            return funcSmartDateTimeFormat(val);
+                        };
+                    })(key),
                 };
             }
             dataColumns.push(obj);
@@ -236,7 +239,7 @@ var KTDatatableRemoteAjaxDemo = function() {
 
             var date_fields = [];
             for (var key in dataFields) {
-                if(['date','datetime'].includes(dataFields[key]['type'])){
+                if(['date','datetime'].includes(dataFields[key]['type']) || /(_date|^date)$/i.test(key)){
                     date_fields.push(key);
                 }
             }
@@ -285,37 +288,54 @@ var KTDatatableRemoteAjaxDemo = function() {
     };
 
 
-    var funcDateFormat =  function(date){
-        var dd = new Date(date).toLocaleString();
-        var d = new Date(dd);
-        var returnDate = "";
-        if(d){
-            var day =   (parseInt(d.getDate()) < 10) ? "0" + (d.getDate()).toString() : d.getDate();
-            var month = (parseInt(d.getMonth()) < 10) ? "0" + (d.getMonth() + 1).toString() : (d.getMonth() + 1);
-            var year = d.getFullYear();
-            if(!valueEmpty(day) && !valueEmpty(month) && !valueEmpty(year)){
-                returnDate =  day +'-'+ month +'-'+ year;
-            }
+    var funcSmartDateTimeFormat = function(date){
+        if (valueEmpty(date)) {
+            return '';
         }
-        return returnDate;
+        var raw = String(date).trim();
+        var ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
+        if (ymd) {
+            var datePart = ymd[3] + '-' + ymd[2] + '-' + ymd[1];
+            var hasTime = typeof ymd[4] !== 'undefined';
+            var isMidnight = !hasTime || (ymd[4] === '00' && ymd[5] === '00' && ymd[6] === '00');
+            if (isMidnight) {
+                return datePart;
+            }
+            return datePart + ' ' + ymd[4] + ':' + ymd[5] + ':' + ymd[6];
+        }
+        var dmy = raw.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
+        if (dmy) {
+            var dmyDate = dmy[1] + '-' + dmy[2] + '-' + dmy[3];
+            var dmyHasTime = typeof dmy[4] !== 'undefined';
+            var dmyMidnight = !dmyHasTime || (dmy[4] === '00' && dmy[5] === '00' && dmy[6] === '00');
+            if (dmyMidnight) {
+                return dmyDate;
+            }
+            return dmyDate + ' ' + dmy[4] + ':' + dmy[5] + ':' + dmy[6];
+        }
+        var d = new Date(raw);
+        if (isNaN(d.getTime())) {
+            return raw;
+        }
+        var day = (d.getDate() < 10) ? '0' + d.getDate() : d.getDate();
+        var month = ((d.getMonth() + 1) < 10) ? '0' + (d.getMonth() + 1) : (d.getMonth() + 1);
+        var year = d.getFullYear();
+        var dateOnly = day + '-' + month + '-' + year;
+        if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
+            return dateOnly;
+        }
+        var hh = (d.getHours() < 10) ? '0' + d.getHours() : d.getHours();
+        var mm = (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes();
+        var ss = (d.getSeconds() < 10) ? '0' + d.getSeconds() : d.getSeconds();
+        return dateOnly + ' ' + hh + ':' + mm + ':' + ss;
+    };
+
+    var funcDateFormat =  function(date){
+        return funcSmartDateTimeFormat(date);
     };
 
     var funcDateTimeFormat =  function(date){
-        // console.log(date);
-        var dd = new Date(date).toLocaleString();
-        var d = new Date(dd);
-        var returnDate = "";
-        if(d){
-            console.log(d);
-            var day =   (parseInt(d.getDate()) < 10) ? "0" + (d.getDate()).toString() : d.getDate();
-            var month = (parseInt(d.getMonth()) < 10) ? "0" + (d.getMonth() + 1).toString() : (d.getMonth() + 1);
-            var year = d.getFullYear();
-            var time = d.toLocaleTimeString();
-            if(!valueEmpty(day) && !valueEmpty(month) && !valueEmpty(year) && !valueEmpty(time)){
-                returnDate =  day +'-'+ month +'-'+ year +' '+ time;
-            }
-        }
-        return returnDate;
+        return funcSmartDateTimeFormat(date);
     };
 
     return {

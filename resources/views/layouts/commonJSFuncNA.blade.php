@@ -626,9 +626,16 @@
             var account_id = thix.parents('.modal-content').find('input[name="account_id"]').val();
             var from_date = thix.parents('.modal-content').find('input[name="date_from"]').val();
             var to_date = thix.parents('.modal-content').find('input[name="date_to"]').val();
-            var ledger_report_case = thix.parents('.modal-content').find('select[name="ledger_report_case"]').val() || 'general_ledger';
+            var ledger_report_case = thix.parents('.modal-content').find('select[name="ledger_report_case"]').val() || 'accounting_ledger';
+            var branch_ids = [];
+            thix.parents('.modal-content').find('input[name="report_branch_ids[]"]').each(function(){
+                branch_ids.push($(this).val());
+            });
+            if(branch_ids.length == 0){
+                branch_ids = [{{ isset($data['branch_branch_id']) ? $data['branch_branch_id'] : auth()->user()->branch_id }}];
+            }
             var formData = {
-                report_branch_ids : [{{$data['branch_branch_id']}}],
+                report_branch_ids : branch_ids,
                 chart_account_multiple : [account_id],
                 date_from : from_date,
                 date_to : to_date,

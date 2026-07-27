@@ -51,8 +51,8 @@ class CoreFunc
                 from tbl_acco_voucher
                 where $chart_account_condition
                 and voucher_date <= to_date('" . $date . "', 'yyyy/mm/dd')
-                and company_id = " . auth()->user()->business_id . "
-                and business_id = " . auth()->user()->company_id . "
+                and business_id = " . auth()->user()->business_id . "
+                and company_id = " . auth()->user()->company_id . "
                 and branch_id in (" . $branch_list . ")";
 
         $data = DB::selectOne($qry);
@@ -72,8 +72,8 @@ class CoreFunc
         $qry = "select sum(voucher_debit) - sum(voucher_credit) opening_bal from tbl_acco_voucher
                 where $chart_account_condition
                 and voucher_date <= to_date('".$date."','yyyy/mm/dd')
-                and company_id = ".auth()->user()->business_id."
-                and business_id = ".auth()->user()->company_id."
+                and business_id = ".auth()->user()->business_id."
+                and company_id = ".auth()->user()->company_id."
                 and branch_id = ".$paras['branch_ids']."";
         $data = DB::selectOne($qry);
         return $data->opening_bal;
@@ -91,8 +91,8 @@ class CoreFunc
         $qry = "select sum(voucher_debit) - sum(voucher_credit) opening_bal from tbl_acco_voucher
                 where $chart_account_condition
                 and voucher_mode_date <= to_date('".$date."','yyyy/mm/dd')
-                and company_id = ".auth()->user()->business_id."
-                and business_id = ".auth()->user()->company_id."
+                and business_id = ".auth()->user()->business_id."
+                and company_id = ".auth()->user()->company_id."
                 and branch_id in(".implode(",",$paras['branch_ids']).")";
         $data = DB::selectOne($qry);
         return $data->opening_bal;

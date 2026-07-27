@@ -1,10 +1,37 @@
+function sanitizeNumericInput(value) {
+    if (value === '' || value === undefined || value === null) {
+        return value;
+    }
+    value = String(value).replace(/[^\d.]/g, '');
+    var dotIndex = value.indexOf('.');
+    if (dotIndex !== -1) {
+        value = value.substring(0, dotIndex + 1) + value.substring(dotIndex + 1).replace(/\./g, '');
+    }
+    return value;
+}
+
 function validateNumber(event) {
     event = (event) ? event : window.event;
     var charCode = (event.which) ? event.which : event.keyCode;
+    if (charCode === 8 || charCode === 0 || charCode === 13) {
+        return true;
+    }
     var val = String.fromCharCode(charCode);
     var validateNum = ['1','2','3','4','5','6','7','8','9','0','.'];
     if(!validateNum.includes(val)) {
         return false;
+    }
+    if (val === '.') {
+        var input = event.target || event.srcElement;
+        if (input && input.tagName === 'INPUT') {
+            var currentValue = input.value || '';
+            var start = typeof input.selectionStart === 'number' ? input.selectionStart : currentValue.length;
+            var end = typeof input.selectionEnd === 'number' ? input.selectionEnd : currentValue.length;
+            var withoutSelection = currentValue.substring(0, start) + currentValue.substring(end);
+            if (withoutSelection.indexOf('.') !== -1) {
+                return false;
+            }
+        }
     }
     return true;
 }
@@ -70,5 +97,11 @@ $(document).ready(function() {
     $('.validOnlyFloatNumber').keypress(validateOnlyFloatNumber);
     $('.debit').keypress(validateOnlyFloatNumber);
     $('.short_text,.small_text,.medium_text,.large_text,.long_text,.double_text,.small_no,.medium_no,.large_no,.mob_no').keypress(setTextLength);
+    $(document).on('input', '.validNumber,.validNo', function() {
+        var sanitized = sanitizeNumericInput(this.value);
+        if (sanitized !== this.value) {
+            this.value = sanitized;
+        }
+    });
 });
 

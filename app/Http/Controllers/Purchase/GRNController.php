@@ -385,6 +385,37 @@ class GRNController extends Controller
         return view('purchase.grn.form', compact('data'));
     }
 
+    protected function syncGrnAccountingVoucherPosted($grn): void
+    {
+        if (!$grn) {
+            return;
+        }
+
+        $voucherId = $grn->voucher_id ?? null;
+        $grnId = $grn->grn_id ?? null;
+        if (empty($voucherId) && empty($grnId)) {
+            return;
+        }
+
+        $updateData = [
+            'posted' => (int) ($grn->posted ?? 0),
+        ];
+        if (isset($grn->staging_apply)) {
+            $updateData['staging_apply'] = $grn->staging_apply;
+        }
+        if (isset($grn->current_stg_id) || property_exists($grn, 'current_stg_id')) {
+            $updateData['current_stg_id'] = $grn->current_stg_id;
+        }
+
+        $query = TblAccoVoucher::where('voucher_type', 'GRN');
+        if (!empty($voucherId)) {
+            $query->where('voucher_id', $voucherId);
+        } else {
+            $query->where('voucher_document_id', $grnId);
+        }
+        $query->update($updateData);
+    }
+
     public function post(Request $request)
     {
         try {
@@ -396,6 +427,7 @@ class GRNController extends Controller
             $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'post', 'post');
             $row->posted = 1;
             $row->update();
+            $this->syncGrnAccountingVoucherPosted($row);
             return response()->json(['status' => 'success']);
         } catch (\RuntimeException $e) {
             return $this->umJsonErrorFromException($e);
@@ -420,6 +452,7 @@ class GRNController extends Controller
                     $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
                     $row->posted = 1;
                     $row->update();
+                    $this->syncGrnAccountingVoucherPosted($row);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
@@ -446,6 +479,7 @@ class GRNController extends Controller
                     $row = TblPurcGrn::where('grn_id', $id)->where(Utilities::currentBCB())->first();
                     $row->posted = 0;
                     $row->update();
+                    $this->syncGrnAccountingVoucherPosted($row);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('message.unpost'), 200);
@@ -465,6 +499,7 @@ class GRNController extends Controller
             $this->guardUmDocumentAction(self::$menu_dtl_id, $row, 'cancel', 'cancel');
             $row->posted = 2;
             $row->update();
+            $this->syncGrnAccountingVoucherPosted($row);
             return response()->json(['status' => 'success', 'message' => trans('message.cancel')]);
         } catch (\RuntimeException $e) {
             return $this->umJsonErrorFromException($e);
@@ -653,6 +688,7 @@ class GRNController extends Controller
                         'document_code_key' => 'grn_code',
                     ]);
                     $grn->save();
+                    $this->syncGrnAccountingVoucherPosted($grn);
                 }
                 DB::commit();
 
@@ -942,7 +978,14 @@ class GRNController extends Controller
                 'voucher_user_id'       =>  auth()->user()->id,
                 'document_ref_account'  =>  (int)$supplier->supplier_account_id,
                 'vat_amount'            =>  $vat_amount_total,
+                'posted'                =>  (int) ($grn->posted ?? 0),
             ];
+            if (isset($grn->staging_apply)) {
+                $data['staging_apply'] = $grn->staging_apply;
+            }
+            if (isset($grn->current_stg_id) || property_exists($grn, 'current_stg_id')) {
+                $data['current_stg_id'] = $grn->current_stg_id;
+            }
             $data['chart_account_id'] = $supplier_chart_account_id;
             $data['voucher_debit'] = 0;
             $data['voucher_credit'] = abs($net_total);
@@ -999,6 +1042,7 @@ class GRNController extends Controller
             $grnVou = TblPurcGrn::where('grn_id',$grn_id)->first();
             $grnVou->voucher_id = $voucher_id;
             $grnVou->save();
+            $grn->voucher_id = $voucher_id;
 
             // end insert update grn voucher
 
@@ -1010,6 +1054,9 @@ class GRNController extends Controller
                 ],
                 'posted_when_exempt' => 0,
                 'stg_log_posted_when_exempt' => 0,
+                'sync_after_save' => function ($model) {
+                    $this->syncGrnAccountingVoucherPosted($model);
+                },
             ]);
 
         }catch (QueryException $e) {

@@ -1173,6 +1173,20 @@ FROM (
 
                             $level_4_closing_debit = 0;
                             $level_4_closing_credit = 0;
+
+                            if(!empty($data['level_list'])){
+                                $total_chart_level = (int)$data['level_list'];
+                            }else{
+                                $total_chart_level = 0;
+                                foreach($list as $row){
+                                    if((int)$row->chart_level > $total_chart_level){
+                                        $total_chart_level = (int)$row->chart_level;
+                                    }
+                                }
+                                if($total_chart_level == 0){
+                                    $total_chart_level = 4;
+                                }
+                            }
                         @endphp
                         @foreach($list as $accounts)
                             @if($accounts->chart_level == 1)
@@ -1396,38 +1410,24 @@ FROM (
                                         <td class="right_number"></td>
                                     @endif
 
-                                    @php
-                                        $level_4_opening_debit += $accounts->open_bal_dr;
-                                        $level_4_opening_credit += $accounts->open_bal_cr;
-
-                                        $level_4_balance_debit += $accounts->dr_balance;
-                                        $level_4_balance_credit += $accounts->cr_balance;
-
-                                        $level_4_period_debit += $accounts->period_bal_dr;
-                                        $level_4_period_credit += $accounts->period_bal_cr;
-
-                                        $level_4_closing_debit += $accounts->closing_bal_dr;
-                                        $level_4_closing_credit += $accounts->closing_bal_cr;
-                                    @endphp
                                 </tr>
                             @endif
-                            
-                            @if(!empty($data['level_list']) && isset($data['level_list']))
-                                @if($data['level_list'] < 4)
-                                    @php
-                                        $level_4_opening_debit += $accounts->open_bal_dr;
-                                        $level_4_opening_credit += $accounts->open_bal_cr;
 
-                                        $level_4_balance_debit += $accounts->dr_balance;
-                                        $level_4_balance_credit += $accounts->cr_balance;
+                            @if((int)$accounts->chart_level == $total_chart_level)
+                                @php
+                                    $closing_net_total = (float)($accounts->closing_bal_dr ?? 0) - (float)($accounts->closing_bal_cr ?? 0);
+                                    $level_4_opening_debit += (float)$accounts->open_bal_dr;
+                                    $level_4_opening_credit += (float)$accounts->open_bal_cr;
 
-                                        $level_4_period_debit += $accounts->period_bal_dr;
-                                        $level_4_period_credit += $accounts->period_bal_cr;
+                                    $level_4_balance_debit += (float)$accounts->dr_balance;
+                                    $level_4_balance_credit += (float)$accounts->cr_balance;
 
-                                        $level_4_closing_debit += $accounts->closing_bal_dr;
-                                        $level_4_closing_credit += $accounts->closing_bal_cr;
-                                    @endphp
-                                @endif
+                                    $level_4_period_debit += (float)$accounts->period_bal_dr;
+                                    $level_4_period_credit += (float)$accounts->period_bal_cr;
+
+                                    $level_4_closing_debit += $closing_net_total > 0 ? $closing_net_total : 0;
+                                    $level_4_closing_credit += $closing_net_total < 0 ? ($closing_net_total * -1) : 0;
+                                @endphp
                             @endif
 
                         @endforeach
@@ -1473,7 +1473,10 @@ FROM (
                 account_id: account_id,
                 name_val: name_val,
                 code_val: code_val,
-                btn_id: 'generate_account_report'
+                btn_id: 'generate_account_report',
+                branch_ids: @json($data['branch_ids'] ?? []),
+                date_from: "{{ isset($data['from_date']) ? date('d-m-Y', strtotime($data['from_date'])) : '' }}",
+                date_to: "{{ isset($data['to_date']) ? date('d-m-Y', strtotime($data['to_date'])) : '' }}"
             };
 
             $.ajaxSetup({

@@ -18,6 +18,11 @@
             <div class="col-lg-3">
                 <input type="hidden" name="product_id" value="{{isset($data['product_id'])?$data['product_id']:''}}">
                 <input type="hidden" name="account_id" value="{{isset($data['account_id'])?$data['account_id']:''}}">
+                @if(isset($data['branch_ids']) && is_array($data['branch_ids']))
+                    @foreach($data['branch_ids'] as $branch_id)
+                        <input type="hidden" name="report_branch_ids[]" value="{{$branch_id}}">
+                    @endforeach
+                @endif
                 <span class="erp-col-form-label">Name :</span>
             </div>
             <div class="col-lg-6">
@@ -32,8 +37,8 @@
                 <div class="col-lg-6">
                     <div class="erp-select2">
                         <select class="form-control erp-form-control-sm kt_select2_options" name="ledger_report_case">
-                            <option value="general_ledger" selected>General Ledger</option>
-                            <option value="accounting_ledger">Accounting Ledger</option>
+                            <option value="general_ledger">General Ledger</option>
+                            <option value="accounting_ledger" selected>Accounting Ledger</option>
                         </select>
                     </div>
                 </div>
@@ -86,14 +91,23 @@
                 <div class="erp-selectDateRange">
                     <div class="input-daterange input-group um_datepicker_5">
                         @php
-                            $date = \Carbon\Carbon::today()->subDays(30);
-                            $newDate = date("d-m-Y", strtotime($date));
+                            if(isset($data['date_from']) && $data['date_from'] != ""){
+                                $newDate = date("d-m-Y", strtotime($data['date_from']));
+                            }else{
+                                $date = \Carbon\Carbon::today()->subDays(30);
+                                $newDate = date("d-m-Y", strtotime($date));
+                            }
+                            if(isset($data['date_to']) && $data['date_to'] != ""){
+                                $toDate = date("d-m-Y", strtotime($data['date_to']));
+                            }else{
+                                $toDate = date('d-m-Y');
+                            }
                         @endphp
                         <input type="text" class="form-control erp-form-control-sm" value="{{ $newDate }}" name="date_from" autocomplete="off">
                         <div class="input-group-append">
                             <span class="input-group-text erp-form-control-sm">To</span>
                         </div>
-                        <input type="text" class="form-control erp-form-control-sm" value="{{date('d-m-Y')}}" name="date_to" autocomplete="off">
+                        <input type="text" class="form-control erp-form-control-sm" value="{{ $toDate }}" name="date_to" autocomplete="off">
                     </div>
                 </div>
             </div>

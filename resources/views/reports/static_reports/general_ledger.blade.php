@@ -193,15 +193,7 @@
                                 }
                             //-----------end type--------------
 
-                            $where = " ( ";
-                            $arr_count = count($data['chart_account']) - 1;
-                            foreach ($data['chart_account'] as $k=>$chartAccoId){
-                                $where .= " VOUCH.chart_account_id = $chartAccoId->chart_account_id ";
-                                if($arr_count != $k){
-                                    $where .= " OR ";
-                                }
-                            }
-                            $where .= " ) ";
+                            $where = " VOUCH.chart_account_id in (".implode(",", $data['chart_account_ids']).") ";
 
                             $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
                             $where .= $where_voucher_type;
