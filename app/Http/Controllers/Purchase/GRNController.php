@@ -493,6 +493,12 @@ class GRNController extends Controller
             throw new Exception('Payment voucher Account Code not correct');
         }
 
+        $paymentAcc = TblAccCoa::where('chart_account_id', $paymentAccountId)->where(Utilities::currentBC())->first(['chart_account_id', 'chart_code', 'chart_name']);
+        $supplierAcc = TblAccCoa::where('chart_account_id', $supplier_chart_account_id)->where(Utilities::currentBC())->first(['chart_account_id', 'chart_code', 'chart_name']);
+        if (!$paymentAcc || !$supplierAcc) {
+            throw new Exception('Payment voucher Account Code not correct');
+        }
+
         $payVoucherId = !empty($existing->voucher_id) ? $existing->voucher_id : Utilities::uuid();
         if (!empty($existing->voucher_no)) {
             $voucher_no = $existing->voucher_no;
@@ -505,20 +511,29 @@ class GRNController extends Controller
         }
         $table_name = 'tbl_acco_voucher';
         $where_clause = '';
+        $amount = abs($net_total);
+        $descrip = 'Payment against GRN: ' . $grn->grn_code . ' - Ref:' . $grn->grn_bill_no;
+        $paymentMode = $paymentTypeId === 1 ? 'Cash' : 'Visa';
 
         $data = [
             'voucher_id'            => $payVoucherId,
             'voucher_document_id'   => $grn->grn_id,
             'voucher_no'            => $voucher_no,
             'voucher_date'          => date('Y-m-d', strtotime($grn->grn_date)),
-            'voucher_descrip'       => 'Payment against GRN: ' . $grn->grn_code . ' - Ref:' . $grn->grn_bill_no,
+            'voucher_descrip'       => $descrip,
             'voucher_type'          => $voucherType,
             'branch_id'             => $new_branch_id,
             'business_id'           => auth()->user()->business_id,
             'company_id'            => auth()->user()->company_id,
             'voucher_user_id'       => auth()->user()->id,
             'document_ref_account'  => (int) $supplier_chart_account_id,
+            'currency_id'           => $grn->currency_id,
+            'voucher_exchange_rate' => $grn->grn_exchange_rate,
+            'voucher_payment_mode'  => $paymentMode,
+            'voucher_tax_status'    => '0',
             'vat_amount'            => 0,
+            'vat_perc'              => 0,
+            'vat_amt'               => 0,
             'posted'                => (int) ($grn->posted ?? 0),
         ];
         if (isset($grn->staging_apply)) {
@@ -528,15 +543,27 @@ class GRNController extends Controller
             $data['current_stg_id'] = $grn->current_stg_id;
         }
 
-        $data['chart_account_id'] = (int) $supplier_chart_account_id;
-        $data['voucher_debit'] = abs($net_total);
-        $data['voucher_credit'] = 0;
+        $data['chart_account_id'] = (int) $paymentAcc->chart_account_id;
+        $data['chart_code'] = $paymentAcc->chart_code;
+        $data['voucher_acc_name'] = $paymentAcc->chart_name;
+        $data['voucher_debit'] = 0;
+        $data['voucher_credit'] = $amount;
+        $data['voucher_fc_debit'] = 0;
+        $data['voucher_fc_credit'] = $amount;
+        $data['net_amt'] = 0;
         $data['voucher_sr_no'] = 1;
         $this->proAccoVoucherInsert($payVoucherId, 'add', $table_name, $data, $where_clause);
 
-        $data['chart_account_id'] = $paymentAccountId;
-        $data['voucher_debit'] = 0;
-        $data['voucher_credit'] = abs($net_total);
+        $data['chart_account_id'] = (int) $supplierAcc->chart_account_id;
+        $data['chart_code'] = $supplierAcc->chart_code;
+        $data['voucher_acc_name'] = $supplierAcc->chart_name;
+        $data['voucher_invoice_id'] = $grn->grn_id;
+        $data['voucher_invoice_code'] = $grn->grn_code;
+        $data['voucher_debit'] = $amount;
+        $data['voucher_credit'] = 0;
+        $data['voucher_fc_debit'] = $amount;
+        $data['voucher_fc_credit'] = 0;
+        $data['net_amt'] = $amount;
         $data['voucher_sr_no'] = 2;
         $this->proAccoVoucherInsert($payVoucherId, 'add', $table_name, $data, $where_clause);
     }
