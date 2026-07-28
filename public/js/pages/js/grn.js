@@ -31,6 +31,21 @@ var KTFormWidgets = function () {
                     required: true,
                     valueNotEquals: "0",
                 },
+                payment_acc_id: {
+                    required: {
+                        depends: function () {
+                            var paymentType = parseInt($('#payment_type_id').val(), 10);
+                            return paymentType === 1 || paymentType === 3;
+                        }
+                    },
+                    valueNotEquals: {
+                        param: "0",
+                        depends: function () {
+                            var paymentType = parseInt($('#payment_type_id').val(), 10);
+                            return paymentType === 1 || paymentType === 3;
+                        }
+                    }
+                },
                 grn_bill_no: {
                     required: true
                 },

@@ -362,10 +362,43 @@ class GRNController extends Controller
         $data['currency'] = TblDefiCurrency::where(Utilities::currentBC())->get();
         $data['accounts'] = TblDefiExpenseAccounts::with('account')->where('expense_accounts_type','grn_acc')->where(Utilities::currentBCB())->get();
         $data['store'] = TblDefiStore::where('store_entry_status',1)->where(Utilities::currentBC())->get();
-        $data['payment_type'] = TblDefiPaymentType::where('payment_type_entry_status',1)
+        $data['payment_type'] = TblDefiPaymentType::where(function ($q) {
+                $q->where('payment_type_entry_status', 1)
+                  ->orWhereNull('payment_type_entry_status');
+            })
             ->where(Utilities::currentBC())->get();
         $data['payment_terms'] = TblAccoPaymentTerm::where('payment_term_entry_status',1)->where(Utilities::currentBC())->get();
         $data['payment_mode'] = TblAccoPaymentMode::where('payment_mode_entry_status',1)->where(Utilities::currentBC())->get();
+
+        $data['cash_acc'] = collect();
+        $data['bank_acc'] = collect();
+        $dataSession = Session::get('dataSession');
+        $cash_group = '6-02-01';
+        $bank_group = '6-02-02';
+        if (!empty($dataSession->cash_group)) {
+            $chart_cash_group = TblAccCoa::where('chart_Account_id', $dataSession->cash_group)->where(Utilities::currentBC())->first('chart_code');
+            if ($chart_cash_group) {
+                $cash_group = substr($chart_cash_group->chart_code, 0, 7);
+            }
+        }
+        if (!empty($dataSession->bank_group)) {
+            $chart_bank_group = TblAccCoa::where('chart_Account_id', $dataSession->bank_group)->where(Utilities::currentBC())->first('chart_code');
+            if ($chart_bank_group) {
+                $bank_group = substr($chart_bank_group->chart_code, 0, 7);
+            }
+        }
+        $data['cash_acc'] = TblAccCoa::select('chart_account_id', 'chart_name', 'chart_code')
+            ->where('chart_level', 4)
+            ->where('chart_code', 'like', $cash_group . '%')
+            ->where(Utilities::currentBC())
+            ->orderBy('chart_code')
+            ->get();
+        $data['bank_acc'] = TblAccCoa::select('chart_account_id', 'chart_name', 'chart_code')
+            ->where('chart_level', 4)
+            ->where('chart_code', 'like', $bank_group . '%')
+            ->where(Utilities::currentBC())
+            ->orderBy('chart_code')
+            ->get();
         $data['tax_on'] = TblDefiConstants::where('constants_type','tax_on')->where('constants_status','1')->get();
         $data['disc_on'] = TblDefiConstants::where('constants_type','disc_on')->where('constants_status','1')->get();
         $arr = [
@@ -414,6 +447,95 @@ class GRNController extends Controller
             $query->where('voucher_document_id', $grnId);
         }
         $query->update($updateData);
+
+        if (!empty($grnId)) {
+            TblAccoVoucher::where('voucher_document_id', $grnId)
+                ->whereIn('voucher_type', ['cpv', 'bpv'])
+                ->update($updateData);
+        }
+    }
+
+    protected function deleteGrnPaymentVouchers($grnId): void
+    {
+        if (empty($grnId)) {
+            return;
+        }
+        TblAccoVoucher::where('voucher_document_id', $grnId)
+            ->whereIn('voucher_type', ['cpv', 'bpv'])
+            ->delete();
+    }
+
+    protected function syncGrnPaymentVoucher($grn, $supplier_chart_account_id, $net_total, $new_branch_id): void
+    {
+        $paymentTypeId = (int) ($grn->payment_type_id ?? 0);
+        $paymentAccountId = (int) ($grn->payment_account_id ?? 0);
+        $voucherType = $paymentTypeId === 1 ? 'cpv' : ($paymentTypeId === 3 ? 'bpv' : null);
+
+        $existing = null;
+        if ($voucherType) {
+            $existing = TblAccoVoucher::where('voucher_document_id', $grn->grn_id)
+                ->where('voucher_type', $voucherType)
+                ->where('branch_id', $new_branch_id)
+                ->first(['voucher_id', 'voucher_no']);
+        }
+
+        $this->deleteGrnPaymentVouchers($grn->grn_id);
+
+        if (!$voucherType || $paymentAccountId <= 0 || abs($net_total) <= 0) {
+            return;
+        }
+
+        $ChartArr = [$supplier_chart_account_id, $paymentAccountId];
+        if ($this->ValidateCharAccCodeIds($ChartArr) !== false) {
+            throw new Exception('Payment voucher Account Code not correct');
+        }
+
+        $payVoucherId = !empty($existing->voucher_id) ? $existing->voucher_id : Utilities::uuid();
+        if (!empty($existing->voucher_no)) {
+            $voucher_no = $existing->voucher_no;
+        } else {
+            $max_voucher = TblAccoVoucher::where('voucher_type', $voucherType)
+                ->where(Utilities::currentBC())
+                ->where('branch_id', $new_branch_id)
+                ->max('voucher_no');
+            $voucher_no = $this->documentCode($max_voucher, $voucherType);
+        }
+        $table_name = 'tbl_acco_voucher';
+        $where_clause = '';
+
+        $data = [
+            'voucher_id'            => $payVoucherId,
+            'voucher_document_id'   => $grn->grn_id,
+            'voucher_no'            => $voucher_no,
+            'voucher_date'          => date('Y-m-d', strtotime($grn->grn_date)),
+            'voucher_descrip'       => 'Payment against GRN: ' . $grn->grn_code . ' - Ref:' . $grn->grn_bill_no,
+            'voucher_type'          => $voucherType,
+            'branch_id'             => $new_branch_id,
+            'business_id'           => auth()->user()->business_id,
+            'company_id'            => auth()->user()->company_id,
+            'voucher_user_id'       => auth()->user()->id,
+            'document_ref_account'  => (int) $supplier_chart_account_id,
+            'vat_amount'            => 0,
+            'posted'                => (int) ($grn->posted ?? 0),
+        ];
+        if (isset($grn->staging_apply)) {
+            $data['staging_apply'] = $grn->staging_apply;
+        }
+        if (isset($grn->current_stg_id) || property_exists($grn, 'current_stg_id')) {
+            $data['current_stg_id'] = $grn->current_stg_id;
+        }
+
+        $data['chart_account_id'] = (int) $supplier_chart_account_id;
+        $data['voucher_debit'] = abs($net_total);
+        $data['voucher_credit'] = 0;
+        $data['voucher_sr_no'] = 1;
+        $this->proAccoVoucherInsert($payVoucherId, 'add', $table_name, $data, $where_clause);
+
+        $data['chart_account_id'] = $paymentAccountId;
+        $data['voucher_debit'] = 0;
+        $data['voucher_credit'] = abs($net_total);
+        $data['voucher_sr_no'] = 2;
+        $this->proAccoVoucherInsert($payVoucherId, 'add', $table_name, $data, $where_clause);
     }
 
     public function post(Request $request)
@@ -594,7 +716,8 @@ class GRNController extends Controller
             'grn_store' => 'required|numeric',
             'grn_ageing_term_id' => 'nullable|numeric',
             'grn_ageing_term_value' => 'nullable|numeric',
-            // 'payment_type_id' => 'required|numeric',
+            'payment_type_id' => 'required|numeric',
+            'payment_acc_id' => 'nullable|numeric',
             'grn_notes' => 'nullable|max:255',
             'pd.*.product_id' => 'nullable|numeric',
             'pd.*.product_barcode_id' => 'nullable|numeric',
@@ -604,6 +727,9 @@ class GRNController extends Controller
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
+        }
+        if (in_array((int)$request->payment_type_id, [1, 3]) && empty($request->payment_acc_id)) {
+            return $this->jsonErrorResponse($data, 'Please select Cash / Visa Account', 200);
         }
         if(isset($request->pdsm)){
             foreach($request->pdsm as $expense){
@@ -698,7 +824,8 @@ class GRNController extends Controller
             }
 
             $grn->grn_exchange_rate = $request->exchange_rate;
-            // $grn->payment_type_id = $request->payment_type_id;
+            $grn->payment_type_id = $request->payment_type_id;
+            $grn->payment_account_id = in_array((int)$request->payment_type_id, [1, 3]) ? $request->payment_acc_id : null;
             $grn->grn_date = date('Y-m-d', strtotime($request->grn_date));
             $grn->supplier_id = $request->supplier_id;
             $grn->purchase_order_id = $request->purchase_order_id;
@@ -1044,6 +1171,8 @@ class GRNController extends Controller
             $grnVou->save();
             $grn->voucher_id = $voucher_id;
 
+            $this->syncGrnPaymentVoucher($grnVou, $supplier_chart_account_id, $net_total, $new_branch_id);
+
             // end insert update grn voucher
 
             $this->finalizeDocumentStaging($request, self::$menu_dtl_id, $form_id, $grn, !isset($id), [
@@ -1196,6 +1325,7 @@ class GRNController extends Controller
             if(!empty($voucher_id)){
                 $this->proAccoVoucherDelete($voucher_id);
             }
+            $this->deleteGrnPaymentVouchers($id);
             if(!empty($po_id)){
                 TblPurcPurchaseOrder::where('purchase_order_id',$po_id)->update(['po_grn_status'=>'pending']);
             }

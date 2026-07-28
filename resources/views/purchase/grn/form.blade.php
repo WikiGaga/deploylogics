@@ -212,7 +212,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 col-form-label">{{ __('message.bill_no') }}:</label>
+                                    <label class="col-lg-6 col-form-label">{{ __('message.bill_no') }}:<span class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <input type="text" id="grn_bill_no" name="grn_bill_no"
                                             value="{{ isset($data['current']->grn_bill_no) ? $data['current']->grn_bill_no : '' }}"
@@ -222,7 +222,70 @@
                             </div>
                         </div>
                         <div class="row form-group-block">
+
+
                             <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 col-form-label">Payment Mode:
+                                        <span class="required">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <div class="erp-select2">
+                                            <select class="form-control kt-select2 erp-form-control-sm moveIndex"
+                                                id="payment_type_id" name="payment_type_id">
+                                                @foreach ($data['payment_type'] as $payment_type)
+                                                    @if (isset($data['id']))
+                                                        @php $payment_type_id = isset($data['current']->payment_type_id)?$data['current']->payment_type_id:''; @endphp
+                                                    @else
+                                                        @php $payment_type_id = '2'; @endphp
+                                                    @endif
+                                                    <option value="{{ $payment_type->payment_type_id }}"
+                                                        data-name="{{ strtolower($payment_type->payment_type_name) }}"
+                                                        {{ $payment_type_id == $payment_type->payment_type_id ? 'selected' : '' }}>
+                                                        {{ $payment_type->payment_type_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @php
+                                $selected_payment_type = isset($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
+                                $show_payment_acc = in_array($selected_payment_type, [1, 3]);
+                                $selected_payment_acc = isset($data['current']->payment_account_id) ? $data['current']->payment_account_id : '';
+                            @endphp
+                            <div class="col-lg-4" id="payment_acc_wrap" style="{{ $show_payment_acc ? '' : 'display: none;' }}">
+                                <div class="row">
+                                    <label class="col-lg-6 col-form-label">Payment Account:
+                                        <span class="required">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <div class="erp-select2">
+                                            <select class="form-control kt-select2 erp-form-control-sm moveIndex"
+                                                id="payment_acc_id" name="payment_acc_id">
+                                                <option value="0">{{ __('message.select') }}</option>
+                                                @foreach ($data['cash_acc'] as $cash_acc)
+                                                    <option value="{{ $cash_acc->chart_account_id }}"
+                                                        data-acc-type="cash"
+                                                        {{ $selected_payment_acc == $cash_acc->chart_account_id ? 'selected' : '' }}>
+                                                        {{ $cash_acc->chart_code . ' - ' . $cash_acc->chart_name }}
+                                                    </option>
+                                                @endforeach
+                                                @foreach ($data['bank_acc'] as $bank_acc)
+                                                    <option value="{{ $bank_acc->chart_account_id }}"
+                                                        data-acc-type="bank"
+                                                        {{ $selected_payment_acc == $bank_acc->chart_account_id ? 'selected' : '' }}>
+                                                        {{ $bank_acc->chart_code . ' - ' . $bank_acc->chart_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-lg-4" style="display: none;">
                                 <div class="row">
                                     <label class="col-lg-6 col-form-label">{{ __('message.payment_terms') }}:</label>
                                     <div class="col-lg-6">
@@ -270,30 +333,7 @@
                                 </div>
                             </div>
                             @include('layouts.branchSelect')
-                            {{-- <div class="col-lg-4">
-                                <div class="row">
-                                    <label class="col-lg-6 col-form-label">Payment Type:
-                                        <span class="required">*</span>
-                                    </label>
-                                    <div class="col-lg-6">
-                                        <div class="erp-select2">
-                                            <select class="form-control kt-select2 erp-form-control-sm moveIndex"
-                                                id="payment_type_id" name="payment_type_id">
-                                                @foreach ($data['payment_type'] as $payment_type)
-                                                    @if (isset($data['id']))
-                                                        @php $payment_type_id = isset($data['current']->payment_type_id)?$data['current']->payment_type_id:''; @endphp
-                                                    @else
-                                                        @php $payment_type_id = '2'; @endphp
-                                                    @endif
-                                                    <option value="{{ $payment_type->payment_type_id }}"
-                                                        {{ $payment_type_id == $payment_type->payment_type_id ? 'selected' : '' }}>
-                                                        {{ $payment_type->payment_type_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> --}}
+
                         </div>
                         <div class="row form-group-block">
                             <div class="col-lg-4">
@@ -1148,7 +1188,7 @@
             // Function to filter stores based on selected branch
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
-                
+
                 // Reset the select element
                 $storeSelect.html('');
 
@@ -1160,7 +1200,7 @@
                 var $matchingOptions = $allStoreOptions.filter(function() {
                     return $(this).attr('data-branch') == selectedBranchId;
                 });
-                
+
                 $storeSelect.append($matchingOptions);
 
                 // CRITICAL: Trigger Select2 change to refresh its UI display
@@ -1173,6 +1213,38 @@
             // 3. Run whenever the branch dropdown changes
             $('#new_branch_id').on('change', function() {
                 filterStores();
+            });
+
+            var $paymentAcc = $('#payment_acc_id');
+            var $allPaymentAccOptions = $paymentAcc.find('option').clone();
+
+            function togglePaymentAccount() {
+                var paymentType = parseInt($('#payment_type_id').val(), 10);
+                var showAcc = (paymentType === 1 || paymentType === 3);
+                var accType = paymentType === 1 ? 'cash' : (paymentType === 3 ? 'bank' : '');
+                var currentVal = $paymentAcc.val();
+
+                if (showAcc) {
+                    $paymentAcc.html('');
+                    $paymentAcc.append($allPaymentAccOptions.filter(function() {
+                        return !$(this).attr('data-acc-type') || $(this).attr('data-acc-type') === accType;
+                    }).clone());
+                    if ($paymentAcc.find('option[value="' + currentVal + '"]').length) {
+                        $paymentAcc.val(currentVal);
+                    } else {
+                        $paymentAcc.val('0');
+                    }
+                    $('#payment_acc_wrap').show();
+                } else {
+                    $paymentAcc.val('0');
+                    $('#payment_acc_wrap').hide();
+                }
+                $paymentAcc.trigger('change.select2');
+            }
+
+            togglePaymentAccount();
+            $('#payment_type_id').on('change', function() {
+                togglePaymentAccount();
             });
         });
 

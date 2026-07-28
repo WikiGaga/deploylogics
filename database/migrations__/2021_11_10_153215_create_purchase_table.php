@@ -1518,6 +1518,9 @@ Schema::table($tbl_purc_grn, function (Blueprint $table) use ($tbl_purc_grn) {
     if (!Schema::hasColumn($tbl_purc_grn,'payment_type_id')) {
         $table->bigInteger('payment_type_id')->nullable();
     }
+    if (!Schema::hasColumn($tbl_purc_grn,'payment_account_id')) {
+        $table->bigInteger('payment_account_id')->nullable();
+    }
     if (!Schema::hasColumn($tbl_purc_grn,'grn_total_qty')) {
         $table->bigInteger('grn_total_qty')->nullable();
     } 
