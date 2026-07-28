@@ -235,7 +235,7 @@
                                                 id="payment_type_id" name="payment_type_id">
                                                 @foreach ($data['payment_type'] as $payment_type)
                                                     @if (isset($data['id']))
-                                                        @php $payment_type_id = isset($data['current']->payment_type_id)?$data['current']->payment_type_id:''; @endphp
+                                                        @php $payment_type_id = !empty($data['current']->payment_type_id)?$data['current']->payment_type_id:'2'; @endphp
                                                     @else
                                                         @php $payment_type_id = '2'; @endphp
                                                     @endif
@@ -250,7 +250,7 @@
                                 </div>
                             </div>
                             @php
-                                $selected_payment_type = isset($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
+                                $selected_payment_type = !empty($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
                                 $show_payment_acc = in_array($selected_payment_type, [1, 3]);
                                 $selected_payment_acc = isset($data['current']->payment_account_id) ? $data['current']->payment_account_id : '';
                             @endphp

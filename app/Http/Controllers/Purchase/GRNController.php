@@ -468,6 +468,9 @@ class GRNController extends Controller
     protected function syncGrnPaymentVoucher($grn, $supplier_chart_account_id, $net_total, $new_branch_id): void
     {
         $paymentTypeId = (int) ($grn->payment_type_id ?? 0);
+        if ($paymentTypeId <= 0) {
+            $paymentTypeId = 2;
+        }
         $paymentAccountId = (int) ($grn->payment_account_id ?? 0);
         $voucherType = $paymentTypeId === 1 ? 'cpv' : ($paymentTypeId === 3 ? 'bpv' : null);
 
@@ -824,8 +827,8 @@ class GRNController extends Controller
             }
 
             $grn->grn_exchange_rate = $request->exchange_rate;
-            $grn->payment_type_id = $request->payment_type_id;
-            $grn->payment_account_id = in_array((int)$request->payment_type_id, [1, 3]) ? $request->payment_acc_id : null;
+            $grn->payment_type_id = !empty($request->payment_type_id) ? $request->payment_type_id : 2;
+            $grn->payment_account_id = in_array((int)$grn->payment_type_id, [1, 3]) ? $request->payment_acc_id : null;
             $grn->grn_date = date('Y-m-d', strtotime($request->grn_date));
             $grn->supplier_id = $request->supplier_id;
             $grn->purchase_order_id = $request->purchase_order_id;
