@@ -70,6 +70,26 @@ var KTDatatableRemoteAjaxDemo = function () {
         return 0;
     }
 
+    function alreadyDisplayFormatted(value) {
+        var raw = String(value === null || value === undefined ? '' : value).trim();
+        return /^\d{2}-\d{2}-\d{4}(?: \d{2}:\d{2}:\d{2})?$/.test(raw) ? raw : null;
+    }
+
+    function formatTemporalValue(value) {
+        var parts = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?(?:\s*(?:Z|[+-]\d{2}:?\d{2}))?$/.exec(value);
+        if (parts === null) {
+            return null;
+        }
+
+        var datePart = parts[3] + '-' + parts[2] + '-' + parts[1];
+        var hasTime = typeof parts[4] !== 'undefined';
+        if (!hasTime || (parts[4] === '00' && parts[5] === '00' && parts[6] === '00')) {
+            return datePart;
+        }
+
+        return datePart + ' ' + parts[4] + ':' + parts[5] + ':' + parts[6];
+    }
+
     function normalizeRow(row) {
 
         Object.keys(row).forEach(function (key) {
@@ -77,6 +97,12 @@ var KTDatatableRemoteAjaxDemo = function () {
             var value = row[key];
 
             if (typeof value === 'string') {
+
+                var temporal = formatTemporalValue(value.trim());
+                if (temporal !== null) {
+                    row[key] = temporal;
+                    return;
+                }
 
                 // .12 -> 0.12
                 if (/^\.\d+$/.test(value)) {
@@ -503,6 +529,10 @@ var KTDatatableRemoteAjaxDemo = function () {
 
 
     var funcDateFormat = function (date) {
+        var preformatted = alreadyDisplayFormatted(date);
+        if (preformatted !== null) {
+            return preformatted;
+        }
         var dd = new Date(date).toLocaleString();
         var d = new Date(dd);
         var returnDate = "";
@@ -518,7 +548,10 @@ var KTDatatableRemoteAjaxDemo = function () {
     };
 
     var funcDateTimeFormat = function (date) {
-        // console.log(date);
+        var preformatted = alreadyDisplayFormatted(date);
+        if (preformatted !== null) {
+            return preformatted;
+        }
         var dd = new Date(date).toLocaleString();
         var d = new Date(dd);
         var returnDate = "";
