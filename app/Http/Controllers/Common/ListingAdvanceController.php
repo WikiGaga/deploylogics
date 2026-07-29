@@ -81,7 +81,7 @@ class ListingAdvanceController extends Controller
             $tbl_1_alias = 'tbl_1.';
             $columns = "$tbl_1_alias".$data['table_id'];
             foreach ($data['table_columns'] as $lk => $table_columns){
-                $columns .= ','.$this->listingSelectExpression($tbl_1_alias, $lk, $table_columns['type'] ?? 'string');
+                $columns .= ','.$tbl_1_alias.$lk;
             }
 
             $where = 'where ';
@@ -222,8 +222,20 @@ class ListingAdvanceController extends Controller
      */
 
     public function getDateType($table_name,$type){
-        $columnTypeMap = $this->getColumnTypeMap($table_name);
-        return $this->resolveColumnType($columnTypeMap, (string) $type);
+
+        $data_type = ViewAllColumnData::where(DB::raw('lower(table_name)'),$this->strLower($table_name))
+            ->where(DB::raw('lower(column_name)'),$this->strLower($type))->where(DB::raw('lower(data_type)'),'date')->exists();
+
+        if($data_type){
+            $datetime_list = ['created_at','updated_at'];
+            if(in_array($type,$datetime_list)){
+                return 'datetime';
+            }else{
+                return 'datetime';
+            }
+        }
+
+        return 'string';
     }
 
     public function getTableColumns($table_name,$listing){
@@ -252,7 +264,7 @@ class ListingAdvanceController extends Controller
 
     private function getColumnTypeMap($table_name): array
     {
-        $map = ViewAllColumnData::query()
+        return ViewAllColumnData::query()
             ->select(['column_name', 'data_type'])
             ->where(DB::raw('lower(table_name)'), $this->strLower($table_name))
             ->get()
@@ -260,23 +272,6 @@ class ListingAdvanceController extends Controller
                 return [strtolower((string) $row->column_name) => strtolower((string) $row->data_type)];
             })
             ->all();
-
-        if (!empty($map)) {
-            return $map;
-        }
-
-        try {
-            $rows = DB::select(
-                'select column_name, data_type from user_tab_columns where upper(table_name) = upper(?)',
-                [$table_name]
-            );
-            foreach ($rows as $row) {
-                $map[strtolower((string) $row->column_name)] = strtolower((string) $row->data_type);
-            }
-        } catch (\Throwable $e) {
-        }
-
-        return $map;
     }
 
     private function resolveColumnType(array $columnTypeMap, string $columnName): string
@@ -287,33 +282,11 @@ class ListingAdvanceController extends Controller
         }
 
         $dataType = $columnTypeMap[$name] ?? null;
-        if ($dataType === 'date') {
-            return 'date';
-        }
-        if ($dataType === 'datetime' || (is_string($dataType) && strpos($dataType, 'timestamp') === 0)) {
+        if ($dataType === 'date' || $dataType === 'datetime' || $dataType === 'timestamp') {
             return 'datetime';
         }
 
-        if ($dataType === null && (substr($name, -5) === '_date' || $name === 'date')) {
-            return 'date';
-        }
-
         return 'string';
-    }
-
-    private function listingSelectExpression(string $tblAlias, string $columnName, string $type): string
-    {
-        $name = strtolower($columnName);
-        $isTemporal = in_array($type, ['date', 'datetime'], true)
-            || in_array($name, ['created_at', 'updated_at'], true)
-            || substr($name, -5) === '_date'
-            || $name === 'date';
-
-        if ($isTemporal) {
-            return "TO_CHAR(".$tblAlias.$columnName.", 'YYYY-MM-DD HH24:MI:SS') as ".$columnName;
-        }
-
-        return $tblAlias.$columnName;
     }
 
     public function getGlobalFilters($request,$data,$tbl_1_alias)

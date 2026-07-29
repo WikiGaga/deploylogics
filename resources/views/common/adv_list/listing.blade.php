@@ -410,7 +410,7 @@
 
 @section('customJS')
     <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
-    <script src="{{ asset('js/pages/listing/data-listing.js') }}?v={{ filemtime(public_path('js/pages/listing/data-listing.js')) }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/listing/data-listing.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/data-delete.js') }}" type="text/javascript"></script>
     <div class="modal fade" id="kt_modal_1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
