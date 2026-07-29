@@ -795,7 +795,7 @@ FROM (
             GROUP BY D.chart_code, D.business_id, D.company_id
       ) M,
       tbl_acco_chart_account ca
-      WHERE M.chart_code = ca.chart_code(+) AND ca.posted = 1
+      WHERE M.chart_code = ca.chart_code(+)
     ) G
     UNION 
     ALL
@@ -1161,7 +1161,7 @@ FROM (
               ) M
             )G
             GROUP BY G.SSGRP_CODE) vouch, tbl_acco_chart_account ca
-            WHERE vouch.chart_code = ca.chart_code(+) AND ca.posted = 1
+            WHERE vouch.chart_code = ca.chart_code(+)
             $level_list
             ORDER BY $OrderBy";
 

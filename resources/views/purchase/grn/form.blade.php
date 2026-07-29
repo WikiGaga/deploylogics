@@ -237,7 +237,7 @@
                                                     @if (isset($data['id']))
                                                         @php $payment_type_id = !empty($data['current']->payment_type_id)?$data['current']->payment_type_id:'2'; @endphp
                                                     @else
-                                                        @php $payment_type_id = '2'; @endphp
+                                                        @php $payment_type_id = '1'; @endphp
                                                     @endif
                                                     <option value="{{ $payment_type->payment_type_id }}"
                                                         data-name="{{ strtolower($payment_type->payment_type_name) }}"
@@ -250,9 +250,20 @@
                                 </div>
                             </div>
                             @php
-                                $selected_payment_type = !empty($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
+                                if (isset($data['id'])) {
+                                    $selected_payment_type = !empty($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
+                                    $selected_payment_acc = !empty($data['current']->payment_account_id) ? $data['current']->payment_account_id : '';
+                                } else {
+                                    $selected_payment_type = 1;
+                                    $selected_payment_acc = '';
+                                    foreach ($data['cash_acc'] as $cash_acc) {
+                                        if ($cash_acc->chart_code === '6-02-01-0002') {
+                                            $selected_payment_acc = $cash_acc->chart_account_id;
+                                            break;
+                                        }
+                                    }
+                                }
                                 $show_payment_acc = in_array($selected_payment_type, [1, 3]);
-                                $selected_payment_acc = isset($data['current']->payment_account_id) ? $data['current']->payment_account_id : '';
                             @endphp
                             <div class="col-lg-4" id="payment_acc_wrap" style="{{ $show_payment_acc ? '' : 'display: none;' }}">
                                 <div class="row">

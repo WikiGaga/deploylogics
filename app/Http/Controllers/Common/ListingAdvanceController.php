@@ -81,7 +81,7 @@ class ListingAdvanceController extends Controller
             $tbl_1_alias = 'tbl_1.';
             $columns = "$tbl_1_alias".$data['table_id'];
             foreach ($data['table_columns'] as $lk => $table_columns){
-                $columns .= ','.$tbl_1_alias.$lk;
+                $columns .= ','.$this->listingSelectExpression($tbl_1_alias, $lk, $table_columns['type'] ?? 'string');
             }
 
             $where = 'where ';
@@ -299,6 +299,21 @@ class ListingAdvanceController extends Controller
         }
 
         return 'string';
+    }
+
+    private function listingSelectExpression(string $tblAlias, string $columnName, string $type): string
+    {
+        $name = strtolower($columnName);
+        $isTemporal = in_array($type, ['date', 'datetime'], true)
+            || in_array($name, ['created_at', 'updated_at'], true)
+            || substr($name, -5) === '_date'
+            || $name === 'date';
+
+        if ($isTemporal) {
+            return "TO_CHAR(".$tblAlias.$columnName.", 'YYYY-MM-DD HH24:MI:SS') as ".$columnName;
+        }
+
+        return $tblAlias.$columnName;
     }
 
     public function getGlobalFilters($request,$data,$tbl_1_alias)

@@ -119,7 +119,7 @@
 
                 )  trial,
                 tbl_acco_chart_account ca
-                where  trial.chart_account_code = ca.chart_code(+) And ca.posted = 1 order by trial.chart_account_code , trial.chart_level";
+                where  trial.chart_account_code = ca.chart_code(+) order by trial.chart_account_code , trial.chart_level";
 
                 $list = DB::select($qry);
                 

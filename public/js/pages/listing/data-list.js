@@ -293,35 +293,67 @@ var KTDatatableRemoteAjaxDemo = function() {
             return '';
         }
         var raw = String(date).trim();
-        var ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
+        var ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
         if (ymd) {
             var datePart = ymd[3] + '-' + ymd[2] + '-' + ymd[1];
+            var matched = ymd[0];
+            var rest = raw.substring(matched.length).trim().replace(/^(Z|[+-]\d{2}:?\d{2})$/i, '');
             var hasTime = typeof ymd[4] !== 'undefined';
-            var isMidnight = !hasTime || (ymd[4] === '00' && ymd[5] === '00' && ymd[6] === '00');
-            if (isMidnight) {
+            if (!hasTime && rest !== '') {
+                var fallback = new Date(raw);
+                if (!isNaN(fallback.getTime())) {
+                    return formatDateParts(fallback, true);
+                }
+                return raw;
+            }
+            if (!hasTime) {
                 return datePart;
             }
-            return datePart + ' ' + ymd[4] + ':' + ymd[5] + ':' + ymd[6];
+            var hh = ('0' + parseInt(ymd[4], 10)).slice(-2);
+            var mm = ymd[5];
+            var ss = ymd[6];
+            if (hh === '00' && mm === '00' && ss === '00') {
+                return datePart;
+            }
+            return datePart + ' ' + hh + ':' + mm + ':' + ss;
         }
-        var dmy = raw.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
+        var dmy = raw.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2}):(\d{2})(?:\.\d+)?)?/);
         if (dmy) {
             var dmyDate = dmy[1] + '-' + dmy[2] + '-' + dmy[3];
+            var dmyMatched = dmy[0];
+            var dmyRest = raw.substring(dmyMatched.length).trim().replace(/^(Z|[+-]\d{2}:?\d{2})$/i, '');
             var dmyHasTime = typeof dmy[4] !== 'undefined';
-            var dmyMidnight = !dmyHasTime || (dmy[4] === '00' && dmy[5] === '00' && dmy[6] === '00');
-            if (dmyMidnight) {
+            if (!dmyHasTime && dmyRest !== '') {
+                var dmyFallback = new Date(raw);
+                if (!isNaN(dmyFallback.getTime())) {
+                    return formatDateParts(dmyFallback, true);
+                }
+                return raw;
+            }
+            if (!dmyHasTime) {
                 return dmyDate;
             }
-            return dmyDate + ' ' + dmy[4] + ':' + dmy[5] + ':' + dmy[6];
+            var dmyHh = ('0' + parseInt(dmy[4], 10)).slice(-2);
+            var dmyMm = dmy[5];
+            var dmySs = dmy[6];
+            if (dmyHh === '00' && dmyMm === '00' && dmySs === '00') {
+                return dmyDate;
+            }
+            return dmyDate + ' ' + dmyHh + ':' + dmyMm + ':' + dmySs;
         }
         var d = new Date(raw);
         if (isNaN(d.getTime())) {
             return raw;
         }
+        return formatDateParts(d, true);
+    };
+
+    var formatDateParts = function (d, allowTime) {
         var day = (d.getDate() < 10) ? '0' + d.getDate() : d.getDate();
         var month = ((d.getMonth() + 1) < 10) ? '0' + (d.getMonth() + 1) : (d.getMonth() + 1);
         var year = d.getFullYear();
         var dateOnly = day + '-' + month + '-' + year;
-        if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
+        if (!allowTime || (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0)) {
             return dateOnly;
         }
         var hh = (d.getHours() < 10) ? '0' + d.getHours() : d.getHours();

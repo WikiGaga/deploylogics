@@ -146,7 +146,7 @@
                             ) D GROUP BY D.chart_code ,   D.business_id,D.company_id
                             ) M
                             ) G  GROUP BY  G.SSGRP_CODE
-                        ) vouch, tbl_acco_chart_account ca where  vouch.chart_code = ca.chart_code(+) and ca.posted = 1 ORDER BY vouch.CHART_CODE";
+                        ) vouch, tbl_acco_chart_account ca where  vouch.chart_code = ca.chart_code(+) ORDER BY vouch.CHART_CODE";
 
                     $acc_data = \Illuminate\Support\Facades\DB::select($query);
 

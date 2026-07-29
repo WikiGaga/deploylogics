@@ -178,7 +178,6 @@
                                     AND COA.COMPANY_ID = C.COMPANY_ID
                                     AND COA.BRANCH_ID = BR.BRANCH_ID
                                     AND COA.CHART_ACCOUNT_ENTRY_STATUS = 1
-                                    AND COA.POSTED = 1
                                     AND COA.CHART_LEVEL > 1 
                                     and COA.CHART_CODE like '".$chartPrefix."'
                                     order by COA.CHART_CODE";
