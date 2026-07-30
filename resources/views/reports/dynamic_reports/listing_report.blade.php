@@ -41,61 +41,6 @@
             // get total
             $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
             $total = DB::select($sqlCount)[0]->total;
-             $baseQuery ="SELECT
-                EMPLOYEE_NAME,
-                TO_CHAR(ATTENDANCE_DATE, 'YYYY-MM-DD') AS ATTENDANCE_DATE,
-                CHECK_IN,
-                CHECK_OUT,
-                TOTAL_HOURS,
-                CASE
-                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT != 'N/A' AND TOTAL_HOURS >= 8 THEN 'Full Day'
-                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT != 'N/A' AND TOTAL_HOURS < 8 THEN 'Half Day / Short'
-                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT = 'N/A' THEN 'Missing Check-Out'
-                    WHEN CHECK_IN = 'N/A' AND CHECK_OUT != 'N/A' THEN 'Missing Check-In'
-                    ELSE 'Absent / No Punch'
-                END AS ATTENDANCE_STATUS
-            FROM (
-                SELECT
-                    emp.EMPLOYEE_NAME,
-                    att.ATTENDANCE_DATE,
-
-                    CASE
-                        WHEN MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) IS NULL
-                        THEN 'N/A'
-                        ELSE TO_CHAR(MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END), 'YYYY-MM-DD HH24:MI:SS')
-                    END AS CHECK_IN,
-
-                    CASE
-                        WHEN MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) IS NULL
-                        THEN 'N/A'
-                        ELSE TO_CHAR(MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END), 'YYYY-MM-DD HH24:MI:SS')
-                    END AS CHECK_OUT,
-
-                    CASE
-                        WHEN MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) IS NOT NULL
-                        AND MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) IS NOT NULL
-                        THEN
-                            ROUND(
-                                (
-                                    CAST(MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) AS DATE) -
-                                    CAST(MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) AS DATE)
-                                ) * 24,
-                                2
-                            )
-                        ELSE 0
-                    END AS TOTAL_HOURS
-
-                FROM tbl_payr_employee emp
-                INNER JOIN TBL_HR_ATTENDENCE_DTL att
-                    ON emp.EMPLOYEE_ID = att.EMP_ID
-                    AND att.IS_DELETED = 0
-
-                GROUP BY
-                    emp.EMPLOYEE_NAME,
-                    att.ATTENDANCE_DATE
-            )
-            ORDER BY ATTENDANCE_DATE DESC, EMPLOYEE_NAME ASC";
-
 
             if ($isAll) {
 
