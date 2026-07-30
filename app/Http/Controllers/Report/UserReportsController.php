@@ -610,7 +610,7 @@ class UserReportsController extends Controller
         $data['date_to'] = new \DateTime("now");
         $data['branches'] = Utilities::getAllBranches();//TblSoftBranch::where(Utilities::currentBC())->where('branch_active_status',1)->get();
         $data['customers'] = TblSaleCustomer::get();
-        // dd('fsd');
+        // dd('fsd',compact('data'));
         if($reportType == 'static'){
             return view('reports.report_static_create', compact('data'));
         } elseif($reportType == 'dynamic'){
@@ -1217,7 +1217,8 @@ class UserReportsController extends Controller
 
             // change variable in query
             $report_tb_data = \App\Models\TblSoftReports::with('report_styling')->where('report_id',$data['report_id'])->first();
-            $qry = str_replace(array("\n","\r\n","\r"), ' ', $report_tb_data['report_query']);
+            $clean_query = preg_replace('/--.*$/m', '', $report_tb_data['report_query']);
+            $qry = str_replace(array("\n","\r\n","\r"), ' ', $clean_query);
             // $qry = strtolower(strtoupper($qry));
             $qry = str_replace('$branch_multiple$'," in (".implode(",",$data['branch_ids']).") ",$qry);
 
@@ -1571,7 +1572,7 @@ class UserReportsController extends Controller
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
                 'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
-                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
+                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt','Date_wise_check_in_check_out','Daily_check_in_check_out',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_activity','product_group_activity','supplier_aging','account_notes',
                 'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
@@ -1923,6 +1924,20 @@ class UserReportsController extends Controller
                         $data['customer'] = $data['customer']->whereIn('customer_type',$customer_group);
                     }*/
                     //$data['customer_ids'] = $customer_ids;
+                }
+
+                 if($data['report_case'] == 'Date_wise_check_in_check_out'){
+                    $data['key'] = 'Date_wise_check_in_check_out';
+                    $data['page_title'] = 'Date wise check in check out';
+                      $data['to_date'] = date('Y-m-d', strtotime($to_date));
+                    $data['from_date'] = date('Y-m-d', strtotime($from_date));
+
+                }
+                if($data['report_case'] == 'Daily_check_in_check_out'){
+                    $data['key'] = 'Daily_check_in_check_out';
+                    $data['page_title'] = 'Daily check in check out';
+                      $data['to_date'] = date('Y-m-d', strtotime($to_date));
+                    $data['from_date'] = date('Y-m-d', strtotime($from_date));
                 }
 
                 if($data['report_case'] == 'trial_balance'){
@@ -3201,7 +3216,7 @@ class UserReportsController extends Controller
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
                 'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
-                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt',
+                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt', 'Date_wise_check_in_check_out','Daily_check_in_check_out','customer_list','branch_wise_customer_list','branch_wise_supplier_list','branch_wise_product_list',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_group_activity', 'product_activity','supplier_aging','account_notes',
                 'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
@@ -3209,7 +3224,7 @@ class UserReportsController extends Controller
                 'item_wise_purchase_summary','category_wise_purchase_analysis','invoice_wise_purchase_summary',
                 'branch_wise_stock','product_list','product_change_rate','invoice_wise_sale_report','sale_register_report','sales_discount','invoice_wise_sales_discount','stock_audit',
                 'branch_wise_stock_summary','group_wise_stock_activity_summary','cash_flow','final_price_update','payment_wht','frb_sales_data','dead_stock','hs_code','product_parent_group_wise_sale','month_wise_product_group_sale','sale_orders_report','pos_closing_report','product-wise-sales','product_pl','monthly_sale_pur_summary',];
-
+// dd($data['key'],$report_cases);
             if(in_array($data['key'],$report_cases)){
                 if($data['form_file_type'] == 'pdf'){
                     $view = view('reports.static_reports.'.$data['key'], compact('data'))->render();
@@ -3831,7 +3846,7 @@ class UserReportsController extends Controller
         ]);
     }
 
-   
+
 
     public function generateReport()
     {
@@ -3844,9 +3859,9 @@ class UserReportsController extends Controller
 
         // 1. Optimize the main Account Data Query
         // We use DB::raw to keep the Oracle-specific window functions but wrap it in Query Builder
-        $whereRaw = "v.voucher_date BETWEEN TO_DATE(?, 'yyyy/mm/dd') AND TO_DATE(?, 'yyyy/mm/dd') 
+        $whereRaw = "v.voucher_date BETWEEN TO_DATE(?, 'yyyy/mm/dd') AND TO_DATE(?, 'yyyy/mm/dd')
                     AND v.business_id = ? AND v.branch_id IN (" . implode(',', $branch_ids) . ")";
-        
+
         $bindings = [$from_date, $to_date, $business_id];
 
         // Note: I'm keeping the core logic but cleaning up the structure
@@ -3860,8 +3875,8 @@ class UserReportsController extends Controller
 
         // 2. Calculate Cost Value
         $cost_value = DB::table(DB::raw("(
-                SELECT SUM(TO_NUMBER(QTY_BASE_UNIT) * TO_NUMBER(COST_RATE)) as cost 
-                FROM VW_SALE_SALES_INVOICE 
+                SELECT SUM(TO_NUMBER(QTY_BASE_UNIT) * TO_NUMBER(COST_RATE)) as cost
+                FROM VW_SALE_SALES_INVOICE
                 WHERE BRANCH_ID IN (1) AND SALES_DATE BETWEEN ...
                 UNION ALL
                 ...

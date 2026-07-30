@@ -22,7 +22,7 @@ class EmployeeShiftController extends Controller
 {
         public static $page_title = 'Roster';
     public static $redirect_url = '/roster';
-    public static $menu_dtl_id = '117';
+    public static $menu_dtl_id = '361';
 
     public function roster(){
 
@@ -32,14 +32,14 @@ class EmployeeShiftController extends Controller
         $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
         $data['branch'] = TblSoftBranch::where('business_id',auth()->user()->business_id)->where('company_id',auth()->user()->company_id)->orderBy('branch_name')->get();
         $data['department'] = TblHrDepartment::where('business_id',auth()->user()->business_id)->where('company_id',auth()->user()->company_id)->orderBy('department_name')->get();
-        
+
         $employees = DB::table('tbl_payr_employee')
         //   ->select('employee_id as id','employee_name as name')
         ->get();
 
         return view('PayrDepartment.roster.index', compact('data','employees'));
     }
-    
+
 public function employees(Request $request)
 {
 
@@ -90,10 +90,10 @@ public function bulkStore(Request $request)
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
             // FIXED: Removed the "!" - now checks if day IS selected
             if (!in_array($date->dayOfWeek, $selectedDays)) {
-                
+
                 $start = $date->copy()->setTimeFromTimeString($config['start']);
                 $end = $date->copy()->setTimeFromTimeString($config['end']);
-                
+
                 if ($config['next_day']) {
                     $end->addDay();
                 }
@@ -128,7 +128,7 @@ public function get(Request $request)
         'end' => 'nullable|date'
     ]);
 
-    
+
     $colors = [
         'morning' => '#2ecc71',
         'night' => '#3498db',
@@ -194,9 +194,9 @@ public function get(Request $request)
 //         foreach ($period as $date) {
 //             // Only create shift if current date matches a selected checkbox day
 //             if (!in_array($date->dayOfWeek, $selectedDays)) {
-                
+
 //                 $fullStart = $date->format('Y-m-d') . ' ' . $sTime;
-                
+
 //                 // For Night Shift, end date is the next morning
 //                 $endLocalDate = ($type == 'night') ? $date->copy()->addDay() : $date;
 //                 $fullEnd = $endLocalDate->format('Y-m-d') . ' ' . $eTime;
@@ -295,7 +295,7 @@ public function get(Request $request)
         $start = \Carbon\Carbon::parse($r->start);
         $end = \Carbon\Carbon::parse($r->end);
 
-        // If start time is later than end time (e.g., 22:00 to 06:00), 
+        // If start time is later than end time (e.g., 22:00 to 06:00),
         // it's a night shift that ends the next day.
         if ($start->gt($end)) {
             $end->addDay();
@@ -336,7 +336,7 @@ public function get(Request $request)
         $data['page_data']['title'] = self::$page_title;
         $data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;;
         $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
-        
+
         $employees = DB::table('tbl_payr_employee')
         ->get();
 

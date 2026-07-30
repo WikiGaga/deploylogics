@@ -30,6 +30,7 @@
 @section('content')
     @php
     $data = Session::get('data');
+    // dd($data);
    // $supplierDtl = \Illuminate\Support\Facades\DB::table('tbl_purc_supplier')->where('supplier_id',$data['supplier_ids'])->first();
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">

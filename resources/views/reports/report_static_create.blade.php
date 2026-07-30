@@ -112,6 +112,8 @@
     <!--begin::Form-->
     @php
 
+    // dd($data['report']);
+
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
         if($case == 'new'){
             $id = "";

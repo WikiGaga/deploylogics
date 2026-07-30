@@ -164,9 +164,22 @@ class EmployeeController extends Controller
 
 
             if($request->register==0){
+
+                if (!empty($employee->attendance_image)) {
+                    $folder = 'images/employee_face';
+                    $filePath = public_path($folder . '/' . $employee->attendance_image);
+
+                    // Check if file exists in public directory before attempting to delete
+                    if (File::exists($filePath)) {
+                        File::delete($filePath);
+                    }
+                }
+
                 $employee->register_status = 0;
                 $employee->attendance_image = null;
                 $employee->image_embeded_code = null;
+
+
             }
 
             $employee->employee_date = isset($request->employee_date) ? date('Y-m-d', strtotime($request->employee_date)) : date('Y-m-d' , time());

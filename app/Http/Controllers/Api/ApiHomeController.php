@@ -218,100 +218,100 @@ class ApiHomeController extends ApiController
         return response()->json($Employees);
     }
 
-    public function store_attendance(Request $request)
-    {
+    // public function store_attendance(Request $request)
+    // {
 
-        // dd($request->all()) ;
-        $validator = Validator::make($request->all(), [
-             'emp_id'    => 'required',
-             'attendance_date'    => 'required',
-             'attendance_time'    => 'required',
-             'attendance_type'    => 'required',
-             'shift_id'    => 'required',
-        ]);
+    //     // dd($request->all()) ;
+    //     $validator = Validator::make($request->all(), [
+    //          'emp_id'    => 'required',
+    //          'attendance_date'    => 'required',
+    //          'attendance_time'    => 'required',
+    //          'attendance_type'    => 'required',
+    //          'shift_id'    => 'required',
+    //     ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Validation error',
+    //             'errors' => $validator->errors()
+    //         ], 422);
+    //     }
 
 
-        $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+    //     $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
-        $data=[
-            'id'=>$p_id, 'emp_id'=>$request->emp_id, 'attendance_date'=>date('Y-m-d',strtotime($request->attendance_date)),
-             'attendance_time'=> date('Y-m-d H:i:s',strtotime($request->attendance_time)), 'attendance_type'=>$request->attendance_type, 'shift_id'=>$request->shift_id
-        ];
+    //     $data=[
+    //         'id'=>$p_id, 'emp_id'=>$request->emp_id, 'attendance_date'=>date('Y-m-d',strtotime($request->attendance_date)),
+    //          'attendance_time'=> date('Y-m-d H:i:s',strtotime($request->attendance_time)), 'attendance_type'=>$request->attendance_type, 'shift_id'=>$request->shift_id
+    //     ];
 
-        $Employee = DB::table('Tbl_hr_attendence_dtl')
-        ->insert([  $data ]);
+    //     $Employee = DB::table('Tbl_hr_attendence_dtl')
+    //     ->insert([  $data ]);
 
-        if (empty($Employee)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee not found.',
-            ], 404); // Use 404 Not Found HTTP status
-        }
+    //     if (empty($Employee)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Employee not found.',
+    //         ], 404); // Use 404 Not Found HTTP status
+    //     }
 
-        // 3. Return the user data as a JSON response
-        return response()->json([
-            'success' => true,
-            'message' => 'User data send successfully.',
-            'Data' => $Employee,
-        ], 200); // Use 200 OK HTTP status
-    }
+    //     // 3. Return the user data as a JSON response
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'User data send successfully.',
+    //         'Data' => $Employee,
+    //     ], 200); // Use 200 OK HTTP status
+    // }
 
-    public function bulk_store_attendance(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'attendances'              => 'required|array|min:1',
-            'attendances.*.emp_id'         => 'required',
-            'attendances.*.attendance_date' => 'required',
-            'attendances.*.attendance_time' => 'required',
-            'attendances.*.attendance_type' => 'required',
-            'attendances.*.shift_id'        => 'required',
-        ]);
+    // public function bulk_store_attendance(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'attendances'              => 'required|array|min:1',
+    //         'attendances.*.emp_id'         => 'required',
+    //         'attendances.*.attendance_date' => 'required',
+    //         'attendances.*.attendance_time' => 'required',
+    //         'attendances.*.attendance_type' => 'required',
+    //         'attendances.*.shift_id'        => 'required',
+    //     ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Validation error',
-                'errors'  => $validator->errors()
-            ], 422);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status'  => false,
+    //             'message' => 'Validation error',
+    //             'errors'  => $validator->errors()
+    //         ], 422);
+    //     }
 
-        $insertData = [];
-        $nextId = DB::table('Tbl_hr_attendence_dtl')->max('id') + 1;
+    //     $insertData = [];
+    //     $nextId = DB::table('Tbl_hr_attendence_dtl')->max('id') + 1;
 
-        foreach ($request->attendances as $attendance) {
-            $insertData[] = [
-                'id'              => $nextId++,
-                'emp_id'          => $attendance['emp_id'],
-                'attendance_date' => date('Y-m-d', strtotime($attendance['attendance_date'])),
-                'attendance_time' => date('Y-m-d H:i:s', strtotime($attendance['attendance_time'])),
-                'attendance_type' => $attendance['attendance_type'],
-                'shift_id'        => $attendance['shift_id'],
-            ];
-        }
+    //     foreach ($request->attendances as $attendance) {
+    //         $insertData[] = [
+    //             'id'              => $nextId++,
+    //             'emp_id'          => $attendance['emp_id'],
+    //             'attendance_date' => date('Y-m-d', strtotime($attendance['attendance_date'])),
+    //             'attendance_time' => date('Y-m-d H:i:s', strtotime($attendance['attendance_time'])),
+    //             'attendance_type' => $attendance['attendance_type'],
+    //             'shift_id'        => $attendance['shift_id'],
+    //         ];
+    //     }
 
-        $inserted = DB::table('Tbl_hr_attendence_dtl')->insert($insertData);
+    //     $inserted = DB::table('Tbl_hr_attendence_dtl')->insert($insertData);
 
-        if (!$inserted) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to store attendance records.',
-            ], 500);
-        }
+    //     if (!$inserted) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to store attendance records.',
+    //         ], 500);
+    //     }
 
-        return response()->json([
-            'success' => true,
-            'message' => count($insertData) . ' attendance record(s) stored successfully.',
-            'total'   => count($insertData),
-        ], 200);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => count($insertData) . ' attendance record(s) stored successfully.',
+    //         'total'   => count($insertData),
+    //     ], 200);
+    // }
 
     public function update_employee_face(Request $request)
     {

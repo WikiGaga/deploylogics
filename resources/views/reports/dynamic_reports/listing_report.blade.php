@@ -30,7 +30,7 @@
                 $report_message = 'No Record Found' ;
             }
         }else{
-            //dump($data['qry']);
+            // dd($data['qry']);
 
            $baseQuery = $data['qry'];
             $page = request('page', 1);
@@ -41,6 +41,62 @@
             // get total
             $sqlCount = "SELECT COUNT(*) AS total FROM ({$baseQuery}) T";
             $total = DB::select($sqlCount)[0]->total;
+             $baseQuery ="SELECT
+                EMPLOYEE_NAME,
+                TO_CHAR(ATTENDANCE_DATE, 'YYYY-MM-DD') AS ATTENDANCE_DATE,
+                CHECK_IN,
+                CHECK_OUT,
+                TOTAL_HOURS,
+                CASE
+                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT != 'N/A' AND TOTAL_HOURS >= 8 THEN 'Full Day'
+                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT != 'N/A' AND TOTAL_HOURS < 8 THEN 'Half Day / Short'
+                    WHEN CHECK_IN != 'N/A' AND CHECK_OUT = 'N/A' THEN 'Missing Check-Out'
+                    WHEN CHECK_IN = 'N/A' AND CHECK_OUT != 'N/A' THEN 'Missing Check-In'
+                    ELSE 'Absent / No Punch'
+                END AS ATTENDANCE_STATUS
+            FROM (
+                SELECT
+                    emp.EMPLOYEE_NAME,
+                    att.ATTENDANCE_DATE,
+
+                    CASE
+                        WHEN MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) IS NULL
+                        THEN 'N/A'
+                        ELSE TO_CHAR(MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END), 'YYYY-MM-DD HH24:MI:SS')
+                    END AS CHECK_IN,
+
+                    CASE
+                        WHEN MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) IS NULL
+                        THEN 'N/A'
+                        ELSE TO_CHAR(MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END), 'YYYY-MM-DD HH24:MI:SS')
+                    END AS CHECK_OUT,
+
+                    CASE
+                        WHEN MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) IS NOT NULL
+                        AND MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) IS NOT NULL
+                        THEN
+                            ROUND(
+                                (
+                                    CAST(MAX(CASE WHEN att.ATTENDANCE_TYPE = 'check-out' THEN att.ATTENDANCE_TIME END) AS DATE) -
+                                    CAST(MIN(CASE WHEN att.ATTENDANCE_TYPE = 'check-in' THEN att.ATTENDANCE_TIME END) AS DATE)
+                                ) * 24,
+                                2
+                            )
+                        ELSE 0
+                    END AS TOTAL_HOURS
+
+                FROM tbl_payr_employee emp
+                INNER JOIN TBL_HR_ATTENDENCE_DTL att
+                    ON emp.EMPLOYEE_ID = att.EMP_ID
+                    AND att.IS_DELETED = 0
+
+                GROUP BY
+                    emp.EMPLOYEE_NAME,
+                    att.ATTENDANCE_DATE
+            )
+            ORDER BY ATTENDANCE_DATE DESC, EMPLOYEE_NAME ASC";
+
+            dd(DB::select($baseQuery), $sqlCount, $total, $requestedLimit, $isAll);
 
             if ($isAll) {
 
@@ -443,9 +499,15 @@
 
                                                         $ruleMatches = false;
                                                         if(!property_exists($dt, $fieldName)){
-                                                            $allRulesMatched = false;
-                                                            $innerGroupMatches = false;
-                                                            break 2;
+                                                            if(property_exists($dt, strtoupper($fieldName))){
+                                                                $fieldName = strtoupper($fieldName);
+                                                            } elseif(property_exists($dt, strtolower($fieldName))){
+                                                                $fieldName = strtolower($fieldName);
+                                                            } else {
+                                                                $allRulesMatched = false;
+                                                                $innerGroupMatches = false;
+                                                                break 2;
+                                                            }
                                                         }
 
                                                         $fieldValue = $dt->$fieldName;
@@ -555,11 +617,21 @@
                                             @endif
                                             @foreach($fieldsKeys as $key=>$fieldsKey)
                                                 @php
-                                                    if($fieldsKey == 'grn_code'){
+                                                    $propKey = $fieldsKey;
+                                                    if (!property_exists($dt, $propKey)) {
+                                                        if (property_exists($dt, strtoupper($propKey))) {
+                                                            $propKey = strtoupper($propKey);
+                                                        } elseif (property_exists($dt, strtolower($propKey))) {
+                                                            $propKey = strtolower($propKey);
+                                                        }
+                                                    }
+                                                    $cellRawVal = $dt->$propKey ?? '';
+
+                                                    if(strtolower($fieldsKey) == 'grn_code'){
                                                         $class = "open_model clickable-cell TEXT-INFO";
 
-                                                        $grn_code=$dt->$fieldsKey;
-                                                        $grn_id=$grn_id_code[$dt->$fieldsKey] ?? null;
+                                                        $grn_code=$cellRawVal;
+                                                        $grn_id=$grn_id_code[$cellRawVal] ?? null;
                                                     }else{
                                                         $class = "";
                                                         $grn_code="";
@@ -569,10 +641,10 @@
                                                 @endphp
 
                                                 @if($column_types[$key] == 'varchar2')
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $dt->$fieldsKey !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $cellRawVal !!}</td>
                                                 @elseif($column_types[$key] == 'number')
                                                     @php
-                                                        $numVal = (int)$dt->$fieldsKey;
+                                                        $numVal = (int)$cellRawVal;
 
                                                         if(in_array($key,$calc) && !$excludeFromCalc){
                                                             //$a_{$key} += $numVal;
@@ -585,7 +657,7 @@
                                                     <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $numVal !!}</td>
                                                 @elseif($column_types[$key] == 'float')
                                                     @php
-                                                        $floatVal = (float)$dt->$fieldsKey;
+                                                        $floatVal = (float)$cellRawVal;
                                                         if(in_array($key,$calc) && !$excludeFromCalc){
                                                             //$a_{$key} += $floatVal;
                                                             //$arr[$key] = $a_{$key};
@@ -596,7 +668,7 @@
                                                     @endphp
                                                     <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                 @elseif($column_types[$key] == 'date')
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! date('d-m-Y', strtotime($dt->$fieldsKey)) !!}</td>
+                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! !empty($cellRawVal) ? date('d-m-Y', strtotime($cellRawVal)) : '' !!}</td>
                                                 @endif
                                             @endforeach
                                         </tr>
