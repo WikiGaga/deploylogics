@@ -96,7 +96,6 @@
             )
             ORDER BY ATTENDANCE_DATE DESC, EMPLOYEE_NAME ASC";
 
-            dd(DB::select($baseQuery), $sqlCount, $total, $requestedLimit, $isAll);
 
             if ($isAll) {
 
