@@ -183,8 +183,8 @@
                         </div>
                         <div class="col-md-3">
                             <div class="kt-input-icon kt-input-icon--left">
-                                <input type="text" class="form-control form-control-sm" placeholder="&nbsp; Search..."
-                                    id="generalSearch" autofocus>
+                                <input type="text" class="form-control form-control-sm" placeholder="Search..."
+                                    id="generalSearch" autofocus autocomplete="off">
                                 <span class="kt-input-icon__icon kt-input-icon__icon--left search-icon-bg">
                                     <span><i class="la la-search"></i></span>
                                 </span>

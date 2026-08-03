@@ -7,11 +7,11 @@
         <div class="col-lg-6" style="padding:10px;">
             <div class="kt-radio-inline" style="float:left;">
                 <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">
-                    <input checked type="radio" name="post_wise" value="all"> ALL
+                    <input type="radio" name="post_wise" value="all"> ALL
                     <span></span>
                 </label>
                 <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">
-                    <input type="radio" name="post_wise" value="post"> Posted
+                    <input type="radio" name="post_wise" value="post" checked> Posted
                     <span></span>
                 </label>
                 <label class="kt-radio kt-radio--bold kt-radio--warning mb-0">

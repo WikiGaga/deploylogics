@@ -1951,3 +1951,26 @@ tr.focus_selected_tr td {
     color: #ffffff !important;
     opacity: 1 !important;
 }
+
+/* ==========================================================================
+   General Search Input Fix (Padding, Cursor, Active Focus Ring & Pointer Events)
+   ========================================================================== */
+#generalSearch,
+.kt-input-icon--left #generalSearch {
+    padding-left: 40px !important;
+    padding-right: 12px !important;
+    caret-color: #333 !important;
+}
+
+#generalSearch:focus {
+    outline: none !important;
+    border-color: #5d78ff !important;
+    box-shadow: 0 0 6px rgba(93, 120, 255, 0.4) !important;
+    background-color: #ffffff !important;
+}
+
+.kt-input-icon--left .kt-input-icon__icon {
+    pointer-events: none !important;
+    z-index: 2;
+}
+

@@ -56,7 +56,7 @@ class POSVoucherController extends Controller
         $data['page_data']['title'] = self::$page_title;
         $data['permission'] = self::$menu_dtl_id.'-view';
         $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
-        $data['page_data']['action'] = 'Insert Voucher';
+        $data['page_data']['action'] = 'POST VOUCHERS';
         $data['branches'] = TblSoftBranch::where('branch_active_status',1)->where(Utilities::currentBC())->get();
 
         return view('accounts.pos_voucher.form',compact('data'));

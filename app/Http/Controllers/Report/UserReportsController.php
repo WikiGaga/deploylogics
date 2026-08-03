@@ -1572,7 +1572,7 @@ class UserReportsController extends Controller
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
                 'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
-                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt','Date_wise_check_in_check_out','Daily_check_in_check_out',
+                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt','Date_wise_check_in_check_out','Daily_check_in_check_out',"account_dabit_credit",
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_activity','product_group_activity','supplier_aging','account_notes',
                 'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
@@ -1939,6 +1939,15 @@ class UserReportsController extends Controller
                       $data['to_date'] = date('Y-m-d', strtotime($to_date));
                     $data['from_date'] = date('Y-m-d', strtotime($from_date));
                 }
+
+                  if($data['report_case'] == 'account_dabit_credit'){
+                    $data['key'] = 'account_dabit_credit';
+                    $data['page_title'] = 'Account Debit Credit Report';
+                      $data['to_date'] = date('Y-m-d', strtotime($to_date));
+                    $data['from_date'] = date('Y-m-d', strtotime($from_date));
+                }
+
+
 
                 if($data['report_case'] == 'trial_balance'){
                     $data['key'] = 'trial_balance';
@@ -3216,7 +3225,7 @@ class UserReportsController extends Controller
             $report_cases = ['slow_moving_stock','stock-with-average-cost','combine_ledger_group_wise','sales-and-cost-summary','consumer-report','supplier_wise_sale','inventory_checklist','total_product_activity_summary','product_and_group_activity','top_sale_qty_barcode_wise','supplier_wise_rebate_calc','inventory_batch_expiry','closing_day','sale_type_wise','summary_of_daily_activity',
                 'vouchers_list','sale_invoice','trial_balance','activity_trial','date_wise_summarized','temp_accounting_ledger','accounting_ledger','general_ledger','grn_list',
                 'top_sale_products','stock_report','inventory_look_up','stock_activity_summary','item_stock_ledger',
-                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt', 'Date_wise_check_in_check_out','Daily_check_in_check_out','customer_list','branch_wise_customer_list','branch_wise_supplier_list','branch_wise_product_list',
+                'chart_account_list','stock_detail_document_wise','supplier_list','customer_rpt', 'Date_wise_check_in_check_out','Daily_check_in_check_out',"account_dabit_credit",'customer_list','branch_wise_customer_list','branch_wise_supplier_list','branch_wise_product_list',
                 'po_list','product_rate','bank_reconciliation','store_wise_stock','stock_valuation',
                 'product_group_activity', 'product_activity','supplier_aging','account_notes',
                 'profit_loss_statement','profit_loss_statement_branch_wise','customer_aging','business_reports_factors',
