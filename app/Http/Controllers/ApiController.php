@@ -44,9 +44,18 @@ class ApiController extends BaseController
     }
 
     public function addNo($str){
-        $no = str_replace( ',', '', $str);
-        $no = (Float)$no;
-        return $no;
+        if ($str === null || trim((string)$str) === '') {
+            return 0;
+        }
+        $no = str_replace(',', '', trim((string)$str));
+        if (strpos($no, '.') === 0) {
+            $no = '0' . $no;
+        }
+        $dotIndex = strpos($no, '.');
+        if ($dotIndex !== false) {
+            $no = substr($no, 0, $dotIndex + 1) . str_replace('.', '', substr($no, $dotIndex + 1));
+        }
+        return (float)$no;
     }
 
     public function ValidateCharCode($ChartArr){

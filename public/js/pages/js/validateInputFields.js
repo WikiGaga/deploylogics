@@ -7,6 +7,9 @@ function sanitizeNumericInput(value) {
     if (dotIndex !== -1) {
         value = value.substring(0, dotIndex + 1) + value.substring(dotIndex + 1).replace(/\./g, '');
     }
+    if (value.indexOf('.') === 0) {
+        value = '0' + value;
+    }
     return value;
 }
 
@@ -97,11 +100,14 @@ $(document).ready(function() {
     $('.validOnlyFloatNumber').keypress(validateOnlyFloatNumber);
     $('.debit').keypress(validateOnlyFloatNumber);
     $('.short_text,.small_text,.medium_text,.large_text,.long_text,.double_text,.small_no,.medium_no,.large_no,.mob_no').keypress(setTextLength);
-    $(document).on('input', '.validNumber,.validNo', function() {
-        var sanitized = sanitizeNumericInput(this.value);
-        if (sanitized !== this.value) {
-            this.value = sanitized;
-        }
+    $(document).on('input paste change keyup blur', '.validNumber,.validNo', function() {
+        var self = this;
+        setTimeout(function() {
+            var sanitized = sanitizeNumericInput(self.value);
+            if (sanitized !== self.value) {
+                self.value = sanitized;
+            }
+        }, 0);
     });
 });
 
