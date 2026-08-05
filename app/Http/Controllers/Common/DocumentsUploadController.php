@@ -46,7 +46,7 @@ class DocumentsUploadController extends Controller
             $data['current'] = TblDefiDocumentUpload::with('files')
                                 ->where('document_upload_form_id',$request->form_id)
                                 ->where('document_upload_form_type',$request->form_type)
-                                ->where(Utilities::currentBCB())->orderBy('sr_no')->get();
+                                ->where(Utilities::currentBC())->orderBy('sr_no')->get();
             // dd($data['current']);
             $data['form_code'] = $request->form_code;
             $data['form_id'] = $request->form_id;
