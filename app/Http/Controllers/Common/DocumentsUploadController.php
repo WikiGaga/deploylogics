@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Database\QueryException;
 use App\Models\Defi\TblSaleBankDistribution;
 use App\Models\Defi\TblDefiDocumentUpload;
+use App\Models\TblSoftMenuDtl;
 use Illuminate\Validation\ValidationException;
 use App\Models\Defi\TblDefiDocumentUploadFiles;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -42,6 +43,7 @@ class DocumentsUploadController extends Controller
         $data = [];
         $data['document_types'] = [];
         $data['current'] = [];
+        $data['can_upload'] = true;
         if(isset($request->form_id) && !empty($request->form_id) && isset($request->form_type) && !empty($request->form_type)){
             $data['current'] = TblDefiDocumentUpload::with('files')
                                 ->where('document_upload_form_id',$request->form_id)
@@ -52,6 +54,7 @@ class DocumentsUploadController extends Controller
             $data['form_id'] = $request->form_id;
             $data['form_type'] = $request->form_type;
             $data['menu_id'] = isset($request->menu_id)?$request->menu_id:"";
+            $data['can_upload'] = $this->checkFormPermission($request->form_type, $request->menu_id);
         //    dd($data['current']->toArray());
         }
         return view('common.upload_document',compact('data'));
@@ -74,6 +77,9 @@ class DocumentsUploadController extends Controller
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 200);
+        }
+        if (!$this->checkFormPermission($request->form_type, $request->menu_id)) {
+            return $this->jsonErrorResponse($data, 'You do not have permission to upload documents for this form.', 200);
         }
         DB::beginTransaction();
         try{
@@ -298,5 +304,99 @@ class DocumentsUploadController extends Controller
 
 
         return view('upload_docs.verify_docs',compact('data'));
+    }
+
+    public function checkFormPermission($formType = null, $menuId = null)
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        $user = auth()->user();
+
+        // Admin / Super Admin bypass
+        if ($user->id == 1 || $user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasRole('administrator')) {
+            return true;
+        }
+
+        // 1. Determine menu_dtl_id from menuId or fallback
+        $menuDtlId = null;
+
+        if (!empty($menuId) && is_numeric($menuId)) {
+            $menuDtlId = (int)$menuId;
+        }
+
+        if (empty($menuDtlId) && !empty($formType)) {
+            if (is_numeric($formType)) {
+                $menuDtlId = (int)$formType;
+            } else {
+                $menuDtl = TblSoftMenuDtl::where('menu_dtl_id', $formType)
+                    ->orWhere('menu_dtl_name', $formType)
+                    ->orWhere('menu_dtl_name', 'LIKE', $formType)
+                    ->orWhere('menu_dtl_link', 'LIKE', '%' . $formType . '%')
+                    ->first();
+                if ($menuDtl) {
+                    $menuDtlId = $menuDtl->menu_dtl_id;
+                }
+            }
+        }
+
+        if (empty($menuDtlId) && !empty($formType)) {
+            $mappings = [
+                'grn' => 23,
+                'grn-register' => 23,
+                'purchase-order' => 38,
+                'sales-invoice' => 60,
+                'pos-sales-invoice' => 60,
+                'stock-audit' => 267,
+            ];
+            $lowerFormType = strtolower($formType);
+            if (isset($mappings[$lowerFormType])) {
+                $menuDtlId = $mappings[$lowerFormType];
+            }
+        }
+
+        // 2. Check permission for menu_dtl_id and actions 'edit', 'upload', 'create'
+        if (!empty($menuDtlId)) {
+            $targetActions = ['edit', 'upload', 'create'];
+
+            foreach ($targetActions as $action) {
+                $permName = $menuDtlId . '-' . $action;
+                if ($user->isAbleTo($permName) || $user->can($permName)) {
+                    return true;
+                }
+            }
+
+            $hasMenuPerm = DB::table('permission_user')
+                ->join('permissions', 'permissions.id', '=', 'permission_user.permission_id')
+                ->where('permission_user.user_id', $user->id)
+                ->where('permissions.menu_dtl_id', $menuDtlId)
+                ->whereIn('permissions.display_name', $targetActions)
+                ->exists();
+
+            if ($hasMenuPerm) {
+                return true;
+            }
+
+            $hasRoleMenuPerm = DB::table('role_user')
+                ->join('permission_role', 'permission_role.role_id', '=', 'role_user.role_id')
+                ->join('permissions', 'permissions.id', '=', 'permission_role.permission_id')
+                ->where('role_user.user_id', $user->id)
+                ->where('permissions.menu_dtl_id', $menuDtlId)
+                ->whereIn('permissions.display_name', $targetActions)
+                ->exists();
+
+            if ($hasRoleMenuPerm) {
+                return true;
+            }
+
+            // If permissions exist for this menu_dtl_id in DB, but user has no edit/upload/create action
+            $menuHasPermissions = DB::table('permissions')->where('menu_dtl_id', $menuDtlId)->exists();
+            if ($menuHasPermissions) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

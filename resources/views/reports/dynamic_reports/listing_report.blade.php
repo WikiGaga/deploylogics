@@ -571,7 +571,7 @@
                                                     }
                                                     $cellRawVal = $dt->$propKey ?? '';
 
-                                                    if(strtolower($fieldsKey) == 'grn_code'){
+                                                    if(strtolower($fieldsKey) == 'grn_code' || strtolower($fieldsKey) == 'code'){
                                                         $class = "open_model clickable-cell TEXT-INFO";
 
                                                         $grn_code=$cellRawVal;

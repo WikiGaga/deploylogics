@@ -1,6 +1,13 @@
+@php
+    $canUpload = isset($data['can_upload']) ? (bool)$data['can_upload'] : true;
+@endphp
 <div class="modal-header" style="padding: 7px 10px;">
     <h5 class="modal-title" id="exampleModalLabel">Document Upload</h5>
-    <button type="submit" id="submit_document" class="btn btn-primary btn-sm" style="margin-left: 20px">Upload</button>
+    @if($canUpload)
+        <button type="submit" id="submit_document" class="btn btn-primary btn-sm" style="margin-left: 20px">Upload</button>
+    @else
+        <span class="badge badge-warning" style="margin-left: 20px; padding: 6px 10px; font-size: 12px; background-color: #ffb822; color: #111;"><i class="fa fa-eye"></i> View Only</span>
+    @endif
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
 </div>
 
@@ -50,9 +57,11 @@
                         <div data-repeater-item class="document_items">
                             <div class="row">
                                 <div class="col-lg-12 text-right">
-                                    <a href="javascript:;" data-repeater-delete="" class="btn btn-sm btn-label-danger">
-                                        <i class="la la-trash-o"></i>
-                                    </a>
+                                    @if($canUpload)
+                                        <a href="javascript:;" data-repeater-delete="" class="btn btn-sm btn-label-danger">
+                                            <i class="la la-trash-o"></i>
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                             <div class="row form-group-block">
@@ -68,7 +77,7 @@
                                         <label class="col-lg-6 erp-col-form-label">Documents Name: <span class="required">*</span></label>
                                         <div class="col-lg-6">
                                             <input type="hidden">
-                                            <input type="text" maxlength="100" name="doc_name" value="{{$current->document_upload_name}}" class="doc_name form-control erp-form-control-sm mustfill">
+                                            <input type="text" maxlength="100" name="doc_name" value="{{$current->document_upload_name}}" class="doc_name form-control erp-form-control-sm mustfill" @if(!$canUpload) readonly @endif>
                                         </div>
                                     </div>
                                 </div>
@@ -77,7 +86,7 @@
                                         <label class="col-lg-6 erp-col-form-label">Documents Type:</label>
                                         <div class="col-lg-6">
                                             <div class="erp-select2">
-                                                <select class="form-control kt-select2 erp-form-control-sm doc_type" name="doc_type">
+                                                <select class="form-control kt-select2 erp-form-control-sm doc_type" name="doc_type" @if(!$canUpload) disabled @endif>
                                                     <option value="0">Select</option>
                                                     @if(count($data['document_types']) != 0)
                                                         @foreach($data['document_types'] as $document_type)
@@ -95,7 +104,7 @@
                                     <div class="row">
                                         <label class="col-lg-6 erp-col-form-label">Reference No:</label>
                                         <div class="col-lg-6">
-                                            <input type="text" maxlength="100" name="reference_num" class="serial_num form-control erp-form-control-sm" value="{{ isset($current->document_refrence_number) ? $current->document_refrence_number : '' }}">
+                                            <input type="text" maxlength="100" name="reference_num" class="serial_num form-control erp-form-control-sm" value="{{ isset($current->document_refrence_number) ? $current->document_refrence_number : '' }}" @if(!$canUpload) readonly @endif>
                                         </div>
                                     </div>
                                 </div>
@@ -103,7 +112,7 @@
                                     <div class="row">
                                         <label class="col-lg-6 erp-col-form-label">Place of issue:</label>
                                         <div class="col-lg-6">
-                                            <input type="text" maxlength="100" name="place_of_issue" class="place_of_issue form-control erp-form-control-sm" value="{{ isset($current->document_place_of_issue) ? $current->document_place_of_issue : '' }}">
+                                            <input type="text" maxlength="100" name="place_of_issue" class="place_of_issue form-control erp-form-control-sm" value="{{ isset($current->document_place_of_issue) ? $current->document_place_of_issue : '' }}" @if(!$canUpload) readonly @endif>
                                         </div>
                                     </div>
                                 </div>
@@ -143,7 +152,7 @@
                                     <div class="row">
                                         <label class="col-lg-3 erp-col-form-label">Remarks:</label>
                                         <div class="col-lg-9">
-                                            <input type="text" maxlength="250" value="{{$current->document_upload_remarks}}" name="remarks" class="remarks form-control erp-form-control-sm">
+                                            <input type="text" maxlength="250" value="{{$current->document_upload_remarks}}" name="remarks" class="remarks form-control erp-form-control-sm" @if(!$canUpload) readonly @endif>
                                         </div>
                                     </div>
                                 </div>
@@ -190,9 +199,11 @@
                     <div data-repeater-item class="document_items">
                         <div class="row">
                             <div class="col-lg-12 text-right">
-                                <a href="javascript:;" data-repeater-delete="" class="btn btn-sm btn-label-danger">
-                                    <i class="la la-trash-o"></i>
-                                </a>
+                                @if($canUpload)
+                                    <a href="javascript:;" data-repeater-delete="" class="btn btn-sm btn-label-danger">
+                                        <i class="la la-trash-o"></i>
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         <div class="row form-group-block">
@@ -207,7 +218,7 @@
                                 <div class="row">
                                     <label class="col-lg-6 erp-col-form-label">Documents Name: <span class="required">*</span></label>
                                     <div class="col-lg-6">
-                                        <input type="text" maxlength="100" name="doc_name" value="{{isset($data['form_code'])?$data['form_code']:""}}" class="doc_name form-control erp-form-control-sm mustfill">
+                                        <input type="text" maxlength="100" name="doc_name" value="{{isset($data['form_code'])?$data['form_code']:""}}" class="doc_name form-control erp-form-control-sm mustfill" @if(!$canUpload) readonly @endif>
                                     </div>
                                 </div>
                             </div>
@@ -216,7 +227,7 @@
                                     <label class="col-lg-6 erp-col-form-label">Documents Type:</label>
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
-                                            <select class="form-control kt-select2 erp-form-control-sm doc_type" name="doc_type">
+                                            <select class="form-control kt-select2 erp-form-control-sm doc_type" name="doc_type" @if(!$canUpload) disabled @endif>
                                                 <option value="0">Select</option>
                                                 @if(count($data['document_types']) != 0)
                                                     @foreach($data['document_types'] as $document_type)
@@ -234,7 +245,7 @@
                                 <div class="row">
                                     <label class="col-lg-6 erp-col-form-label">Serial No:</label>
                                     <div class="col-lg-6">
-                                        <input type="text" maxlength="100" name="serial_num" class="serial_num form-control erp-form-control-sm">
+                                        <input type="text" maxlength="100" name="serial_num" class="serial_num form-control erp-form-control-sm" @if(!$canUpload) readonly @endif>
                                     </div>
                                 </div>
                             </div>
@@ -242,7 +253,7 @@
                                 <div class="row">
                                     <label class="col-lg-6 erp-col-form-label">Place of issue:</label>
                                     <div class="col-lg-6">
-                                        <input type="text" maxlength="100" name="place_of_issue" class="place_of_issue form-control erp-form-control-sm">
+                                        <input type="text" maxlength="100" name="place_of_issue" class="place_of_issue form-control erp-form-control-sm" @if(!$canUpload) readonly @endif>
                                     </div>
                                 </div>
                             </div>
@@ -282,7 +293,7 @@
                                 <div class="row">
                                     <label class="col-lg-3 erp-col-form-label">Remarks:</label>
                                     <div class="col-lg-9">
-                                        <input type="text" maxlength="250" name="remarks" class="remarks form-control erp-form-control-sm">
+                                        <input type="text" maxlength="250" name="remarks" class="remarks form-control erp-form-control-sm" @if(!$canUpload) readonly @endif>
                                     </div>
                                 </div>
                             </div>
@@ -393,6 +404,7 @@
         }
     }
     function dz(){
+        var canUpload = {{$canUpload ? 'true' : 'false'}};
         var url = "/form-upload-document-attach";
         var url_remove = "/remove-document-files";
         var form_id_val = $('#form_id').val();
@@ -402,8 +414,9 @@
             paramName: "file", // The name that will be used to transfer the file
             maxFiles: 10,
             maxFilesize: 10, // MB
-            addRemoveLinks: true,
-            autoProcessQueue: true,
+            addRemoveLinks: canUpload,
+            clickable: canUpload,
+            autoProcessQueue: canUpload,
             uploadMultiple: true,
             autoDiscover: true,
             parallelUploads: 10,
@@ -428,27 +441,13 @@
                     done();
                 }
             },
-            init: function () {
-                var myDropzone = this;
-                var thix = $(this.element);
-                var document_items = thix.parents('.document_items');
-                var fileIndex = document_items.index();
-                var filesProcessed = {}; // Track processed files to avoid duplicates
-               // cd("index: "+index);
-                myDropzone.on("successmultiple" , function(files , response){
-                    // console.log('successmultiple fired', files, response);
-                    if(response && response.length > 0){
-                        response.forEach(function(data, index){
-                            var uuid = (files[index] && files[index].upload) ? files[index].upload.uuid : Date.now() + '_' + index;
-                            // Check if this file was already processed
-                            if(!filesProcessed[uuid]){
-                                filesProcessed[uuid] = true;
-                                document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ uuid +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
-                            }
-                        });
-                    }
-                });
+                if(!canUpload){
+                    thix.find('.dropzone-msg').hide();
+                }
                 myDropzone.on("removedfile", function(file) {
+                    if(!canUpload){
+                        return false;
+                    }
                     if(file.current){
                         if(file.id !== undefined){
                             $.ajax({
