@@ -211,6 +211,31 @@
                           // dump($query);
                             $ResultList = \Illuminate\Support\Facades\DB::select($query);
                         @endphp
+                        @php
+                            $voucherMenuMap = [
+                                'jv' => 31,
+                                'obv' => 62,
+                                'crv' => 28,
+                                'cpv' => 37,
+                                'brv' => 29,
+                                'bpv' => 36,
+                                'ctrv' => 138,
+                                'lv' => 138,
+                                'lfv' => 171,
+                                'brpv' => 269,
+                                'brrv' => 274,
+                                'pv' => 270,
+                                'rv' => 286,
+                                'ipv' => 271,
+                                'irv' => 272,
+                                'pve' => 273,
+                                'grn' => 23,
+                                'po' => 38,
+                                'pr' => 50,
+                                'si' => 60,
+                                'so' => 58,
+                            ];
+                        @endphp
                         @foreach($ResultList as $key=>$list)
                             @php
                                 $color = 'black!important';
@@ -238,11 +263,13 @@
 
 
                                 $list->voucher_descrip = str_replace("Inv.:" , "" , $list->voucher_descrip);
+                                $vTypeLower = strtolower($list->voucher_type);
+                                $voucherMenuId = isset($voucherMenuMap[$vTypeLower]) ? $voucherMenuMap[$vTypeLower] : (isset($list->menu_dtl_id) ? $list->menu_dtl_id : '');
                                 // dd($list);
                             @endphp
                             <tr>
                                 <td style="color:{{$color}}">{{ isset($list->branch_short_name) ? $list->branch_short_name : ""  }}</td>
-                                <td style="color:{{$color}}">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$list->voucher_date))))}}</td>
+                                <td class="open_doc_modal clickable-cell" style="color:{{$color}}; cursor: pointer;" data-form_id="{{$print_id}}" data-form_code="{{$list->voucher_no}}" data-form_type="{{strtolower($list->voucher_type)}}" data-menu_id="{{$voucherMenuId}}">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$list->voucher_date))))}}</td>
                                 <td><span style="color:{{$color}}" class="generate_report" data-id="{{$print_id}}" data-type="{{$list->voucher_type}}" data-branch-id="{{$list->branch_id}}">{{$list->voucher_no}}</span></td>
                                 <td style="color:{{$color}}">{{ $vendor_name }} <br> {{$list->contra_chart_name}}</td>
                                 <td style="color:{{$color}}">{{ $list->user_name ?? '' }}</td>
@@ -351,7 +378,31 @@
 
 @section('customJS')
     <script>
+        $(document).on('click', '.open_doc_modal', function(e) {
+            e.preventDefault();
+            var form_id   = $(this).data('form_id');
+            var form_code = $(this).data('form_code');
+            var form_type = $(this).data('form_type');
+            var menu_id   = $(this).data('menu_id');
 
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            var formData = {
+                form_id:   form_id,
+                form_code: form_code,
+                form_type: form_type,
+                menu_id:   menu_id
+            };
+
+            var data_url = '/upload-document';
+            $('#kt_modal_md').modal('show');
+            $('#kt_modal_md').find('.modal-content').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading document details...</p></div>');
+            $('#kt_modal_md').find('.modal-content').load(data_url, formData);
+        });
     </script>
 @endsection
 @section('exportXls')
