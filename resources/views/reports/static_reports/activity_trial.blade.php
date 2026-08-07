@@ -652,8 +652,20 @@ $qry ="SELECT ca.CHART_ACCOUNT_ID,
   ca.CHART_NAME,
   chart_name_sorting,
   vouch.CHART_LEVEL,
-  OPEN_BAL_DR,
-  OPEN_BAL_CR,
+  (
+    CASE
+      WHEN vouch.OPEN_BAL > 0
+      THEN vouch.OPEN_BAL
+      ELSE 0
+    END
+  ) OPEN_BAL_DR,
+  (
+    CASE
+      WHEN vouch.OPEN_BAL < 0
+      THEN vouch.OPEN_BAL * - 1
+      ELSE 0
+    END
+  ) OPEN_BAL_CR,
   DR_BALANCE,
   CR_BALANCE,
   (
