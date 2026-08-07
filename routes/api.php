@@ -33,6 +33,7 @@ Route::get('/whatsapp-send-bill/{text?}/{link?}/{to?}', 'Api\WhatsApp\WhatsAppAp
 Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@sendWhatsAppOfferFile');
 
 Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
+Route::post('pos-order-voucher', 'Api\PosOrderVoucherController@store');
 
 
 
