@@ -426,24 +426,35 @@
                 'x-csrf-token': $('meta[name="csrf-token"]').attr('content'),
             },
             accept: function(file, done) {
-                var myDropzone = this;
-                var thix = $(this.element);
-                var document_items = thix.parents('.document_items');
-               // cd(document_items);
-                /*var index = document_items.index();
-                cd("cindex: "+index);
-                myDropzone.on("success" , function(file , response){
-                    document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ file.upload.uuid +'" name="document_list['+index+'][files][]" value="'+ response +'" />');
-                });*/
                 if (file.name == "justinbieber.jpg") {
                     done("Naha, you don't.");
                 } else {
                     done();
                 }
             },
+            init: function () {
+                var myDropzone = this;
+                var thix = $(this.element);
+                var document_items = thix.parents('.document_items');
+                var fileIndex = document_items.index();
+                var filesProcessed = {};
+
                 if(!canUpload){
                     thix.find('.dropzone-msg').hide();
                 }
+
+                myDropzone.on("successmultiple" , function(files , response){
+                    if(response && response.length > 0){
+                        response.forEach(function(data, index){
+                            var uuid = (files[index] && files[index].upload) ? files[index].upload.uuid : Date.now() + '_' + index;
+                            if(!filesProcessed[uuid]){
+                                filesProcessed[uuid] = true;
+                                document_items.append('<input type="hidden" data-type="uploadedfile" id="'+ uuid +'" name="document_list['+fileIndex+'][files][]" value="'+ data +'" />');
+                            }
+                        });
+                    }
+                });
+
                 myDropzone.on("removedfile", function(file) {
                     if(!canUpload){
                         return false;
