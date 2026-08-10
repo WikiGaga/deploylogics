@@ -735,5 +735,132 @@ document.addEventListener('DOMContentLoaded', function() {
     applyRTLFormLayout();
 });
 </script>
+<script>
+// Dynamic Column Hide/Show for Static Reports
+$(document).ready(function() {
+    if ($('.data_entry_header').length > 0) {
+        return;
+    }
+
+    var $body = $('.kt-portlet__body');
+    if ($body.length === 0) return;
+
+    var $tables = $body.find('table');
+    if ($tables.length === 0) return;
+
+    var $mainTable = null;
+    var $targetHeaderTr = null;
+    var maxThCount = 0;
+
+    $tables.each(function() {
+        var $t = $(this);
+        var $candidateHeaderRows = $t.find('thead tr, tr:has(th)');
+        if ($candidateHeaderRows.length === 0) {
+            $candidateHeaderRows = $t.find('tr').first();
+        }
+        $candidateHeaderRows.each(function() {
+            var $tr = $(this);
+            var thCount = $tr.children('th').length;
+            if (thCount === 0) {
+                thCount = $tr.children('td').length;
+            }
+            if (thCount > maxThCount) {
+                maxThCount = thCount;
+                $mainTable = $t;
+                $targetHeaderTr = $tr;
+            }
+        });
+    });
+
+    if (!$mainTable || !$targetHeaderTr || maxThCount === 0) return;
+
+    var $ths = $targetHeaderTr.children('th');
+    if ($ths.length === 0) {
+        $ths = $targetHeaderTr.children('td');
+    }
+    if ($ths.length === 0) return;
+
+    var dropdownItemsHtml = '';
+    $ths.each(function(index) {
+        var labelText = $(this).text().trim().replace(/\s+/g, ' ');
+        if (!labelText) {
+            labelText = 'Column ' + (index + 1);
+        }
+        dropdownItemsHtml += '<li><label style="margin: 3px 12px; cursor: pointer; display: block; white-space: nowrap;"><input value="' + index + '" type="checkbox" checked style="margin-right: 6px;">' + labelText + '</label></li>';
+    });
+
+    var headerHtml = '<div class="row row-data-entry-header mb-2">' +
+        '<div class="col-lg-12 text-right">' +
+            '<div class="data_entry_header">' +
+                '<div class="hiddenFiledsCount" style="display: inline-block; margin-right: 8px;"><span>0</span> fields hide</div>' +
+                '<div class="dropdown dropdown-inline">' +
+                    '<button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 28px; height: 28px; border: 0;">' +
+                        '<i class="flaticon-more" style="color: #666666;"></i>' +
+                    '</button>' +
+                    '<ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus static_column_dropdown" style="height: 200px; overflow: auto;" aria-labelledby="dropdownMenu1">' +
+                        dropdownItemsHtml +
+                    '</ul>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+
+    $body.prepend(headerHtml);
+
+    // Keep dropdown open while interacting with checkboxes
+    $(document).on('click', '.static_column_dropdown', function(e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('change', '.static_column_dropdown input[type="checkbox"]', function() {
+        var colVal = parseInt($(this).val());
+        var isChecked = $(this).is(':checked');
+
+        $tables.each(function() {
+            var $table = $(this);
+            $table.find('tr').each(function() {
+                var $row = $(this);
+                var currentVisualCol = 0;
+
+                $row.children('th, td').each(function() {
+                    var $cell = $(this);
+                    var colspan = parseInt($cell.attr('colspan')) || 1;
+                    var cellStartCol = currentVisualCol;
+                    var cellEndCol = currentVisualCol + colspan - 1;
+                    currentVisualCol += colspan;
+
+                    if (colspan === 1) {
+                        if (cellStartCol === colVal) {
+                            if (isChecked) {
+                                $cell.show();
+                            } else {
+                                $cell.hide();
+                            }
+                        }
+                    } else {
+                        // For cells spanning multiple columns, remain visible if at least 1 covered column is active
+                        var isAnySpannedColVisible = false;
+                        for (var c = cellStartCol; c <= cellEndCol; c++) {
+                            var cb = $('.static_column_dropdown input[type="checkbox"][value="' + c + '"]');
+                            if (cb.length === 0 || cb.is(':checked')) {
+                                isAnySpannedColVisible = true;
+                                break;
+                            }
+                        }
+                        if (isAnySpannedColVisible) {
+                            $cell.show();
+                        } else {
+                            $cell.hide();
+                        }
+                    }
+                });
+            });
+        });
+
+        var hiddenCount = $('.static_column_dropdown input[type="checkbox"]:not(:checked)').length;
+        $('.hiddenFiledsCount span').html(hiddenCount);
+    });
+});
+</script>
 @endif
 </html>
