@@ -112,7 +112,7 @@
                             }
                         }
 
-                        $qq = "select grn_id, grn_date,grn_code,grn_type,branch_short_name, supplier_name, product_name, uom_name,
+                        $qq = "select grn_id, grn_date,grn_code,grn_type,branch_short_name, supplier_name, product_name, uom_name, tbl_purc_grn_dtl_packing,
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_quantity * -1 ELSE tbl_purc_grn_dtl_quantity END  tbl_purc_grn_dtl_quantity ,
                         tbl_purc_grn_dtl_rate,
                         case   when GRN_TYPE ='PR' THEN tbl_purc_grn_dtl_amount * -1 ELSE tbl_purc_grn_dtl_amount END  tbl_purc_grn_dtl_amount ,
@@ -153,6 +153,7 @@
                     @endphp
                     @php
                         $pi_grand_total_quantity = 0;
+                        $pi_grand_total_net_qty = 0;
                         $pi_grand_total_gross_amount = 0;
                         $pi_grand_total_disc_amount = 0;
                         $pi_grand_total_vat_amount = 0;
@@ -163,6 +164,7 @@
                     @endphp
                     @php
                         $pr_grand_total_quantity = 0;
+                        $pr_grand_total_net_qty = 0;
                         $pr_grand_total_gross_amount = 0;
                         $pr_grand_total_disc_amount = 0;
                         $pr_grand_total_vat_amount = 0;
@@ -179,21 +181,26 @@
                             <th class="text-center">Inv #</th>
                             <th class="text-center">Item Description</th>
                             <th class="text-center">Quantity</th>
+                            <th class="text-center">Packing</th>
+                            <th class="text-center">Net QTY</th>
                             <th class="text-center">Unit</th>
                             <th class="text-center">Rate</th>
-                            <th class="text-center">Gross Amount</th>
+                            <th class="text-center">Amount</th>
                             <th class="text-center">Disc Amount</th>
-                            <th class="text-center">GST Amount</th>
+                            <th class="text-center">VAT Amount</th>
                             <th class="text-center">Spec.Disc</th>
                             <th class="text-center">FED</th>
+                            <th class="text-center">Gross Amount</th>
+                            <th class="text-center">Gross Amount per unit</th>
                             <th class="text-center">Net Amount</th>
                             <th class="text-center">Item TP</th>
                         </tr>
                         @if(isset($data['specific_purchase_type']) && in_array($data['specific_purchase_type'],['grn','all']) )
-                        <tr><td colspan="15"><h6>Purchase Invoice</h6></td></tr>
+                        <tr><td colspan="19"><h6>Purchase Invoice</h6></td></tr>
                         @foreach($list_pi as $key=>$row)
                             @php
                                 $sub_total_quantity = 0;
+                                $sub_total_net_qty = 0;
                                 $sub_gross_amount = 0;
                                 $sub_total_disc_amount = 0;
                                 $sub_total_vat_amount = 0;
@@ -202,9 +209,15 @@
                                 $sub_total_total_amount = 0;
                             @endphp
                             <tr>
-                                <td colspan="15"><b>{{$key}}</b></td>
+                                <td colspan="19"><b>{{$key}}</b></td>
                             </tr>
                             @foreach($row as $k=>$product)
+                                @php
+                                    $packing = isset($product->tbl_purc_grn_dtl_packing) && $product->tbl_purc_grn_dtl_packing > 0 ? $product->tbl_purc_grn_dtl_packing : 1;
+                                    $net_qty = $packing * $product->tbl_purc_grn_dtl_quantity;
+                                    $gross_amount = $product->tbl_purc_grn_dtl_total_amount;
+                                    $gross_amount_per_unit = $net_qty != 0 ? ($gross_amount / $net_qty) : 0;
+                                @endphp
                                 <tr>
                                     <td>{{$ki}}</td>
                                     <td>{{isset($product->grn_date)? date('d-m-Y', strtotime(trim(str_replace('/','-',$product->grn_date)))):''}}</td>
@@ -212,6 +225,8 @@
                                     <td class="open_model clickable-cell TEXT-INFO" data-grn_id="{{ $product->grn_id ?? ($grn_id_code[$product->grn_code] ?? null) }}" data-grn_code="{{$product->grn_code}}" >{{$product->grn_code}}</td>
                                     <td>{{$product->product_name}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_quantity)}}</td>
+                                    <td class="text-center">{{$product->tbl_purc_grn_dtl_packing}}</td>
+                                    <td class="text-right">{{number_format($net_qty,3)}}</td>
                                     <td class="text-center">{{$product->uom_name}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_rate,3)}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_amount,3)}}</td>
@@ -219,12 +234,15 @@
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_vat_amount,3)}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_spec_disc_amount,3)}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_fed_amount,3)}}</td>
+                                    <td class="text-right">{{number_format($gross_amount,3)}}</td>
+                                    <td class="text-right">{{number_format($gross_amount_per_unit,3)}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_total_amount,3)}}</td>
                                     <td class="text-right">{{number_format($product->tbl_purc_grn_dtl_net_tp,3)}}</td>
                                 </tr>
                                 @php
                                     $ki += 1;
                                     $sub_total_quantity += $product->tbl_purc_grn_dtl_quantity;
+                                    $sub_total_net_qty += $net_qty;
                                     $sub_gross_amount += $product->tbl_purc_grn_dtl_amount;
                                     $sub_total_disc_amount += $product->tbl_purc_grn_dtl_disc_amount;
                                     $sub_total_vat_amount += $product->tbl_purc_grn_dtl_vat_amount;
@@ -235,7 +253,9 @@
                             @endforeach
                             <tr class="sub_total">
                                 <td colspan="5" class="rep-font-bold">( {{$key}} ) Sub Total:</td>
-                                <td class="text-right rep-font-bold">{{number_format($sub_total_quantity)}}</td>
+                                <td class="text-right rep-font-bold">{{number_format($sub_total_quantity,3)}}</td>
+                                <td class="text-right rep-font-bold"></td>
+                                <td class="text-right rep-font-bold">{{number_format($sub_total_net_qty,3)}}</td>
                                 <td class="text-right rep-font-bold"></td>
                                 <td class="text-right rep-font-bold"></td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_gross_amount,3)}}</td>
@@ -245,9 +265,12 @@
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_fed_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
                                 <td class="text-right rep-font-bold"></td>
+                                <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
+                                <td class="text-right rep-font-bold"></td>
                             </tr>
                             @php
                                 $pi_grand_total_quantity += $sub_total_quantity;
+                                $pi_grand_total_net_qty += $sub_total_net_qty;
                                 $pi_grand_total_gross_amount += $sub_gross_amount;
                                 $pi_grand_total_disc_amount += $sub_total_disc_amount;
                                 $pi_grand_total_vat_amount += $sub_total_vat_amount;
@@ -258,7 +281,9 @@
                         @endforeach
                         <tr class="grand_total">
                             <td colspan="5" class="rep-font-bold">Purchase Invoice Total:</td>
-                            <td class="text-right rep-font-bold">{{number_format($pi_grand_total_quantity)}}</td>
+                            <td class="text-right rep-font-bold">{{number_format($pi_grand_total_quantity,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
+                            <td class="text-right rep-font-bold">{{number_format($pi_grand_total_net_qty,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold">{{number_format($pi_grand_total_gross_amount,3)}}</td>
@@ -268,13 +293,16 @@
                             <td class="text-right rep-font-bold">{{number_format($pi_grand_total_fed_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($pi_grand_total_total_amount,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
+                            <td class="text-right rep-font-bold">{{number_format($pi_grand_total_total_amount,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
                         </tr>
                         @endif
                         @if(isset($data['specific_purchase_type']) && in_array($data['specific_purchase_type'],['pr','all']) )
-                            <tr><td colspan="15"><h6>Purchase Return</h6></td></tr>
+                            <tr><td colspan="19"><h6>Purchase Return</h6></td></tr>
                             @foreach($list_pr as $pr_key=>$pr_row)
                                 @php
                                     $sub_total_quantity = 0;
+                                    $sub_total_net_qty = 0;
                                     $sub_gross_amount = 0;
                                     $sub_total_disc_amount = 0;
                                     $sub_total_vat_amount = 0;
@@ -283,9 +311,15 @@
                                     $sub_total_total_amount = 0;
                                 @endphp
                                 <tr>
-                                    <td colspan="15"><b>{{$pr_key}}</b></td>
+                                    <td colspan="19"><b>{{$pr_key}}</b></td>
                                 </tr>
                                 @foreach($pr_row as $k=>$pr_product)
+                                    @php
+                                        $pr_packing = isset($pr_product->tbl_purc_grn_dtl_packing) && $pr_product->tbl_purc_grn_dtl_packing > 0 ? $pr_product->tbl_purc_grn_dtl_packing : 1;
+                                        $pr_net_qty = $pr_packing * $pr_product->tbl_purc_grn_dtl_quantity;
+                                        $pr_gross_amount = $pr_product->tbl_purc_grn_dtl_total_amount;
+                                        $pr_gross_amount_per_unit = $pr_net_qty != 0 ? ($pr_gross_amount / $pr_net_qty) : 0;
+                                    @endphp
                                     <tr>
                                         <td>{{$kr}}</td>
                                         <td>{{isset($pr_product->grn_date)? date('d-m-Y', strtotime(trim(str_replace('/','-',$pr_product->grn_date)))):''}}</td>
@@ -293,6 +327,8 @@
                                         <td>{{$pr_product->grn_code}}</td>
                                         <td>{{$pr_product->product_name}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_quantity)}}</td>
+                                        <td class="text-center">{{$pr_product->tbl_purc_grn_dtl_packing}}</td>
+                                        <td class="text-right">{{number_format($pr_net_qty)}}</td>
                                         <td class="text-center">{{$pr_product->uom_name}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_rate,3)}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_amount,3)}}</td>
@@ -300,12 +336,15 @@
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_vat_amount,3)}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_spec_disc_amount,3)}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_fed_amount,3)}}</td>
+                                        <td class="text-right">{{number_format($pr_gross_amount,3)}}</td>
+                                        <td class="text-right">{{number_format($pr_gross_amount_per_unit,3)}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_total_amount,3)}}</td>
                                         <td class="text-right">{{number_format($pr_product->tbl_purc_grn_dtl_net_tp,3)}}</td>
                                     </tr>
                                     @php
                                         $kr += 1;
                                         $sub_total_quantity += $pr_product->tbl_purc_grn_dtl_quantity;
+                                        $sub_total_net_qty += $pr_net_qty;
                                         $sub_gross_amount += $pr_product->tbl_purc_grn_dtl_amount;
                                         $sub_total_disc_amount += $pr_product->tbl_purc_grn_dtl_disc_amount;
                                         $sub_total_vat_amount += $pr_product->tbl_purc_grn_dtl_vat_amount;
@@ -318,6 +357,8 @@
                                     <td colspan="5" class="rep-font-bold">( {{$pr_key}} ) Sub Total:</td>
                                     <td class="text-right rep-font-bold">{{number_format($sub_total_quantity)}}</td>
                                     <td class="text-right rep-font-bold"></td>
+                                    <td class="text-right rep-font-bold">{{number_format($sub_total_net_qty)}}</td>
+                                    <td class="text-right rep-font-bold"></td>
                                     <td class="text-right rep-font-bold"></td>
                                     <td class="text-right rep-font-bold">{{number_format($sub_gross_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($sub_total_disc_amount,3)}}</td>
@@ -326,9 +367,12 @@
                                     <td class="text-right rep-font-bold">{{number_format($sub_total_fed_amount,3)}}</td>
                                     <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
                                     <td class="text-right rep-font-bold"></td>
+                                    <td class="text-right rep-font-bold">{{number_format($sub_total_total_amount,3)}}</td>
+                                    <td class="text-right rep-font-bold"></td>
                                 </tr>
                                 @php
                                     $pr_grand_total_quantity += $sub_total_quantity;
+                                    $pr_grand_total_net_qty += $sub_total_net_qty;
                                     $pr_grand_total_gross_amount += $sub_gross_amount;
                                     $pr_grand_total_disc_amount += $sub_total_disc_amount;
                                     $pr_grand_total_vat_amount += $sub_total_vat_amount;
@@ -341,6 +385,8 @@
                                 <td colspan="5" class="rep-font-bold">Purchase Return Total:</td>
                                 <td class="text-right rep-font-bold">{{number_format($pr_grand_total_quantity)}}</td>
                                 <td class="text-right rep-font-bold"></td>
+                                <td class="text-right rep-font-bold">{{number_format($pr_grand_total_net_qty)}}</td>
+                                <td class="text-right rep-font-bold"></td>
                                 <td class="text-right rep-font-bold"></td>
                                 <td class="text-right rep-font-bold">{{number_format($pr_grand_total_gross_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($pr_grand_total_disc_amount,3)}}</td>
@@ -349,11 +395,14 @@
                                 <td class="text-right rep-font-bold">{{number_format($pr_grand_total_fed_amount,3)}}</td>
                                 <td class="text-right rep-font-bold">{{number_format($pr_grand_total_total_amount,3)}}</td>
                                 <td class="text-right rep-font-bold"></td>
+                                <td class="text-right rep-font-bold">{{number_format($pr_grand_total_total_amount,3)}}</td>
+                                <td class="text-right rep-font-bold"></td>
                             </tr>
                         @endif
                         @if(isset($data['specific_purchase_type']) && in_array($data['specific_purchase_type'],['all']) )
                         @php
                             $grand_total_quantity = $pi_grand_total_quantity + $pr_grand_total_quantity;
+                            $grand_total_net_qty = $pi_grand_total_net_qty + $pr_grand_total_net_qty;
                             $grand_total_gross_amount = $pi_grand_total_gross_amount + $pr_grand_total_gross_amount;
                             $grand_total_disc_amount = $pi_grand_total_disc_amount + $pr_grand_total_disc_amount;
                             $grand_total_vat_amount = $pi_grand_total_vat_amount + $pr_grand_total_vat_amount;
@@ -365,12 +414,16 @@
                             <td colspan="5" class="rep-font-bold">Grand Total:</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_quantity)}}</td>
                             <td class="text-right rep-font-bold"></td>
+                            <td class="text-right rep-font-bold">{{number_format($grand_total_net_qty)}}</td>
+                            <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_gross_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_disc_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_vat_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_spec_disc_amount,3)}}</td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_fed_amount,3)}}</td>
+                            <td class="text-right rep-font-bold">{{number_format($grand_total_total_amount,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
                             <td class="text-right rep-font-bold">{{number_format($grand_total_total_amount,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                         </tr>

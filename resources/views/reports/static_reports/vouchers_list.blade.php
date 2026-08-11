@@ -10,6 +10,17 @@
             tfoot>tr>td {padding:0 !important;}
             body {margin: 0;}
         }
+
+        .clickable-cell {
+            cursor: pointer;
+            color: #17a2b8 !important;
+            text-decoration: none;
+        }
+
+        .clickable-cell:hover {
+            text-decoration: underline;
+            color: #117a8b !important;
+        }
     </style>
 @endsection
 @section('content')
@@ -17,6 +28,29 @@
         $data = Session::get('data');
 
         // dd($data);
+        $voucherMenuMap = [
+            'jv' => 31,
+            'obv' => 62,
+            'crv' => 28,
+            'cpv' => 37,
+            'brv' => 29,
+            'bpv' => 36,
+            'ctrv' => 138,
+            'lv' => 138,
+            'lfv' => 171,
+            'brpv' => 269,
+            'brrv' => 274,
+            'pv' => 270,
+            'rv' => 286,
+            'ipv' => 271,
+            'irv' => 272,
+            'pve' => 273,
+            'grn' => 23,
+            'po' => 38,
+            'pr' => 50,
+            'si' => 60,
+            'so' => 58,
+        ];
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -113,9 +147,11 @@
                                     @php
                                         $print_id = $voucher->voucher_document_id ?? '';
                                         if($print_id == ''){$print_id = $voucher->voucher_id;}
+                                        $vTypeLower = strtolower($voucher->voucher_type);
+                                        $voucherMenuId = isset($voucherMenuMap[$vTypeLower]) ? $voucherMenuMap[$vTypeLower] : '';
                                     @endphp
                                     <tr>
-                                        <td class="text-left">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$voucher->voucher_date))))}}</td>
+                                        <td class="open_doc_modal clickable-cell text-left" style="cursor: pointer;" data-form_id="{{$print_id}}" data-form_code="{{$voucher->voucher_no}}" data-form_type="{{strtolower($voucher->voucher_type)}}" data-menu_id="{{$voucherMenuId}}">{{date('d-m-Y', strtotime(trim(str_replace('/','-',$voucher->voucher_date))))}}</td>
                                         <td class="text-left">
                                             <span class="generate_report clickable-cell" data-id="{{$print_id}}" data-type="{{$voucher->voucher_type}}">{{$voucher->voucher_no}}</span>
                                         </td>
@@ -175,7 +211,33 @@
 @endsection
 
 @section('customJS')
+    <script>
+        $(document).on('click', '.open_doc_modal', function(e) {
+            e.preventDefault();
+            var form_id   = $(this).data('form_id');
+            var form_code = $(this).data('form_code');
+            var form_type = $(this).data('form_type');
+            var menu_id   = $(this).data('menu_id');
 
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            var formData = {
+                form_id:   form_id,
+                form_code: form_code,
+                form_type: form_type,
+                menu_id:   menu_id
+            };
+
+            var data_url = '/upload-document';
+            $('#kt_modal_md').modal('show');
+            $('#kt_modal_md').find('.modal-content').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading document details...</p></div>');
+            $('#kt_modal_md').find('.modal-content').load(data_url, formData);
+        });
+    </script>
 @endsection
 @section('exportXls')
     @if($data['form_file_type'] == 'xls')
