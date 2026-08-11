@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\CreatePerson::class,
         \App\Console\Commands\VoucherPosting::class,
+        \App\Console\Commands\VoucherOrderSync::class,
     ];
 
     /**
@@ -38,7 +39,7 @@ class Kernel extends ConsoleKernel
                 $schedule->command('zcmd:stock_batch_insert')->everyTenMinutes();
             }
             if($subdomain == 'atayebat'){
-                $schedule->command('voucher:posting')->hourlyAt(59);
+                $schedule->command('voucher:order-sync')->everyTenMinutes();
                 $schedule->command('voucher:cash_posting')->dailyAt('03:00');
                 $schedule->command('reportverify:closingday')->timezone('Asia/Muscat')->dailyAt("23:55");
                 $schedule->command('cheque:notify')->timezone('Asia/Muscat')->dailyAt("09:00");
