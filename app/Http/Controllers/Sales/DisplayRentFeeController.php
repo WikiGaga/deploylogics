@@ -61,7 +61,11 @@ class DisplayRentFeeController extends Controller
                 : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
 
             if($exists){
-                $data['permission'] = self::$menu_dtl_id.'-edit';
+                $menuPermissionPrefix = self::$menu_dtl_id;
+                $data['permission'] = [
+                    $menuPermissionPrefix.'-edit',
+                    $menuPermissionPrefix.'-view',
+                ];
                 $data['id'] = $id;
                 $currentQuery = TblSaleSales::with('dtls','supplier_view','expense')
                     ->where(Utilities::currentBC())
@@ -73,7 +77,9 @@ class DisplayRentFeeController extends Controller
                 if(empty($data['current'])){
                     abort('404');
                 }
-                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                $canEdit = auth()->user()->isAbleTo($menuPermissionPrefix.'-edit')
+                    && (string) $data['current']->branch_id === (string) auth()->user()->branch_id;
+                if($canEdit){
                     $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
                     $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());

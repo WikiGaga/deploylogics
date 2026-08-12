@@ -348,7 +348,11 @@ class PurchaseOrderController extends Controller
                 : $baseQuery->wherein('branch_id', $user_branches->pluck('branch_id'))->exists();
 
             if($exists){
-                $data['permission'] = self::$menu_dtl_id.'-edit';
+                $menuPermissionPrefix = self::$menu_dtl_id;
+                $data['permission'] = [
+                    $menuPermissionPrefix.'-edit',
+                    $menuPermissionPrefix.'-view',
+                ];
                 $data['id'] = $id;
                 $currentQuery = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')
                     ->where('purchase_order_id',$id)
@@ -359,11 +363,13 @@ class PurchaseOrderController extends Controller
                 $data['current'] = $currentQuery->first();
 
                 // dd($data['current']->toArray());
-                
+
                 if(empty($data['current'])){
                     abort('404');
                 }
-                if(Utilities::documentBranchIsUserAccessible($data['current']->branch_id)){
+                $canEdit = auth()->user()->isAbleTo($menuPermissionPrefix.'-edit')
+                    && Utilities::documentBranchIsUserAccessible($data['current']->branch_id);
+                if($canEdit){
                     $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
                     $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());

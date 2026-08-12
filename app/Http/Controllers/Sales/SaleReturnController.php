@@ -82,7 +82,11 @@ class SaleReturnController extends Controller
                 : $baseQuery->where('branch_id', auth()->user()->branch_id)->exists();
 
             if($exists){
-                $data['permission'] = $data['invoice_menu_id'].'-edit';
+                $menuPermissionPrefix = $data['invoice_menu_id'];
+                $data['permission'] = [
+                    $menuPermissionPrefix.'-edit',
+                    $menuPermissionPrefix.'-view',
+                ];
                 $data['id'] = $id;
                 $qry = TblSaleSales::with('dtls','customer_view','expense','SO')
                     ->where(Utilities::currentBC())
@@ -100,7 +104,9 @@ class SaleReturnController extends Controller
                 if(empty($data['current'])){
                     abort('404');
                 }
-                if((string) $data['current']->branch_id === (string) auth()->user()->branch_id){
+                $canEdit = auth()->user()->isAbleTo($menuPermissionPrefix.'-edit')
+                    && (string) $data['current']->branch_id === (string) auth()->user()->branch_id;
+                if($canEdit){
                     $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
                     $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());

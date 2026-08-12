@@ -460,7 +460,11 @@ class VoucherController extends Controller
                 : $baseQuery->wherein('branch_id', $user_branches->pluck('branch_id'))->exists();
 
             if($exists){
-                $data['permission'] = $data['stock_menu_id'].'-edit';
+                $menuPermissionPrefix = $data['stock_menu_id'];
+                $data['permission'] = [
+                    $menuPermissionPrefix.'-edit',
+                    $menuPermissionPrefix.'-view',
+                ];
                 $data['id'] = $id;
                 $currentQuery = TblAccoVoucher::where('voucher_id',$id)
                     ->where('voucher_type',$type)
@@ -474,7 +478,9 @@ class VoucherController extends Controller
                     abort('404');
                 }
 
-                if(Utilities::documentBranchIsUserAccessible($data['current']->branch_id)){
+                $canEdit = auth()->user()->isAbleTo($menuPermissionPrefix.'-edit')
+                    && Utilities::documentBranchIsUserAccessible($data['current']->branch_id);
+                if($canEdit){
                     $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 }else{
                     $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
