@@ -2,7 +2,13 @@ function sanitizeNumericInput(value) {
     if (value === '' || value === undefined || value === null) {
         return value;
     }
-    value = String(value).replace(/[^\d.]/g, '');
+    var strVal = String(value).trim();
+    if (strVal.indexOf('.') === 0) {
+        strVal = '0' + strVal;
+    } else if (strVal.indexOf('-.') === 0) {
+        strVal = '-0' + strVal.substring(1);
+    }
+    value = strVal.replace(/[^\d.-]/g, '');
     var dotIndex = value.indexOf('.');
     if (dotIndex !== -1) {
         value = value.substring(0, dotIndex + 1) + value.substring(dotIndex + 1).replace(/\./g, '');
@@ -12,6 +18,38 @@ function sanitizeNumericInput(value) {
     }
     return value;
 }
+
+(function($) {
+    if (typeof $ !== 'undefined' && $.fn && !$.fn.val._leadingZeroPatched) {
+        var originalVal = $.fn.val;
+        var patchedVal = function(value) {
+            if (arguments.length > 0 && value !== undefined && value !== null) {
+                if (this.length) {
+                    var strVal = String(value).trim();
+                    if (/^\.\d+/.test(strVal) || /^-\.\d+/.test(strVal)) {
+                        var shouldSanitize = false;
+                        for (var i = 0; i < this.length; i++) {
+                            var el = this[i];
+                            if (el && el.tagName === 'INPUT') {
+                                var inputType = (el.type || 'text').toLowerCase();
+                                if (inputType === 'text' || inputType === 'number' || inputType === 'hidden' || inputType === 'tel' || !inputType) {
+                                    shouldSanitize = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (shouldSanitize) {
+                            value = strVal.indexOf('.') === 0 ? ('0' + strVal) : ('-0' + strVal.substring(1));
+                        }
+                    }
+                }
+            }
+            return originalVal.apply(this, arguments);
+        };
+        patchedVal._leadingZeroPatched = true;
+        $.fn.val = patchedVal;
+    }
+})(jQuery);
 
 function validateNumber(event) {
     event = (event) ? event : window.event;
@@ -100,7 +138,7 @@ $(document).ready(function() {
     $('.validOnlyFloatNumber').keypress(validateOnlyFloatNumber);
     $('.debit').keypress(validateOnlyFloatNumber);
     $('.short_text,.small_text,.medium_text,.large_text,.long_text,.double_text,.small_no,.medium_no,.large_no,.mob_no').keypress(setTextLength);
-    $(document).on('input paste change keyup blur', '.validNumber,.validNo', function() {
+    $(document).on('input paste change keyup blur', '.validNumber,.validNo,.validOnlyFloatNumber,.debit,.credit,.fcdebit,.fccredit,.vatperc,.vatamt,.netamt,.amount,.deduct_credit,.expense_amount,.expense_perc,.tblGridCal_qty,.tblGridCal_rate,.tblGridCal_amount,.tblGridCal_discount_perc,.tblGridCal_discount_amount,.tblGridCal_vat_perc,.tblGridCal_vat_amount,.tblGridCal_gross_amount,.tblGridSale_rate,.fc_rate', function() {
         var self = this;
         setTimeout(function() {
             var sanitized = sanitizeNumericInput(self.value);
@@ -110,4 +148,5 @@ $(document).ready(function() {
         }, 0);
     });
 });
+
 

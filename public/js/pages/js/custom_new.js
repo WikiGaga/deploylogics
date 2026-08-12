@@ -94,32 +94,56 @@ function ChartCodeMasking(){
 }
 
 function notNull(val){
-    if(val == null || val == '' || val == NaN || val == undefined){
+    if(val == null || val === '' || val == NaN || val == undefined){
         return "";
     }else{
+        var strVal = String(val).trim();
+        if(strVal.indexOf('.') === 0){
+            return '0' + strVal;
+        }else if(strVal.indexOf('-.') === 0){
+            return '-0' + strVal.substring(1);
+        }
         return val;
     }
 }
 function notEmptyZero(val){
-    if(val == null || val == '' || val == NaN || val == undefined){
+    if(val == null || val === '' || val == NaN || val == undefined){
         return 0;
     }else{
+        var strVal = String(val).trim();
+        if(strVal.indexOf('.') === 0){
+            return '0' + strVal;
+        }else if(strVal.indexOf('-.') === 0){
+            return '-0' + strVal.substring(1);
+        }
         return val;
     }
 }
 function notNullEmpty(val,deci = 3){
-    if(val == null || val == '' || val == NaN || val == undefined){
+    if(val == null || val === '' || val == NaN || val == undefined){
         return Number(0).toFixed(deci);
     }else{
-        return parseFloat(val).toFixed(deci);
+        var strVal = String(val).trim();
+        if(strVal.indexOf('.') === 0){
+            strVal = '0' + strVal;
+        }else if(strVal.indexOf('-.') === 0){
+            strVal = '-0' + strVal.substring(1);
+        }
+        return parseFloat(strVal).toFixed(deci);
     }
 }
 
 function notNullEmptyFixed(val,deci){
-    if(val == null || val == '' || val == NaN || val == undefined){
+    if(val == null || val === '' || val == NaN || val == undefined){
         return Number(0).toFixed(deci);
     }else{
-        return Number(val).toFixed(deci);
+        var strVal = String(val).trim();
+        if(strVal.indexOf('.') === 0){
+            strVal = '0' + strVal;
+        }else if(strVal.indexOf('-.') === 0){
+            strVal = '-0' + strVal.substring(1);
+        }
+        return Number(strVal).toFixed(deci);
     }
 }
 function JS_number_format(val){

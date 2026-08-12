@@ -1337,10 +1337,14 @@
                             var total_length = $('#repeated_data>tr').length;
 
                             function notNullNo(val) {
-                                if (val == null) {
+                                if (val == null || val === '') {
                                     return "";
                                 } else {
-                                    return val = parseFloat(val).toFixed(3);
+                                    var strVal = String(val).trim();
+                                    if (strVal.indexOf('.') === 0) {
+                                        strVal = '0' + strVal;
+                                    }
+                                    return parseFloat(strVal).toFixed(3);
                                 }
                             }
                             for (var p = 0; p < response['all']['po_details'].length; p++) {
@@ -1910,11 +1914,18 @@
                             var html = '';
 
                             function notNull(val) {
-                                return val == null ? "" : val;
+                                if (val == null) return "";
+                                var strVal = String(val).trim();
+                                if (strVal.indexOf('.') === 0) return '0' + strVal;
+                                if (strVal.indexOf('-.') === 0) return '-0' + strVal.substring(1);
+                                return val;
                             }
 
                             function notNullNo(val) {
-                                return val == null ? "" : parseFloat(val).toFixed(3);
+                                if (val == null || val === '') return "";
+                                var strVal = String(val).trim();
+                                if (strVal.indexOf('.') === 0) strVal = '0' + strVal;
+                                return parseFloat(strVal).toFixed(3);
                             }
 
                             for (var i = 0; i < response['all'].length; i++) {
