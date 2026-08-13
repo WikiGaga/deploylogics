@@ -160,6 +160,7 @@ class UserReportsController2 extends Controller
             $supplier_ids = isset($request->supplier_ids)?$request->supplier_ids:[];
             $users_ids = isset($request->users_ids)?$request->users_ids:[];
             $hide_total = isset($request->hide_total)?1:"";
+            $include_pos_vouchers = isset($request->include_pos_vouchers)?1:"";
 
             $report_cases = ['closing_day','sale_type_wise','summary_of_daily_activity',
                 'vouchers_list','sale_invoice','trial_balance','accounting_ledger','grn_list',
@@ -239,7 +240,11 @@ class UserReportsController2 extends Controller
                     }
                     //-----------end type--------------
                     $data['where'] = $data['where_voucher_type'].''.$data['where_chart_account'];
+                    if($include_pos_vouchers != 1){
+                        $data['where'] .= " and lower(voucher_type) not in ('pos','rpos') ";
+                    }
                     $data['hide_total'] = $hide_total;
+                    $data['include_pos_vouchers'] = $include_pos_vouchers;
                     $data['to_date'] = date('Y-m-d', strtotime($to_date)); //for oracle db like 2020-04-16
                     $data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
                     $query = "Select distinct branch_id,branch_name from vw_acco_voucher where voucher_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd') and branch_id = '".$request->report_branch_name."' and ( voucher_debit <> 0 OR  voucher_credit <> 0 ) ".$data['where'];

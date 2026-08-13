@@ -67,6 +67,19 @@
             </div>
         </div>
     </div>
+    <div class="row form-group-block">
+        <div class="col-lg-3">
+            <label class="erp-col-form-label">Include POS vouchers:</label>
+        </div>
+        <div class="col-lg-6">
+            <div class="kt-checkbox-inline">
+                <label class="kt-checkbox kt-checkbox--tick kt-checkbox--brand">
+                    <input type="checkbox" name="include_pos_vouchers">
+                    <span></span>
+                </label>
+            </div>
+        </div>
+    </div>
 @endif
 @if($data['case_name'] == 'combine_ledger_group_wise')
     <div class="row form-group-block">

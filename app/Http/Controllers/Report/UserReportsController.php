@@ -1558,6 +1558,7 @@ class UserReportsController extends Controller
             $supplier_ids = isset($request->supplier_ids)?$request->supplier_ids:[];
             $users_ids = isset($request->users_ids)?$request->users_ids:[];
             $hide_total = isset($request->hide_total)?1:"";
+            $include_pos_vouchers = isset($request->include_pos_vouchers)?1:"";
             $greater_than_net_tp = isset($request->greater_than_net_tp)?1:"";
             $activity_check = isset($request->activity_check)?1:"";
             $consolidate = isset($request->consolidate)?1:0;
@@ -1893,7 +1894,11 @@ class UserReportsController extends Controller
                     }
                     //-----------end type--------------
                     $data['where'] = $data['where_voucher_type'].''.$data['where_chart_account'];
+                    if($include_pos_vouchers != 1){
+                        $data['where'] .= " and lower(voucher_type) not in ('pos','rpos') ";
+                    }
                     $data['hide_total'] = $hide_total;
+                    $data['include_pos_vouchers'] = $include_pos_vouchers;
                     $data['post_wise'] = $post_wise;
                     $data['to_date'] = date('Y-m-d', strtotime($to_date)); //for oracle db like 2020-04-16
                     $data['from_date'] = date('Y-m-d', strtotime($from_date)); //for oracle db like 2020-04-16
