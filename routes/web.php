@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Artisan;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -26,22 +26,34 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/test-pusher', function () {
-    //   dd(config('broadcasting.connections.pusher'));
-    event(new \App\Events\PusherEvent('Hello from Laravel!'));
-    return 'event sent';
-});
+    Route::get('/test-pusher', function () {
+        //   dd(config('broadcasting.connections.pusher'));
+        event(new \App\Events\PusherEvent('Hello from Laravel!'));
+        return 'event sent';
+    });
 
-Route::get('/test-notification', function () {
-    $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
-    $model = get_class(new TblPurcGrn());
+    Route::get('/clear-app-cache-temporary', function () {
+        Artisan::call('cache:clear');
+        Artisan::call('config:clear');
+        Artisan::call('view:clear');
+        Artisan::call('route:clear');
 
-    Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', 'https://example.com', [
-        'stage' => 'Published'
-    ]));
+        // If using Spatie Permissions:
+        // app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-    return 'Notification sent';
-});
+        return 'All caches cleared successfully!';
+    });
+
+    Route::get('/test-notification', function () {
+        $user = \App\Models\User::where('email','zaryabakhtar9@gmail.com')->first();
+        $model = get_class(new TblPurcGrn());
+
+        Notification::send($user, new GlobalNotification('vw_purc_purchase_order_listing', 'https://example.com', [
+            'stage' => 'Published'
+        ]));
+
+        return 'Notification sent';
+    });
 
 Route::middleware('auth')->post('/push/subscribe', function (Request $request) {
     $request->validate([
@@ -1159,7 +1171,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('posted','Accounts\VoucherController@Posted');
             Route::post('unposted','Accounts\VoucherController@UnPosted');
             Route::post('cancel','Accounts\VoucherController@cancel');
-            
+
             Route::post('Posted/{id?}','Accounts\VoucherController@VoucherPosted');
             Route::post('UnPosted/{id?}','Accounts\VoucherController@VoucherUnPosted');
         });

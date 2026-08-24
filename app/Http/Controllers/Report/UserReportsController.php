@@ -3159,6 +3159,9 @@ class UserReportsController extends Controller
         if($case_name == 'inventory'){
             $menu_dtl_id = 75;
         }
+        if($case_name == 'hr-reports'){
+            $menu_dtl_id = 363;
+        }
         $data['case_name'] = $case_name;
         $data['list'] = TblSoftReports::where('report_entry_status',1)
             ->where('parent_menu_id',$menu_dtl_id)->orderBy('report_sr_no')->get();

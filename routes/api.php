@@ -35,13 +35,20 @@ Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@s
 Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 Route::post('pos-order-voucher', 'Api\PosOrderVoucherController@store');
 
-
+    Route::prefix('activity-logs')->group(function () {
+        Route::post('bulk', 'Api\ActivityLogController@storeBulk');
+        Route::get('/', 'Api\ActivityLogController@index');
+        Route::get('summary', 'Api\ActivityLogController@summary');
+        Route::delete('purge', 'Api\ActivityLogController@purge');
+    });
 
 Route::group(['middleware'=>['auth:api']], function () {
 
     Route::get('test', 'Api\ApiHomeController@index');
 
     Route::get('dashboard', 'Api\ApiHomeController@dashboard');
+
+
 
     Route::prefix('auth')->group(function () {
         Route::post('verify-branch', 'Api\Auth\LoginController@verifyBranch');
