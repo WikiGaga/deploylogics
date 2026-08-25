@@ -411,6 +411,8 @@ class ApiHomeController extends ApiController
             'attendance_time' => 'required',
             'attendance_type' => 'required', // e.g., 'Check-In' or 'Check-Out'
             'branch_id' => 'required', // e.g., 'Check-In' or 'Check-Out'
+            'latitude' => 'required',
+            'longitude' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -458,6 +460,7 @@ class ApiHomeController extends ApiController
                     'business_id' => $employee->business_id,
                     'company_id'  => $employee->company_id,
                     'branch_id'   => $request->branch_id,
+
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
@@ -474,6 +477,8 @@ class ApiHomeController extends ApiController
                 'attendance_time' => $att_full_time,
                 'attendance_type' => $request->attendance_type,
                 'branch_id' => $request->branch_id,
+                'latitude'   => $request->latitude,
+                'longitude'   => $request->longitude,
                 'shift_id'        => 1,
                 'att_id'          => $att_id,
                 'created_at'      => now(),
@@ -498,6 +503,8 @@ class ApiHomeController extends ApiController
             '*.attendance_type' => 'required|in:Check-In,Check-Out',
             '*.employees'       => 'required|numeric',
             '*.branch_id'       => 'required|numeric',
+            '*.latitude'        => 'required',
+            '*.longitude'       => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -565,6 +572,8 @@ class ApiHomeController extends ApiController
                     'attendance_time' => $attendanceTime,
                     'attendance_type' => $attendance['attendance_type'],
                     'branch_id' => $attendance['branch_id'],
+                    'latitude' => $attendance['latitude'],
+                    'longitude' => $attendance['longitude'],
                     'shift_id' => 1,
                     'att_id' => $attId,
                     'created_at' => now(),
