@@ -20,6 +20,7 @@ class SalaryNotificationController extends Controller
 {
     public static $page_title = 'Salary Notifications';
     public static $redirect_url = 'salary-notifications';
+    public static $menu_dtl_id = '363';
 
     protected $whatsappService;
     protected $parser;

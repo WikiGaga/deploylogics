@@ -45,10 +45,9 @@ class ListingAdvanceController extends Controller
         $data = [];
         $case_name = (isset($subType) && !empty($subType)) ? $subType : $caseType;
         $listing = TblSoftListingStudio::where('listing_studio_case',$case_name)->first();
-        // dd( $case_name, $listing,$listing->menu_dtl_id );
-        // if(empty($listing)){
-        //     return abort('404');
-        // }
+        if (empty($listing)) {
+            return abort(404, 'Listing configuration not found for: ' . $case_name);
+        }
         $data['data_url'] = action('Common\ListingAdvanceController@index',$case_name);
         $data['menu_dtl_id'] = $listing->menu_dtl_id;
         $data['has_staging'] = DB::table('tbl_menu_flow_criteria')->where('menu_flow_criteria_status',1)->where('menu_dtl_id',$listing->menu_dtl_id)->exists();
@@ -513,6 +512,9 @@ class ListingAdvanceController extends Controller
         if($case_name == 'product-discount-setup'){
             $arr['table_columns'] = self::customColumnsDiscountSetup();
         }
+        if($case_name == 'salary-notifications'){
+            $arr['table_columns'] = self::customColumnsSalaryNotifications();
+        }
         return $arr;
     }
 
@@ -520,8 +522,8 @@ class ListingAdvanceController extends Controller
     {
         return [
             "discount_code" => [
-                'title' => 'Code',
-                'type' => 'string',
+                "title" => 'Code',
+                "type" => 'string',
             ],
             "discount_title" => [
                 'title' => 'Title',
@@ -549,6 +551,44 @@ class ListingAdvanceController extends Controller
             ],
             "created_at" => [
                 'title' => "Entry Date",
+                'type' => 'datetime',
+            ],
+        ];
+    }
+
+    public function customColumnsSalaryNotifications()
+    {
+        return [
+            'pay_period' => [
+                'title' => 'Pay Period',
+                'type' => 'string',
+            ],
+            'file_name' => [
+                'title' => 'File Name',
+                'type' => 'string',
+            ],
+            'total_rows' => [
+                'title' => 'Total Rows',
+                'type' => 'string',
+            ],
+            'queued_count' => [
+                'title' => 'Queued',
+                'type' => 'string',
+            ],
+            'sent_count' => [
+                'title' => 'Sent',
+                'type' => 'string',
+            ],
+            'failed_count' => [
+                'title' => 'Failed',
+                'type' => 'string',
+            ],
+            'status' => [
+                'title' => 'Status',
+                'type' => 'string',
+            ],
+            'created_at' => [
+                'title' => 'Created At',
                 'type' => 'datetime',
             ],
         ];

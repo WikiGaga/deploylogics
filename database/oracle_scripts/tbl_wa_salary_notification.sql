@@ -1,6 +1,7 @@
 -- ================================================================
 -- Salary WhatsApp Notification tables (Oracle)
 -- Run manually before using /salary-notifications/form
+-- Also run: database/oracle_scripts/listing_salary_notifications.sql
 -- ================================================================
 
 BEGIN
