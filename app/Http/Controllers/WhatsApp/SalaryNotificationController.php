@@ -35,13 +35,16 @@ class SalaryNotificationController extends Controller
     public function create()
     {
         $data = [];
-        $data['page_data'] = array_merge(Utilities::newForm(), [
-            'title' => self::$page_title,
-            'action' => 'Upload',
-            'type' => 'Upload',
-            'path_index' => $this->prefixIndexPage . self::$redirect_url,
-            'create' => '',
-        ]);
+        $data['page_data'] = [];
+        $data['page_data']['title'] = self::$page_title;
+        $data['page_data']['path_index'] = $this->prefixIndexPage . self::$redirect_url;
+        $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
+        $data['menu_id'] = self::$menu_dtl_id;
+        $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $data['permission'] = self::$menu_dtl_id . '-create';
+        $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
+        $data['page_data']['action'] = 'Upload';
+        $data['page_data']['type'] = 'Upload';
 
         return view('whatsapp.salary_notifications.form', compact('data'));
     }
@@ -205,13 +208,17 @@ class SalaryNotificationController extends Controller
         }
 
         $data = [];
-        $data['page_data'] = [
-            'title' => self::$page_title . ' — Batch Detail',
-            'type' => 'Detail',
-            'path_index' => $this->prefixIndexPage . self::$redirect_url,
-            'create' => '/salary-notifications/form',
-        ];
+        $data['page_data'] = [];
+        $data['page_data']['title'] = self::$page_title;
+        $data['page_data']['path_index'] = $this->prefixIndexPage . self::$redirect_url;
+        $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
+        $data['menu_id'] = self::$menu_dtl_id;
+        $data['menu_dtl_id'] = self::$menu_dtl_id;
+        $data['permission'] = self::$menu_dtl_id . '-view';
+        $data['page_data'] = array_merge($data['page_data'], Utilities::viewForm());
+        $data['page_data']['type'] = 'Detail';
         $data['batch'] = $batch;
+        $data['id'] = $id;
 
         return view('whatsapp.salary_notifications.show', compact('data'));
     }
