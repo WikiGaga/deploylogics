@@ -412,8 +412,14 @@ class Utilities
         }
         Session::forget('dataSession');
         //session branch to bussiness convert 11-feb-2021(7:25pm)
-        $config = TblDefiConfiguration::first();
-        $short_keys = TblDefiShortcutKeys::first();
+        // Configuration and shortcut keys are saved per branch, so an unscoped first() can
+        // load another branch's accounts. Fall back to wider scopes for older single-row setups.
+        $config = TblDefiConfiguration::where(Utilities::currentBCB())->first()
+            ?: TblDefiConfiguration::where(Utilities::currentBC())->first()
+            ?: TblDefiConfiguration::first();
+        $short_keys = TblDefiShortcutKeys::where(Utilities::currentBCB())->first()
+            ?: TblDefiShortcutKeys::where(Utilities::currentBC())->first()
+            ?: TblDefiShortcutKeys::first();
         $configBranch = TblDefiConfigBranches::where(Utilities::currentBC())->where('acc_branch_id',auth()->user()->branch_id)->first();
         $dataSession = [];
         if(!empty($short_keys) && !empty($config)){

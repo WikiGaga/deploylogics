@@ -142,12 +142,27 @@ class SupplierController extends Controller
         if($referer == $this->page_view){
             return $this->jsonErrorResponse($data, "Cannot update this entry.", 200);
         }
+        // A new vendor takes its account code from the vendor group's account. Editing keeps
+        // the existing account, so the parent is only resolved and checked when creating.
+        $parent_account_code = null;
+        if(!isset($id)){
+            $sup_type = TblPurcSupplierType::where('supplier_type_id',$request->supplier_type)->where(Utilities::currentBC())->first();
+            if(empty($sup_type)){
+                return $this->jsonErrorResponse($data, "Select a valid vendor group.", 200);
+            }
+            $acc_code = TblAccCoa::where('chart_account_id',$sup_type->supplier_type_account_id)->where(Utilities::currentBC())->first();
+            if(empty($acc_code)){
+                return $this->jsonErrorResponse($data, "Vendor group '".$sup_type->supplier_type_name."' has no chart of account linked. Fix the vendor group before adding vendors to it.", 200);
+            }
+            if($this->isProfitLossChartCode($acc_code->chart_code)){
+                return $this->jsonErrorResponse($data, "Vendor group '".$sup_type->supplier_type_name."' is linked to ".$acc_code->chart_code." - ".$acc_code->chart_name.", which is a profit & loss account. Vendors created under it would be reported as expenses. Link the vendor group to a payables account first.", 200);
+            }
+            $parent_account_code = $acc_code->chart_code;
+        }
+
         DB::beginTransaction();
         try{
-            $sup_type = TblPurcSupplierType::where('supplier_type_id',$request->supplier_type)->where(Utilities::currentBC())->first();
-            $acc_code = TblAccCoa::where('chart_account_id',$sup_type->supplier_type_account_id)->where(Utilities::currentBC())->first();
             $level_no = 4;
-            $parent_account_code = $acc_code->chart_code; //
             $business_id = auth()->user()->business_id;
             $company_id = auth()->user()->company_id;
             $branch_id = auth()->user()->branch_id;

@@ -185,6 +185,13 @@ class Controller extends BaseController
     }
 
 
+    // Chart groups 7, 8 and 9 are income, cost of sales and expenses. A party control
+    // account (vendor, customer, bank) created under them is reported as P&L activity
+    // instead of a balance sheet balance.
+    public function isProfitLossChartCode($chart_code){
+        return in_array(substr((string)$chart_code, 0, 1), ['7','8','9'], true);
+    }
+
     public function proPurcChartInsert($level_no,$parent_account_code,$business_id,$company_id,$branch_id,$user_id,$chart_name){
         $pdo = DB::getPdo();
         $account_id = 0;

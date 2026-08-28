@@ -1703,6 +1703,13 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('delete/{id}','WhatsApp\WAMessagesController@destroy');
     });
 
+    Route::prefix('salary-notifications')->group(function () {
+        Route::get('form', 'WhatsApp\SalaryNotificationController@create');
+        Route::post('preview', 'WhatsApp\SalaryNotificationController@preview')->name('salary_notifications.preview');
+        Route::post('send', 'WhatsApp\SalaryNotificationController@send')->name('salary_notifications.send');
+        Route::get('batch/{id}', 'WhatsApp\SalaryNotificationController@show')->name('salary_notifications.batch');
+    });
+
     Route::prefix('whatsapp')->group(function () {
         Route::get('customer-support','WhatsApp\WhatsAppChatController@index');
         Route::post('get-customer-chat/{phoneNo}','WhatsApp\WhatsAppChatController@getChatWindow')->name('chat.getChatWindow');

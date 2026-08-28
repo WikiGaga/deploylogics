@@ -78,12 +78,28 @@ class SupplierTypeController extends Controller
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
         }
+        // A new vendor group takes its account code from the configured Supplier Group A/C.
+        // Editing keeps the existing account, so the parent is only resolved when creating.
+        $parent_account_code = null;
+        if(!isset($id)){
+            $dataSession = Session::get('dataSession');
+            $configured_group = isset($dataSession->supplier_group)?$dataSession->supplier_group:null;
+            if(empty($configured_group)){
+                return $this->jsonErrorResponse($data, "Supplier Group A/C is not configured. Set it under Setting > Configuration > Purchase before creating a vendor group.", 200);
+            }
+            $supplier_group = TblAccCoa::where('chart_account_id',$configured_group)->where(Utilities::currentBC())->first('chart_code');
+            if(empty($supplier_group)){
+                return $this->jsonErrorResponse($data, "The configured Supplier Group A/C was not found in the chart of accounts. Reselect it under Setting > Configuration > Purchase.", 200);
+            }
+            if($this->isProfitLossChartCode($supplier_group->chart_code)){
+                return $this->jsonErrorResponse($data, "Supplier Group A/C is set to ".$supplier_group->chart_code.", which is a profit & loss account. Vendor groups created under it would be reported as expenses. Point it at a payables group under Setting > Configuration > Purchase.", 200);
+            }
+            $parent_account_code = $supplier_group->chart_code;
+        }
+
         DB::beginTransaction();
         try{
             $level_no = 3;
-            $supplier_group = TblAccCoa::where('chart_account_id',Session::get('dataSession')->supplier_group)->where(Utilities::currentBC())->first('chart_code');
-            //$parent_account_code = "3-01-00-0000";
-            $parent_account_code = $supplier_group->chart_code;
             $business_id = auth()->user()->business_id;
             $company_id = auth()->user()->company_id;
             $branch_id = auth()->user()->branch_id;
