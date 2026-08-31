@@ -29,6 +29,38 @@
             <div class="kt-portlet__body">
                 <input type="hidden" value="{{ $data['menu_id'] }}" id="menu_id">
 
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading mb-3"><i class="la la-info-circle"></i> Important Instructions</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Excel file format</strong>
+                            <ul class="mb-2 pl-3">
+                                <li>Use the approved <strong>Salary template</strong> file (.xlsx / .xls).</li>
+                                <li><strong>Cell A2:</strong> pay period (e.g. SEP-2025).</li>
+                                <li><strong>Row 3:</strong> headers. <strong>Employee data from row 4</strong> onward.</li>
+                                <li><strong>Column C:</strong> employee name (required).</li>
+                                <li><strong>Column F:</strong> mobile number (required).</li>
+                                <li>Salary values: columns H–R. Net payment is calculated automatically (do not rely on column U).</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Phone numbers</strong>
+                            <ul class="mb-2 pl-3">
+                                <li>Enter the <strong>full international number with country code</strong>.</li>
+                                <li>Examples: <code>96891234567</code>, <code>+923001234567</code>, <code>00971501234567</code>.</li>
+                                <li>Any country is allowed. Local numbers without country code are not accepted.</li>
+                            </ul>
+                            <strong>Sending</strong>
+                            <ul class="mb-0 pl-3">
+                                <li>Click <strong>Preview</strong> first and fix all row errors before sending.</li>
+                                <li><strong>Confirm &amp; Send All</strong> queues WhatsApp messages in the background.</li>
+                                <li>You will be redirected to the batch detail page to track Sent / Failed status.</li>
+                                <li>Do not upload the same file again while a batch is still processing.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <form id="salary_notification_form" class="kt-form" enctype="multipart/form-data" autocomplete="off">
                     @csrf
                     <div class="row mb-4">
@@ -38,7 +70,7 @@
                                 <input type="file" name="file" id="salary_file" class="custom-file-input" accept=".xlsx,.xls">
                                 <label class="custom-file-label" for="salary_file">Choose file (Salary template format)</label>
                             </div>
-                            <small class="form-text text-muted">Use the approved salary sheet format. Data starts row 4; pay period in A2.</small>
+                            <small class="form-text text-muted">Upload the salary Excel file, then click Preview to validate all rows.</small>
                         </div>
                         <div class="col-lg-3">
                             <button type="button" class="btn btn-brand btn-sm" id="btn_preview">

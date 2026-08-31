@@ -109,40 +109,22 @@ class WhatsappService
         $phone = preg_replace('/(?!^\+)[^\d]/', '', $phone);
 
         if (strpos($phone, '00') === 0) {
-            $phone = '+' . substr($phone, 2);
+            $phone = substr($phone, 2);
         }
 
-        // Already E.164 with +
-        if (preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
-            return $phone;
+        $phone = ltrim($phone, '+');
+
+        if ($phone === '') {
+            throw new InvalidArgumentException('Phone number is required.');
         }
 
-        // Oman local mobile: 91234567
-        if (preg_match('/^[79]\d{7}$/', $phone)) {
-            return '+968' . $phone;
+        if (!preg_match('/^[1-9]\d{6,14}$/', $phone)) {
+            throw new InvalidArgumentException(
+                'Invalid phone number format. Use international number with country code, e.g. 96891234567 or +96891234567.'
+            );
         }
 
-        // Oman with country code: 96891234567
-        if (preg_match('/^968[79]\d{7}$/', $phone)) {
-            return '+' . $phone;
-        }
-
-        // Pakistan with country code: 923097274927
-        if (preg_match('/^92(3\d{9})$/', $phone)) {
-            return '+' . $phone;
-        }
-
-        // Pakistan local with leading zero: 03097274927
-        if (preg_match('/^0(3\d{9})$/', $phone)) {
-            return '+92' . substr($phone, 1);
-        }
-
-        // Pakistan local mobile without zero: 3097274927
-        if (preg_match('/^(3\d{9})$/', $phone)) {
-            return '+92' . $phone;
-        }
-
-        throw new InvalidArgumentException('Invalid phone number format: ' . $phone);
+        return '+' . $phone;
     }
 
     public function cleanParam($text)
