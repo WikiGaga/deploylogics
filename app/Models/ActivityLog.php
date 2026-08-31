@@ -8,6 +8,11 @@ class ActivityLog extends Model
 {
     protected $table = 'activity_logs';
 
+    protected static function primaryKeyName()
+    {
+        return (new static)->getKeyName();
+    }
+
     public $timestamps = false;
 
     protected $fillable = [
