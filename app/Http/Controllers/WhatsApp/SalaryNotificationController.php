@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\WhatsApp;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendSalaryNotificationJob;
+use App\Jobs\SendSalaryBatchJob;
 use App\Library\Utilities;
 use App\Models\TblWaSalaryNotificationBatch;
 use App\Models\TblWaSalaryNotificationDtl;
@@ -139,8 +139,6 @@ class SalaryNotificationController extends Controller
 
         DB::beginTransaction();
 
-        $jobsToDispatch = [];
-
         try {
             $batchId = Utilities::uuid();
             $now = date('Y-m-d H:i:s');
@@ -177,8 +175,6 @@ class SalaryNotificationController extends Controller
                     'status' => 'queued',
                     'created_at' => $now,
                 ]);
-
-                $jobsToDispatch[] = $dtlId;
             }
 
             DB::commit();
@@ -187,11 +183,9 @@ class SalaryNotificationController extends Controller
             return $this->jsonErrorResponse([], $e->getMessage(), 500);
         }
 
-        foreach ($jobsToDispatch as $dtlId) {
-            SendSalaryNotificationJob::dispatch($dtlId)
-                ->onConnection('database')
-                ->onQueue('whatsapp');
-        }
+        SendSalaryBatchJob::dispatch($batchId)
+            ->onConnection('database')
+            ->onQueue('whatsapp');
 
         try {
             Cache::forget($cacheKey);
@@ -255,13 +249,11 @@ class SalaryNotificationController extends Controller
             return $this->jsonErrorResponse([], 'No pending rows to retry.', 422);
         }
 
-        foreach ($pendingDetails as $detail) {
-            SendSalaryNotificationJob::dispatch($detail->dtl_id)
-                ->onConnection('database')
-                ->onQueue('whatsapp');
-        }
+        SendSalaryBatchJob::dispatch($id)
+            ->onConnection('database')
+            ->onQueue('whatsapp');
 
-        if ($batch->status === 'completed' || $batch->status === 'partial') {
+        if (in_array($batch->status, ['completed', 'partial'])) {
             $batch->status = 'processing';
             $batch->save();
         }

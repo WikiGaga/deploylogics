@@ -51,7 +51,7 @@ class WhatsappService
         $payload = [
             'messaging_product' => 'whatsapp',
             'recipient_type' => 'individual',
-            'to' => $this->formatPhoneNumber($to),
+            'to' => ltrim($this->formatPhoneNumber($to), '+'),
             'type' => 'template',
             'template' => [
                 'name' => $templateName,
