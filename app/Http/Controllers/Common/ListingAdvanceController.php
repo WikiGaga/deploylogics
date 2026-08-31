@@ -62,6 +62,11 @@ class ListingAdvanceController extends Controller
             $data['form-action'] = '/'.$case_name;
         }
 
+        if ($case_name === 'salary-notifications') {
+            $data['create-form'] = '/salary-notifications/form';
+            $data['form-action'] = '/salary-notifications';
+        }
+
         $listing_studio_query = unserialize($listing->listing_studio_query);
         $table_name = $listing->listing_studio_table_name;
         $table_name_alias = $listing_studio_query->table_name;

@@ -1704,11 +1704,11 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     Route::prefix('salary-notifications')->group(function () {
+        Route::post('delete/{id}', 'WhatsApp\SalaryNotificationController@destroy');
         Route::get('form/{id?}', 'WhatsApp\SalaryNotificationController@create');
         Route::post('preview', 'WhatsApp\SalaryNotificationController@preview')->name('salary_notifications.preview');
         Route::post('send', 'WhatsApp\SalaryNotificationController@send')->name('salary_notifications.send');
         Route::post('retry/{id}', 'WhatsApp\SalaryNotificationController@retryPending')->name('salary_notifications.retry');
-        Route::post('delete/{id}', 'WhatsApp\SalaryNotificationController@destroy');
         Route::get('batch/{id}', 'WhatsApp\SalaryNotificationController@show')->name('salary_notifications.batch');
     });
 
