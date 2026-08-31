@@ -32,8 +32,12 @@ class SalaryNotificationController extends Controller
         $this->parser = $parser;
     }
 
-    public function create()
+    public function create($id = null)
     {
+        if ($id) {
+            return $this->show($id);
+        }
+
         $data = [];
         $data['page_data'] = [];
         $data['page_data']['title'] = self::$page_title;
@@ -187,7 +191,7 @@ class SalaryNotificationController extends Controller
             return $this->jsonSuccessResponse([
                 'batch_id' => $batchId,
                 'queued_count' => count($validRows),
-                'redirect_url' => url('/salary-notifications/batch/' . $batchId),
+                'redirect_url' => url('/salary-notifications/form/' . $batchId),
                 'listing_url' => url('/listing/salary-notifications'),
             ], count($validRows) . ' message(s) queued for sending.', 200);
         } catch (Exception $e) {

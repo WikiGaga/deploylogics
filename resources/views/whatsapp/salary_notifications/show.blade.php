@@ -15,12 +15,20 @@
                     <div class="col-md-3"><strong>Status:</strong> {{ strtoupper($data['batch']->status) }}</div>
                     <div class="col-md-3"><strong>Created:</strong> {{ $data['batch']->created_at }}</div>
                 </div>
+                @php
+                    $pendingCount = max(0, $data['batch']->total_rows - $data['batch']->sent_count - $data['batch']->failed_count);
+                @endphp
                 <div class="row mb-4">
                     <div class="col-md-3"><strong>Total:</strong> {{ $data['batch']->total_rows }}</div>
-                    <div class="col-md-3"><strong>Sent:</strong> {{ $data['batch']->sent_count }}</div>
-                    <div class="col-md-3"><strong>Failed:</strong> {{ $data['batch']->failed_count }}</div>
-                    <div class="col-md-3"><strong>Queued:</strong> {{ $data['batch']->queued_count }}</div>
+                    <div class="col-md-3"><strong>Sent:</strong> <span id="sent-count">{{ $data['batch']->sent_count }}</span></div>
+                    <div class="col-md-3"><strong>Failed:</strong> <span id="failed-count">{{ $data['batch']->failed_count }}</span></div>
+                    <div class="col-md-3"><strong>Pending:</strong> <span id="pending-count">{{ $pendingCount }}</span></div>
                 </div>
+                @if(in_array($data['batch']->status, ['queued', 'processing']))
+                    <div class="alert alert-info">
+                        Messages are sent one-by-one in the background queue. This page refreshes every 10 seconds until all rows are processed.
+                    </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -62,4 +70,14 @@
         </div>
     </div>
     @endpermission
+@endsection
+
+@section('pageJS')
+    @if(in_array($data['batch']->status, ['queued', 'processing']))
+    <script>
+        setTimeout(function () {
+            window.location.reload();
+        }, 10000);
+    </script>
+    @endif
 @endsection
