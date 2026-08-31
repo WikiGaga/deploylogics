@@ -113,16 +113,12 @@ $(function () {
                     return;
                 }
 
-                var html = '<strong>' + response.message + '</strong><br>';
+                toastr.success(response.message);
                 if (response.data.redirect_url) {
-                    html += '<a href="' + response.data.redirect_url + '">View batch detail</a> | ';
-                }
-                if (response.data.listing_url) {
-                    html += '<a href="' + response.data.listing_url + '">Back to listing</a>';
+                    window.location.href = response.data.redirect_url;
+                    return;
                 }
 
-                $('#send-result').html(html).show();
-                toastr.success(response.message);
                 $('#btn_send_all').hide();
             },
             error: function (xhr) {
