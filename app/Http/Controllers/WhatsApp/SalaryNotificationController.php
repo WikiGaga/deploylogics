@@ -139,6 +139,8 @@ class SalaryNotificationController extends Controller
 
         DB::beginTransaction();
 
+        $jobsToDispatch = [];
+
         try {
             $batchId = Utilities::uuid();
             $now = date('Y-m-d H:i:s');
@@ -176,13 +178,22 @@ class SalaryNotificationController extends Controller
                     'created_at' => $now,
                 ]);
 
-                SendSalaryNotificationJob::dispatch($dtlId)
-                    ->onConnection('database')
-                    ->onQueue('whatsapp');
+                $jobsToDispatch[] = $dtlId;
             }
 
             DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse([], $e->getMessage(), 500);
+        }
 
+        foreach ($jobsToDispatch as $dtlId) {
+            SendSalaryNotificationJob::dispatch($dtlId)
+                ->onConnection('database')
+                ->onQueue('whatsapp');
+        }
+
+        try {
             Cache::forget($cacheKey);
             if (!empty($cached['stored_path'])) {
                 Storage::disk('local')->delete($cached['stored_path']);
@@ -195,7 +206,6 @@ class SalaryNotificationController extends Controller
                 'listing_url' => url('/listing/salary-notifications'),
             ], count($validRows) . ' message(s) queued for sending.', 200);
         } catch (Exception $e) {
-            DB::rollBack();
             return $this->jsonErrorResponse([], $e->getMessage(), 500);
         }
     }
@@ -225,6 +235,67 @@ class SalaryNotificationController extends Controller
         $data['id'] = $id;
 
         return view('whatsapp.salary_notifications.show', compact('data'));
+    }
+
+    public function retryPending($id)
+    {
+        $batch = TblWaSalaryNotificationBatch::where('batch_id', $id)
+            ->where(Utilities::currentBCB())
+            ->first();
+
+        if (!$batch) {
+            return $this->jsonErrorResponse([], 'Batch not found.', 404);
+        }
+
+        $pendingDetails = TblWaSalaryNotificationDtl::where('batch_id', $id)
+            ->where('status', 'queued')
+            ->get();
+
+        if ($pendingDetails->isEmpty()) {
+            return $this->jsonErrorResponse([], 'No pending rows to retry.', 422);
+        }
+
+        foreach ($pendingDetails as $detail) {
+            SendSalaryNotificationJob::dispatch($detail->dtl_id)
+                ->onConnection('database')
+                ->onQueue('whatsapp');
+        }
+
+        if ($batch->status === 'completed' || $batch->status === 'partial') {
+            $batch->status = 'processing';
+            $batch->save();
+        }
+
+        return $this->jsonSuccessResponse([
+            'retried_count' => $pendingDetails->count(),
+        ], $pendingDetails->count() . ' pending message(s) re-queued.', 200);
+    }
+
+    public function destroy($id)
+    {
+        $data = [];
+        DB::beginTransaction();
+
+        try {
+            $batch = TblWaSalaryNotificationBatch::where('batch_id', $id)
+                ->where(Utilities::currentBCB())
+                ->first();
+
+            if (!$batch) {
+                DB::rollBack();
+                return $this->jsonErrorResponse($data, 'Record not found.', 404);
+            }
+
+            TblWaSalaryNotificationDtl::where('batch_id', $id)->delete();
+            $batch->delete();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+
+        DB::commit();
+
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
     }
 
     protected function cacheKey($token)

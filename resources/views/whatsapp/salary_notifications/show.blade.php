@@ -29,6 +29,13 @@
                         Messages are sent one-by-one in the background queue. This page refreshes every 10 seconds until all rows are processed.
                     </div>
                 @endif
+                @if($pendingCount > 0)
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-warning btn-sm" id="retry-pending-btn" data-batch-id="{{ $data['id'] }}">
+                            Retry {{ $pendingCount }} Pending Message(s)
+                        </button>
+                    </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -73,6 +80,30 @@
 @endsection
 
 @section('pageJS')
+    @if($pendingCount > 0)
+    <script>
+        $('#retry-pending-btn').on('click', function () {
+            var batchId = $(this).data('batch-id');
+            var btn = $(this);
+            btn.prop('disabled', true);
+
+            $.ajax({
+                url: '/salary-notifications/retry/' + batchId,
+                type: 'POST',
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                success: function (res) {
+                    toastr.success(res.message || 'Pending messages re-queued.');
+                    setTimeout(function () { window.location.reload(); }, 1500);
+                },
+                error: function (xhr) {
+                    btn.prop('disabled', false);
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Retry failed.';
+                    toastr.error(msg);
+                }
+            });
+        });
+    </script>
+    @endif
     @if(in_array($data['batch']->status, ['queued', 'processing']))
     <script>
         setTimeout(function () {

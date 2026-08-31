@@ -35,7 +35,11 @@ class SendSalaryNotificationJob implements ShouldQueue
     public function handle()
     {
         $dtl = TblWaSalaryNotificationDtl::where('dtl_id', $this->dtlId)->first();
-        if (!$dtl || $dtl->status === 'sent') {
+        if (!$dtl) {
+            throw new Exception('Salary notification detail row not found: ' . $this->dtlId);
+        }
+
+        if ($dtl->status === 'sent') {
             return;
         }
 
