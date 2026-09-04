@@ -150,25 +150,21 @@ var KTFormWidgets = function() {
                 return;
             }
 
-            var token = window.apiAccessToken || $('meta[name="jwt-token"]').attr('content');
-
             triggerButton.prop('disabled', true).addClass('kt-spinner kt-spinner--sm kt-spinner--light');
             ingredientFeedback
                 .removeClass()
                 .html('<div class="alert alert-info mb-0">Sync in progress...</div>');
 
             $.ajax({
-                url: '/api/ingredient-usage',
+                url: '/pos-voucher/ingredient-usage',
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json',
                 processData: false,
-                headers: $.extend(
-                    {
-                        'Accept': 'application/json'
-                    },
-                    token ? { 'Authorization': 'Bearer ' + token } : {}
-                ),
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: JSON.stringify({
                     branch_id: branchId,
                     date_from: dateFrom,
@@ -178,12 +174,25 @@ var KTFormWidgets = function() {
                     triggerButton.prop('disabled', false).removeClass('kt-spinner kt-spinner--sm kt-spinner--light');
 
                     if (response.success) {
-                        var alertClass = response.inserted_rows > 0 ? 'alert-success' : 'alert-warning';
+                        var unmatched = response.unmatched || {};
+                        var unmatchedTotal = (unmatched.no_variation || 0)
+                            + (unmatched.no_option_ids || 0)
+                            + (unmatched.no_recipe || 0)
+                            + (unmatched.empty_recipe || 0);
                         var message = response.inserted_rows > 0
-                            ? 'Ingredient usage synced successfully. Inserted rows: ' + response.inserted_rows + '.'
+                            ? 'Ingredient usage synced successfully. Rows: ' + response.inserted_rows + '.'
                             : (response.message || 'No ingredient usage records were generated.');
-                        if (response.inserted_rows > 0) {
+                        if (unmatchedTotal > 0) {
+                            message += ' Unmatched lines: ' + unmatchedTotal
+                                + ' (no variation: ' + (unmatched.no_variation || 0)
+                                + ', no option: ' + (unmatched.no_option_ids || 0)
+                                + ', no recipe: ' + (unmatched.no_recipe || 0)
+                                + ', empty recipe: ' + (unmatched.empty_recipe || 0) + ').';
+                        }
+                        if (response.inserted_rows > 0 && unmatchedTotal === 0) {
                             toastr.success(message);
+                        } else if (response.inserted_rows > 0) {
+                            toastr.warning(message);
                         } else {
                             toastr.warning(message);
                         }

@@ -1203,6 +1203,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::prefix('pos-voucher')->group(function () {
             Route::get('form/{id?}','Accounts\POSVoucherController@create');
             Route::post('form/{id?}','Accounts\POSVoucherController@store');
+            Route::post('ingredient-usage','Api\OrderRecipeUsageController@store');
         });
         Route::prefix('bank-reconciliation')->group(function () {
             Route::get('form/{id?}','Accounts\BankReconciliationController@create');
