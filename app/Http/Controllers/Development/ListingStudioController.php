@@ -90,9 +90,22 @@ class ListingStudioController extends Controller
             $data['listing_studio_code'] = $this->documentCode(TblSoftListingStudio::max('listing_studio_code'),'LS');
         }
 
-        $sorted =  ViewAllColumnData::select('table_name')->groupby('table_name')->get();
-        $collection = collect($sorted);
-        $data['table_list'] = $collection->sortBy('table_name');
+        $tableList = ViewAllColumnData::query()
+            ->select('table_name')
+            ->whereNotNull('table_name')
+            ->distinct()
+            ->orderBy('table_name')
+            ->get();
+
+        // Some Oracle installations have an empty VW_ALL_COLUMN_DATA helper view.
+        // Fall back to the current schema catalogue so Listing Studio remains usable.
+        if ($tableList->isEmpty() && DB::connection()->getDriverName() === 'oracle') {
+            $tableList = collect(DB::select(
+                'select distinct table_name from user_tab_columns order by table_name'
+            ));
+        }
+
+        $data['table_list'] = $tableList;
         // dd($sorted, $data['table_list']);
         $data['filter_case_list'] = TblSoftReportingFilterCase::where('reporting_filter_case_entry_status',1)->orderBy('reporting_filter_case_name')->get();
         return view('development.listing_studio.form',compact('data'));

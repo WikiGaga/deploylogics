@@ -36,6 +36,11 @@ class LeavePolicyController extends Controller
             ['company_id',auth()->user()->company_id],
             ['branch_id',auth()->user()->branch_id]
         ]; // ->where($currentBusinessCompanyBranch)
+
+        $this->currentBusinessCompany = [
+            ['business_id',auth()->user()->business_id],
+            ['company_id',auth()->user()->company_id],
+        ];
     }
     /**
      * Display a listing of the resource.
@@ -75,11 +80,11 @@ class LeavePolicyController extends Controller
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
         }
 
-        $data['leave_type'] = TblHrLeaveType::where($this->currentBusinessCompanyBranch)->where('leave_type_entry_status',1)->orderBy('leave_type_name')->get();
-        $data['religion'] = TblHrReligion::where($this->currentBusinessCompanyBranch)->where('religion_entry_status',1)->orderBy('religion_name')->get();
-        $data['grade'] = TblHrGrade::where($this->currentBusinessCompanyBranch)->where('grade_entry_status',1)->orderBy('grade_name')->get();
-        $data['designation'] = TblHrDesignation::where($this->currentBusinessCompanyBranch)->where('designation_entry_status',1)->orderBy('designation_name')->get();
-        $data['department'] = TblHrDepartment::where($this->currentBusinessCompanyBranch)->where('department_entry_status',1)->orderBy('department_name')->get();
+        $data['leave_type'] = TblHrLeaveType::where($this->currentBusinessCompany)->where('leave_type_entry_status',1)->orderBy('leave_type_name')->get();
+        $data['religion'] = TblHrReligion::where($this->currentBusinessCompany)->where('religion_entry_status',1)->orderBy('religion_name')->get();
+        $data['grade'] = TblHrGrade::where($this->currentBusinessCompany)->where('grade_entry_status',1)->orderBy('grade_name')->get();
+        $data['designation'] = TblHrDesignation::where($this->currentBusinessCompany)->where('designation_entry_status',1)->orderBy('designation_name')->get();
+        $data['department'] = TblHrDepartment::where($this->currentBusinessCompany)->where('department_entry_status',1)->orderBy('department_name')->get();
        // dd($data['current']->toArray());
         return view('PayrDepartment.leave_policy.form',compact('data'));
     }

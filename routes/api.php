@@ -34,6 +34,7 @@ Route::post('/whatsapp-send-offer/{link}', 'Api\WhatsApp\WhatsAppApiController@s
 
 Route::post('pos-order-voucher', 'Api\PosOrderVoucherController@store');
 
+Route::get('search_employee', 'Api\ApiHomeController@search_employee');
 
 
 Route::group(['middleware'=>['auth:api']], function () {
@@ -64,6 +65,7 @@ Route::group(['middleware'=>['auth:api']], function () {
 
     Route::get('get_employee', 'Api\ApiHomeController@get_employee');
     Route::get('get_all_employees', 'Api\ApiHomeController@get_all_employees');
+    // Route::get('search_employee', 'Api\ApiHomeController@search_employee');
     Route::post('store_attendance', 'Api\ApiHomeController@store_attendance');
     Route::post('update_employee_face', 'Api\ApiHomeController@update_employee_face');
     Route::post('add_attendance', 'Api\ApiHomeController@add_attendance');

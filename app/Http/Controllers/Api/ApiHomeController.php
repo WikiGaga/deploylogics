@@ -218,6 +218,81 @@ class ApiHomeController extends ApiController
         return response()->json($Employees);
     }
 
+    public function search_employee(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'search' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provide an employee code or local phone number in the search field.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $search = trim((string) $request->input('search'));
+
+        $employee = DB::table('tbl_payr_employee as e')
+            ->leftJoin('tbl_payr_gender as g', 'g.gender_id', '=', 'e.GENDER_ID')
+            ->leftJoin('tbl_defi_city as cty', 'cty.city_id', '=', 'e.EMPLOYEE_LOCAL_CITY_ID')
+            ->leftJoin('tbl_defi_country as c', 'c.country_id', '=', 'e.EMPLOYEE_LOCAL_COUNTRY_ID')
+            ->select(
+                'e.EMPLOYEE_ID AS ID',
+                'e.EMPLOYEE_CODE',
+                'e.EMPLOYEE_NAME',
+                'e.EMPLOYEE_IMG',
+                'e.EMPLOYEE_LOCAL_ADDRESS_1 as ADDRESS',
+                'e.EMPLOYEE_LOCAL_PERSONAL_EMAIL as EMAIL',
+                'e.EMPLOYEE_DATE_OF_BIRTH as DATE_OF_BIRTH',
+                'e.EMPLOYEE_LOCAL_PHONE_NO as PHONE_NO',
+                'e.branch_id',
+                'g.GENDER_NAME AS GENDER',
+                'cty.CITY_NAME AS CITY',
+                'c.COUNTRY_NAME',
+                'e.REGISTER_STATUS',
+                'e.ATTENDANCE_IMAGE',
+                'e.IMAGE_EMBEDED_CODE',
+                'e.CREATED_AT'
+            )
+            ->where(function ($query) use ($search) {
+                $query->where('e.EMPLOYEE_CODE', $search)
+                    ->orWhere('e.EMPLOYEE_LOCAL_PHONE_NO', $search);
+            })
+            ->first();
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404);
+        }
+
+        $employee->employee_img = "images/employee/{$employee->employee_img}";
+        $employee->employee_branches = DB::table('tbl_soft_branch')
+            ->join('tbl_payr_employee_branch', 'tbl_soft_branch.branch_id', '=', 'tbl_payr_employee_branch.branch_id')
+            ->select('tbl_soft_branch.branch_id', 'tbl_soft_branch.branch_short_name', 'tbl_soft_branch.branch_longitude', 'tbl_soft_branch.branch_latitude')
+            ->where('tbl_payr_employee_branch.employee_id', $employee->id)
+            ->get()
+            ->transform(function ($branch) {
+                $branch->branch_id = (int) $branch->branch_id;
+                return $branch;
+            });
+
+        foreach (['id', 'branch_id', 'register_status'] as $field) {
+            if (isset($employee->$field)) {
+                $employee->$field = (int) $employee->$field;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee found successfully.',
+            'data' => $employee,
+        ]);
+    }
+
     // public function store_attendance(Request $request)
     // {
 
@@ -410,9 +485,9 @@ class ApiHomeController extends ApiController
             'emp_id'          => 'required',
             'attendance_time' => 'required',
             'attendance_type' => 'required', // e.g., 'Check-In' or 'Check-Out'
-            'branch_id' => 'required', // e.g., 'Check-In' or 'Check-Out'
-            'latitude' => 'required',
-            'longitude' => 'required',
+            'branch_id'       => 'required',
+            'latitude'        => 'required',
+            'longitude'       => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -438,6 +513,14 @@ class ApiHomeController extends ApiController
             if (empty($employee)) {
                 return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
             }
+
+            // Check if branch is allowed for employee (primary branch or assigned secondary branches)
+            $is_allowed = ($employee->branch_id == $request->branch_id) || DB::table('tbl_payr_employee_branch')
+                ->where('employee_id', $employee_id)
+                ->where('branch_id', $request->branch_id)
+                ->exists();
+
+            $out_side_branch = $is_allowed ? 0 : 1;
 
             // 2. Check if the Main Attendance Header exists for this date
             // Fixed the syntax error from ->?id to a safe check
@@ -481,6 +564,7 @@ class ApiHomeController extends ApiController
                 'longitude'   => $request->longitude,
                 'shift_id'        => 1,
                 'att_id'          => $att_id,
+                'out_side_branch' => $out_side_branch,
                 'created_at'      => now(),
                 'updated_at'      => now()
             ];
@@ -525,6 +609,7 @@ class ApiHomeController extends ApiController
                 $employeeId = $attendance['employees'];
                 $attendanceTime = date('Y-m-d H:i:s', strtotime($attendance['attendance_time']));
                 $attendanceDate = date('Y-m-d', strtotime($attendance['attendance_time']));
+                $branchId = $attendance['branch_id'];
 
                 $employee = DB::table('tbl_payr_employee')
                     ->where('employee_id', $employeeId)
@@ -537,6 +622,14 @@ class ApiHomeController extends ApiController
                     ];
                     continue;
                 }
+
+                // Check if branch is allowed for employee (primary branch or assigned secondary branches)
+                $is_allowed = ($employee->branch_id == $branchId) || DB::table('tbl_payr_employee_branch')
+                    ->where('employee_id', $employeeId)
+                    ->where('branch_id', $branchId)
+                    ->exists();
+
+                $out_side_branch = $is_allowed ? 0 : 1;
 
                 $header = DB::table('Tbl_hr_attendence')
                     ->where('att_date', $attendanceDate)
@@ -555,7 +648,7 @@ class ApiHomeController extends ApiController
                         'att_date' => $attendanceDate,
                         'business_id' => $employee->business_id,
                         'company_id' => $employee->company_id,
-                        'branch_id' => $attendance['branch_id'],
+                        'branch_id' => $branchId,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -571,11 +664,12 @@ class ApiHomeController extends ApiController
                     'attendance_date' => $attendanceDate,
                     'attendance_time' => $attendanceTime,
                     'attendance_type' => $attendance['attendance_type'],
-                    'branch_id' => $attendance['branch_id'],
+                    'branch_id' => $branchId,
                     'latitude' => $attendance['latitude'],
                     'longitude' => $attendance['longitude'],
                     'shift_id' => 1,
                     'att_id' => $attId,
+                    'out_side_branch' => $out_side_branch,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

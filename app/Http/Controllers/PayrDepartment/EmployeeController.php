@@ -50,6 +50,11 @@ class EmployeeController extends Controller
             ['company_id',auth()->user()->company_id],
             ['branch_id',auth()->user()->branch_id]
         ]; // ->where($currentBusinessCompanyBranch)
+
+        $this->currentBusinessCompany = [
+            ['business_id',auth()->user()->business_id],
+            ['company_id',auth()->user()->company_id],
+        ];
     }
 
     /**
@@ -97,27 +102,27 @@ class EmployeeController extends Controller
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
             $data['employee_code'] = $this->documentCode(TblHrEmployee::max('employee_code'),'EMP');
         }
-        $data['gender'] = TblHrGender::where($this->currentBusinessCompanyBranch)->where('gender_entry_status',1)->orderBy('gender_name')->get();
-        $data['religion'] = TblHrReligion::where($this->currentBusinessCompanyBranch)->where('religion_entry_status',1)->orderBy('religion_name')->get();
-        $data['nationality'] = TblHrNationality::where($this->currentBusinessCompanyBranch)->where('nationality_entry_status',1)->orderBy('nationality_name')->get();
-        $data['country'] = TblDefiCountry::where($this->currentBusinessCompanyBranch)->where('country_entry_status',1)->orderBy('country_name')->get();
-        $data['designation'] = TblHrDesignation::where($this->currentBusinessCompanyBranch)->where('designation_entry_status',1)->orderBy('designation_name')->get();
-        $data['grade'] = TblHrGrade::where($this->currentBusinessCompanyBranch)->where('grade_entry_status',1)->orderBy('grade_name')->get();
-        $data['document_types'] = TblHrDocuments::where($this->currentBusinessCompanyBranch)->where('document_entry_status',1)->orderBy('document_name')->get();
-        $data['language'] = TblHrLanguage::where($this->currentBusinessCompanyBranch)->where('language_entry_status',1)->orderBy('language_name')->get();
-        $data['department'] = TblHrDepartment::where($this->currentBusinessCompanyBranch)->where('department_entry_status',1)->orderBy('department_name')->get();
+        $data['gender'] = TblHrGender::where($this->currentBusinessCompany)->where('gender_entry_status',1)->orderBy('gender_name')->get();
+        $data['religion'] = TblHrReligion::where($this->currentBusinessCompany)->where('religion_entry_status',1)->orderBy('religion_name')->get();
+        $data['nationality'] = TblHrNationality::where($this->currentBusinessCompany)->where('nationality_entry_status',1)->orderBy('nationality_name')->get();
+        $data['country'] = TblDefiCountry::where($this->currentBusinessCompany)->where('country_entry_status',1)->orderBy('country_name')->get();
+        $data['designation'] = TblHrDesignation::where($this->currentBusinessCompany)->where('designation_entry_status',1)->orderBy('designation_name')->get();
+        $data['grade'] = TblHrGrade::where($this->currentBusinessCompany)->where('grade_entry_status',1)->orderBy('grade_name')->get();
+        $data['document_types'] = TblHrDocuments::where($this->currentBusinessCompany)->where('document_entry_status',1)->orderBy('document_name')->get();
+        $data['language'] = TblHrLanguage::where($this->currentBusinessCompany)->where('language_entry_status',1)->orderBy('language_name')->get();
+        $data['department'] = TblHrDepartment::where($this->currentBusinessCompany)->where('department_entry_status',1)->orderBy('department_name')->get();
         // $data['department'] = TblHrDepartment::where('department_entry_status',1)->orderBy('department_name')->get();
-        $data['employee_type'] = TblHrEmployeeType::where($this->currentBusinessCompanyBranch)->where('employee_type_entry_status',1)->orderBy('employee_type_name')->get();
-        $data['sponsorship'] = TblHrSponsorShip::where($this->currentBusinessCompanyBranch)->where('sponsorship_entry_status',1)->orderBy('sponsorship_name')->get();
-        $data['bank'] = TblDefiBank::where($this->currentBusinessCompanyBranch)->where('bank_entry_status',1)->orderBy('bank_name')->get();
+        $data['employee_type'] = TblHrEmployeeType::where($this->currentBusinessCompany)->where('employee_type_entry_status',1)->orderBy('employee_type_name')->get();
+        $data['sponsorship'] = TblHrSponsorShip::where($this->currentBusinessCompany)->where('sponsorship_entry_status',1)->orderBy('sponsorship_name')->get();
+        $data['bank'] = TblDefiBank::where($this->currentBusinessCompany)->where('bank_entry_status',1)->orderBy('bank_name')->get();
         $data['branch'] = TblSoftBranch::where('business_id',auth()->user()->business_id)->where('company_id',auth()->user()->company_id)->orderBy('branch_name')->get();
-        $data['insurance'] = TblHrInsuranceCompany::where($this->currentBusinessCompanyBranch)->where('insurance_company_entry_status',1)->orderBy('insurance_company_name')->get();
-        $data['insurance_type'] = TblHrInsuranceType::where($this->currentBusinessCompanyBranch)->where('insurance_type_entry_status',1)->orderBy('insurance_type_name')->get();
+        $data['insurance'] = TblHrInsuranceCompany::where($this->currentBusinessCompany)->where('insurance_company_entry_status',1)->orderBy('insurance_company_name')->get();
+        $data['insurance_type'] = TblHrInsuranceType::where($this->currentBusinessCompany)->where('insurance_type_entry_status',1)->orderBy('insurance_type_name')->get();
         $data['martial_status'] = config('constants.marital_status');
         $data['termination_type'] = config('constants.termination.type');
         $data['termination_status'] = config('constants.termination.status');
         $data['blood_group'] = config('constants.blood_group');
-        $data['allowance'] = DB::table('tbl_hr_allowance')->where($this->currentBusinessCompanyBranch)->get();
+        $data['allowance'] = DB::table('tbl_hr_allowance')->where($this->currentBusinessCompany)->get();
         $data['employee_allowance'] = [];
 
         $data['form_type'] = 'employee';
@@ -484,7 +489,7 @@ class EmployeeController extends Controller
 
     public function CityCurrent($countryCurrent,$editcase = false)
     {
-        $data = TblDefiCity::where($this->currentBusinessCompanyBranch)
+        $data = TblDefiCity::where($this->currentBusinessCompany)
         ->where('country_id', '=', $countryCurrent)
         ->where('city_entry_status',1)
         ->orderBy('city_name')

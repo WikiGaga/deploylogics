@@ -3160,7 +3160,8 @@ class UserReportsController extends Controller
             $menu_dtl_id = 75;
         }
         if($case_name == 'hr-reports'){
-            $menu_dtl_id = 363;
+            $menu_dtl_id = DB::table('TBL_SOFT_MENU_DTL')->where('menu_dtl_name', 'HR Reports')->value('menu_dtl_id');
+            // $menu_dtl_id = 363;
         }
         $data['case_name'] = $case_name;
         $data['list'] = TblSoftReports::where('report_entry_status',1)

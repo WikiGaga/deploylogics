@@ -475,6 +475,16 @@ class ReportController extends Controller
 
             $data = ViewAllColumnData::where('table_name', strtoupper($table))->get();
 
+            // Keep report/listing builders working when the Oracle metadata
+            // helper view exists but contains no rows.
+            if ($data->isEmpty() && DB::connection()->getDriverName() === 'oracle') {
+                $data = DB::table('user_tab_columns')
+                    ->select('table_name', 'column_name', 'data_type', 'data_length')
+                    ->where('table_name', strtoupper($table))
+                    ->orderBy('column_name')
+                    ->get();
+            }
+
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
