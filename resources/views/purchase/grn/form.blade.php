@@ -232,16 +232,17 @@
                                     <div class="col-lg-6">
                                         <div class="erp-select2">
                                             <select class="form-control kt-select2 erp-form-control-sm moveIndex"
-                                                id="payment_type_id" name="payment_type_id">
+                                                id="payment_type_id" name="payment_type_id" required>
+                                                <option value="">{{ __('message.select') }}</option>
                                                 @foreach ($data['payment_type'] as $payment_type)
                                                     @if (isset($data['id']))
-                                                        @php $payment_type_id = !empty($data['current']->payment_type_id)?$data['current']->payment_type_id:'2'; @endphp
+                                                        @php $payment_type_id = !empty($data['current']->payment_type_id)?$data['current']->payment_type_id:''; @endphp
                                                     @else
-                                                        @php $payment_type_id = '1'; @endphp
+                                                        @php $payment_type_id = ''; @endphp
                                                     @endif
                                                     <option value="{{ $payment_type->payment_type_id }}"
                                                         data-name="{{ strtolower($payment_type->payment_type_name) }}"
-                                                        {{ $payment_type_id == $payment_type->payment_type_id ? 'selected' : '' }}>
+                                                        {{ (string)$payment_type_id === (string)$payment_type->payment_type_id ? 'selected' : '' }}>
                                                         {{ $payment_type->payment_type_name }}</option>
                                                 @endforeach
                                             </select>
@@ -251,17 +252,11 @@
                             </div>
                             @php
                                 if (isset($data['id'])) {
-                                    $selected_payment_type = !empty($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : 2;
+                                    $selected_payment_type = !empty($data['current']->payment_type_id) ? (int)$data['current']->payment_type_id : '';
                                     $selected_payment_acc = !empty($data['current']->payment_account_id) ? $data['current']->payment_account_id : '';
                                 } else {
-                                    $selected_payment_type = 1;
+                                    $selected_payment_type = '';
                                     $selected_payment_acc = '';
-                                    foreach ($data['cash_acc'] as $cash_acc) {
-                                        if ($cash_acc->chart_code === '6-02-01-0002') {
-                                            $selected_payment_acc = $cash_acc->chart_account_id;
-                                            break;
-                                        }
-                                    }
                                 }
                                 $show_payment_acc = in_array($selected_payment_type, [1, 3]);
                             @endphp
@@ -1188,7 +1183,7 @@
 @section('customJS')
     <script src="{{ asset('js/pages/js/grn.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/purchase/grn-autosave.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/grn-autosave.js?v=3') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         $(document).ready(function() {

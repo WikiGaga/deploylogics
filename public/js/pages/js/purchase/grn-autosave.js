@@ -46,6 +46,13 @@ const GRNFormAutoSave = {
 
         try {
             const formData = JSON.parse(savedData);
+
+            if (!formData.version || formData.version < 3) {
+                console.log('Clearing old version autosave data');
+                this.clearSavedData();
+                return;
+            }
+
             const savedTime = new Date(formData.timestamp);
             const now = new Date();
             const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
@@ -76,7 +83,7 @@ const GRNFormAutoSave = {
             gridRows: [],
             select2Values: {},
             gridBodyHtml: '',
-            version: 2
+            version: 3
         };
 
         try {
