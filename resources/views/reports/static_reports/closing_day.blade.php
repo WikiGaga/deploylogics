@@ -108,17 +108,21 @@
                             <td class="text-center">{{ $item->order_date }}</td>
                             <td class="text-center">{{ $item->session_no }}</td>
                             <td class="text-center">{{ $item->user_name }}</td>
-                            <td class="text-center">{{ $item->total_cash_paid }}</td>
-                            <td class="text-center">{{ $item->closing_cash }}</td>
-                            <td class="text-center">{{ $item->cash_diff }}</td>
-                            <td class="text-center">{{ $item->total_card_paid }}</td>
-                            <td class="text-center">{{ $item->closing_visa }}</td>
-                            <td class="text-center">{{ $item->visa_diff }}</td>
+                            <td class="text-center">{{ number_format((float)$item->total_cash_paid, 3) }}</td>
+                            <td class="text-center">{{ number_format((float)$item->closing_cash, 3) }}</td>
+                            @php $cdiff = (float)$item->cash_diff; @endphp
+                            <td class="text-center {{ abs($cdiff) > 0.0001 ? ($cdiff < 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold') : '' }}">{{ number_format($cdiff, 3) }}</td>
+                            <td class="text-center">{{ number_format((float)$item->total_card_paid, 3) }}</td>
+                            <td class="text-center">{{ number_format((float)$item->closing_visa, 3) }}</td>
+                            @php $vdiff = (float)$item->visa_diff; @endphp
+                            <td class="text-center {{ abs($vdiff) > 0.0001 ? ($vdiff < 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold') : '' }}">{{ number_format($vdiff, 3) }}</td>
 
-                            <td class="text-center">{{ $item->tot_amount }}</td>
-                            <td class="text-center">{{ $item->tot_diff }}</td>
-                            <td class="text-center">{{ $item->tot_diff_percentage }}</td>
-                            <td class="text-center">{{ $item->total_credit }}</td>
+                            <td class="text-center">{{ number_format((float)$item->tot_amount, 3) }}</td>
+                            @php $tdiff = (float)$item->tot_diff; @endphp
+                            <td class="text-center {{ abs($tdiff) > 0.0001 ? ($tdiff < 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold') : '' }}">{{ number_format($tdiff, 3) }}</td>
+                            @php $pdiff = (string)$item->tot_diff_percentage; @endphp
+                            <td class="text-center {{ $pdiff !== '' && $pdiff !== '0%' && $pdiff !== '0.00%' && $pdiff !== '0' ? (strpos($pdiff, '-') !== false ? 'text-danger font-weight-bold' : 'text-success font-weight-bold') : '' }}">{{ $pdiff }}</td>
+                            <td class="text-center">{{ number_format((float)$item->total_credit, 3) }}</td>
                             <td class="text-center">{{ $item->paid_orders }}</td>
                             <td class="text-center">{{ $item->deleted_count }}</td>
                             <td class="text-center">{{ $item->unpaid_orders }}</td>

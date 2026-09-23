@@ -352,8 +352,15 @@
             background: #e8eaf6 !important;
             z-index: 11;
             box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
-            border-bottom: 3px solid #777777 !important;
-            border-top: 2px solid #777777 !important;
+        table#dynamic_report_table tr.item_row td.cell-diff-negative {
+            background-color: #ffebee !important;
+            color: #c62828 !important;
+            font-weight: bold;
+        }
+        table#dynamic_report_table tr.item_row td.cell-diff-positive {
+            background-color: #e8f5e9 !important;
+            color: #2e7d32 !important;
+            font-weight: bold;
         }
     </style>
 @endsection
@@ -585,30 +592,39 @@
                                                 @endphp
 
                                                 @if($column_types[$key] == 'varchar2')
-                                                    <td class="{{ $class }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $cellRawVal !!}</td>
+                                                    @php
+                                                        $valStr = (string)$cellRawVal;
+                                                        $cellClass = $class;
+                                                        if(stripos($fieldsKey, 'diff') !== false && $valStr !== '' && $valStr !== '0%' && $valStr !== '0.00%' && $valStr !== '0'){
+                                                            $cellClass .= ' ' . ((strpos($valStr, '-') !== false) ? 'cell-diff-negative' : 'cell-diff-positive');
+                                                        }
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $valStr !!}</td>
                                                 @elseif($column_types[$key] == 'number')
                                                     @php
                                                         $numVal = (int)$cellRawVal;
 
                                                         if(in_array($key,$calc) && !$excludeFromCalc){
-                                                            //$a_{$key} += $numVal;
-                                                            //$arr[$key] = $a_{$key};
                                                             $a_[$key] += $numVal;
                                                             $arr[$key] = $a_[$key];
                                                         }
                                                         $cellClass = $class;
+                                                        if(stripos($fieldsKey, 'diff') !== false && $numVal != 0){
+                                                            $cellClass .= ' ' . ($numVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive');
+                                                        }
                                                     @endphp
                                                     <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $numVal !!}</td>
                                                 @elseif($column_types[$key] == 'float')
                                                     @php
                                                         $floatVal = (float)$cellRawVal;
                                                         if(in_array($key,$calc) && !$excludeFromCalc){
-                                                            //$a_{$key} += $floatVal;
-                                                            //$arr[$key] = $a_{$key};
                                                             $a_[$key]+= $floatVal;
                                                             $arr[$key] = $a_[$key];
                                                         }
                                                         $cellClass = $class;
+                                                        if(stripos($fieldsKey, 'diff') !== false && abs($floatVal) > 0.0001){
+                                                            $cellClass .= ' ' . ($floatVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive');
+                                                        }
                                                     @endphp
                                                     <td class="{{ $cellClass }}" data-grn_id="{{ $grn_id }}" data-grn_code="{{ $grn_code }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! number_format($floatVal,!empty($decimal[$key])?$decimal[$key]:0) !!}</td>
                                                 @elseif($column_types[$key] == 'date')

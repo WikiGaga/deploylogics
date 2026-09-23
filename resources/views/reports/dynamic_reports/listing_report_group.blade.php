@@ -159,6 +159,16 @@
             color: #f57c00;
             font-weight: 600;
         }
+        table#dynamic_report_table tr.item_row td.cell-diff-negative {
+            background-color: #ffebee !important;
+            color: #c62828 !important;
+            font-weight: bold;
+        }
+        table#dynamic_report_table tr.item_row td.cell-diff-positive {
+            background-color: #e8f5e9 !important;
+            color: #2e7d32 !important;
+            font-weight: bold;
+        }
         /*==========================
         start hidden checkbox
      */
@@ -478,7 +488,13 @@
                                                     $cellClass = '';
                                                 @endphp
                                                 @if($column_types[$key] == 'varchar2')
-                                                    <td class="{{ $cellClass }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{{$item->$fieldsKey}}</td>
+                                                    @php
+                                                        $valStr = (string)($item->$fieldsKey);
+                                                        if(stripos($fieldsKey, 'diff') !== false && $valStr !== '' && $valStr !== '0%' && $valStr !== '0.00%' && $valStr !== '0'){
+                                                            $cellClass = (strpos($valStr, '-') !== false) ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                        }
+                                                    @endphp
+                                                    <td class="{{ $cellClass }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $valStr !!}</td>
                                                 @elseif($column_types[$key] == 'number')
                                                     @php
                                                         $numVal = (int)$item->$fieldsKey;
@@ -486,7 +502,9 @@
                                                             $ai_[$key] += $numVal;
                                                             $arr_item[$key] = $ai_[$key];
                                                         }
-                                                        if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                        if(stripos($fieldsKey, 'diff') !== false && $numVal != 0){
+                                                            $cellClass = $numVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                        } elseif($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
                                                             $cellClass = 'cell-zero-amount';
                                                         }
                                                     @endphp
@@ -498,7 +516,9 @@
                                                             $ai_[$key] += $floatVal;
                                                             $arr_item[$key] = $ai_[$key];
                                                         }
-                                                        if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                        if(stripos($fieldsKey, 'diff') !== false && abs($floatVal) > 0.0001){
+                                                            $cellClass = $floatVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                        } elseif($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
                                                             $cellClass = 'cell-zero-amount';
                                                         }
                                                     @endphp
@@ -695,7 +715,13 @@
                                                             $cellClass = '';
                                                         @endphp
                                                         @if($column_types[$key] == 'varchar2')
-                                                            <td class="{{ $cellClass }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{{$item->$fieldsKey}}</td>
+                                                            @php
+                                                                $valStr = (string)($item->$fieldsKey);
+                                                                if(stripos($fieldsKey, 'diff') !== false && $valStr !== '' && $valStr !== '0%' && $valStr !== '0.00%' && $valStr !== '0'){
+                                                                    $cellClass = (strpos($valStr, '-') !== false) ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                                }
+                                                            @endphp
+                                                            <td class="{{ $cellClass }}" @if(!empty($rowTextColor)) style="color: {{ $rowTextColor }} !important;" @endif>{!! $valStr !!}</td>
                                                         @elseif($column_types[$key] == 'number')
                                                             @php
                                                                 $numVal = (int)$item->$fieldsKey;
@@ -703,7 +729,9 @@
                                                                     $ai_[$key] += $numVal;
                                                                     $arr_item[$key] = $ai_[$key];
                                                                 }
-                                                                if($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                if(stripos($fieldsKey, 'diff') !== false && $numVal != 0){
+                                                                    $cellClass = $numVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                                } elseif($numVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
                                                                     $cellClass = 'cell-zero-amount';
                                                                 }
                                                             @endphp
@@ -715,7 +743,9 @@
                                                                     $ai_[$key] += $floatVal;
                                                                     $arr_item[$key] = $ai_[$key];
                                                                 }
-                                                                if($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
+                                                                if(stripos($fieldsKey, 'diff') !== false && abs($floatVal) > 0.0001){
+                                                                    $cellClass = $floatVal < 0 ? 'cell-diff-negative' : 'cell-diff-positive';
+                                                                } elseif($floatVal == 0 && (stripos($fieldsKey, 'amount') !== false || stripos($fieldsKey, 'qty') !== false || stripos($fieldsKey, 'quantity') !== false || stripos($fieldsKey, 'balance') !== false)){
                                                                     $cellClass = 'cell-zero-amount';
                                                                 }
                                                             @endphp
