@@ -51,6 +51,9 @@ $(document).on('click', '.data_tbody_row', function() {
     if (caseType == 'stockTransferHelp') {
         get_stock_transfer_detail(thix);
     }
+    if (caseType == 'grnHelpNew') {
+        get_grn_detail(thix);
+    }
     if (caseType == 'supplierHelp') {
         get_supplier_detail(thix);
     }
@@ -2422,6 +2425,10 @@ function get_grn_detail(selected_row){
     }
     $('#ref_grn_code').val(grn_code);
     $('#ref_grn_id').val(grn_id);
+    $('#inLineHelp').remove();
+    if($('#getGRNRequestData').length > 0) {
+        $('#getGRNRequestData').click();
+    }
 }
 
 $('#stock_receiving_code').keydown(function(e) {

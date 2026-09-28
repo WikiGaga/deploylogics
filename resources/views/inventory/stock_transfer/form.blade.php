@@ -249,13 +249,13 @@
                                             @endif
                                         </div>
                                         @if($case == 'new')
-                                            <input type="text" value="{{isset($grn_from_code)?$grn_from_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','grnHelp')}}" id="ref_grn_code" name="grn_code" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
+                                            <input type="text" value="{{isset($grn_from_code)?$grn_from_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','grnHelp')}}" id="ref_grn_code" name="grn_code" class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                         @else
                                             <input type="text" value="{{isset($grn_from_code)?$grn_from_code:''}}" id="ref_grn_code" name="grn_code" class="readonly form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                         @endif
                                         <input type="hidden" id="ref_grn_id" name="grn_id" value="{{isset($grn_from_id)?$grn_from_id:''}}"/>
                                         <div class="input-group-append">
-                                            <span class="input-group-text btn-open-mob-help" id="mobOpenInlineSupplierHelp">
+                                            <span class="input-group-text btn-open-mob-help" id="mobOpenInlineGRNHelp" title="Search GRN">
                                                 <i class="la la-search"></i>
                                             </span>
                                             @if($case == 'new')
@@ -605,10 +605,24 @@
             });
         }
 
+        $(document).on('click', '.btn-open-mob-help', function(e) {
+            e.preventDefault();
+            var input = $(this).closest('.input-group').find('.open_inline__help');
+            if(input.length) {
+                input.addClass('on_click_event').focus().trigger('click');
+            }
+        });
+
+        $(document).on('input', '#ref_grn_code', function() {
+            $('#ref_grn_id').val('');
+        });
+
         $(document).on('click' , '#getGRNRequestData' , function(e){
-            validate = true
+            validate = true;
             var grn_id = $('#ref_grn_id').val();
-            if(valueEmpty(grn_id)){
+            var grn_code = $('#ref_grn_code').val();
+
+            if(valueEmpty(grn_id) && valueEmpty(grn_code)){
                 toastr.error('Please Select GRN No. First');
                 validate = false;
                 return false;
@@ -618,6 +632,7 @@
                 var url = '/stock/890/get-grn-dtl-data';
                 var formData = {
                     grn_id : grn_id,
+                    grn_code : grn_code,
                     rate_type : $('#rate_type').val(),
                     rate_perc : $('#rate_perc').val(),
                 };
@@ -635,59 +650,66 @@
                         if(response.status == 'success'){
                             $('tbody.erp_form__grid_body').html('');
                             if(!valueEmpty(response.data['grn'])){
-                                // console.log(response.data['grn']);
+                                $('#ref_grn_id').val(response.data['grn'].grn_id);
+                                $('#ref_grn_code').val(response.data['grn'].grn_code);
                                 var grns = response.data['grn'].grn_dtl;
                                 var tr = '';
                                 var total_length = $('tbody.erp_form__grid_body tr').length;
                                 for(var p=0; p < grns.length; p++ ){
                                     total_length++;
                                     var row = grns[p];
+                                    var uom_id = (row.barcode && row.barcode.uom) ? row.barcode.uom.uom_id : (row.uom ? row.uom.uom_id : (row.uom_id || ''));
+                                    var uom_name = (row.barcode && row.barcode.uom) ? row.barcode.uom.uom_name : (row.uom ? row.uom.uom_name : '');
+                                    var pd_barcode = row.barcode ? row.barcode.product_barcode_barcode : (row.product_barcode_barcode || '');
+                                    var product_name = row.product ? row.product.product_name : '';
+                                    var pd_packing = row.barcode ? row.barcode.product_barcode_packing : (row.tbl_purc_grn_dtl_packing || 1);
+
                                     tr += '<tr class="new-row">'+
                                         '<td class="handle">'+
                                             '<i class="fa fa-arrows-alt-v handle"></i>'+
                                             '<input type="text" value="'+total_length+'" name="pd['+total_length+'][sr_no]" title="'+total_length+'" class="form-control erp-form-control-sm handle" readonly="" autocomplete="off" aria-invalid="false">'+
                                             '<input type="hidden" name="pd['+total_length+'][product_id]" data-id="product_id" value="'+row.product_id+'" class="product_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
                                             '<input type="hidden" name="pd['+total_length+'][product_barcode_id]" data-id="product_barcode_id" value="'+row.product_barcode_id+'" class="product_barcode_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
-                                            '<input type="hidden" name="pd['+total_length+'][uom_id]" data-id="uom_id" value="'+row.barcode.uom.uom_id+'" class="uom_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
-                                            '<input type="hidden" name="pd['+total_length+'][grn_qty]" data-id="grn_qty" value="'+row.grn_qty+'" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][dis_perc]" data-id="dis_perc" value="'+row.dis_perc+'" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][dis_amount]" data-id="dis_amount" value="'+row.dis_amount+'" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][after_dis_amount]" data-id="after_dis_amount" value="'+row.after_dis_amount+'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][gst_perc]" data-id="gst_perc" value="'+row.gst_perc+'" class="tblGridCal_gst_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][gst_amount]" data-id="gst_amount" value="'+row.gst_amount+'" class="tblGridCal_gst_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][fed_perc]" data-id="fed_perc" value="'+row.fed_perc+'" class="tblGridCal_fed_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][fed_amount]" data-id="fed_amount" value="'+row.fed_amount+'" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][spec_disc_perc]" data-id="spec_disc_perc" value="'+row.spec_disc_perc+'" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][spec_disc_amount]" data-id="spec_disc_amount" value="'+row.spec_disc_amount+'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][gross_amount]" data-id="gross_amount" value="'+row.gross_amount+'" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][net_amount]" data-id="net_amount" value="'+row.net_amount+'" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][unit_price]" data-id="unit_price" value="'+row.unit_price+'" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][uom_id]" data-id="uom_id" value="'+uom_id+'" class="uom_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
+                                            '<input type="hidden" name="pd['+total_length+'][grn_qty]" data-id="grn_qty" value="'+(row.grn_qty || row.tbl_purc_grn_dtl_quantity || '')+'" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][dis_perc]" data-id="dis_perc" value="'+(row.dis_perc || row.tbl_purc_grn_dtl_disc_percent || '')+'" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][dis_amount]" data-id="dis_amount" value="'+(row.dis_amount || row.tbl_purc_grn_dtl_disc_amount || '')+'" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][after_dis_amount]" data-id="after_dis_amount" value="'+(row.after_dis_amount || '')+'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][gst_perc]" data-id="gst_perc" value="'+(row.gst_perc || row.tbl_purc_grn_dtl_gst_percent || '')+'" class="tblGridCal_gst_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][gst_amount]" data-id="gst_amount" value="'+(row.gst_amount || row.tbl_purc_grn_dtl_gst_amount || '')+'" class="tblGridCal_gst_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][fed_perc]" data-id="fed_perc" value="'+(row.fed_perc || '')+'" class="tblGridCal_fed_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][fed_amount]" data-id="fed_amount" value="'+(row.fed_amount || '')+'" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][spec_disc_perc]" data-id="spec_disc_perc" value="'+(row.spec_disc_perc || '')+'" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][spec_disc_amount]" data-id="spec_disc_amount" value="'+(row.spec_disc_amount || '')+'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][gross_amount]" data-id="gross_amount" value="'+(row.gross_amount || row.tbl_purc_grn_dtl_total_amount || '')+'" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][net_amount]" data-id="net_amount" value="'+(row.net_amount || row.tbl_purc_grn_dtl_amount || '')+'" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][unit_price]" data-id="unit_price" value="'+(row.unit_price || row.tbl_purc_grn_dtl_rate || '')+'" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
 
                                         '</td>'+
                                         '<td>'+
-                                            '<input type="text" name="pd['+total_length+'][pd_barcode]" data-id="pd_barcode" data-url="" value="'+ row.barcode.product_barcode_barcode +'" title="'+row.barcode.product_barcode_barcode+'" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off">'+
+                                            '<input type="text" name="pd['+total_length+'][pd_barcode]" data-id="pd_barcode" data-url="" value="'+ pd_barcode +'" title="'+pd_barcode+'" class="form-control erp-form-control-sm pd_barcode tb_moveIndex open_inline__help" readonly="" autocomplete="off">'+
                                         '</td>'+
                                         '<td>'+
-                                            '<input type="text" name="pd['+total_length+'][product_name]" data-id="product_name" data-url="" value="'+ row.product.product_name +'" class="form-control erp-form-control-sm product_name" readonly="" autocomplete="off">'+
+                                            '<input type="text" name="pd['+total_length+'][product_name]" data-id="product_name" data-url="" value="'+ product_name +'" class="form-control erp-form-control-sm product_name" readonly="" autocomplete="off">'+
                                         '</td>'+
                                         '<td>' +
                                             '<div class="erp-select2">' +
                                                 '<select class="pd_uom field_readonly form-control erp-form-control-sm">' +
-                                                    '<option value="'+row.barcode.uom.uom_id+'">'+row.barcode.uom.uom_name+'</option>' +
+                                                    '<option value="'+uom_id+'">'+uom_name+'</option>' +
                                                 '</select>' +
                                             '</div>' +
                                         '</td>'+
-                                        '<td><input readonly data-id="pd_packing" name="pd['+total_length+'][pd_packing]" value="'+ row.barcode.product_barcode_packing +'" type="text" class="pd_packing form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input readonly data-id="pd_packing" name="pd['+total_length+'][pd_packing]" value="'+ pd_packing +'" type="text" class="pd_packing form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
                                         '<td><input readonly data-id="demand_qty" name="pd['+total_length+'][demand_qty]" value="" type="text" class="demand_qty form-control erp-form-control-sm validNumber validOnlyNumber "></td>'+
-                                        '<td><input  data-id="quantity" name="pd['+total_length+'][quantity]" value="'+ row.tbl_purc_grn_dtl_quantity +'" type="text" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
-                                        '<td><input readonly data-id="sale_rate" name="pd['+total_length+'][sale_rate]" value="'+ row.tbl_purc_grn_dtl_sale_rate +'" type="text" class="tblGridSale_rate form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
-                                        '<td><input data-id="rate" name="pd['+total_length+'][rate]" value="'+ row.tbl_purc_grn_dtl_rate +'" type="text" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input data-id="amount" name="pd['+total_length+'][amount]" value="'+ row.tbl_purc_grn_dtl_amount +'" type="text" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
+                                        '<td><input  data-id="quantity" name="pd['+total_length+'][quantity]" value="'+ (row.tbl_purc_grn_dtl_quantity || 0) +'" type="text" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input readonly data-id="sale_rate" name="pd['+total_length+'][sale_rate]" value="'+ (row.tbl_purc_grn_dtl_sale_rate || 0) +'" type="text" class="tblGridSale_rate form-control erp-form-control-sm validNumber validOnlyNumber"></td>'+
+                                        '<td><input data-id="rate" name="pd['+total_length+'][rate]" value="'+ (row.tbl_purc_grn_dtl_rate || 0) +'" type="text" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
+                                        '<td><input data-id="amount" name="pd['+total_length+'][amount]" value="'+ (row.tbl_purc_grn_dtl_amount || 0) +'" type="text" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
                                         '<td><input data-id="dis_perc" name="pd['+total_length+'][dis_perc]" value="'+ (row.tbl_purc_grn_dtl_disc_percent || '') +'" type="text" class="tblGridCal_discount_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
                                         '<td><input data-id="dis_amount" name="pd['+total_length+'][dis_amount]" value="'+ (row.tbl_purc_grn_dtl_disc_amount || '') +'" type="text" class="tblGridCal_discount_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
                                         '<td><input data-id="vat_perc" name="pd['+total_length+'][vat_perc]" value="'+ (row.tbl_purc_grn_dtl_vat_percent || '') +'" type="text" class="tblGridCal_vat_perc tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
                                         '<td><input data-id="vat_amount" name="pd['+total_length+'][vat_amount]" value="'+ (row.tbl_purc_grn_dtl_vat_amount || '') +'" type="text" class="tblGridCal_vat_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber"></td>'+
-                                        '<td><input readonly data-id="gross_amount" name="pd['+total_length+'][gross_amount]" value="'+ (row.tbl_purc_grn_dtl_total_amount || '') +'" type="text" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>'+
+                                        '<td><input readonly data-id="gross_amount" name="pd['+total_length+'][gross_amount]" value="'+ (row.tbl_purc_grn_dtl_total_amount || 0) +'" type="text" class="tblGridCal_gross_amount form-control erp-form-control-sm validNumber"></td>'+
 
                                         '<td class="text-center">'+
                                         '<div class="btn-group btn-group btn-group-sm" role="group">'+
@@ -699,6 +721,9 @@
                                         '</tr>';
                                 }
                                 $('tbody.erp_form__grid_body').append(tr);
+                                if (typeof allCalcFunc === 'function') { allCalcFunc(); }
+                                if (typeof dataDelete === 'function') { dataDelete(); }
+                                if (typeof updateHiddenFields === 'function') { updateHiddenFields(); }
                             }
                             toastr.success(response.message);
                         }else{

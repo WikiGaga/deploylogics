@@ -371,10 +371,13 @@ class StockController extends Controller
             }else{
                 if($formType == 'str'){
                     $stockTrans = TblInveStock::where('stock_id',$request->stock_from_id)
+                        ->where(Utilities::currentBC())
+                        ->where('stock_branch_to_id', $new_branch_id)
                         ->where('stock_receive_status',0)
                         ->where('stock_code_type','st')->first();
                     if(empty($stockTrans)){
-                        return $this->returnjsonerror("Already stock received.",200);
+                        DB::rollBack();
+                        return $this->returnjsonerror("Stock transfer is unavailable, already received, or does not belong to this branch.",200);
                     }
                     $stockTrans->stock_receive_status =  1;
                     $stockTrans->save();
@@ -530,22 +533,31 @@ class StockController extends Controller
                     }
                     if($formType == 'st')
                     {
-                        $per_itm_gst_amount = @round($pd['gst_amount'] / $pd['grn_qty'],2);
-                        $gst_amount = $per_itm_gst_amount * $pd['quantity'];
+                        $grnQty = (isset($pd['grn_qty']) && (float)$pd['grn_qty'] > 0) ? (float)$pd['grn_qty'] : 0;
+                        $itemQty = isset($pd['quantity']) ? (float)$pd['quantity'] : 0;
 
+                        if ($grnQty > 0) {
+                            $per_itm_gst_amount = round((isset($pd['gst_amount']) ? (float)$pd['gst_amount'] : 0) / $grnQty, 2);
+                            $gst_amount = $per_itm_gst_amount * $itemQty;
 
+                            $per_itm_dis_amount = round((isset($pd['dis_amount']) ? (float)$pd['dis_amount'] : 0) / $grnQty, 2);
+                            $dis_amount = $per_itm_dis_amount * $itemQty;
 
-                        $per_itm_dis_amount = @round($pd['dis_amount'] / $pd['grn_qty'],2);
-                        $dis_amount = $per_itm_dis_amount * $pd['quantity'];
+                            $per_itm_after_dis_amount = round((isset($pd['after_dis_amount']) ? (float)$pd['after_dis_amount'] : 0) / $grnQty, 2);
+                            $after_dis_amount = $per_itm_after_dis_amount * $itemQty;
 
-                        $per_itm_after_dis_amount = @round($pd['after_dis_amount'] / $pd['grn_qty'],2);
-                        $after_dis_amount = $per_itm_after_dis_amount * $pd['quantity'];
+                            $per_itm_fed_amount = round((isset($pd['fed_amount']) ? (float)$pd['fed_amount'] : 0) / $grnQty, 2);
+                            $fed_amount = $per_itm_fed_amount * $itemQty;
 
-                        $per_itm_fed_amount = @round($pd['fed_amount'] / $pd['grn_qty'],2);
-                        $fed_amount = $per_itm_fed_amount * $pd['quantity'];
-
-                        $per_itm_spec_disc_amount = @round($pd['spec_disc_amount'] / $pd['grn_qty'],2);
-                        $spec_disc_amount = $per_itm_spec_disc_amount * $pd['quantity'];
+                            $per_itm_spec_disc_amount = round((isset($pd['spec_disc_amount']) ? (float)$pd['spec_disc_amount'] : 0) / $grnQty, 2);
+                            $spec_disc_amount = $per_itm_spec_disc_amount * $itemQty;
+                        } else {
+                            $gst_amount = 0;
+                            $dis_amount = 0;
+                            $after_dis_amount = 0;
+                            $fed_amount = 0;
+                            $spec_disc_amount = 0;
+                        }
 
                         $dtl->grn_qty =  isset($pd['grn_qty'])?$this->addNo($pd['grn_qty']):"";
                         $dtl->grn_disc_per =  isset($pd['dis_perc'])?$this->addNo($pd['dis_perc']):"";
@@ -612,8 +624,10 @@ class StockController extends Controller
 
                    // dd($dtl);
                     $dtl->save();
-                    if($formType == 'st'){
-                        if($pd['demand_qty'] <= $pd['quantity']){
+                    if($formType == 'st' && isset($pd['demand_qty']) && strlen((string)$pd['demand_qty']) > 0){
+                        $demandQty = (float)$pd['demand_qty'];
+                        $itemQty = (float)($pd['quantity'] ?? 0);
+                        if($demandQty <= $itemQty){
                             $demnadDtl = TblPurcDemandDtl::where('demand_id',$request->stock_from_id)
                                 ->where('product_id',$pd['product_id'])
                                 ->where('product_barcode_id',$pd['product_barcode_id'])->first();
@@ -622,7 +636,7 @@ class StockController extends Controller
                                 $demnadDtl->save();
                             }
                         }
-                        if($pd['demand_qty'] > $pd['quantity']){
+                        if($demandQty > $itemQty){
                             $demnadDtl = TblPurcDemandDtl::where('demand_id',$request->stock_from_id)
                                 ->where('product_id',$pd['product_id'])
                                 ->where('product_barcode_id',$pd['product_barcode_id'])->first();
@@ -1375,8 +1389,31 @@ class StockController extends Controller
 
         DB::beginTransaction();
         try{
+            $stockId = $request->stock_id;
+            $stockCode = trim((string) $request->stock_code);
 
-            $data['stock'] = TblInveStock::with('stock_dtls')->where('stock_id',$request->stock_id)->first();
+            $query = TblInveStock::with('stock_dtls')
+                ->where(Utilities::currentBC())
+                ->where('stock_code_type', 'st')
+                ->where('stock_branch_to_id', auth()->user()->branch_id)
+                ->where('stock_receive_status', 0);
+
+            if (!empty($stockId)) {
+                $query->where('stock_id', $stockId);
+            } elseif (!empty($stockCode)) {
+                $query->where('stock_code', $stockCode);
+            } else {
+                DB::rollback();
+                return $this->jsonErrorResponse($data, 'Select first Stock Code', 200);
+            }
+
+            $stock = $query->first();
+            if (empty($stock)) {
+                DB::rollback();
+                return $this->jsonErrorResponse($data, 'Stock Transfer document not found.', 200);
+            }
+
+            $data['stock'] = $stock;
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -1400,8 +1437,29 @@ class StockController extends Controller
 
         DB::beginTransaction();
         try{
+            $grnId = $request->grn_id;
+            $grnCode = trim((string) $request->grn_code);
 
-            $data['grn'] = TblPurcGrn::with('grn_dtl')->where('grn_id',$request->grn_id)->first();
+            $query = TblPurcGrn::with('grn_dtl.product', 'grn_dtl.barcode')
+                ->where(Utilities::currentBCB())
+                ->where('grn_type', 'GRN');
+
+            if (!empty($grnId)) {
+                $query->where('grn_id', $grnId);
+            } elseif (!empty($grnCode)) {
+                $query->where('grn_code', $grnCode);
+            } else {
+                DB::rollback();
+                return $this->jsonErrorResponse($data, 'Please Select GRN No. First', 200);
+            }
+
+            $grn = $query->first();
+            if (empty($grn)) {
+                DB::rollback();
+                return $this->jsonErrorResponse($data, 'GRN Document not found for the entered code.', 200);
+            }
+
+            $data['grn'] = $grn;
 
         }catch (QueryException $e) {
             DB::rollback();

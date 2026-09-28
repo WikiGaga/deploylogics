@@ -664,10 +664,16 @@
             });
         }
 
+        $(document).on('input', '#ref_grn_code', function() {
+            $('#ref_grn_id').val('');
+        });
+
         $(document).on('click' , '#getGRNRequestData' , function(e){
-            validate = true
+            validate = true;
             var grn_id = $('#ref_grn_id').val();
-            if(valueEmpty(grn_id)){
+            var grn_code = $('#ref_grn_code').val();
+
+            if(valueEmpty(grn_id) && valueEmpty(grn_code)){
                 toastr.error('Please Select GRN No. First');
                 validate = false;
                 return false;
@@ -677,6 +683,7 @@
                 var url = '/stock/890/get-grn-dtl-data';
                 var formData = {
                     grn_id : grn_id,
+                    grn_code : grn_code,
                     rate_type : $('#rate_type').val(),
                     rate_perc : $('#rate_perc').val(),
                 };
@@ -694,6 +701,8 @@
                         if(response.status == 'success'){
                             $('tbody.erp_form__grid_body').html('');
                             if(!valueEmpty(response.data['grn'])){
+                                $('#ref_grn_id').val(response.data['grn'].grn_id);
+                                $('#ref_grn_code').val(response.data['grn'].grn_code);
                                 // console.log(response.data['grn']);
                                 var grns = response.data['grn'].grn_dtl;
                                 var tr = '';

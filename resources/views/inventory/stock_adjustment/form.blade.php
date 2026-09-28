@@ -17,12 +17,13 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
+                $store = \App\Models\TblDefiStore::where('branch_id',auth()->user()->branch_id)->where('store_default_value',1)->first();
+                $storeid = isset($store->store_id)?$store->store_id:"";
                 if($data['stock_code_type'] == 'sa'){
                     $rate_type  = 'item_cost_rate';
                 }else{
                     $rate_type  = 'item_sale_rate';
                 }
-                
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;

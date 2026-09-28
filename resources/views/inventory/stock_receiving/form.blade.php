@@ -114,7 +114,7 @@
                                                 @endif
                                             </div>
                                             @if($case == 'new')
-                                                <input type="text" value="{{isset($stock_transfer_code)?$stock_transfer_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','stockTransferHelp')}}" id="stock_transfer_code" name="stock_transfer_code" class="open_inline__help form-control erp-form-control-sm moveIndex" placeholder="Enter here">
+                                                <input type="text" value="{{isset($stock_transfer_code)?$stock_transfer_code:''}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','stockTransferHelp')}}" id="stock_transfer_code" name="stock_transfer_code" class="open_inline__help on_click_event form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                             @else
                                                 <input type="text" value="{{isset($stock_transfer_code)?$stock_transfer_code:''}}" id="stock_transfer_code" name="stock_transfer_code" class="readonly form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                             @endif
@@ -499,10 +499,24 @@
             "placeholder": "dd-mm-yyyy",
             autoUnmask: true
         });
+
+        $(document).on('click', '.btn-open-mob-help', function(e) {
+            e.preventDefault();
+            var input = $(this).closest('.input-group').find('.open_inline__help');
+            if(input.length) {
+                input.addClass('on_click_event').focus().trigger('click');
+            }
+        });
+
+        $(document).on('input', '#stock_transfer_code', function() {
+            $('#stock_from_id').val('');
+        });
+
         $('#getStockTransferData').click(function(){
             var thix = $(this);
             var val = thix.parents('.input-group').find('input#stock_from_id').val();
-            if(val){
+            var code_val = thix.parents('.input-group').find('input#stock_transfer_code').val();
+            if(val || code_val){
                 swal.fire({
                     title: 'Alert!',
                     text: "Are You Sure To Get Data!",
@@ -513,6 +527,7 @@
                     if (result.value) {
                         var formData = {
                             stock_id : val,
+                            stock_code : code_val,
                         };
                         $.ajax({
                             headers: {
@@ -525,7 +540,12 @@
                             success: function(response) {
                                 if(response['status'] == 'success'){
                                     toastr.success(response.message);
-                                    var stock = response.data.stock.stock_dtls;
+                                    if(!valueEmpty(response.data.stock)){
+                                        $('#stock_from_id').val(response.data.stock.stock_id);
+                                        $('#stock_transfer_code').val(response.data.stock.stock_code);
+                                        $('#store').val(response.data.stock.stock_store_from_id);
+                                        $('#branch_from_id').val(response.data.stock.stock_branch_from_id);
+                                        var stock = response.data.stock.stock_dtls;
                                     var tr = "";
                                     var iteration = $('.erp_form__grid_body').find('tr').length + 1;
                                     for(var i=0;i < stock.length;i++){
