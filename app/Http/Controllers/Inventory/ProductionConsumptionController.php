@@ -37,16 +37,24 @@ class ProductionConsumptionController extends Controller
         $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
 
         if (isset($id)) {
-            if (TblProductionConsumption::where('code', 'LIKE', $id)->exists()) {
+            $branchScope = function ($query) {
+                return $query->where('business_id', auth()->user()->business_id)
+                    ->where('company_id', auth()->user()->company_id)
+                    ->where('branch_id', auth()->user()->branch_id);
+            };
+
+            if (TblProductionConsumption::where('code', 'LIKE', $id)->where($branchScope)->exists()) {
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = TblProductionConsumption::where('code', $id)->get();
-                if (isset($data['current'][0])) {
-                    $data['document_code'] = $data['current'][0]->code;
-                } else {
-                    $data['document_code'] = $data['current']->code;
-                }
+                $lines = TblProductionConsumption::with(['product', 'barcode', 'uom'])
+                    ->where('code', $id)
+                    ->where($branchScope)
+                    ->orderBy('sr_no')
+                    ->get();
+                $data['lines'] = $lines;
+                $data['current'] = $lines->first();
+                $data['document_code'] = $data['current']->code;
             } else {
                 abort(404);
             }
@@ -81,6 +89,9 @@ class ProductionConsumptionController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:d-m-Y',
+            'transfer_from'     => 'required|numeric|not_in:0',
+            'transfer_to'       => 'required|numeric|not_in:0',
+            'status'            => 'required|in:1,2',
             'pd'           => 'required|array',
             'pd.*.sr_no'   => 'required|integer',
             'pd.*.pd_barcode' => 'required|string|max:50',
@@ -101,24 +112,31 @@ class ProductionConsumptionController extends Controller
         try {
             $recordDate = date('Y-m-d', strtotime($request->record_date));
 
+            $branchScope = [
+                ['business_id', auth()->user()->business_id],
+                ['company_id', auth()->user()->company_id],
+                ['branch_id', auth()->user()->branch_id],
+            ];
+
             if ($id) {
                 DB::table('tblproductionconsumption')
                     ->where('code', $id)
+                    ->where($branchScope)
                     ->delete();
+                $code = $id;
+            } else {
+                $doc_data = [
+                    'biz_type'          => 'branch',
+                    'model'             => 'TblProductionConsumption',
+                    'code_field'        => 'code',
+                    'code_prefix'       => strtoupper('pc')
+                ];
+                $code = Utilities::documentCode($doc_data);
             }
-
-            $doc_data = [
-                'biz_type'          => 'branch',
-                'model'             => 'TblProductionConsumption',
-                'code_field'        => 'code',
-                'code_prefix'       => strtoupper('pc')
-            ];
-
-            $code = Utilities::documentCode($doc_data);
 
             foreach ($request->pd as $entry) {
                 DB::table('tblproductionconsumption')->insert([
-                    'code'          => $id ?? $code,
+                    'code'          => $code,
                     'record_date'   => $recordDate,
                     'type'          => 'PC',
                     'sr_no'         => $entry['sr_no'],
@@ -136,7 +154,7 @@ class ProductionConsumptionController extends Controller
                     'branch_id'     => auth()->user()->branch_id,
                     'status'        => $request->status ?? 1,
                     'posted'        => $request->posted ?? 0,
-                    'cancel'        => $request->cancel ?? 0,
+                    'cancel'        => $request->has('cancel') ? 1 : 0,
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ]);
@@ -144,26 +162,56 @@ class ProductionConsumptionController extends Controller
 
             DB::commit();
 
-            if(isset($id)){
+            if (isset($id)) {
                 $data = array_merge($data, Utilities::returnJsonEditForm());
                 $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
                 return $this->jsonSuccessResponse($data, trans('message.update'), 200);
-            }else{
+            } else {
                 $data = array_merge($data, Utilities::returnJsonNewForm());
-                $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$code;
+                $data['redirect'] = '/' . self::$redirect_url . $this->prefixCreatePage . '/' . $code;
                 return $this->jsonSuccessResponse($data, trans('message.create'), 200);
             }
 
-
-            // $data['redirect'] = $this->prefixIndexPage.self::$redirect_url.'/form';
-            // return $this->jsonSuccessResponse($data, $id ? 'Record Updated Successfully' : 'Record Created Successfully', 200);
-
+        } catch (QueryException $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
         } catch (Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return $this->jsonErrorResponse($data, $e->getMessage(), 500);
         }
     }
 
+    public function destroy($id)
+    {
+        $data = [];
+        DB::beginTransaction();
 
+        try {
+            $deleted = DB::table('tblproductionconsumption')
+                ->where('code', $id)
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->delete();
 
+            if (!$deleted) {
+                return $this->jsonErrorResponse($data, 'Production & Consumption entry not found.', 404);
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse($data, $e->getMessage(), 200);
+        }
+
+        DB::commit();
+        return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
+    }
 }

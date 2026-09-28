@@ -19,32 +19,16 @@
                 $date =  date('d-m-Y');
             }
             if($case == 'edit'){
-                if (isset($data['current'][0])) {
-                    // Multiple records case
-                    $id = $data['current'][0]->code;
-                    $code = $data['current'][0]->code;
-                    // dd($data['current'][0]);
-                    $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current'][0]->record_date))));
-                    $product_barcode_id = $data['current'][0]->item_code;
-                    $transferFrom = $data['current'][0]->transfer_from;
-                    $transferTo = $data['current'][0]->transfer_to;
-                    $status = $data['current'][0]->status;
-                    $cancel = $data['current'][0]->cancel;
-                    $remarks = $data['current'][0]->remarks;
-                    $dtls = $data['current']; // All records
-                } else {
-                    // Single record case
-                    $id = $data['current']->code;
-                    $code = $data['current']->code;
-                    $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->record_date))));
-                    $product_barcode_id = $data['current']->item_code;
-                    $transferFrom = $data['current']->transfer_from;
-                    $transferTo = $data['current']->transfer_to;
-                    $status = $data['current']->status;
-                    $cancel = $data['current']->cancel;
-                    $remarks = $data['current']->remarks;
-                    $dtls = [$data['current']];
-                }
+                $id = $data['current']->code;
+                $code = $data['current']->code;
+                $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->record_date))));
+                $product_barcode_id = $data['current']->item_code;
+                $transferFrom = $data['current']->transfer_from;
+                $transferTo = $data['current']->transfer_to;
+                $status = $data['current']->status;
+                $cancel = $data['current']->cancel;
+                $remarks = $data['current']->remarks;
+                $dtls = isset($data['lines']) ? $data['lines'] : collect([$data['current']]);
             }
             $form_type = $data['form_type'];
     @endphp
@@ -280,9 +264,9 @@
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][product_id]" data-id="product_id" value="{{isset($dtl->product->product_id)?$dtl->product->product_id:""}}" class="product_id form-control erp-form-control-sm handle" readonly>
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
                                                     {{-- <input type="hidden" name="pd[{{$loop->iteration}}][constants_id]" data-id="constants_id" value="{{isset($dtl->constants->constants_id)?$dtl->constants->constants_id:""}}" class="constants_id form-control erp-form-control-sm handle" readonly> --}}
-                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{isset($dtl->code)?$dtl->code:""}}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
+                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{ $dtl->item_code }}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
                                                 </td>
-                                                <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{$dtl->code}}" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{ $dtl->item_code }}" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
                                                 <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->product->product_name)?$dtl->product->product_name:""}}" class="product_name form-control erp-form-control-sm" readonly></td>
                                                 <td>
                                                     <select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd[{{$loop->iteration}}][uom]">
@@ -292,7 +276,7 @@
                                                 <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][packing]" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
                                                 <td><input type="text" data-id="qty" name="pd[{{$loop->iteration}}][qty]" value="{{$dtl->qty}}" class="tblGridCal_qty tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
                                                 <td><input type="text" data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{$dtl->rate}}" class="tblGridCal_rate tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
-                                                <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{$dtl->item_formulation_dtl_amount}}" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
+                                                <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{ $dtl->amount }}" class="tblGridCal_amount tb_moveIndex form-control erp-form-control-sm validNumber validOnlyFloatNumber" ></td>
 
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
@@ -344,7 +328,7 @@
 @section('customJS')
 
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/formulation.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/production-consumption.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-modal.js') }}" type="text/javascript"></script>

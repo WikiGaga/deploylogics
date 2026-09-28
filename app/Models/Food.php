@@ -13,6 +13,10 @@ class Food extends Model
 
     protected $primaryKey = 'id';
 
+    public $timestamps = true;
+
+    protected $guarded = [];
+
     protected static function primaryKeyName()
     {
         return (new static)->getKeyName();

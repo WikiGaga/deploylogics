@@ -91,7 +91,9 @@ class ListingAdvanceController extends Controller
             $where = 'where ';
 
             // fix where
-            if(isset($listing_studio_query->listing_business_or_branch)){
+            if ($case_name === 'food') {
+                $where .= '('.$tbl_1_alias.'restaurant_id = '.(int) auth()->user()->branch_id.')';
+            } elseif(isset($listing_studio_query->listing_business_or_branch)){
                 if($listing_studio_query->listing_business_or_branch == 'branch'){
                     $where .= '('.$tbl_1_alias.'business_id = '.auth()->user()->business_id.' AND '.$tbl_1_alias.'company_id = '.auth()->user()->company_id.' AND '.$tbl_1_alias.'branch_id = '.auth()->user()->branch_id.')';
                 }else{
