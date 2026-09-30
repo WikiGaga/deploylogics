@@ -102,7 +102,7 @@ class MenuMakerController extends Controller
             $menu->menu_dtl_link = $request->menu_dtl_link;
             $menu->menu_dtl_table_name = $request->menu_dtl_table_name;
             $menu->menu_dtl_sorting = $request->menu_dtl_sorting;
-            $menu->menu_dtl_visibility = 1;
+            $menu->menu_dtl_visibility = $request->has('menu_dtl_visibility') ? 1 : 0;
             $menu->business_id = auth()->user()->business_id;
             $menu->company_id = auth()->user()->company_id;
             $menu->branch_id = auth()->user()->branch_id;
@@ -163,8 +163,7 @@ class MenuMakerController extends Controller
                 }
             }
 
-            //clear menu from cache
-            Cache::forget('menu');
+            $this->clearSidebarMenuCache();
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -238,8 +237,7 @@ class MenuMakerController extends Controller
             $menu = TblSoftMenuDtl::where('menu_dtl_id',$id)->first();
             $menu->delete();
 
-            //clear menu from cache
-            Cache::forget('menu');
+            $this->clearSidebarMenuCache();
         }catch (QueryException $e) {
             DB::rollback();
             return $this->jsonErrorResponse($data, $e->getMessage(), 200);
@@ -255,5 +253,10 @@ class MenuMakerController extends Controller
         }
         DB::commit();
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
+    }
+
+    protected function clearSidebarMenuCache()
+    {
+        Cache::forget('sidebar_menus:business:' . auth()->user()->business_id);
     }
 }

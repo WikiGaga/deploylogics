@@ -18,6 +18,7 @@
             $link = $data['current']->menu_dtl_link;
             $table = $data['current']->menu_dtl_table_name;
             $alignment = $data['current']->menu_dtl_sorting;
+            $menu_dtl_visibility = $data['current']->menu_dtl_visibility;
         }
     @endphp
     @permission($data['permission'])
@@ -75,6 +76,15 @@
                                     <label class="col-lg-3  erp-col-form-label">Alignment:</label>
                                     <div class="col-lg-9">
                                         <input type="text" name="menu_dtl_sorting" value="{{ isset($alignment)?$alignment:'' }}" maxlength="5" class="form-control erp-form-control-sm validNumber text-left">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-lg-3  erp-col-form-label">Show in menu:</label>
+                                    <div class="col-lg-9">
+                                        <label class="kt-checkbox kt-checkbox--bold kt-checkbox--brand">
+                                            <input type="checkbox" name="menu_dtl_visibility" value="1" {{ (!isset($menu_dtl_visibility) || $menu_dtl_visibility == 1) ? 'checked' : '' }}>
+                                            <span></span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
