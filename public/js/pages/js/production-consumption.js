@@ -20,10 +20,6 @@ var KTFormWidgets = function() {
                     required: true,
                     valueNotEquals: '0',
                 },
-                status: {
-                    required: true,
-                    valueNotEquals: '0',
-                },
             },
             submitHandler: function(form) {
                 if ($('.erp_form__grid_body tr').length === 0) {

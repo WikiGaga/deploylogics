@@ -47,7 +47,7 @@ class ProductionConsumptionController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $lines = TblProductionConsumption::with(['product', 'barcode', 'uom'])
+                $lines = TblProductionConsumption::with(['barcode.product', 'barcode.uom'])
                     ->where('code', $id)
                     ->where($branchScope)
                     ->orderBy('sr_no')
@@ -91,11 +91,10 @@ class ProductionConsumptionController extends Controller
             'record_date'       => 'required|date_format:d-m-Y',
             'transfer_from'     => 'required|numeric|not_in:0',
             'transfer_to'       => 'required|numeric|not_in:0',
-            'status'            => 'required|in:1,2',
             'pd'           => 'required|array',
             'pd.*.sr_no'   => 'required|integer',
             'pd.*.pd_barcode' => 'required|string|max:50',
-            // 'pd.*.stock_type' => 'required|string|max:50',
+            'pd.*.stock_type' => 'required|in:production,consumption',
             'pd.*.qty'     => 'required|numeric',
             'pd.*.rate'    => 'required|numeric',
             'pd.*.amount'  => 'required|numeric',
@@ -140,7 +139,7 @@ class ProductionConsumptionController extends Controller
                     'record_date'   => $recordDate,
                     'type'          => 'PC',
                     'sr_no'         => $entry['sr_no'],
-                    // 'stock_type'    => $entry['stock_type'],
+                    'stock_type'    => $entry['stock_type'],
                     'item_code'     => $entry['pd_barcode'],
                     'qty'           => $entry['qty'],
                     'rate'          => $entry['rate'],
@@ -152,9 +151,9 @@ class ProductionConsumptionController extends Controller
                     'business_id'   => auth()->user()->business_id,
                     'company_id'    => auth()->user()->company_id,
                     'branch_id'     => auth()->user()->branch_id,
-                    'status'        => $request->status ?? 1,
+                    'status'        => 1,
                     'posted'        => $request->posted ?? 0,
-                    'cancel'        => $request->has('cancel') ? 1 : 0,
+                    'cancel'        => 0,
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ]);

@@ -465,6 +465,8 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                     // tr.find('.sldtl_disc_per').focus();
                 }else if(form_type == 'request_quotation' || form_type == 'request_order' || form_type == 'request_invoice'){
                     tr.find('.pd_length').focus();
+                }else if(form_type == 'production-consumption'){
+                    tr.find('#stock_type').focus();
                 }else{
                     tr.find('.tblGridCal_qty').focus();
                 }

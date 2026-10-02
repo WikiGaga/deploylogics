@@ -15,15 +15,7 @@ class TblProductionConsumption extends Model
         return (new static)->getKeyName();
     }
 
-    public function product(){
-        return $this->belongsTo(TblPurcProduct::class, 'item_code', 'product_barcode_id');
-    }
-
     function barcode(){
         return $this->belongsTo(TblPurcProductBarcode::class, 'item_code', 'product_barcode_barcode');
-    }
-
-    function uom(){
-        return $this->belongsTo(TblDefiUom::class, 'uom_id');
     }
 }

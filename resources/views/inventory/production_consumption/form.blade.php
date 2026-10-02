@@ -25,8 +25,6 @@
                 $product_barcode_id = $data['current']->item_code;
                 $transferFrom = $data['current']->transfer_from;
                 $transferTo = $data['current']->transfer_to;
-                $status = $data['current']->status;
-                $cancel = $data['current']->cancel;
                 $remarks = $data['current']->remarks;
                 $dtls = isset($data['lines']) ? $data['lines'] : collect([$data['current']]);
             }
@@ -102,40 +100,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row form-group-block">
-                        <div class="col-lg-4">
-                            <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Status: <span class="required">*</span></label>
-                                <div class="col-lg-6">
-                                    <div class="erp-select2">
-                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="status" name="status">
-                                            <option value="0">Select</option>
-                                            @php $status = isset($status)?$status:'' @endphp
-                                                <option value="1" {{$status == 1 ?'selected':''}}>Draft</option>
-                                                <option value="2" {{$status == 2 ?'selected':''}}>Submitted</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">Cancel:</label>
-                            <div class="col-lg-6">
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input"
-                                        id="cancel_checkbox"
-                                        name="cancel"
-                                        value="1"
-                                        {{ isset($cancel) && $cancel == 1 ? 'checked' : '' }}
-                                    >
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
@@ -145,7 +109,7 @@
                                         <i class="flaticon-more" style="color: #666666;"></i>
                                     </button>
                                     @php
-                                        $headings = ['Sr No','Barcode','Product Name','UOM','Packing','Qty','Rate','Amount'];
+                                        $headings = ['Sr No','Barcode','Product Name','Type','UOM','Packing','Qty','Rate','Amount'];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="max-height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                         @foreach($headings as $key=>$heading)
@@ -214,6 +178,16 @@
                                             </div>
                                         </th>
                                         <th scope="col">
+                                            <div class="erp_form__grid_th_title">Type</div>
+                                            <div class="erp_form__grid_th_input">
+                                                <select id="stock_type" class="stock_type tb_moveIndex form-control erp-form-control-sm">
+                                                    <option value="">Select</option>
+                                                    <option value="production">Production</option>
+                                                    <option value="consumption">Consumption</option>
+                                                </select>
+                                            </div>
+                                        </th>
+                                        <th scope="col">
                                             <div class="erp_form__grid_th_title">UOM</div>
                                             <div class="erp_form__grid_th_input">
                                                 <select id="pd_uom" class="pd_uom tb_moveIndex form-control erp-form-control-sm">
@@ -261,16 +235,25 @@
                                             <tr>
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{$loop->iteration}}" name="pd[{{$loop->iteration}}][sr_no]"  class="form-control erp-form-control-sm handle" readonly>
-                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_id]" data-id="product_id" value="{{isset($dtl->product->product_id)?$dtl->product->product_id:""}}" class="product_id form-control erp-form-control-sm handle" readonly>
-                                                    <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
+                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_id]" data-id="product_id" value="{{isset($dtl->barcode->product->product_id)?$dtl->barcode->product->product_id:""}}" class="product_id form-control erp-form-control-sm handle" readonly>
+                                                    <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->barcode->uom->uom_id)?$dtl->barcode->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
                                                     {{-- <input type="hidden" name="pd[{{$loop->iteration}}][constants_id]" data-id="constants_id" value="{{isset($dtl->constants->constants_id)?$dtl->constants->constants_id:""}}" class="constants_id form-control erp-form-control-sm handle" readonly> --}}
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{ $dtl->item_code }}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
                                                 </td>
                                                 <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{ $dtl->item_code }}" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
-                                                <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->product->product_name)?$dtl->product->product_name:""}}" class="product_name form-control erp-form-control-sm" readonly></td>
+                                                <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->barcode->product->product_name)?$dtl->barcode->product->product_name:""}}" class="product_name form-control erp-form-control-sm" readonly></td>
+                                                <td>
+                                                    <div class="erp-select2">
+                                                        <select class="stock_type tb_moveIndex form-control erp-form-control-sm" data-id="stock_type" name="pd[{{$loop->iteration}}][stock_type]">
+                                                            <option value="">Select</option>
+                                                            <option value="production" {{ (isset($dtl->stock_type) && $dtl->stock_type == 'production') ? 'selected' : '' }}>Production</option>
+                                                            <option value="consumption" {{ (isset($dtl->stock_type) && $dtl->stock_type == 'consumption') ? 'selected' : '' }}>Consumption</option>
+                                                        </select>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd[{{$loop->iteration}}][uom]">
-                                                        <option value="{{isset($dtl->uom->uom_id)?$dtl->uom->uom_id:""}}">{{isset($dtl->uom->uom_name)?$dtl->uom->uom_name:""}}</option>
+                                                        <option value="{{isset($dtl->barcode->uom->uom_id)?$dtl->barcode->uom->uom_id:""}}">{{isset($dtl->barcode->uom->uom_name)?$dtl->barcode->uom->uom_name:""}}</option>
                                                     </select>
                                                 </td>
                                                 <td><input type="text" data-id="pd_packing" name="pd[{{$loop->iteration}}][packing]" value="{{isset($dtl->barcode->product_barcode_packing)?$dtl->barcode->product_barcode_packing:""}}" class="pd_packing form-control erp-form-control-sm" readonly></td>
@@ -289,6 +272,7 @@
                                     </tbody>
                                     <tbody class="erp_form__grid_body_total">
                                         <tr>
+                                            <td></td>
                                             <td></td>
                                             <td></td>
                                             <td></td>
@@ -351,6 +335,13 @@
                 'message':'Enter Product Detail',
                 'require':true,
                 'readonly':true
+            },
+            {
+                'id':'stock_type',
+                'fieldClass':'stock_type tb_moveIndex',
+                'type':'select',
+                'require':true,
+                'message':'Select Production or Consumption'
             },
             {
                 'id':'pd_uom',
