@@ -117,6 +117,7 @@
                                 <th>Debit</th>
                                 <th>Credit</th>
                                 <th>Balance</th>
+                                <th>Status</th>
                                 <th>CR/DR</th>
                             </tr>
                         </thead>
@@ -153,6 +154,7 @@
                                     {{number_format($opening_balc * (-1),3)}}
                                 @endif
                             </th>
+                            <th></th>
                             <th class="text-center">
                                 @if($opening_balc > 0)
                                     DR
@@ -299,6 +301,9 @@
                                     @else
                                         {{number_format($opening_balc * (-1),3)}}
                                     @endif
+                                </td>
+                                <td class="text-center" style="color:{{$color}}">
+                                    @if($list->posted == 1) Posted @else Unposted @endif
                                 </td>
                                 <td class="text-center" style="color:{{$color}}">
                                     @if($opening_balc > 0)
