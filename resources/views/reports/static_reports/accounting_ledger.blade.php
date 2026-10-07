@@ -207,7 +207,7 @@
                             $query = "Select VOUCH.*,acc.chart_name contra_chart_name from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             ,TBL_ACCO_CHART_ACCOUNT acc
                             where acc.chart_account_id(+) = VOUCH.voucher_cont_acc_code
-                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.posted = 1
+                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+)
                             $date_field
                             and ( VOUCH.voucher_debit <> 0 OR  VOUCH.voucher_credit <> 0 ) and " .$where." order by VOUCH.voucher_date,VOUCH.created_at,SEQ.SQUENCE_SORTING_ORDER,VOUCH.voucher_sr_no,VOUCH.VOUCHER_NO";
                           // dump($query);
