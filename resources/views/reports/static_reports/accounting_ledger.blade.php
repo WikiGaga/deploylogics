@@ -334,6 +334,7 @@
                                     {{number_format($sub_opening_balc * (-1),3)}}
                                 @endif
                             </td>
+                            <td></td>
                             <td class="text-center rep-font-bold">
                                 @if($sub_opening_balc > 0)
                                     DR
@@ -356,6 +357,7 @@
                                     {{number_format($opening_balc * (-1),3)}}
                                 @endif
                             </td>
+                            <td></td>
                             <td class="text-center rep-font-bold">
                                 @if($opening_balc > 0)
                                     DR
