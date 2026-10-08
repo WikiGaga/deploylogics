@@ -117,6 +117,7 @@
                                 <th>Debit</th>
                                 <th>Credit</th>
                                 <th>Balance</th>
+                                <th>Status</th>
                                 <th>CR/DR</th>
                             </tr>
                         </thead>
@@ -153,6 +154,7 @@
                                     {{number_format($opening_balc * (-1),3)}}
                                 @endif
                             </th>
+                            <th></th>
                             <th class="text-center">
                                 @if($opening_balc > 0)
                                     DR
@@ -205,7 +207,7 @@
                             $query = "Select VOUCH.*,acc.chart_name contra_chart_name from vw_acco_voucher VOUCH,TBL_SOFT_VOUCHER_SQUENCE SEQ
                             ,TBL_ACCO_CHART_ACCOUNT acc
                             where acc.chart_account_id(+) = VOUCH.voucher_cont_acc_code
-                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+) AND VOUCH.posted = 1
+                            and VOUCH.voucher_TYPE = SEQ.SQUENCE_VOUCHER_TYPE(+)
                             $date_field
                             and ( VOUCH.voucher_debit <> 0 OR  VOUCH.voucher_credit <> 0 ) and " .$where." order by VOUCH.voucher_date,VOUCH.created_at,SEQ.SQUENCE_SORTING_ORDER,VOUCH.voucher_sr_no,VOUCH.VOUCHER_NO";
                           // dump($query);
@@ -301,6 +303,9 @@
                                     @endif
                                 </td>
                                 <td class="text-center" style="color:{{$color}}">
+                                    @if($list->posted == 1) Posted @else Unposted @endif
+                                </td>
+                                <td class="text-center" style="color:{{$color}}">
                                     @if($opening_balc > 0)
                                         DR
                                     @else
@@ -329,6 +334,7 @@
                                     {{number_format($sub_opening_balc * (-1),3)}}
                                 @endif
                             </td>
+                            <td></td>
                             <td class="text-center rep-font-bold">
                                 @if($sub_opening_balc > 0)
                                     DR
@@ -351,6 +357,7 @@
                                     {{number_format($opening_balc * (-1),3)}}
                                 @endif
                             </td>
+                            <td></td>
                             <td class="text-center rep-font-bold">
                                 @if($opening_balc > 0)
                                     DR
