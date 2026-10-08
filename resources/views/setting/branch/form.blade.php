@@ -266,159 +266,158 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group-block row">
-                                                    <label class="col-lg-3 erp-col-form-label">Google Map Address:</label>
+                                                    <label class="col-lg-3 erp-col-form-label">Google Map Address / Coordinates:</label>
                                                     <div class="col-lg-12">
-                                                        <input class="form-control erp-form-control-sm large_text input-sm pac-target-input" type="text" value="{{isset($google_address)?$google_address:''}}"  name="branch_google_address" id="pac-input" placeholder="Enter a location" onchange="getltln('pac-input');" autocomplete="off" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); font-weight: normal;">
-                                                        <div>Latitude: <span id="res">{{isset($latitude)?$latitude:''}}</span></div>
-                                                        <div>longitude: <span id="res2">{{isset($longitude)?$longitude:''}}</span></div>
-                                                        <input type="hidden" name="branch_latitude" id="savelatitude" value="{{isset($latitude)?$latitude:'31.582045'}}">
-                                                        <input type="hidden" name="branch_longitude" id="savelongitude" value="{{isset($longitude)?$longitude:'74.329376'}}">
+                                                        <input class="form-control erp-form-control-sm large_text input-sm pac-target-input" type="text" value="{{isset($google_address)?$google_address:''}}"  name="branch_google_address" id="pac-input" placeholder="Enter an address or coordinates (e.g., 24.7136, 46.6753)" onchange="getltln('pac-input');" autocomplete="off" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); font-weight: normal;">
+                                                        
+                                                        <div class="row mt-2 mb-2 align-items-center">
+                                                            <div class="col-md-5">
+                                                                <div class="input-group input-group-sm">
+                                                                    <div class="input-group-prepend"><span class="input-group-text">Lat</span></div>
+                                                                    <input type="text" class="form-control form-control-sm" id="savelatitude" name="branch_latitude" value="{{isset($latitude)?$latitude:'31.582045'}}" onchange="searchByDirectCoordinates();">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-5">
+                                                                <div class="input-group input-group-sm">
+                                                                    <div class="input-group-prepend"><span class="input-group-text">Lng</span></div>
+                                                                    <input type="text" class="form-control form-control-sm" id="savelongitude" name="branch_longitude" value="{{isset($longitude)?$longitude:'74.329376'}}" onchange="searchByDirectCoordinates();">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <button type="button" class="btn btn-sm btn-primary btn-block" onclick="searchByDirectCoordinates();">Go to Lat/Lng</button>
+                                                            </div>
+                                                        </div>
+                                                        <div style="display:none;">Latitude: <span id="res">{{isset($latitude)?$latitude:''}}</span> | Longitude: <span id="res2">{{isset($longitude)?$longitude:''}}</span></div>
+
                                                         <script type="text/javascript">
+                                                            var map, marker, geocoder;
 
-                                                            function getltln(p) {
-                                                                //alert('sl');
-                                                                //console.log('sl');
-                                                                //console.log(p);
-                                                                var geocoder = new google.maps.Geocoder();
-                                                                var address = document.getElementById(p).value;
-
-                                                                geocoder.geocode( { 'address': address}, function(results, status) {
-
-                                                                    if (status == google.maps.GeocoderStatus.OK) {
-                                                                        var latitude = results[0].geometry.location.lat();
-                                                                        var longitude = results[0].geometry.location.lng();
-                                                                        document.getElementById('res').innerHTML=latitude;
-                                                                        document.getElementById('res2').innerHTML=longitude;
-                                                                        document.getElementById('savelatitude').value=latitude;
-                                                                        document.getElementById('savelongitude').value=longitude;
-
-
-                                                                        var myLatlng = new google.maps.LatLng(latitude,longitude);
-                                                                        var mapOptions = {
-                                                                            zoom: 17,
-                                                                            center: myLatlng
+                                                            function updateCoordinatesAndAddress(latLng, updateAddressInput) {
+                                                                var lat = (typeof latLng.lat === 'function') ? latLng.lat() : latLng.lat;
+                                                                var lng = (typeof latLng.lng === 'function') ? latLng.lng() : latLng.lng;
+                                                                
+                                                                document.getElementById('res').innerHTML = lat;
+                                                                document.getElementById('res2').innerHTML = lng;
+                                                                document.getElementById('savelatitude').value = lat;
+                                                                document.getElementById('savelongitude').value = lng;
+                                                                
+                                                                if (marker) {
+                                                                    marker.setPosition(latLng);
+                                                                    marker.setVisible(true);
+                                                                }
+                                                                if (map) {
+                                                                    map.setCenter(latLng);
+                                                                }
+                                                                
+                                                                if (updateAddressInput && geocoder) {
+                                                                    geocoder.geocode({ location: latLng }, function(results, status) {
+                                                                        if (status === 'OK' && results[0]) {
+                                                                            document.getElementById('pac-input').value = results[0].formatted_address;
                                                                         }
-                                                                        var map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-                                                                        var marker = new google.maps.Marker({
-                                                                            position: myLatlng,
-                                                                            title:"Hello World!",
-                                                                        });
-
-                                                                        // To add the marker to the map, call setMap();
-                                                                        marker.setMap(map);
-
-
-                                                                        //var infowindow = new google.maps.InfoWindow();
-                                                                        //var infowindowContent = document.getElementById('infowindow-content');
-                                                                        //infowindow.setContent(infowindowContent);
-                                                                        var marker = new google.maps.Marker({
-                                                                            map: map,
-                                                                            anchorPoint: new google.maps.Point(0, -29)
-                                                                        });
-
-                                                                        //infowindowContent.children['place-address'].textContent = address;
-                                                                        //infowindow.open(map, marker);
-
-
-                                                                    }
-                                                                });
-
-
+                                                                    });
+                                                                }
                                                             }
 
-                                                            // This example requires the Places library. Include the libraries=places
-                                                            // parameter when you first load the API. For example:
-                                                            // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+                                                            function processAddressOrCoordinates(inputVal) {
+                                                                if (!inputVal || !inputVal.trim()) return;
+                                                                
+                                                                var coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/;
+                                                                var match = inputVal.trim().match(coordRegex);
+                                                                
+                                                                if (match) {
+                                                                    var lat = parseFloat(match[1]);
+                                                                    var lng = parseFloat(match[3]);
+                                                                    if (!isNaN(lat) && !isNaN(lng)) {
+                                                                        var latLng = new google.maps.LatLng(lat, lng);
+                                                                        updateCoordinatesAndAddress(latLng, true);
+                                                                        if (map) map.setZoom(17);
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                
+                                                                if (geocoder) {
+                                                                    geocoder.geocode({ address: inputVal }, function(results, status) {
+                                                                        if (status === 'OK' && results[0]) {
+                                                                            var location = results[0].geometry.location;
+                                                                            updateCoordinatesAndAddress(location, false);
+                                                                            if (map) {
+                                                                                if (results[0].geometry.viewport) {
+                                                                                    map.fitBounds(results[0].geometry.viewport);
+                                                                                } else {
+                                                                                    map.setCenter(location);
+                                                                                    map.setZoom(17);
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }
+
+                                                            function getltln(p) {
+                                                                var val = document.getElementById(p).value;
+                                                                processAddressOrCoordinates(val);
+                                                            }
+
+                                                            function searchByDirectCoordinates() {
+                                                                var lat = parseFloat(document.getElementById('savelatitude').value);
+                                                                var lng = parseFloat(document.getElementById('savelongitude').value);
+                                                                if (!isNaN(lat) && !isNaN(lng)) {
+                                                                    var latLng = new google.maps.LatLng(lat, lng);
+                                                                    updateCoordinatesAndAddress(latLng, true);
+                                                                    if (map) map.setZoom(17);
+                                                                }
+                                                            }
 
                                                             function initMap() {
-                                                                //  alert('s');
-                                                                var map = new google.maps.Map(document.getElementById('map'), {
-                                                                    center: {lat: 31.582045, lng: 74.329376},
+                                                                geocoder = new google.maps.Geocoder();
+                                                                
+                                                                var initLat = parseFloat(document.getElementById('savelatitude').value) || 31.582045;
+                                                                var initLng = parseFloat(document.getElementById('savelongitude').value) || 74.329376;
+                                                                var initCenter = { lat: initLat, lng: initLng };
+
+                                                                map = new google.maps.Map(document.getElementById('map'), {
+                                                                    center: initCenter,
                                                                     zoom: 14
                                                                 });
 
-                                                                var card = document.getElementById('pac-card');
-                                                                var input = document.getElementById('pac-input');
-                                                                var types = document.getElementById('type-selector');
-                                                                var strictBounds = document.getElementById('strict-bounds-selector');
-
-                                                                map.controls[google.maps.ControlPosition.TOP_RIGHT].push(card);
-
-                                                                var autocomplete = new google.maps.places.Autocomplete(input);
-
-                                                                // Bind the map's bounds (viewport) property to the autocomplete object,
-                                                                // so that the autocomplete requests use the current map bounds for the
-                                                                // bounds option in the request.
-                                                                autocomplete.bindTo('bounds', map);
-
-                                                                var infowindow = new google.maps.InfoWindow();
-                                                                var infowindowContent = document.getElementById('infowindow-content');
-                                                                infowindow.setContent(infowindowContent);
-                                                                var marker = new google.maps.Marker({
+                                                                marker = new google.maps.Marker({
                                                                     map: map,
-                                                                    anchorPoint: new google.maps.Point(0, -29)
+                                                                    position: initCenter,
+                                                                    draggable: true
                                                                 });
 
+                                                                var input = document.getElementById('pac-input');
+                                                                var autocomplete = new google.maps.places.Autocomplete(input);
+                                                                autocomplete.bindTo('bounds', map);
+
                                                                 autocomplete.addListener('place_changed', function() {
-                                                                    infowindow.close();
-                                                                    marker.setVisible(false);
                                                                     var place = autocomplete.getPlace();
-                                                                    if (!place.geometry) {
-                                                                        // User entered the name of a Place that was not suggested and
-                                                                        // pressed the Enter key, or the Place Details request failed.
-                                                                        window.alert("No details available for input: '" + place.name + "'");
+                                                                    if (!place || !place.geometry) {
+                                                                        processAddressOrCoordinates(input.value);
                                                                         return;
                                                                     }
 
-                                                                    // If the place has a geometry, then present it on a map.
                                                                     if (place.geometry.viewport) {
                                                                         map.fitBounds(place.geometry.viewport);
                                                                     } else {
                                                                         map.setCenter(place.geometry.location);
-                                                                        map.setZoom(17);  // Why 17? Because it looks good.
+                                                                        map.setZoom(17);
                                                                     }
-                                                                    marker.setPosition(place.geometry.location);
-                                                                    marker.setVisible(true);
-
-                                                                    var address = '';
-                                                                    if (place.address_components) {
-                                                                        address = [
-                                                                            (place.address_components[0] && place.address_components[0].short_name || ''),
-                                                                            (place.address_components[1] && place.address_components[1].short_name || ''),
-                                                                            (place.address_components[2] && place.address_components[2].short_name || '')
-                                                                        ].join(' ');
-                                                                    }
-
-                                                                    /*infowindowContent.children['place-icon'].src = place.icon;
-                                                                    infowindowContent.children['place-name'].textContent = place.name;
-                                                                    infowindowContent.children['place-address'].textContent = address;
-                                                                    infowindow.open(map, marker);*/
+                                                                    
+                                                                    updateCoordinatesAndAddress(place.geometry.location, false);
                                                                 });
 
-                                                                // Sets a listener on a radio button to change the filter type on Places
-                                                                // Autocomplete.
-                                                                /*function setupClickListener(id, types) {
-                                                                    var radioButton = document.getElementById(id);
-                                                                    radioButton.addEventListener('click', function() {
-                                                                        autocomplete.setTypes(types);
-                                                                    });
-                                                                }
+                                                                marker.addListener('dragend', function(e) {
+                                                                    updateCoordinatesAndAddress(e.latLng, true);
+                                                                });
 
-                                                                setupClickListener('changetype-all', []);
-                                                                setupClickListener('changetype-address', ['address']);
-                                                                setupClickListener('changetype-establishment', ['establishment']);
-                                                                setupClickListener('changetype-geocode', ['geocode']);
-
-                                                                document.getElementById('use-strict-bounds')
-                                                                    .addEventListener('click', function() {
-                                                                        console.log('Checkbox clicked! New state=' + this.checked);
-                                                                        autocomplete.setOptions({strictBounds: this.checked});
-                                                                    });*/
+                                                                map.addListener('click', function(e) {
+                                                                    updateCoordinatesAndAddress(e.latLng, true);
+                                                                });
                                                             }
                                                         </script>
                                                         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsg3oFV_HSQJqndKVAINg6NPbt6vgfBWo&amp;libraries=places&amp;callback=initMap" async="" defer=""></script>
-                                                        <div id="map"  style="height:250px;"></div>
+                                                        <div id="map" style="height:250px;"></div>
                                                     </div>
                                                 </div>
                                             </div>
