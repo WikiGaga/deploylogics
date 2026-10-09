@@ -36,7 +36,7 @@
         @csrf
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
-                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+                <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                     @include('elements.page_header',['page_data' => $data['page_data']])
                 </div>
                 <div class="kt-portlet__body">
@@ -301,6 +301,8 @@
                 </div>
             </div>
         </div>
+
+        @include('staging_activity.auto_include')
     </form>
                 <!--end::Form-->
     @endpermission

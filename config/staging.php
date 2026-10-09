@@ -15,6 +15,7 @@ return [
         '36' => 'voucher_id',
         '37' => 'voucher_id',
         '62' => 'voucher_id',
+        '336' => 'code',
 
     ],
 

@@ -132,6 +132,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeProductionConsumptionMasterRow($menu->menu_dtl_table_name, $query);
 
         $result = $query->exists();
         $this->dashboardCache['has_enrolled'][$key] = (bool) $result;
@@ -206,6 +207,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeProductionConsumptionMasterRow($menu->menu_dtl_table_name, $query);
 
         $ids = $query->distinct()
             ->pluck('current_stg_id')
@@ -500,6 +502,7 @@ class StagingService
             $query = DB::table($formTableName);
             $query->where($primaryKey, $formId);
             $this->scopeAccoVoucherForConditionCheck($formNameOrMenuDtlId, $formTableName, $query);
+            $this->scopeProductionConsumptionMasterRow($formTableName, $query);
             return $query->whereRaw($whereClause, $bindings)->exists();
         }
 
@@ -565,6 +568,7 @@ class StagingService
         }
 
         $this->scopeAccoVoucherForConditionCheck($formNameOrMenuDtlId, $formTableName, $query);
+        $this->scopeProductionConsumptionMasterRow($formTableName, $query);
 
         $result = $query->whereRaw($whereClause, $bindings)->exists();
 
@@ -1165,6 +1169,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $documents);
+        $this->scopeProductionConsumptionMasterRow($tableName, $documents);
         $this->scopeAccessibleBranches($tableName, $documents);
 
         return $documents->get();
@@ -1206,11 +1211,36 @@ class StagingService
 
             $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $count);
             $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $count);
+            $this->scopeProductionConsumptionMasterRow($tableName, $count);
 
             $counts[$flow->stg_flows_id] = $count->count();
         }
 
         return $counts;
+    }
+
+    /**
+     * Production & Consumption stores header+lines as rows sharing `code`.
+     * Count/list only the master line (sr_no = 1) so each document appears once.
+     */
+    public function scopeProductionConsumptionMasterRow($tableName, $query): void
+    {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'productionconsumption') === false) {
+            return;
+        }
+
+        try {
+            $cols = array_map('strtolower', DB::getSchemaBuilder()->getColumnListing($tableName));
+            if (!in_array('sr_no', $cols, true)) {
+                return;
+            }
+            $query->where(function ($q) {
+                $q->where('sr_no', '1')->orWhere('sr_no', 1);
+            });
+        } catch (\Throwable $e) {
+            return;
+        }
     }
 
     /**

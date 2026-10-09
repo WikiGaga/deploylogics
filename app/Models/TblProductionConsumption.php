@@ -11,6 +11,13 @@ class TblProductionConsumption extends Model
     protected $table = 'tblproductionconsumption';
     protected $primaryKey = 'code';
 
+    protected $fillable = [
+        'code',
+        'current_stg_id',
+        'staging_apply',
+        'posted',
+    ];
+
     protected static function primaryKeyName() {
         return (new static)->getKeyName();
     }

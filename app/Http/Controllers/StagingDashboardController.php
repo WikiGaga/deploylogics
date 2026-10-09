@@ -111,7 +111,7 @@ class StagingDashboardController extends Controller
                 )
                 ->whereNotNull('current_stg_id');
 
-            $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->applyDashboardStagingTableScopes($menuDtlId, $tableName, $query);
             $this->stagingService->scopeStockDocumentByMenu($menuDtlId, $tableName, $query);
             $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
@@ -179,6 +179,12 @@ class StagingDashboardController extends Controller
         }
     }
 
+    protected function applyDashboardStagingTableScopes($menuDtlId, $tableName, $query): void
+    {
+        $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+        $this->stagingService->scopeProductionConsumptionMasterRow($tableName, $query);
+    }
+
     protected function getDocumentCountAtStage($menuDtlId, $tableName, $flowId): int
     {
         if (!$this->stagingService->tableHasStagingWorkflowColumns($tableName)) {
@@ -194,7 +200,7 @@ class StagingDashboardController extends Controller
                     $this->stagingService->getStagingApplyEnrolledValue($menuDtlId)
                 );
 
-            $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+            $this->applyDashboardStagingTableScopes($menuDtlId, $tableName, $query);
             $this->stagingService->scopeStockDocumentByMenu($menuDtlId, $tableName, $query);
             $this->stagingService->scopeAccessibleBranches($tableName, $query);
 
@@ -279,10 +285,26 @@ class StagingDashboardController extends Controller
                 'cols' => ['voucher_no', 'voucher_date'],
                 'titles' => ['Voucher No', 'Voucher Date'],
             ],
+            336 => [
+                'path' => '/production-consumption/form/',
+                'pk' => 'code',
+                'cols' => ['code', 'record_date'],
+                'titles' => ['PC No', 'Date'],
+            ],
         ];
 
         if (isset($configs[$menuDtlId])) {
             return $configs[$menuDtlId];
+        }
+
+        $configuredPk = config('staging.document_primary_keys_by_menu.' . $menuDtlId);
+        if ($configuredPk !== null && $configuredPk !== '') {
+            return [
+                'path' => '/',
+                'pk' => $configuredPk,
+                'cols' => [$configuredPk],
+                'titles' => ['Document'],
+            ];
         }
 
         $base = preg_replace('/^tbl_[a-z]+_/', '', $tableName);
