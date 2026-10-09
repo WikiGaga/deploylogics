@@ -62,7 +62,11 @@ class EmployeeAttendanceController extends Controller
             $Tbl_hr_attendence=DB::table('Tbl_hr_attendence')->where('id',$id)->first();
            
             if(!empty($Tbl_hr_attendence)){
-                $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get();
+                $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get()
+                    ->map(function ($attendance) {
+                        $attendance->attendance_type = $this->normalizeAttendanceType($attendance->attendance_type);
+                        return $attendance;
+                    });
                 $data['att_data'] = $Tbl_hr_attendence_dtl;
                 $data['att_no'] = $Tbl_hr_attendence->att_no;
                 $data['att_note'] = $Tbl_hr_attendence->att_note;
@@ -122,7 +126,7 @@ class EmployeeAttendanceController extends Controller
                         'emp_id'=>$arr['employee_select'], 
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
                         'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
-                        'attendance_type'=>$arr['type_select'], 
+                        'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
                         'shift_id'=>1,
                         'att_id'=>$id,
                         'created_at' => now(),
@@ -161,7 +165,7 @@ class EmployeeAttendanceController extends Controller
                         'emp_id'=>$arr['employee_select'], 
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
                         'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
-                        'attendance_type'=>$arr['type_select'], 
+                        'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
                         'shift_id'=>1,
                         'att_id'=>$att_id,
                         'created_at' => now(),
@@ -248,5 +252,23 @@ class EmployeeAttendanceController extends Controller
         }
         DB::commit();
         return $this->jsonSuccessResponse($data, trans('message.delete'), 200);
+    }
+
+    /**
+     * Keep attendance types consistent between mobile-app and web-form values.
+     */
+    private function normalizeAttendanceType($type)
+    {
+        $normalized = strtolower(str_replace(['_', ' '], '-', trim((string) $type)));
+
+        if ($normalized === 'check-in') {
+            return 'check_in';
+        }
+
+        if ($normalized === 'check-out') {
+            return 'check_out';
+        }
+
+        return trim((string) $type);
     }
 }

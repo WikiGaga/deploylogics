@@ -127,8 +127,8 @@
                                                 <div class="erp_form__grid_th_input">
                                                     <select id="type_select" name="type_select" class="form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
-                                                        <option value="Check-In" >Check-In</option>
-                                                        <option value="Check-Out" >Check-Out</option>
+                                                        <option value="check_in">Check-In</option>
+                                                        <option value="check_out">Check-Out</option>
                                                         @end
                                                     </select>
                                                 </div>
@@ -173,8 +173,8 @@
                                                 <td>
                                                     <select data-id="type_select" name="pd[{{$loop->iteration}}][type_select]" class=" form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
-                                                        <option value="Check-In" {{$rec->attendance_type == 'Check-In'?'selected':''}}>Check-In</option>
-                                                        <option value="Check-Out" {{$rec->attendance_type == 'Check-Out'?'selected':''}}>Check-Out</option>
+                                                        <option value="check_in" {{$rec->attendance_type == 'check_in'?'selected':''}}>Check-In</option>
+                                                        <option value="check_out" {{$rec->attendance_type == 'check_out'?'selected':''}}>Check-Out</option>
                                                     </select> 
                                                 </td>
                                                 <td>
