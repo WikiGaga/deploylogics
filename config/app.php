@@ -68,7 +68,7 @@ return [
     */
 
    // 'timezone' => 'UCT',
-    'timezone' => env('APP_TIMEZONE', 'Asia/Karachi'),
+    'timezone' => env('APP_TIMEZONE', 'Asia/Muscat'),
 
     /*
     |--------------------------------------------------------------------------

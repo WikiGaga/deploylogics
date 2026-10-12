@@ -60,7 +60,7 @@ class EmployeeAttendanceController extends Controller
 
         if(isset($id)){
             $Tbl_hr_attendence=DB::table('Tbl_hr_attendence')->where('id',$id)->first();
-           
+
             if(!empty($Tbl_hr_attendence)){
                 $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->get()
                     ->map(function ($attendance) {
@@ -75,7 +75,7 @@ class EmployeeAttendanceController extends Controller
             }else{
                 abort('404');
             }
-           
+
         }else{
             // $data['permission'] = $data['stock_menu_id'].'-create';
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
@@ -83,7 +83,7 @@ class EmployeeAttendanceController extends Controller
             $data['att_no'] = $this->documentCode($max_voucher,'ATT');
         }
 
-      
+
         return view('PayrDepartment.employee_attendance.form', compact('data'));
     }
 
@@ -101,15 +101,15 @@ class EmployeeAttendanceController extends Controller
 
                   $data=[
                         'att_date'=>date('Y-m-d',strtotime($request->date)),
-                        'att_note'=> $request->att_note, 
-                        // 'att_no'=> $request->att_no, 
+                        'att_note'=> $request->att_note,
+                        // 'att_no'=> $request->att_no,
                         'business_id'=>auth()->user()->business_id,
                         'company_id'=>auth()->user()->company_id,
                         'branch_id'=>auth()->user()->branch_id,
                         'updated_at' => now(),
                     ];
 
-                       
+
                 $Employee = DB::table('Tbl_hr_attendence')
                 ->where('id',$id)
                 ->update(  $data );
@@ -122,11 +122,12 @@ class EmployeeAttendanceController extends Controller
                     $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
                     $data=[
-                        'id'=>$p_id, 
-                        'emp_id'=>$arr['employee_select'], 
+                        'id'=>$p_id,
+                        'emp_id'=>$arr['employee_select'],
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])),
                         'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
+                        'type'=>'web',
                         'shift_id'=>1,
                         'att_id'=>$id,
                         'created_at' => now(),
@@ -141,10 +142,10 @@ class EmployeeAttendanceController extends Controller
                 $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
 
                 $data=[
-                        'id'=>$att_id, 
+                        'id'=>$att_id,
                         'att_date'=>date('Y-m-d',strtotime($request->date)),
-                        'att_note'=> $request->att_note, 
-                        'att_no'=> $request->att_no, 
+                        'att_note'=> $request->att_note,
+                        'att_no'=> $request->att_no,
                         'business_id'=>auth()->user()->business_id,
                         'company_id'=>auth()->user()->company_id,
                         'branch_id'=>auth()->user()->branch_id,
@@ -161,11 +162,12 @@ class EmployeeAttendanceController extends Controller
                     $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
 
                     $data=[
-                        'id'=>$p_id, 
-                        'emp_id'=>$arr['employee_select'], 
+                        'id'=>$p_id,
+                        'emp_id'=>$arr['employee_select'],
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])), 
+                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])),
                         'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
+                        'type'=>'web',
                         'shift_id'=>1,
                         'att_id'=>$att_id,
                         'created_at' => now(),
@@ -176,7 +178,7 @@ class EmployeeAttendanceController extends Controller
                     $Employee = DB::table('Tbl_hr_attendence_dtl')->insert(  $data );
                 }
             }
-       
+
         if(isset($id)){
             $data = array_merge($data, Utilities::returnJsonEditForm());
             $data['redirect'] = $this->prefixIndexPage.self::$redirect_url;
@@ -185,7 +187,7 @@ class EmployeeAttendanceController extends Controller
             $data = array_merge($data, Utilities::returnJsonNewForm());
             $data['redirect'] = '/'.self::$redirect_url.$this->prefixCreatePage.'/'.$att_id;
             return $this->jsonSuccessResponse($data, trans('message.create'), 200);
-        }  
+        }
     }
 
     /**
