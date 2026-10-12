@@ -77,7 +77,7 @@
                                         <i class="flaticon-more" style="color: #666666;"></i>
                                     </button>
                                     @php
-                                        $headings = ['Sr No','Employee Name','Type','Date Time'];
+                                        $headings = ['Sr No','Employee Name','Attendance Type','Source','Date Time'];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                         @foreach($headings as $key=>$heading)
@@ -129,8 +129,14 @@
                                                         <option value="">{{ __('message.select') }}</option>
                                                         <option value="check_in">Check-In</option>
                                                         <option value="check_out">Check-Out</option>
-                                                        @end
                                                     </select>
+                                                </div>
+                                            </th>
+
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">Source</div>
+                                                <div class="erp_form__grid_th_input">
+                                                    <input type="text" id="attendance_source" value="web" class="form-control erp-form-control-sm" readonly>
                                                 </div>
                                             </th>
 
@@ -159,6 +165,7 @@
                                             <tr>
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{$loop->iteration}}" name="pd[{{$loop->iteration}}][sr_no]"  class="form-control erp-form-control-sm handle" readonly>
+                                                    <input type="hidden" name="pd[{{$loop->iteration}}][attendance_detail_id]" value="{{$rec->id}}">
                                                     <!-- <input readonly type="hidden" name="pd[{{ $loop->iteration }}][cheque_book_id]" data-id="cheque_book_id" value=""  class="cheque_book_id form-control erp-form-control-sm"> -->
                                                 </td>
                                                <td>
@@ -176,6 +183,9 @@
                                                         <option value="check_in" {{$rec->attendance_type == 'check_in'?'selected':''}}>Check-In</option>
                                                         <option value="check_out" {{$rec->attendance_type == 'check_out'?'selected':''}}>Check-Out</option>
                                                     </select> 
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-id="attendance_source" value="{{ strtolower($rec->type ?? 'app') }}" class="form-control erp-form-control-sm" readonly>
                                                 </td>
                                                 <td>
                                                 <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
@@ -328,6 +338,14 @@
                 'require':true,
                 'readonly':true,
                 'type':'select'
+
+            },
+            {
+                'id':'attendance_source',
+                'fieldClass':'',
+                'message':'',
+                'require':false,
+                'readonly':true,
 
             }, {
                 'id':'attendance_time',

@@ -114,6 +114,9 @@ class EmployeeAttendanceController extends Controller
                 ->where('id',$id)
                 ->update(  $data );
 
+                $existingSources = DB::table('Tbl_hr_attendence_dtl')
+                    ->where('att_id', $id)
+                    ->pluck('type', 'id');
                 $Employee = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->delete();
 
                  $array=$request->pd;
@@ -127,7 +130,9 @@ class EmployeeAttendanceController extends Controller
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
                         'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])),
                         'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
-                        'type'=>'web',
+                        'type'=>isset($arr['attendance_detail_id'], $existingSources[$arr['attendance_detail_id']])
+                            ? $existingSources[$arr['attendance_detail_id']]
+                            : 'web',
                         'shift_id'=>1,
                         'att_id'=>$id,
                         'created_at' => now(),
