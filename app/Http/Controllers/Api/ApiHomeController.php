@@ -17,6 +17,7 @@ use Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Image;
 
 
@@ -441,6 +442,12 @@ class ApiHomeController extends ApiController
                 $attendance_image = $filename;
 
             } catch (\Exception $e) {
+                Log::error('API employee face image upload failed.', [
+                    'employee_id' => $employee_id,
+                    'route' => $request->path(),
+                    'ip' => $request->ip(),
+                    'exception' => $e,
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'File upload failed: ' . $e->getMessage(),
@@ -471,6 +478,12 @@ class ApiHomeController extends ApiController
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('API employee face database update failed.', [
+                'employee_id' => $employee_id,
+                'route' => $request->path(),
+                'ip' => $request->ip(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Database update failed: ' . $e->getMessage(),
@@ -779,6 +792,12 @@ class ApiHomeController extends ApiController
                 'data' => $data
             ], 201);
         } catch (\Exception $e) {
+            Log::error('API app version store failed.', [
+                'app_name' => $data['app_name'],
+                'route' => $request->path(),
+                'ip' => $request->ip(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to store app version: ' . $e->getMessage(),
