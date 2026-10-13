@@ -93,6 +93,12 @@ class ListingAdvanceController extends Controller
             // fix where
             if ($case_name === 'food') {
                 $where .= '('.$tbl_1_alias.'restaurant_id = '.(int) auth()->user()->branch_id.')';
+            } elseif (strcasecmp($case_name, 'Employee-Attendance') === 0) {
+                // Attendance is always branch-owned. Keep this boundary enforced
+                // even when an older Listing Studio record is scoped as business.
+                $where .= '('.$tbl_1_alias.'business_id = '.(int) auth()->user()->business_id
+                    .' AND '.$tbl_1_alias.'company_id = '.(int) auth()->user()->company_id
+                    .' AND '.$tbl_1_alias.'branch_id = '.(int) auth()->user()->branch_id.')';
             } elseif(isset($listing_studio_query->listing_business_or_branch)){
                 if($listing_studio_query->listing_business_or_branch == 'branch'){
                     $where .= '('.$tbl_1_alias.'business_id = '.auth()->user()->business_id.' AND '.$tbl_1_alias.'company_id = '.auth()->user()->company_id.' AND '.$tbl_1_alias.'branch_id = '.auth()->user()->branch_id.')';

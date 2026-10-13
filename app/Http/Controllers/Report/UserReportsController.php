@@ -2988,7 +2988,7 @@ class UserReportsController extends Controller
                 }
                 if($data['report_case'] == 'stock_receiving'){
                     $data['key'] = 'stock_receiving';
-                    $data['page_title'] = 'Stock Receiving';
+                    $data['page_title'] = 'Stock Receiving Report';
                     $getdata = $getdata->where('stock_code_type','like','str');
                     if(!empty($data['all_branches'])){
                         $getdata = $getdata->whereIn('stock_branch_from_id',$data['all_branches']);
@@ -3738,6 +3738,10 @@ class UserReportsController extends Controller
         }
         $fieldsKeys[] = 'Batch No';
         $fieldsKeys[] = 'Quantity';
+        if($key == 'stock_transfer' || $key == 'stock_receiving'){
+            $fieldsKeys[] = 'Sale Rate';
+            $fieldsKeys[] = 'MRP';
+        }
         if($key != 'stock_adjustment'){
             $fieldsKeys[] = 'Rate';
             $fieldsKeys[] = 'Amount';
@@ -3747,7 +3751,7 @@ class UserReportsController extends Controller
             $r = [];
             if($key == 'opening_stock' || $key == 'stock_transfer' || $key == 'stock_receiving'){
                 $r[] = $kgs;
-                for ($i=0;$i<11;$i++){
+                for ($i=0;$i<count($fieldsKeys)-1;$i++){
                     $r[] = '';
                 }
                 array_push($data,$r);
@@ -3763,7 +3767,7 @@ class UserReportsController extends Controller
                 $rr = [];
                 if($key == 'opening_stock' || $key == 'stock_transfer' || $key == 'stock_receiving'){
                     $rr[] = $kg;
-                    for ($i=0;$i<11;$i++){
+                    for ($i=0;$i<count($fieldsKeys)-1;$i++){
                         $rr[] = '';
                     }
                 }
@@ -3807,6 +3811,10 @@ class UserReportsController extends Controller
                     }
                     $dr[] = $item->stock_dtl_batch_no;
                     $dr[] = number_format($item->stock_dtl_quantity);
+                    if($key == 'stock_transfer' || $key == 'stock_receiving'){
+                        $dr[] = number_format($item->stock_dtl_purc_rate,3);
+                        $dr[] = number_format($item->mrp,3);
+                    }
                     if($key != 'stock_adjustment'){
                         $dr[] = number_format($item->stock_dtl_rate,3);
                         $dr[] = number_format($item->stock_dtl_amount,3);

@@ -234,6 +234,7 @@ class ApiHomeController extends ApiController
         }
 
         $search = trim((string) $request->input('search'));
+        $searchTerm = '%' . strtolower($search) . '%';
 
         $employee = DB::table('tbl_payr_employee as e')
             ->leftJoin('tbl_payr_gender as g', 'g.gender_id', '=', 'e.GENDER_ID')
@@ -257,10 +258,11 @@ class ApiHomeController extends ApiController
                 'e.IMAGE_EMBEDED_CODE',
                 'e.CREATED_AT'
             )
-            ->where(function ($query) use ($search) {
-                $query->where('e.EMPLOYEE_CODE', $search)
-                    ->orWhere('e.EMPLOYEE_LOCAL_PHONE_NO', $search);
-            })
+          ->where(function ($query) use ($searchTerm) {
+        $query->whereRaw('LOWER(e.EMPLOYEE_CODE) LIKE ?', [$searchTerm])
+              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PHONE_NO) LIKE ?', [$searchTerm])
+              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PERSONAL_EMAIL) LIKE ?', [$searchTerm]);
+    })
             ->first();
 
         if (!$employee) {
@@ -539,6 +541,9 @@ class ApiHomeController extends ApiController
             // Fixed the syntax error from ->?id to a safe check
             $attendance_header = DB::table('Tbl_hr_attendence')
                 ->where('att_date', $att_date)
+                ->where('business_id', $employee->business_id)
+                ->where('company_id', $employee->company_id)
+                ->where('branch_id', $request->branch_id)
                 ->first();
 
             if (!$attendance_header) {
@@ -647,6 +652,9 @@ class ApiHomeController extends ApiController
 
                 $header = DB::table('Tbl_hr_attendence')
                     ->where('att_date', $attendanceDate)
+                    ->where('business_id', $employee->business_id)
+                    ->where('company_id', $employee->company_id)
+                    ->where('branch_id', $branchId)
                     ->first();
 
                 if (!$header) {

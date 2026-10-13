@@ -234,8 +234,14 @@ class StockController extends Controller
                 $data['display_location'] = ViewInveDisplayLocation::where('branch_id',auth()->user()->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();
                 $data['page_data']['print'] = '/stock/'.$type.'/print/'.$id;
                 $data['stock_code'] = $data['current']->stock_code;
-                if($type == 'stock-transfer' && $data['current']->stock_receive_status == 1){
-                    //$data['page_data']['action'] = '';
+                if($type === 'stock-receiving' && !empty($data['current']->stock_request_id)){
+                    $data['source_transfer'] = TblInveStock::where('stock_id', $data['current']->stock_request_id)
+                        ->where('stock_code_type', 'st')
+                        ->where(Utilities::currentBC())
+                        ->first();
+                }
+                if($type == 'stock-transfer' && (int) $data['current']->stock_receive_status > 0){
+                    $data['page_data']['action'] = '';
                 }
 
                 $data['page_data']['post'] = action('Inventory\StockController@post', ['type' => $type]);
@@ -304,8 +310,27 @@ class StockController extends Controller
         $this->menu_id = $this->resolveStockMenuIdFromType($type);
         $data = [];
         $errData = [];
+        $expectedFormTypes = [
+            'opening-stock' => 'os',
+            'stock-transfer' => 'st',
+            'stock-distribution' => 'sd',
+            'stock-adjustment' => 'sa',
+            'damaged-items' => 'di',
+            'expired-items' => 'ei',
+            'sample-items' => 'sp',
+            'repair-items' => 'ri',
+            'stock-receiving' => 'str',
+            'internal-stock-transfer' => 'ist',
+            'disassemble-products' => 'dss',
+        ];
+        if (!isset($expectedFormTypes[$type])) {
+            abort(404);
+        }
+        $formType = $expectedFormTypes[$type];
+        $request->merge(['stock_code_type' => $formType]);
+
         $valid = [
-            // 'stock_date' => 'required|date_format:d-m-Y',
+            'stock_date' => 'required|date_format:d-m-Y',
             'store' => 'nullable|numeric',
             'new_branch_id' => 'required|numeric',
             // 'store_to' => 'nullable|numeric',
@@ -319,14 +344,58 @@ class StockController extends Controller
         ];
 
        $new_branch_id = $request->new_branch_id;
-        if($request->stock_code_type == 'os' || $request->stock_code_type == 'sd'){
+        if($formType == 'os' || $formType == 'sd'){
             $valid['store'] = 'required|numeric|not_in:0';
+        }
+        if($formType == 'st'){
+            $valid['store'] = 'required|numeric|not_in:0';
+            $valid['branch_to'] = 'required|numeric|not_in:0|different:new_branch_id';
+            $valid['pd'] = 'required|array|min:1';
+            $valid['pd.*.product_id'] = 'required|numeric';
+            $valid['pd.*.product_barcode_id'] = 'required|numeric';
+            $valid['pd.*.uom_id'] = 'required|numeric';
+            $valid['pd.*.quantity'] = 'required|numeric|gt:0';
+            $valid['pd.*.rate'] = 'required|numeric|min:0';
+            $valid['pd.*.amount'] = 'required|numeric|min:0';
+        }
+        if($formType == 'str'){
+            $valid['store_to'] = 'required|numeric|not_in:0';
+            $valid['stock_from_id'] = 'required|numeric';
         }
         //dd($valid);
         $validator = Validator::make($request->all(), $valid);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
             return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
+        }
+        $allowedBranchIds = DB::table('tbl_soft_user_branch')
+            ->where('user_id', auth()->user()->id)
+            ->pluck('branch_id')
+            ->map(function ($branchId) { return (string) $branchId; })
+            ->all();
+        if (!in_array((string) $request->new_branch_id, $allowedBranchIds, true)) {
+            return $this->jsonErrorResponse($data, 'Selected source branch is not accessible.', 422);
+        }
+        if ($formType === 'st') {
+            $sourceStoreExists = TblDefiStore::where('store_id', $request->store)
+                ->where('branch_id', $request->new_branch_id)
+                ->where(Utilities::currentBC())
+                ->exists();
+            $destinationBranchExists = TblSoftBranch::where('branch_id', $request->branch_to)
+                ->where(Utilities::currentBC())
+                ->exists();
+            if (!$sourceStoreExists || !$destinationBranchExists) {
+                return $this->jsonErrorResponse($data, 'Invalid source store or destination branch.', 422);
+            }
+        }
+        if ($formType === 'str') {
+            $destinationStoreExists = TblDefiStore::where('store_id', $request->store_to)
+                ->where('branch_id', $request->new_branch_id)
+                ->where(Utilities::currentBC())
+                ->exists();
+            if (!$destinationStoreExists) {
+                return $this->jsonErrorResponse($data, 'The receiving store does not belong to the selected branch.', 422);
+            }
         }
         if(isset($request->selected_barcode_rate) && !empty($request->selected_barcode_rate)){
             $rate_by = config('constants.rate_by');
@@ -340,7 +409,7 @@ class StockController extends Controller
             'forward', 'send_forward', 'back', 'send_back', 'sendback', 'post', 'cancel', 'un_post', 'unpost',
         ], true);
 
-        if(empty($request->pd) && !$isWorkflowStagingAction){
+        if(empty($request->pd) && !$isWorkflowStagingAction && $formType !== 'str'){
             return $this->returnjsonerror("Please Enter Product Detail",201);
         }
         if($request->stock_code_type == 'sd' && !$isWorkflowStagingAction && !empty($request->pd)){
@@ -364,22 +433,60 @@ class StockController extends Controller
         }
         DB::beginTransaction();
         try{
-            $formType = $request->stock_code_type;
+            $formType = $expectedFormTypes[$type];
             // dd($formType);
             if(isset($id)){
-                $stock = TblInveStock::where('stock_id',$id)->first();
+                $stock = TblInveStock::where('stock_id',$id)
+                    ->where('stock_code_type', $formType)
+                    ->where(Utilities::currentBC())
+                    ->whereIn('branch_id', $allowedBranchIds)
+                    ->first();
+                if (empty($stock)) {
+                    throw new ModelNotFoundException('Stock document not found.');
+                }
+                if ($formType === 'st' && (int) $stock->stock_receive_status > 0) {
+                    throw ValidationException::withMessages([
+                        'stock_id' => 'A received stock transfer cannot be modified.',
+                    ]);
+                }
+                if ($formType === 'str') {
+                    if ((string) $request->stock_from_id !== (string) $stock->stock_request_id) {
+                        throw ValidationException::withMessages([
+                            'stock_from_id' => 'The source transfer of an existing receipt cannot be changed.',
+                        ]);
+                    }
+                    $stockTrans = TblInveStock::with('stock_dtls')
+                        ->where('stock_id', $stock->stock_request_id)
+                        ->where(Utilities::currentBC())
+                        ->where('stock_branch_to_id', $new_branch_id)
+                        ->whereIn('stock_receive_status', [1, 2])
+                        ->where('posted', 1)
+                        ->where('stock_code_type','st')
+                        ->lockForUpdate()
+                        ->first();
+                    if (empty($stockTrans)) {
+                        throw ValidationException::withMessages([
+                            'stock_from_id' => 'The posted source transfer is no longer available.',
+                        ]);
+                    }
+                    $this->applySourceTransferToReceivingRequest($request, $stockTrans);
+                }
             }else{
                 if($formType == 'str'){
-                    $stockTrans = TblInveStock::where('stock_id',$request->stock_from_id)
+                    $stockTrans = TblInveStock::with('stock_dtls')->where('stock_id',$request->stock_from_id)
                         ->where(Utilities::currentBC())
                         ->where('stock_branch_to_id', $new_branch_id)
                         ->where('stock_receive_status',0)
-                        ->where('stock_code_type','st')->first();
+                        ->where('posted', 1)
+                        ->where('stock_code_type','st')
+                        ->lockForUpdate()
+                        ->first();
                     if(empty($stockTrans)){
                         DB::rollBack();
-                        return $this->returnjsonerror("Stock transfer is unavailable, already received, or does not belong to this branch.",200);
+                        return $this->returnjsonerror("Only a posted, unreceived stock transfer belonging to this branch can be received.",200);
                     }
-                    $stockTrans->stock_receive_status =  1;
+                    $this->applySourceTransferToReceivingRequest($request, $stockTrans);
+                    $stockTrans->stock_receive_status =  2;
                     $stockTrans->save();
                 }
                 $stock = new TblInveStock();
@@ -414,6 +521,10 @@ class StockController extends Controller
                         'document_code_key' => 'stock_code',
                     ]);
                     $stock->save();
+                    if ($formType === 'str' && ($stagingActionCode === 'cancel' || (int) ($stock->posted ?? 0) === 2)) {
+                        $this->releaseReceivingSourceTransfer($stock);
+                    }
+                    $this->syncStockAccountingVoucherPosted($stock);
                 }
                 DB::commit();
 
@@ -489,12 +600,12 @@ class StockController extends Controller
             $stock->supplier_id = isset($request->supplier_id)?$request->supplier_id:'';
 
 
-            $stock->stock_total_items = $request->summary_total_item;
-            $stock->stock_total_gross_net_amount = $request->summary_net_amount;
-            $stock->stock_advance_tax_perc = $request->overall_vat_perc;
-            $stock->stock_advance_tax_amount = $request->overall_vat_amount;
-            $stock->stock_total_net_amount = $request->overall_net_amount;
-            $stock_total_net_amount = $request->overall_net_amount;
+            $stock->stock_total_items = 0;
+            $stock->stock_total_gross_net_amount = 0;
+            $stock->stock_advance_tax_perc = 0;
+            $stock->stock_advance_tax_amount = 0;
+            $stock->stock_total_net_amount = 0;
+            $stock_total_net_amount = 0;
 
 
             $stock->business_id = auth()->user()->business_id;
@@ -540,7 +651,7 @@ class StockController extends Controller
                             $per_itm_gst_amount = round((isset($pd['gst_amount']) ? (float)$pd['gst_amount'] : 0) / $grnQty, 2);
                             $gst_amount = $per_itm_gst_amount * $itemQty;
 
-                            $per_itm_dis_amount = round((isset($pd['dis_amount']) ? (float)$pd['dis_amount'] : 0) / $grnQty, 2);
+                            $per_itm_dis_amount = round((isset($pd['grn_dis_amount']) ? (float)$pd['grn_dis_amount'] : 0) / $grnQty, 2);
                             $dis_amount = $per_itm_dis_amount * $itemQty;
 
                             $per_itm_after_dis_amount = round((isset($pd['after_dis_amount']) ? (float)$pd['after_dis_amount'] : 0) / $grnQty, 2);
@@ -560,7 +671,7 @@ class StockController extends Controller
                         }
 
                         $dtl->grn_qty =  isset($pd['grn_qty'])?$this->addNo($pd['grn_qty']):"";
-                        $dtl->grn_disc_per =  isset($pd['dis_perc'])?$this->addNo($pd['dis_perc']):"";
+                        $dtl->grn_disc_per =  isset($pd['grn_dis_perc'])?$this->addNo($pd['grn_dis_perc']):"";
                         $dtl->grn_disc_amount =  isset($dis_amount)?$this->addNo($dis_amount):"";
                         $dtl->grn_after_disc_amount =  isset($after_dis_amount)?$this->addNo($after_dis_amount):"";
                         $dtl->grn_gst_per =  isset($pd['gst_perc'])?$this->addNo($pd['gst_perc']):"";
@@ -569,7 +680,7 @@ class StockController extends Controller
                         $dtl->grn_fed_amount =  isset($fed_amount)?$this->addNo($fed_amount):"";
                         $dtl->grn_spec_disc_per =  isset($pd['spec_disc_perc'])?$this->addNo($pd['spec_disc_perc']):"";
                         $dtl->grn_spec_disc_amount =  isset($spec_disc_amount)?$this->addNo($spec_disc_amount):"";
-                        $dtl->grn_gross_amount =  isset($pd['gross_amount'])?$this->addNo($pd['gross_amount']):"";
+                        $dtl->grn_gross_amount =  isset($pd['grn_gross_amount'])?$this->addNo($pd['grn_gross_amount']):"";
                         $dtl->grm_net_amount =  isset($pd['net_amount'])?$this->addNo($pd['net_amount']):"";
                         $dtl->grn_rate =  isset($pd['unit_price'])?$this->addNo($pd['unit_price']):"";
                     }
@@ -689,11 +800,7 @@ class StockController extends Controller
 
                     if($formType == 'str')
                     {
-                        $rateupdate = false;
-                        if(TblInveStock::where('stock_id','LIKE',$id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->exists())
-                        {
-                            $rateupdate = true;
-                        }
+                        $rateupdate = true;
 
                         //$row = TblSoftBranch::where('branch_id',auth()->user()->branch_id)->first();
                         $row = TblSoftBranch::where('branch_id',$request->branch_from_id)->first();
@@ -713,14 +820,14 @@ class StockController extends Controller
 
                                 $barcodeList = TblPurcProductBarcode::where('product_id',$pd['product_id'])
                                 ->where('business_id',auth()->user()->business_id)
-                                ->get(['product_id','product_barcode_id','business_id','product_barcode_barcode']);
+                                ->get(['product_id','product_barcode_id','business_id','product_barcode_barcode','product_barcode_packing']);
 
                                 foreach ($barcodeList as $item){
                                     $barcodePurcRate = (float)$purc_rate * (float)$item->product_barcode_packing;
 
                                     $vExist = TblPurcProductBarcodePurchRate::where('product_barcode_id',$item->product_barcode_id)
                                     ->where('product_id',$item->product_id)
-                                    ->where('branch_id',auth()->user()->branch_id);
+                                    ->where('branch_id',$new_branch_id);
                                     if($vExist->exists()){
                                         $vExist->update([
                                             'product_barcode_cost_rate'=> $barcodePurcRate,
@@ -751,12 +858,23 @@ class StockController extends Controller
                 }
             }
             $stock = TblInveStock::where('stock_id',$stock->stock_id)->first();
+            $stock->stock_total_items = isset($request->pd) ? count($request->pd) : 0;
             $stock->stock_total_qty =  $stock_total_qty;
             if($formType == 'st'){
                 $stock->stock_total_amount =  $stock_total_gross_amount;
             }else{
                 $stock->stock_total_amount =  $stock_total_amount;
             }
+            $advanceTaxPercent = max(0, min(100, (float) $request->input('overall_vat_perc', 0)));
+            $advanceTaxAmount = (float) $request->input('overall_vat_amount', 0);
+            if ($advanceTaxAmount <= 0 && $advanceTaxPercent > 0) {
+                $advanceTaxAmount = ($stock_total_gross_amount * $advanceTaxPercent) / 100;
+            }
+            $stock_total_net_amount = $stock_total_gross_amount + $advanceTaxAmount;
+            $stock->stock_total_gross_net_amount = $stock_total_gross_amount;
+            $stock->stock_advance_tax_perc = $advanceTaxPercent;
+            $stock->stock_advance_tax_amount = $advanceTaxAmount;
+            $stock->stock_total_net_amount = $stock_total_net_amount;
             $stock->save();
 
            // dd($formType);
@@ -780,10 +898,9 @@ class StockController extends Controller
                 }
 
                 $cost_amount=0;
-                $inner_Dtls = TblInveStockDtl::where('stock_id',$id)->get();
+                $inner_Dtls = TblInveStockDtl::where('stock_id',$stock_id)->get();
                 foreach ($inner_Dtls as $inner_Dtl){
-                    $costamount = TblInveStockDtl::where('stock_id',$inner_Dtl->stock_id)->where(Utilities::currentBC())->where('branch_id',$new_branch_id)->first();
-                    $cost_amount += $costamount->cost_amount;
+                    $cost_amount += (float) $inner_Dtl->cost_amount;
                 }
                // dd($request);
                 $where_clause = '';
@@ -840,18 +957,36 @@ class StockController extends Controller
                         break;
                 }
 
+                if($formType === 'str' && $stock_total_vat_amount > 0 && empty($stock_vat_account)){
+                    DB::rollback();
+                    return $this->jsonErrorResponse($data, 'Stock receive VAT account is not configured for the receiving branch.', 200);
+                }
+                if($formType === 'str' && $stock_total_disc_amount > 0 && empty($stock_disc_account)){
+                    DB::rollback();
+                    return $this->jsonErrorResponse($data, 'Stock receive discount account is not configured for the receiving branch.', 200);
+                }
+
                 //check account code
+                // Validate only accounts that this flow actually writes to the voucher.
+                // stock_cash_account is not used by the voucher insert logic.
                 $ChartArr = [
                     $stock_income,
                     $stock_branch_account,
                     $stock_account,
-                    $stock_vat_account,
-                    $stock_disc_account,
-                    $stock_cash_account
                 ];
+                if ($formType === 'str' && $stock_total_vat_amount > 0) {
+                    $ChartArr[] = $stock_vat_account;
+                }
+                if ($formType === 'str' && $stock_total_disc_amount > 0) {
+                    $ChartArr[] = $stock_disc_account;
+                }
+                $ChartArr = array_values(array_filter($ChartArr, function ($accountId) {
+                    return $accountId !== null && $accountId !== '';
+                }));
                 $response = $this->ValidateCharCode($ChartArr);
                 if($response == false){
-                    //return $this->jsonErrorResponse($data, "Voucher Account Code not correct",404);
+                    DB::rollback();
+                    return $this->jsonErrorResponse($data, "Voucher Account Code not correct", 422);
                 }
                 //voucher start
                 $data = [
@@ -926,6 +1061,26 @@ class StockController extends Controller
                     $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
                 }
 
+                if($formType === 'str' && $stock_total_vat_amount > 0 && $stock_vat_account != "")
+                {
+                    $data['chart_account_id'] = $stock_vat_account;
+                    $data['voucher_sr_no'] = 3;
+                    $data['voucher_descrip'] = 'Stock Receive VAT against inv#'.$stock->stock_code;
+                    $data['voucher_debit'] = abs($stock_total_vat_amount);
+                    $data['voucher_credit'] = 0;
+                    $this->proAccoVoucherInsert($voucher_id,'add',$table_name,$data,$where_clause);
+                }
+
+                if($formType === 'str' && $stock_total_disc_amount > 0 && $stock_disc_account != "")
+                {
+                    $data['chart_account_id'] = $stock_disc_account;
+                    $data['voucher_sr_no'] = 4;
+                    $data['voucher_descrip'] = 'Stock Receive Discount against inv#'.$stock->stock_code;
+                    $data['voucher_debit'] = 0;
+                    $data['voucher_credit'] = abs($stock_total_disc_amount);
+                    $this->proAccoVoucherInsert($voucher_id,'add',$table_name,$data,$where_clause);
+                }
+
                 $allChartAcc = TblAccCoa::whereIn('chart_code',['6-01-10-0001'])->select('chart_account_id','chart_code','chart_name')->get();
 
                 foreach ($allChartAcc as $oneChartAcc){
@@ -933,7 +1088,7 @@ class StockController extends Controller
                         $stock_vat_account = $oneChartAcc->chart_account_id;
                     }
                 }
-                if($request->overall_vat_amount > 0)
+                if($advanceTaxAmount > 0)
                 {
                     $action = 'add';
                     $data['chart_account_id'] = $stock_vat_account;
@@ -942,12 +1097,12 @@ class StockController extends Controller
                             $data['voucher_sr_no'] = 4;
                             $data['voucher_descrip'] = 'Adv Tax Amount against inv#'.$stock->stock_code;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = abs($request->overall_vat_amount);
+                            $data['voucher_credit'] = abs($advanceTaxAmount);
                         break;
                         case "str":
-                            $data['voucher_sr_no'] = 3;
+                            $data['voucher_sr_no'] = 5;
                             $data['voucher_descrip'] = 'Adv Tax Amount against inv#'.$stock->stock_code;
-                            $data['voucher_debit'] = abs($request->overall_vat_amount);
+                            $data['voucher_debit'] = abs($advanceTaxAmount);
                             $data['voucher_credit'] = 0;
                         break;
                     }
@@ -971,6 +1126,14 @@ class StockController extends Controller
                 ],
                 'posted_when_exempt' => 0,
                 'stg_log_posted_when_exempt' => 0,
+                'sync_after_save' => function ($model) {
+                    if ($model->stock_code_type === 'str' && (int) ($model->posted ?? 0) === 2) {
+                        $this->releaseReceivingSourceTransfer($model);
+                    } elseif ($model->stock_code_type === 'str' && (int) ($model->posted ?? 0) === 1) {
+                        $this->setReceivingSourceStatus($model, 1);
+                    }
+                    $this->syncStockAccountingVoucherPosted($model);
+                },
             ]);
 
 
@@ -1391,11 +1554,26 @@ class StockController extends Controller
         try{
             $stockId = $request->stock_id;
             $stockCode = trim((string) $request->stock_code);
+            $receivingBranchId = auth()->user()->branch_id;
+            if ($request->filled('branch_id')) {
+                $allowedBranchIds = DB::table('tbl_soft_user_branch')
+                    ->where('user_id', auth()->user()->id)
+                    ->pluck('branch_id')
+                    ->map(function ($id) { return (string) $id; })
+                    ->all();
+                if (!ctype_digit((string) $request->branch_id)
+                    || !in_array((string) $request->branch_id, $allowedBranchIds, true)) {
+                    DB::rollBack();
+                    return $this->jsonErrorResponse($data, 'Selected receiving branch is not accessible.', 422);
+                }
+                $receivingBranchId = (int) $request->branch_id;
+            }
 
             $query = TblInveStock::with('stock_dtls')
                 ->where(Utilities::currentBC())
                 ->where('stock_code_type', 'st')
-                ->where('stock_branch_to_id', auth()->user()->branch_id)
+                ->where('stock_branch_to_id', $receivingBranchId)
+                ->where('posted', 1)
                 ->where('stock_receive_status', 0);
 
             if (!empty($stockId)) {
@@ -1441,8 +1619,25 @@ class StockController extends Controller
             $grnCode = trim((string) $request->grn_code);
 
             $query = TblPurcGrn::with('grn_dtl.product', 'grn_dtl.barcode')
-                ->where(Utilities::currentBCB())
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
                 ->where('grn_type', 'GRN');
+
+            $branchId = auth()->user()->branch_id;
+            if ($request->filled('branch_id')) {
+                $allowedBranchIds = DB::table('tbl_soft_user_branch')
+                    ->where('user_id', auth()->user()->id)
+                    ->pluck('branch_id')
+                    ->map(function ($id) { return (string) $id; })
+                    ->all();
+                if (!ctype_digit((string) $request->branch_id)
+                    || !in_array((string) $request->branch_id, $allowedBranchIds, true)) {
+                    DB::rollBack();
+                    return $this->jsonErrorResponse($data, 'Selected GRN branch is not accessible.', 422);
+                }
+                $branchId = (int) $request->branch_id;
+            }
+            $query->where('branch_id', $branchId);
 
             if (!empty($grnId)) {
                 $query->where('grn_id', $grnId);
@@ -1486,11 +1681,34 @@ class StockController extends Controller
         $data = [];
         DB::beginTransaction();
         try{
-            $stock= TblInveStock::where('stock_id',$id)->first();
+            $this->menu_id = $this->resolveStockMenuIdFromType($type);
+            $userBranchIds = DB::table('tbl_soft_user_branch')
+                ->where('user_id', auth()->user()->id)
+                ->pluck('branch_id');
+            $stock= TblInveStock::where('stock_id',$id)
+                ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
+                ->where(Utilities::currentBC())
+                ->whereIn('branch_id', $userBranchIds)
+                ->first();
+            if (empty($stock)) {
+                throw new ModelNotFoundException('Stock document not found.');
+            }
+            if (!auth()->user()->isAbleTo($this->menu_id . '-delete')) {
+                throw new Exception('You do not have permission to delete this document.');
+            }
+            if ($type === 'stock-transfer' && (int) $stock->stock_receive_status > 0) {
+                throw new Exception('A received stock transfer cannot be deleted.');
+            }
+            if ((int) ($stock->posted ?? 0) === 1 || ((int) ($stock->posted ?? 0) === 0 && ((int) ($stock->staging_apply ?? 0) === 1 || !empty($stock->current_stg_id)))) {
+                throw new Exception('A posted or staged document must be canceled through its workflow before deletion.');
+            }
             $st_id = $stock->stock_request_id;
 
-            if(!empty($st_id)){
-                TblInveStock::where('stock_id',$st_id)->update(['stock_receive_status'=>'0']);
+            if($type === 'stock-receiving' && !empty($st_id)){
+                TblInveStock::where('stock_id',$st_id)
+                    ->where('stock_code_type', 'st')
+                    ->where(Utilities::currentBC())
+                    ->update(['stock_receive_status'=>'0']);
             }
 
             $stock->stock_dtls()->delete();
@@ -1658,6 +1876,51 @@ class StockController extends Controller
         dd('OK');
     }
 
+    protected function applySourceTransferToReceivingRequest(Request $request, $stockTrans): void
+    {
+        $rows = [];
+        foreach ($stockTrans->stock_dtls as $index => $detail) {
+            $rows[$index + 1] = [
+                'sr_no' => $index + 1,
+                'product_id' => $detail->product_id,
+                'product_barcode_id' => $detail->product_barcode_id,
+                'pd_barcode' => $detail->product_barcode_barcode,
+                'uom_id' => $detail->uom_id,
+                'pd_packing' => $detail->stock_dtl_packing,
+                'demand_qty' => $detail->stock_dtl_demand_quantity,
+                'stock_transfer_qty' => $detail->stock_dtl_quantity,
+                'quantity' => $detail->stock_dtl_quantity,
+                'rate' => $detail->stock_dtl_rate,
+                'sale_rate' => $detail->stock_dtl_sale_rate,
+                'sale_amount' => $detail->stock_dtl_sale_amount,
+                'amount' => $detail->stock_dtl_amount,
+                'dis_perc' => $detail->stock_dtl_disc_percent,
+                'dis_amount' => $detail->stock_dtl_disc_amount,
+                'vat_perc' => $detail->stock_dtl_vat_percent,
+                'vat_amount' => $detail->stock_dtl_vat_amount,
+                'gross_amount' => $detail->stock_dtl_total_amount,
+                'batch_no' => $detail->stock_dtl_batch_no,
+                'production_date' => $detail->stock_dtl_production_date,
+                'expiry_date' => $detail->stock_dtl_expiry_date,
+            ];
+        }
+        if (empty($rows)) {
+            throw ValidationException::withMessages([
+                'stock_from_id' => 'The source transfer has no product details.',
+            ]);
+        }
+
+        $request->merge([
+            'stock_from_id' => $stockTrans->stock_id,
+            'branch_from_id' => $stockTrans->stock_branch_from_id,
+            'store' => $stockTrans->stock_store_from_id,
+            'supplier_id' => $stockTrans->supplier_id,
+            'overall_vat_perc' => $stockTrans->stock_advance_tax_perc,
+            'overall_vat_amount' => $stockTrans->stock_advance_tax_amount,
+            'pd' => $rows,
+        ]);
+    }
+
     protected function resolveStockMenuIdFromType($type): string
     {
         switch ($type) {
@@ -1676,21 +1939,103 @@ class StockController extends Controller
         }
     }
 
+    protected function resolveStockCodeTypeFromType($type): string
+    {
+        $types = [
+            'opening-stock' => 'os',
+            'stock-transfer' => 'st',
+            'stock-distribution' => 'sd',
+            'stock-adjustment' => 'sa',
+            'damaged-items' => 'di',
+            'expired-items' => 'ei',
+            'sample-items' => 'sp',
+            'repair-items' => 'ri',
+            'stock-receiving' => 'str',
+            'internal-stock-transfer' => 'ist',
+            'disassemble-products' => 'dss',
+        ];
+        if (!isset($types[$type])) {
+            abort(404);
+        }
+        return $types[$type];
+    }
+
+    protected function syncStockAccountingVoucherPosted($stock): void
+    {
+        if (empty($stock)) {
+            return;
+        }
+
+        $query = TblAccoVoucher::where('voucher_document_id', $stock->stock_id);
+        if (!empty($stock->voucher_id)) {
+            $query->where('voucher_id', $stock->voucher_id);
+        }
+        $updateData = ['posted' => (int) ($stock->posted ?? 0)];
+        if (isset($stock->staging_apply)) {
+            $updateData['staging_apply'] = $stock->staging_apply;
+        }
+        if (isset($stock->current_stg_id) || property_exists($stock, 'current_stg_id')) {
+            $updateData['current_stg_id'] = $stock->current_stg_id;
+        }
+        $query->update($updateData);
+    }
+
+    protected function assertTransferNotReceived($row, string $action): void
+    {
+        if (!empty($row) && $row->stock_code_type === 'st' && (int) $row->stock_receive_status > 0) {
+            throw new \RuntimeException('A received stock transfer cannot be ' . $action . '.', 422);
+        }
+    }
+
+    protected function releaseReceivingSourceTransfer($receiving): void
+    {
+        if (empty($receiving) || $receiving->stock_code_type !== 'str' || empty($receiving->stock_request_id)) {
+            return;
+        }
+        TblInveStock::where('stock_id', $receiving->stock_request_id)
+            ->where('stock_code_type', 'st')
+            ->where(Utilities::currentBC())
+            ->update(['stock_receive_status' => 0]);
+    }
+
+    protected function setReceivingSourceStatus($receiving, int $status): void
+    {
+        if (empty($receiving) || $receiving->stock_code_type !== 'str' || empty($receiving->stock_request_id)) {
+            return;
+        }
+        TblInveStock::where('stock_id', $receiving->stock_request_id)
+            ->where('stock_code_type', 'st')
+            ->where(Utilities::currentBC())
+            ->update(['stock_receive_status' => $status]);
+    }
+
     public function cancel(Request $request, $type)
     {
         $this->menu_id = $this->resolveStockMenuIdFromType($type);
+        DB::beginTransaction();
         try {
             $stock_id = $request->stock_id;
             if (empty($stock_id)) {
+                DB::rollBack();
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBC())->first();
+            $row = TblInveStock::where('stock_id', $stock_id)
+                ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
+                ->where(Utilities::currentBC())->first();
+            $this->assertTransferNotReceived($row, 'canceled');
             $this->guardUmDocumentAction($this->menu_id, $row, 'cancel', 'cancel');
             $row->posted = 2;
             $row->update();
+            $this->releaseReceivingSourceTransfer($row);
+            $this->syncStockAccountingVoucherPosted($row);
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => trans('message.cancel')]);
         } catch (\RuntimeException $e) {
+            DB::rollBack();
             return $this->umJsonErrorFromException($e);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->jsonErrorResponse([], $e->getMessage(), 422);
         }
     }
 
@@ -1704,10 +2049,14 @@ class StockController extends Controller
             if (empty($stock_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)->where(Utilities::currentBC())->first();
+            $row = TblInveStock::where('stock_id', $stock_id)
+                ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
+                ->where(Utilities::currentBC())->first();
             $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
             $row->posted = 1;
             $row->update();
+            $this->setReceivingSourceStatus($row, 1);
+            $this->syncStockAccountingVoucherPosted($row);
             return response()->json(['status' => 'success']);
         } catch (\RuntimeException $e) {
             return $this->umJsonErrorFromException($e);
@@ -1724,17 +2073,21 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBC())->first();
+                    $row = TblInveStock::where('stock_id', $id)
+                        ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
+                        ->where(Utilities::currentBC())->first();
                     $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->first();
+                if(TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->first();
                     $row->posted = 1;
                     $row->update();
+                    $this->setReceivingSourceStatus($row, 1);
+                    $this->syncStockAccountingVoucherPosted($row);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('Successfully Posted'), 200);
@@ -1754,17 +2107,22 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)->where(Utilities::currentBC())->first();
+                    $row = TblInveStock::where('stock_id', $id)
+                        ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
+                        ->where(Utilities::currentBC())->first();
+                    $this->assertTransferNotReceived($row, 'un-posted');
                     $this->guardUmDocumentAction($this->menu_id, $row, 'un_post_module', 'unpost');
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where(Utilities::currentBC())->first();
+                if(TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->exists()){
+                    $row = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->first();
                     $row->posted = 0;
                     $row->update();
+                    $this->setReceivingSourceStatus($row, 2);
+                    $this->syncStockAccountingVoucherPosted($row);
                 }
             }
             return $this->jsonSuccessResponse($data, trans('Successfully Un-Posted'), 200);

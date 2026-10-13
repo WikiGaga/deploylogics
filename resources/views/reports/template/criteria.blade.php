@@ -7,8 +7,26 @@
     @if(isset($data['all_branches']) && count($data['all_branches']) != 0)
         @php $branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['all_branches'])->get('branch_name'); @endphp
         <h6 class="kt-invoice__criteria">
-            <span style="color: #e27d00;">Branch:</span>
+            <span style="color: #e27d00;">{{ $data['key'] == 'stock_transfer' ? 'Destination Branch:' : ($data['key'] == 'stock_receiving' ? 'Source Branch:' : 'Branch:') }}</span>
             @foreach($branch_lists as $branch_list)
+                <span style="color: #5578eb;">{{$branch_list->branch_name}}</span><span style="color: #fd397a;">, </span>
+            @endforeach
+        </h6>
+    @endif
+    @if($data['key'] == 'stock_receiving' && isset($data['branch_ids']) && count($data['branch_ids']) != 0)
+        @php $receiving_branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->get('branch_name'); @endphp
+        <h6 class="kt-invoice__criteria">
+            <span style="color: #e27d00;">Receiving Branch:</span>
+            @foreach($receiving_branch_lists as $branch_list)
+                <span style="color: #5578eb;">{{$branch_list->branch_name}}</span><span style="color: #fd397a;">, </span>
+            @endforeach
+        </h6>
+    @endif
+    @if($data['key'] == 'stock_transfer' && isset($data['branch_ids']) && count($data['branch_ids']) != 0)
+        @php $source_branch_lists = \Illuminate\Support\Facades\DB::table('tbl_soft_branch')->whereIn('branch_id',$data['branch_ids'])->get('branch_name'); @endphp
+        <h6 class="kt-invoice__criteria">
+            <span style="color: #e27d00;">Source Branch:</span>
+            @foreach($source_branch_lists as $branch_list)
                 <span style="color: #5578eb;">{{$branch_list->branch_name}}</span><span style="color: #fd397a;">, </span>
             @endforeach
         </h6>
@@ -35,10 +53,12 @@
             @php 
                 $supplierDtl = \Illuminate\Support\Facades\DB::table('tbl_purc_supplier')->where('supplier_id',$data['supplier_ids'])->first();
             @endphp
-            <h6 class="kt-invoice__criteria">
-                <span style="color: #e27d00;">Supplier:</span>
-                <span style="color: #5578eb;">{{" ".$supplierDtl->supplier_name." "}}</span>
-            </h6>
+            @if($supplierDtl)
+                <h6 class="kt-invoice__criteria">
+                    <span style="color: #e27d00;">Supplier:</span>
+                    <span style="color: #5578eb;">{{" ".$supplierDtl->supplier_name." "}}</span>
+                </h6>
+            @endif
         @endif
     @endif
 </div>

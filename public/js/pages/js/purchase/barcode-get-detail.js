@@ -1688,12 +1688,21 @@ function get_stock_transfer_detail(selected_row) {
     var stock_store_from_id = selected_row.find('tr.d-none>td[data-field="stock_store_from_id"]').text();
     var stock_branch_from_id = selected_row.find('tr.d-none>td[data-field="stock_branch_from_id"]').text();
 
-    selected_row.parents('.erp_form___block').find('#stock_transfer_code').val(stock_transfer_code);
-    selected_row.parents('.erp_form___block').find('#stock_from_id').val(stock_from_id);
-    selected_row.parents('.erp_form___block').find('#store').val(stock_store_from_id);
-    selected_row.parents('.erp_form___block').find('#branch_from_id').val(stock_branch_from_id);
+    var receivingForm = $('#stock_transfer_receiving');
+    var formBlock = receivingForm.length ? receivingForm : selected_row.parents('.erp_form___block');
+    formBlock.find('#stock_transfer_code').val(stock_transfer_code);
+    formBlock.find('#stock_from_id').val(stock_from_id);
+    formBlock.find('#store').val(stock_store_from_id);
+    formBlock.find('#branch_from_id').val(stock_branch_from_id);
+    if (receivingForm.length && stock_from_id) {
+        if (typeof window.loadStockTransferData === 'function') {
+            window.loadStockTransferData(true);
+        } else {
+            receivingForm.find('#getStockTransferData').data('skip-confirm', true).triggerHandler('click');
+        }
+    }
     $('#inLineHelp').remove();
-    selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');
+    formBlock.find('input').removeClass('open_inline__help__focus');
 }
 
 $('#supplier_name').keydown(function(e) {

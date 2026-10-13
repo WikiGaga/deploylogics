@@ -108,6 +108,12 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                 formData.supplier_id = $('#supplier_id').val();
             }
             formData.val = that.val();
+            if (that.attr('id') === 'stock_transfer_code') {
+                formData.branch_id = $('#new_branch_id').val();
+            }
+            if (that.attr('id') === 'ref_grn_code' && $('#stock_transfer_form').length) {
+                formData.branch_id = $('#new_branch_id').val();
+            }
             currentForm=formData;
             currenturl=data_url;
             currentinLineHelp=inLineHelp;
@@ -367,6 +373,9 @@ $(document).on('click', '#OpenInlineSupplierHelp', function(e) {
                 formData.supplier_id = $('#supplier_id').val();
             }
             formData.val = that.val();
+            if (that.attr('id') === 'stock_transfer_code') {
+                formData.branch_id = $('#new_branch_id').val();
+            }
             currentRequest = $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

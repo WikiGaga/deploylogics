@@ -67,8 +67,10 @@
                             @if($case == 'edit')
                                 <div class="col-lg-6">
                                     <div class="erp-page--title">
-                                        @if($data['current']->stock_receive_status == 1)
-                                             <span style="background: #ff5722;color: #fff;padding: 0px 30px;">This stock have been received to other branch</span>
+                                        @if((int)$data['current']->stock_receive_status === 1)
+                                             <span style="background: #ff5722;color: #fff;padding: 0px 30px;">This stock has been received by the destination branch</span>
+                                        @elseif((int)$data['current']->stock_receive_status === 2)
+                                             <span style="background: #f0ad4e;color: #fff;padding: 0px 30px;">This stock is reserved by a pending receiving document</span>
                                         @endif
                                     </div>
                                 </div>
@@ -325,8 +327,8 @@
                                             <input id="uom_id" readonly type="hidden" class="uom_id form-control erp-form-control-sm">
 
                                             <input id="grn_qty" readonly type="hidden" class="tblGridCal_grn_qty form-control erp-form-control-sm">
-                                            <input id="dis_perc" readonly type="hidden" class="tblGridCal_discount_perc form-control erp-form-control-sm">
-                                            <input id="dis_amount" readonly type="hidden" class="tblGridCal_discount_amount form-control erp-form-control-sm">
+                                            <input id="grn_dis_perc" readonly type="hidden" class="grn_discount_perc form-control erp-form-control-sm">
+                                            <input id="grn_dis_amount" readonly type="hidden" class="grn_discount_amount form-control erp-form-control-sm">
                                             <input id="after_dis_amount" readonly type="hidden" class="tblGridCal_after_discount_amount form-control erp-form-control-sm">
                                             <input id="gst_perc" readonly type="hidden" class="gst_perc form-control erp-form-control-sm">
                                             <input id="gst_amount" readonly type="hidden" class="gst_amount form-control erp-form-control-sm">
@@ -334,7 +336,7 @@
                                             <input id="fed_amount" readonly type="hidden" class="tblGridCal_fed_amount form-control erp-form-control-sm">
                                             <input id="spec_disc_perc" readonly type="hidden" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm">
                                             <input id="spec_disc_amount" readonly type="hidden" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm">
-                                            <input id="gross_amount" readonly type="hidden" class="tblGridCal_gross_amount form-control erp-form-control-sm">
+                                            <input id="grn_gross_amount" readonly type="hidden" class="grn_gross_amount form-control erp-form-control-sm">
                                             <input id="net_amount" readonly type="hidden" class="tblGridCal_net_amount form-control erp-form-control-sm">
                                             <input id="unit_price" readonly type="hidden" class="tblGridCal_unit_price form-control erp-form-control-sm">
                                         </div>
@@ -452,8 +454,8 @@
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{isset($dtl->product_barcode_id)?$dtl->product_barcode_id:""}}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
 
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][grn_qty]" data-id="grn_qty" value="{{isset($dtl->grn_qty)?$dtl->grn_qty:""}}" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>
-                                                <input type="hidden" name="pd[{{$loop->iteration}}][dis_perc]" data-id="dis_perc" value="{{isset($dtl->grn_disc_per)?$dtl->grn_disc_per:""}}" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>
-                                                <input type="hidden" name="pd[{{$loop->iteration}}][dis_amount]" data-id="dis_amount" value="{{isset($dtl->grn_disc_amount)?$dtl->grn_disc_amount:""}}" class="tblGridCal_discount_amount _barcode_id form-control erp-form-control-sm handle" readonly>
+                                                <input type="hidden" name="pd[{{$loop->iteration}}][grn_dis_perc]" data-id="grn_dis_perc" value="{{isset($dtl->grn_disc_per)?$dtl->grn_disc_per:""}}" class="grn_discount_perc form-control erp-form-control-sm handle" readonly>
+                                                <input type="hidden" name="pd[{{$loop->iteration}}][grn_dis_amount]" data-id="grn_dis_amount" value="{{isset($dtl->grn_disc_amount)?$dtl->grn_disc_amount:""}}" class="grn_discount_amount form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][after_dis_amount]" data-id="after_dis_amount" value="{{isset($dtl->grn_after_disc_amount)?$dtl->grn_after_disc_amount:""}}" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][gst_perc]" data-id="gst_perc" value="{{isset($dtl->grn_gst_per)?$dtl->grn_gst_per:""}}" class="gst_perc form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][gst_amount]" data-id="gst_amount" value="{{isset($dtl->grn_gst_amount)?$dtl->grn_gst_amount:""}}" class="gst_amount form-control erp-form-control-sm handle" readonly>
@@ -461,7 +463,7 @@
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][fed_amount]" data-id="fed_amount" value="{{isset($dtl->grn_fed_amount)?$dtl->grn_fed_amount:""}}" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][spec_disc_perc]" data-id="spec_disc_perc" value="{{isset($dtl->grn_spec_disc_per)?$dtl->grn_spec_disc_per:""}}" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][spec_disc_amount]" data-id="spec_disc_amount" value="{{isset($dtl->grn_spec_disc_amount)?$dtl->grn_spec_disc_amount:""}}" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>
-                                                <input type="hidden" name="pd[{{$loop->iteration}}][gross_amount]" data-id="gross_amount" value="{{isset($dtl->grn_gross_amount)?$dtl->grn_gross_amount:""}}" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>
+                                                <input type="hidden" name="pd[{{$loop->iteration}}][grn_gross_amount]" data-id="grn_gross_amount" value="{{isset($dtl->grn_gross_amount)?$dtl->grn_gross_amount:""}}" class="grn_gross_amount form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][net_amount]" data-id="net_amount" value="{{isset($dtl->grm_net_amount)?$dtl->grm_net_amount:""}}" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>
                                                 <input type="hidden" name="pd[{{$loop->iteration}}][unit_price]" data-id="unit_price" value="{{isset($dtl->grn_rate)?$dtl->grn_rate:""}}" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>
                                             </td>
@@ -509,7 +511,7 @@
                     </div>
                 </div>
 
-                {{-- @include('inventory.stock_transfer.summary_total') --}}
+                @include('inventory.stock_transfer.summary_total')
 
                 <div class="row form-group-block">
                     <label class="col-lg-2 erp-col-form-label">Notes:</label>
@@ -629,10 +631,11 @@
             }
             if(validate){
                 var disabledElement = $('table.erp_form__grid');
-                var url = '/stock/890/get-grn-dtl-data';
+                var url = '/stock/stock-transfer/get-grn-dtl-data';
                 var formData = {
                     grn_id : grn_id,
                     grn_code : grn_code,
+                    branch_id : $('#new_branch_id').val(),
                     rate_type : $('#rate_type').val(),
                     rate_perc : $('#rate_perc').val(),
                 };
@@ -672,8 +675,8 @@
                                             '<input type="hidden" name="pd['+total_length+'][product_barcode_id]" data-id="product_barcode_id" value="'+row.product_barcode_id+'" class="product_barcode_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
                                             '<input type="hidden" name="pd['+total_length+'][uom_id]" data-id="uom_id" value="'+uom_id+'" class="uom_id form-control erp-form-control-sm" readonly="" autocomplete="off">'+
                                             '<input type="hidden" name="pd['+total_length+'][grn_qty]" data-id="grn_qty" value="'+(row.grn_qty || row.tbl_purc_grn_dtl_quantity || '')+'" class="tblGridCal_grn_qty form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][dis_perc]" data-id="dis_perc" value="'+(row.dis_perc || row.tbl_purc_grn_dtl_disc_percent || '')+'" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][dis_amount]" data-id="dis_amount" value="'+(row.dis_amount || row.tbl_purc_grn_dtl_disc_amount || '')+'" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][grn_dis_perc]" data-id="grn_dis_perc" value="'+(row.dis_perc || row.tbl_purc_grn_dtl_disc_percent || '')+'" class="grn_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][grn_dis_amount]" data-id="grn_dis_amount" value="'+(row.dis_amount || row.tbl_purc_grn_dtl_disc_amount || '')+'" class="grn_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][after_dis_amount]" data-id="after_dis_amount" value="'+(row.after_dis_amount || '')+'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][gst_perc]" data-id="gst_perc" value="'+(row.gst_perc || row.tbl_purc_grn_dtl_gst_percent || '')+'" class="tblGridCal_gst_perc form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][gst_amount]" data-id="gst_amount" value="'+(row.gst_amount || row.tbl_purc_grn_dtl_gst_amount || '')+'" class="tblGridCal_gst_amount form-control erp-form-control-sm handle" readonly>\n' +
@@ -681,7 +684,7 @@
                                             '<input type="hidden" name="pd['+total_length+'][fed_amount]" data-id="fed_amount" value="'+(row.fed_amount || '')+'" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][spec_disc_perc]" data-id="spec_disc_perc" value="'+(row.spec_disc_perc || '')+'" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][spec_disc_amount]" data-id="spec_disc_amount" value="'+(row.spec_disc_amount || '')+'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                            '<input type="hidden" name="pd['+total_length+'][gross_amount]" data-id="gross_amount" value="'+(row.gross_amount || row.tbl_purc_grn_dtl_total_amount || '')+'" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                            '<input type="hidden" name="pd['+total_length+'][grn_gross_amount]" data-id="grn_gross_amount" value="'+(row.gross_amount || row.tbl_purc_grn_dtl_total_amount || '')+'" class="grn_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][net_amount]" data-id="net_amount" value="'+(row.net_amount || row.tbl_purc_grn_dtl_amount || '')+'" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
                                             '<input type="hidden" name="pd['+total_length+'][unit_price]" data-id="unit_price" value="'+(row.unit_price || row.tbl_purc_grn_dtl_rate || '')+'" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
 
@@ -817,7 +820,7 @@
                 'readonly':true
             },
         ];
-        var arr_hidden_field = ['product_id','product_barcode_id','uom_id','grn_qty','dis_perc','dis_amount','after_dis_amount','gst_perc','gst_amount','fed_perc','fed_amount','spec_disc_perc','spec_disc_amount','gross_amount','net_amount','unit_price'];
+        var arr_hidden_field = ['product_id','product_barcode_id','uom_id','grn_qty','grn_dis_perc','grn_dis_amount','after_dis_amount','gst_perc','gst_amount','fed_perc','fed_amount','spec_disc_perc','spec_disc_amount','grn_gross_amount','net_amount','unit_price'];
 
         $(".date_inputmask").inputmask("99-99-9999", {
             "mask": "99-99-9999",
@@ -846,7 +849,7 @@
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },
                             type        : 'POST',
-                            url         : '/stock/890/get-stock-request-dtl-data',
+                            url         : '/stock/stock-transfer/get-stock-request-dtl-data',
                             dataType	: 'json',
                             data        : formData,
                             success: function(response) {
@@ -876,8 +879,8 @@
                                                 '<input type="hidden" name="pd['+iteration+'][uom_id]" data-id="uom_id" value="'+stocki['uom']['uom_id']+'" class="uom_id form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][product_barcode_id]" data-id="product_barcode_id" value="'+stocki['product_barcode_id']+'" class="product_barcode_id form-control erp-form-control-sm handle" readonly>\n' +
 
-                                                '<input type="hidden" name="pd['+iteration+'][dis_perc]" data-id="dis_perc" value="'+stocki['dis_perc']+'" class="tblGridCal_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
-                                                '<input type="hidden" name="pd['+iteration+'][dis_amount]" data-id="dis_amount" value="'+stocki['dis_amount']+'" class="tblGridCal_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                                '<input type="hidden" name="pd['+iteration+'][grn_dis_perc]" data-id="grn_dis_perc" value="'+stocki['dis_perc']+'" class="grn_discount_perc form-control erp-form-control-sm handle" readonly>\n' +
+                                                '<input type="hidden" name="pd['+iteration+'][grn_dis_amount]" data-id="grn_dis_amount" value="'+stocki['dis_amount']+'" class="grn_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][after_dis_amount]" data-id="after_dis_amount" value="'+stocki['after_dis_amount']+'" class="tblGridCal_after_discount_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][gst_perc]" data-id="gst_perc" value="'+stocki['gst_perc']+'" class="tblGridCal_gst_perc form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][gst_amount]" data-id="gst_amount" value="'+stocki['gst_amount']+'" class="tblGridCal_gst_amount form-control erp-form-control-sm handle" readonly>\n' +
@@ -885,7 +888,7 @@
                                                 '<input type="hidden" name="pd['+iteration+'][fed_amount]" data-id="fed_amount" value="'+stocki['fed_amount']+'" class="tblGridCal_fed_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][spec_disc_perc]" data-id="spec_disc_perc" value="'+stocki['spec_disc_perc']+'" class="tblGridCal_spec_disc_perc form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][spec_disc_amount]" data-id="spec_disc_amount" value="'+stocki['spec_disc_amount']+'" class="tblGridCal_spec_disc_amount form-control erp-form-control-sm handle" readonly>\n' +
-                                                '<input type="hidden" name="pd['+iteration+'][gross_amount]" data-id="gross_amount" value="'+stocki['gross_amount']+'" class="tblGridCal_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
+                                                '<input type="hidden" name="pd['+iteration+'][grn_gross_amount]" data-id="grn_gross_amount" value="'+stocki['gross_amount']+'" class="grn_gross_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][net_amount]" data-id="net_amount" value="'+stocki['net_amount']+'" class="tblGridCal_net_amount form-control erp-form-control-sm handle" readonly>\n' +
                                                 '<input type="hidden" name="pd['+iteration+'][unit_price]" data-id="unit_price" value="'+stocki['unit_price']+'" class="tblGridCal_unit_price form-control erp-form-control-sm handle" readonly>\n' +
                                             '</td>\n' +
@@ -1066,6 +1069,6 @@
     @yield('summary_total_pageJS')
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/open-inline-help.js?v='.time()) }}" type="text/javascript"></script>
 @endsection
 

@@ -32,10 +32,7 @@
             $selected_rate_type = $data['current']->stock_rate_type;
             $rate_perc = $data['current']->stock_rate_perc;
             $stock_from_id = $data['current']->stock_request_id;
-            if(isset($stock_from_id)){
-                $stock_transfer = \App\Models\TblInveStock::where('stock_id',(int)$stock_from_id)->first();
-                $stock_transfer_code = $stock_transfer->stock_code;
-            }
+            $stock_transfer_code = isset($data['source_transfer']) ? $data['source_transfer']->stock_code : '';
             $dtls = isset($data['current']->stock_dtls)? $data['current']->stock_dtls :[];
         }
         $type =$data['form_type'];
@@ -510,45 +507,56 @@
 
         $(document).on('input', '#stock_transfer_code', function() {
             $('#stock_from_id').val('');
+            $('#store').val('');
+            $('#branch_from_id').val('');
+            $('.erp_form__grid_body').empty();
+            allCalcFunc();
         });
 
-        $('#getStockTransferData').click(function(){
-            var thix = $(this);
-            var val = thix.parents('.input-group').find('input#stock_from_id').val();
-            var code_val = thix.parents('.input-group').find('input#stock_transfer_code').val();
+        window.loadStockTransferData = function(skipConfirm){
+            var receivingForm = $('#stock_transfer_receiving');
+            var val = receivingForm.find('#stock_from_id').val();
+            var code_val = receivingForm.find('#stock_transfer_code').val();
             if(val || code_val){
-                swal.fire({
+                var confirmation = skipConfirm === true ? $.Deferred().resolve({value: true}).promise() : swal.fire({
                     title: 'Alert!',
                     text: "Are You Sure To Get Data!",
                     type: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes'
-                }).then(function(result) {
+                });
+                confirmation.then(function(result) {
                     if (result.value) {
                         var formData = {
                             stock_id : val,
                             stock_code : code_val,
+                            branch_id : $('#new_branch_id').val(),
                         };
                         $.ajax({
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },
                             type        : 'POST',
-                            url         : '/stock/890/get-stock-transfer-dtl-data',
+                            url         : "{{ action('Inventory\\StockController@getStockTransferDtlData', ['type' => 'stock-receiving']) }}",
                             dataType	: 'json',
                             data        : formData,
                             success: function(response) {
                                 if(response['status'] == 'success'){
                                     toastr.success(response.message);
-                                    if(!valueEmpty(response.data.stock)){
+                                    if(response.data && !valueEmpty(response.data.stock)){
                                         $('#stock_from_id').val(response.data.stock.stock_id);
                                         $('#stock_transfer_code').val(response.data.stock.stock_code);
                                         $('#store').val(response.data.stock.stock_store_from_id);
                                         $('#branch_from_id').val(response.data.stock.stock_branch_from_id);
-                                        var stock = response.data.stock.stock_dtls;
-                                    var tr = "";
-                                    var iteration = $('.erp_form__grid_body').find('tr').length + 1;
-                                    for(var i=0;i < stock.length;i++){
+                                        var stock = response.data.stock.stock_dtls || [];
+                                        if(stock.length === 0){
+                                            $('.erp_form__grid_body').empty();
+                                            toastr.error('The selected stock transfer has no product details.');
+                                            return;
+                                        }
+                                        var tr = "";
+                                        var iteration = $('.erp_form__grid_body').find('tr').length + 1;
+                                        for(var i=0;i < stock.length;i++){
                                         var stocki = stock[i];
                                         var expiry_date = stocki['stock_dtl_expiry_date'];
                                         var d = new Date(expiry_date);
@@ -556,6 +564,8 @@
                                         var month = (parseInt(d.getMonth()) < 10) ? "0" + (d.getMonth() + 1).toString() : (d.getMonth() + 1);
                                         var year = d.getFullYear();
                                         var stock_dtl_expiry_date =  day +'-'+ month +'-'+ year;
+                                        var productName = stocki['product'] ? stocki['product']['product_name'] : '';
+                                        var uomName = stocki['uom'] ? stocki['uom']['uom_name'] : '';
                                         tr += '<tr>\n' +
                                             '<td class="handle"><i class="fa fa-arrows-alt-v handle"></i>\n' +
                                             '<input type="text" value="'+iteration+'" name="pd['+iteration+'][sr_no]"  class="form-control erp-form-control-sm handle" readonly>\n' +
@@ -565,10 +575,10 @@
                                             '<input type="hidden" name="pd['+iteration+'][product_barcode_id]" data-id="product_barcode_id" value="'+stocki['product_barcode_id']+'" class="product_barcode_id form-control erp-form-control-sm handle" readonly>\n' +
                                             '</td>\n' +
                                             '<td><input type="text" data-id="pd_barcode" name="pd['+iteration+'][pd_barcode]" value="'+stocki['product_barcode_barcode']+'" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>\n' +
-                                            '<td><input type="text" data-id="product_name" name="pd['+iteration+'][product_name]" value="'+stocki['product']['product_name']+'" class="product_name form-control erp-form-control-sm" readonly></td>\n' +
+                                            '<td><input type="text" data-id="product_name" name="pd['+iteration+'][product_name]" value="'+productName+'" class="product_name form-control erp-form-control-sm" readonly></td>\n' +
                                             '<td>\n' +
                                             '<select class="pd_uom field_readonly tb_moveIndex form-control erp-form-control-sm" data-id="pd_uom" name="pd['+iteration+'][uom]">\n' +
-                                            '<option value="'+stocki['uom_id']+'">'+stocki['uom']['uom_name']+'</option>\n' +
+                                            '<option value="'+stocki['uom_id']+'">'+uomName+'</option>\n' +
                                             '</select>\n' +
                                             '</td>\n' +
                                             '<td><input type="text" data-id="pd_packing" name="pd['+iteration+'][pd_packing]" value="'+stocki['stock_dtl_packing']+'" class="pd_packing form-control erp-form-control-sm" readonly></td>\n' +
@@ -600,7 +610,19 @@
                                         "placeholder": "dd-mm-yyyy",
                                         autoUnmask: true
                                     });
+                                    } else {
+                                        toastr.error('The selected stock transfer data is empty.');
+                                    }
+                                } else {
+                                    toastr.error(response.message || 'Unable to load the selected stock transfer.');
                                 }
+                            },
+                            error: function(xhr) {
+                                var message = 'Unable to load the selected stock transfer.';
+                                if(xhr.responseJSON && xhr.responseJSON.message){
+                                    message = xhr.responseJSON.message;
+                                }
+                                toastr.error(message);
                             }
                         });
                     }
@@ -609,6 +631,12 @@
             }else{
                 toastr.error("Select first Stock Code");
             }
+        };
+
+        $('#getStockTransferData').click(function(){
+            var skipConfirm = $(this).data('skip-confirm') === true;
+            $(this).removeData('skip-confirm');
+            window.loadStockTransferData(skipConfirm);
         });
 
         $(document).on('click','#getStockTransferPrintData',function(){
@@ -626,7 +654,7 @@
     </script>
     @yield('summary_total_pageJS')
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script>
 
         setInterval(function(){
@@ -639,5 +667,5 @@
             $('.t_gross_total').text(parseFloat(t_gross_total).toFixed(3));
         },100)
     </script>
-    <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/open-inline-help.js?v='.time()) }}" type="text/javascript"></script>
 @endsection

@@ -1393,8 +1393,19 @@ class DataTableController extends Controller
                 $where .= " lower(grn_code) like '%" . strtolower($str) . "%'";
                 $where .= " AND ";
             }
-            $where .= " business_id = " . auth()->user()->business_id;
-            $where .= " AND branch_id = " . auth()->user()->branch_id;
+            $branchId = auth()->user()->branch_id;
+            if ($request->filled('branch_id') && ctype_digit((string) $request->branch_id)) {
+                $allowedBranchIds = DB::table('tbl_soft_user_branch')
+                    ->where('user_id', auth()->user()->id)
+                    ->pluck('branch_id')
+                    ->map(function ($id) { return (string) $id; })
+                    ->all();
+                if (in_array((string) $request->branch_id, $allowedBranchIds, true)) {
+                    $branchId = (int) $request->branch_id;
+                }
+            }
+            $where .= " business_id = " . (int) auth()->user()->business_id;
+            $where .= " AND branch_id = " . (int) $branchId;
             $where .= " AND grn_type = 'GRN' ";
             $data['list'] = DB::select('select ' . $selectColumns . ' from vw_purc_grn ' . $where . ' GROUP BY supplier_name,grn_code,grn_date,grn_id ORDER BY grn_code desc FETCH FIRST 50 ROWS ONLY');
             $data['head'] = ['Code', 'Date', 'Supplier Name'];
@@ -1580,22 +1591,25 @@ class DataTableController extends Controller
             $data['head'] = ['Date', 'Code', 'Branch From'];
         }
         if ($helpType == 'stockTransferHelp') {
+            $receivingBranchId = auth()->user()->branch_id;
+            if (!empty($request->branch_id) && Utilities::documentBranchIsUserAccessible($request->branch_id)) {
+                $receivingBranchId = $request->branch_id;
+            }
             $data['show_name'] = 'stock_code';
             $data['hideKeys'] = ['stock_id', 'stock_store_from_id', 'stock_branch_from_id'];
             $data['keys'] = ['stock_date', 'stock_code', 'stock_branch_to_name', 'stock_store_to_name'];
             $merge = array_merge($data['keys'], $data['hideKeys']);
-            $selectColumns = implode(', ', $merge);
-            $where = 'where ';
+            $query = DB::table('vw_inve_stock')->select($merge)
+                ->where('stock_code_type', 'st')
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->where('posted', 1)
+                ->where('stock_receive_status', 0)
+                ->where('stock_branch_to_id', $receivingBranchId);
             if ($str) {
-                $where .= " lower(stock_code) like '%" . strtolower($str) . "%'";
-                $where .= " AND ";
+                $query->whereRaw('lower(stock_code) like ?', ['%' . strtolower($str) . '%']);
             }
-            $where .= " stock_code_type = 'st'";
-            $where .= " AND business_id = " . auth()->user()->business_id;
-            $where .= " AND stock_receive_status = 0";
-            $where .= " AND stock_branch_to_id = " . auth()->user()->branch_id;
-            //dd('select '.$selectColumns.' from vw_inve_stock '.$where.' GROUP BY('.$selectColumns.') ORDER BY stock_code desc FETCH FIRST 50 ROWS ONLY');
-            $data['list'] = DB::select('select ' . $selectColumns . ' from vw_inve_stock ' . $where . ' GROUP BY(' . $selectColumns . ') ORDER BY stock_code desc FETCH FIRST 50 ROWS ONLY');
+            $data['list'] = $query->distinct()->orderBy('stock_code', 'desc')->limit(50)->get();
             $data['head'] = ['Date', 'Code', 'To Transfer Branch', 'To Store'];
         }
         if ($helpType == 'stockReceivingHelp') {

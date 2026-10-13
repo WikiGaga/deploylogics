@@ -189,7 +189,7 @@
                                                 </td>
                                                 <td>
                                                 <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
-                                                    value="{{ $rec->attendance_time }}"   />
+                                                    value="{{ !empty($rec->attendance_time) ? date('d-m-Y h:i A', strtotime($rec->attendance_time)) : '' }}"   />
                                                     
                                                 </td>
                                                 <td class="text-center">
@@ -305,9 +305,8 @@
             todayHighlight: true,
             templates: arrows,
             
-            // Updated Format: dd-mm-yyyy followed by hours:minutes
-            // 'hh' is 12-hour, 'HH' is 24-hour. 'ii' is minutes.
-            format: "dd-mm-yyyy HH:ii", 
+            // 12-hour time with an AM/PM suffix.
+            format: "dd-mm-yyyy HH:ii P",
             
             showMeridian: true, // Set to true for AM/PM support
             minuteStep: 5      // Optional: interval between minutes

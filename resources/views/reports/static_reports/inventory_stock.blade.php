@@ -28,6 +28,7 @@
                 <div class="col-lg-12">
                     <table width="100%" id="rep_sale_invoice_datatable" class="table bt-datatable table-bordered">
                         <tr class="sticky-header">
+                            <th class="text-left">Store</th>
                             @if($data['key'] == 'stock_transfer')
                                 <th class="text-center">Branch From</th>
                                 <th class="text-center">Branch To</th>
@@ -78,10 +79,10 @@
                             @endphp
                             <tr>
                                 @if($data['key'] == 'opening_stock' || $data['key'] == 'stock_transfer' || $data['key'] == 'stock_receiving')
-                                    <td colspan="12"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
+                                    <td colspan="13"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
                                 @endif
                                 @if($data['key'] == 'stock_adjustment' || $data['key'] == 'expired_items'  || $data['key'] == 'sample_items' || $data['key'] == 'damaged_items')
-                                    <td colspan="10"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
+                                    <td colspan="11"><b>{{date('d-m-Y', strtotime($key))}}</b></td>
                                 @endif
                             </tr>
                             @foreach($list as $k=>$inventory)
@@ -94,10 +95,10 @@
                                 @endphp
                                 <tr>
                                     @if($data['key'] == 'opening_stock' || $data['key'] == 'stock_transfer' || $data['key'] == 'stock_receiving')
-                                        <td colspan="12">{{$k}}</td>
+                                        <td colspan="13">{{$k}}</td>
                                     @endif
                                     @if($data['key'] == 'stock_adjustment' || $data['key'] == 'expired_items'  || $data['key'] == 'sample_items' || $data['key'] == 'damaged_items')
-                                        <td colspan="10">{{$k}}</td>
+                                        <td colspan="11">{{$k}}</td>
                                     @endif
                                 </tr>
                                 @foreach($inventory as $item)
@@ -122,6 +123,7 @@
 
                                     @endphp
                                     <tr>
+                                        <td>{{$item->stock_store_from_name}}</td>
                                         @if($data['key'] == 'stock_transfer')
                                             <td>{{$item->stock_branch_from_name}}</td>
                                             <td>{{$item->stock_branch_to_name}}</td>
@@ -166,10 +168,10 @@
                                 @endforeach
                                 <tr>
                                     @if($data['key'] == 'opening_stock'  || $data['key'] == 'stock_transfer' || $data['key'] == 'stock_receiving')
-                                        <td colspan="6" class="rep-font-bold">Total:</td>
+                                        <td colspan="7" class="rep-font-bold">Total:</td>
                                     @endif
                                     @if($data['key'] == 'expired_items'  || $data['key'] == 'stock_adjustment' || $data['key'] == 'sample_items' || $data['key'] == 'damaged_items')
-                                        <td colspan="4" class="rep-font-bold">Total:</td>
+                                        <td colspan="5" class="rep-font-bold">Total:</td>
                                     @endif
                                     @if($data['key'] == 'stock_adjustment')
                                         <td class="text-right rep-font-bold"></td>
@@ -192,10 +194,10 @@
                             @endforeach
                             <tr class="sub_total">
                                 @if($data['key'] == 'opening_stock' || $data['key'] == 'stock_transfer' || $data['key'] == 'stock_receiving')
-                                    <td colspan="6" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
+                                    <td colspan="7" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
                                 @endif
                                 @if($data['key'] == 'expired_items' || $data['key'] == 'stock_adjustment' || $data['key'] == 'sample_items' || $data['key'] == 'damaged_items')
-                                    <td colspan="4" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
+                                    <td colspan="5" class="rep-font-bold">( {{date('d-m-Y', strtotime($key))}} ) Sub Total:</td>
                                 @endif
                                 @if($data['key'] == 'stock_adjustment')
                                     <td class="text-right rep-font-bold"></td>
@@ -217,10 +219,10 @@
                         @endforeach
                         <tr class="grand_total">
                             @if($data['key'] == 'opening_stock'  || $data['key'] == 'stock_transfer' || $data['key'] == 'stock_receiving')
-                                <td colspan="6" class="rep-font-bold">Grand Total:</td>
+                                <td colspan="7" class="rep-font-bold">Grand Total:</td>
                             @endif
                             @if($data['key'] == 'expired_items' || $data['key'] == 'stock_adjustment' || $data['key'] == 'sample_items' || $data['key'] == 'damaged_items')
-                                <td colspan="4" class="rep-font-bold">Grand Total:</td>
+                                <td colspan="5" class="rep-font-bold">Grand Total:</td>
                             @endif
                             @if($data['key'] == 'stock_adjustment')
                                 <td class="text-right rep-font-bold"></td>
