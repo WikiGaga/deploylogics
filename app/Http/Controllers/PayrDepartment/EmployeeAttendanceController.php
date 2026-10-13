@@ -97,6 +97,19 @@ class EmployeeAttendanceController extends Controller
     {
         $data=[];
             if(isset($id)){
+
+                $exists_with_same_date = DB::table('Tbl_hr_attendence')
+                ->where('att_date', date('Y-m-d', strtotime($request->date)))
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->where('id', '!=', $id)
+                ->exists();
+
+                if ($exists_with_same_date) {
+                    return $this->jsonErrorResponse($data, trans('message.attendance_already_exists'), 200);
+                }
+
                 $employee = TblHrEmployeeAttendance::where('id',$id)->first();
 
                   $data=[
@@ -128,7 +141,7 @@ class EmployeeAttendanceController extends Controller
                         'id'=>$p_id,
                         'emp_id'=>$arr['employee_select'],
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])),
+                        'attendance_time'=> $this->combineAttendanceDateAndTime($request->date, $arr['attendance_time']),
                         'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
                         'type'=>isset($arr['attendance_detail_id'], $existingSources[$arr['attendance_detail_id']])
                             ? $existingSources[$arr['attendance_detail_id']]
@@ -144,6 +157,18 @@ class EmployeeAttendanceController extends Controller
                 }
 
             }else{
+
+                $exists_with_same_date = DB::table('Tbl_hr_attendence')
+                ->where('att_date', date('Y-m-d', strtotime($request->date)))
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->exists();
+
+                if ($exists_with_same_date) {
+                    return $this->jsonErrorResponse($data, trans('message.attendance_already_exists'), 200);
+                }
+
                 $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
 
                 $data=[
@@ -158,6 +183,8 @@ class EmployeeAttendanceController extends Controller
                         'updated_at' => now()
                     ];
 
+                    // dd(auth()->user()->branch_id);
+
                 $att_id = DB::table('Tbl_hr_attendence')
                 ->insert( $data );
 
@@ -170,7 +197,7 @@ class EmployeeAttendanceController extends Controller
                         'id'=>$p_id,
                         'emp_id'=>$arr['employee_select'],
                         'attendance_date'=>date('Y-m-d',strtotime($request->date)),
-                        'attendance_time'=> date('Y-m-d H:i',strtotime($arr['attendance_time'])),
+                        'attendance_time'=> $this->combineAttendanceDateAndTime($request->date, $arr['attendance_time']),
                         'attendance_type'=>$this->normalizeAttendanceType($arr['type_select']),
                         'type'=>'web',
                         'shift_id'=>1,
@@ -277,5 +304,23 @@ class EmployeeAttendanceController extends Controller
         }
 
         return trim((string) $type);
+    }
+
+    /**
+     * The grid collects time only; the attendance date is controlled by the
+     * document header so a detail row cannot be saved against another date.
+     */
+    private function combineAttendanceDateAndTime($attendanceDate, $attendanceTime)
+    {
+        $dateTimestamp = strtotime((string) $attendanceDate);
+        $timeTimestamp = strtotime((string) $attendanceTime);
+
+        if ($dateTimestamp === false || $timeTimestamp === false) {
+            throw ValidationException::withMessages([
+                'attendance_time' => 'Please select a valid attendance date and time.',
+            ]);
+        }
+
+        return date('Y-m-d', $dateTimestamp).' '.date('H:i', $timeTimestamp);
     }
 }

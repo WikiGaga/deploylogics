@@ -512,7 +512,7 @@ class ApiHomeController extends ApiController
                 'errors' => $validator->errors()
             ], 422);
         }
-
+   //we
         // Wrap in a transaction to ensure data integrity
         return DB::transaction(function () use ($request) {
 

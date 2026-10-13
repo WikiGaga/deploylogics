@@ -141,7 +141,7 @@
                                             </th>
 
                                             <th cope="col">
-                                                <div class="erp_form__grid_th_title">Date</div>
+                                                <div class="erp_form__grid_th_title">Time</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input type="text"  id="attendance_time" name="attendance_time" class="form-control erp-form-control-sm moveIndex c-date-p kt_datepicker_33" readonly
                                                     value="{{ isset($date) ? $date : '' }}" autofocus />
@@ -189,7 +189,7 @@
                                                 </td>
                                                 <td>
                                                 <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
-                                                    value="{{ !empty($rec->attendance_time) ? date('d-m-Y h:i A', strtotime($rec->attendance_time)) : '' }}"   />
+                                                    value="{{ !empty($rec->attendance_time) ? date('h:i A', strtotime($rec->attendance_time)) : '' }}"   />
                                                     
                                                 </td>
                                                 <td class="text-center">
@@ -305,11 +305,14 @@
             todayHighlight: true,
             templates: arrows,
             
-            // 12-hour time with an AM/PM suffix.
-            format: "dd-mm-yyyy HH:ii P",
-            
-            showMeridian: true, // Set to true for AM/PM support
-            minuteStep: 5      // Optional: interval between minutes
+            // The attendance date comes only from the header date field.
+            format: "HH:ii P",
+            showMeridian: true,
+            startView: 1,
+            minView: 0,
+            maxView: 1,
+            forceParse: 0,
+            minuteStep: 5
         }); 
 
         $('#attendance_time').datetimepicker('setDate', new Date());
