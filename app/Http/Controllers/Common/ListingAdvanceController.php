@@ -129,6 +129,13 @@ class ListingAdvanceController extends Controller
             }else{
                 $sortDirection  = ($request->has('sort.sort') && $request->filled('sort.sort'))? $request->input('sort.sort') : 'desc';
                 $sortField  = ($request->has('sort.field') && $request->filled('sort.field'))? $request->input('sort.field') : 'created_at';
+                if (strcasecmp($case_name, 'Employee-Attendance') === 0) {
+                    $allowedSortFields = array_merge(array_keys($data['table_columns']), [$data['table_id'], 'created_at']);
+                    if (!in_array($sortField, $allowedSortFields, true)) {
+                        $sortField = 'created_at';
+                    }
+                    $sortDirection = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+                }
                 $orderBy = " ORDER BY $tbl_1_alias$sortField $sortDirection ";
                 $sort_colum_name_1 = $sortField;
             }
@@ -183,6 +190,10 @@ class ListingAdvanceController extends Controller
             $meta    = [];
             $page  = ($request->has('pagination.page') && $request->filled('pagination.page'))? $request->input('pagination.page') : 1;
             $perpage  = ($request->has('pagination.perpage') && $request->filled('pagination.perpage'))? $request->input('pagination.perpage') : -1;
+            if (strcasecmp($case_name, 'Employee-Attendance') === 0) {
+                $page = max(1, (int) $page);
+                $perpage = max(1, min(5000, (int) $perpage > 0 ? (int) $perpage : 100));
+            }
 
             // $perpage 0; get all data
             if ($perpage > 0) {
@@ -313,7 +324,7 @@ class ListingAdvanceController extends Controller
             $global_search = false;
             if(isset($globalFilters['global_search']) && !empty($globalFilters['global_search'])){
                 $generalSearch = str_replace(" " , "%" , $globalFilters['global_search']);
-                $generalSearch = strtolower($generalSearch);
+                $generalSearch = str_replace("'", "''", strtolower($generalSearch));
                 $textSearch = "";
                 foreach ($data['table_columns'] as $tkey=>$table_columns){
                     if($table_columns['type'] == 'string'){
@@ -404,10 +415,10 @@ class ListingAdvanceController extends Controller
                         if(isset($inline_filter[$tkey]) && !empty($inline_filter[$tkey])){
                             if($table_columns['type'] == 'string'){
                                 if($tkey == 'discount_status'){
-                                    $inline_where .= " and (lower(".$tbl_1_alias."is_active_status) like '%".strtolower($inline_filter[$tkey])."%' OR ";
-                                    $inline_where .= " lower(".$tbl_1_alias."expire_status) like '%".strtolower($inline_filter[$tkey])."%' ) ";
+                                    $inline_where .= " and (lower(".$tbl_1_alias."is_active_status) like '%".str_replace("'", "''", strtolower($inline_filter[$tkey]))."%' OR ";
+                                    $inline_where .= " lower(".$tbl_1_alias."expire_status) like '%".str_replace("'", "''", strtolower($inline_filter[$tkey]))."%' ) ";
                                 }else{
-                                    $inline_where .= " and lower(".$tbl_1_alias.$tkey.") like '%".strtolower($inline_filter[$tkey])."%'";
+                                    $inline_where .= " and lower(".$tbl_1_alias.$tkey.") like '%".str_replace("'", "''", strtolower($inline_filter[$tkey]))."%'";
                                 }
                             }
                             if(in_array($table_columns['type'],['date','datetime'])){

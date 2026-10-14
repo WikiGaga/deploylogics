@@ -8,7 +8,7 @@ class TblHrEmployeeAttendance extends Model
 {
     protected $table = 'tbl_hr_attendence';
     protected $primaryKey = 'id';
-//test
+
 
 
     protected static function primaryKeyName() {

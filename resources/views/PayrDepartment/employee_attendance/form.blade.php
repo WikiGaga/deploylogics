@@ -9,6 +9,7 @@
 
    
             $employees = $data['employee'];
+            $allEmployees = $data['all_employee'];
             $id = $data['att_id'];
             $att_no = $data['att_no'];
             $form_type = $data['form_type'];
@@ -30,6 +31,9 @@
         <form id="voucher_form" class="kt-form" method="post" action="{{action('PayrDepartment\EmployeeAttendanceController@store', [$id])}}">
  
     @csrf
+        @if(!empty($data['attendance_snapshot']))
+            <input type="hidden" name="attendance_snapshot" value="{{ $data['attendance_snapshot'] }}">
+        @endif
         <input type="hidden" value='{{$form_type}}' id="form_type">
         <input type="hidden" value='{{$att_no}}' name="att_no">
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
@@ -45,6 +49,21 @@
                                     <div class="erp-page--title">
                                         {{$att_no}}
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="row">
+                                <label class="col-lg-5 erp-col-form-label">All Employees:</label>
+                                <div class="col-lg-7">
+                                    <select id="all_employee_select" class="form-control erp-form-control-sm">
+                                        <option value="">{{ __('message.select') }}</option>
+                                        @foreach ($allEmployees as $employee)
+                                            <option value="{{ $employee->employee_id }}" data-out-side-branch="{{ $employee->out_side_branch }}">
+                                                {{ $employee->employee_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -77,7 +96,7 @@
                                         <i class="flaticon-more" style="color: #666666;"></i>
                                     </button>
                                     @php
-                                        $headings = ['Sr No','Employee Name','Attendance Type','Source','Date Time'];
+                                        $headings = ['Sr No','Employee Name','Attendance Type','Source','Out Side Branch','Time'];
                                     @endphp
                                     <ul class="dropdown-menu dropdown-menu-right checkbox-menu allow-focus listing_dropdown" style="height: 200px;overflow: auto;" aria-labelledby="dropdownMenu1">
                                         @foreach($headings as $key=>$heading)
@@ -113,7 +132,7 @@
                                                     <select id="employee_select" name="employee_select" class="form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
                                                            @foreach ($employees as $employee)
-                                                                    <option value="{{ $employee->employee_id }}" >
+                                                                    <option value="{{ $employee->employee_id }}" data-out-side-branch="{{ $employee->out_side_branch }}">
                                                                         {{ $employee->employee_name }}</option>
                                                             @endforeach
 
@@ -140,11 +159,18 @@
                                                 </div>
                                             </th>
 
+                                            <th scope="col">
+                                                <div class="erp_form__grid_th_title">Out Side Branch</div>
+                                                <div class="erp_form__grid_th_input">
+                                                    <input type="text" id="out_side_branch_display" value="No" class="form-control erp-form-control-sm" readonly>
+                                                </div>
+                                            </th>
+
                                             <th cope="col">
                                                 <div class="erp_form__grid_th_title">Time</div>
                                                 <div class="erp_form__grid_th_input">
                                                     <input type="text"  id="attendance_time" name="attendance_time" class="form-control erp-form-control-sm moveIndex c-date-p kt_datepicker_33" readonly
-                                                    value="{{ isset($date) ? $date : '' }}" autofocus />
+                                                    value="" autofocus />
                                                 </div>
                                             </th>
 
@@ -162,17 +188,17 @@
                                     @if(isset($att_data))
                                         @foreach($att_data as $rec)
                                           
-                                            <tr>
+                                            <tr data-original-employee="{{ $rec->emp_id }}" data-original-outside="{{ (int) ($rec->out_side_branch ?? 0) }}">
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{$loop->iteration}}" name="pd[{{$loop->iteration}}][sr_no]"  class="form-control erp-form-control-sm handle" readonly>
-                                                    <input type="hidden" name="pd[{{$loop->iteration}}][attendance_detail_id]" value="{{$rec->id}}">
+                                                    <input type="hidden" data-id="attendance_detail_id" name="pd[{{$loop->iteration}}][attendance_detail_id]" value="{{$rec->id}}">
                                                     <!-- <input readonly type="hidden" name="pd[{{ $loop->iteration }}][cheque_book_id]" data-id="cheque_book_id" value=""  class="cheque_book_id form-control erp-form-control-sm"> -->
                                                 </td>
                                                <td>
                                                     <select data-id="employee_select" name="pd[{{$loop->iteration}}][employee_select]" class=" form-control erp-form-control-sm">
                                                         <option value="">{{ __('message.select') }}</option>
                                                            @foreach ($employees as $employee)
-                                                                    <option value="{{ $employee->employee_id }}" {{$rec->emp_id == $employee->employee_id?'selected':''}} >{{ $employee->employee_name }}</option>
+                                                                    <option value="{{ $employee->employee_id }}" data-out-side-branch="{{ $employee->out_side_branch }}" {{$rec->emp_id == $employee->employee_id?'selected':''}} >{{ $employee->employee_name }}</option>
                                                             @endforeach
                                                     </select>
                                                 </td>
@@ -186,6 +212,9 @@
                                                 </td>
                                                 <td>
                                                     <input type="text" data-id="attendance_source" value="{{ strtolower($rec->type ?? 'app') }}" class="form-control erp-form-control-sm" readonly>
+                                                </td>
+                                                <td>
+                                                    <input type="text" data-id="out_side_branch_display" value="{{ (int) ($rec->out_side_branch ?? 0) === 1 ? 'Yes' : 'No' }}" class="form-control erp-form-control-sm" readonly>
                                                 </td>
                                                 <td>
                                                 <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
@@ -352,7 +381,7 @@
             }, {
                 'id':'attendance_time',
                 'fieldClass':'',
-                'message':'Date is Required',
+                'message':'Time is Required',
                 'require':true,
                 'readonly':true,
 
@@ -365,6 +394,155 @@
        
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
+    <script>
+        $(document).ready(function () {
+            // Attendance has select and time-only columns. Build its rows locally so
+            // the generic voucher repeater cannot drop columns on subsequent adds.
+            $('#addData').off('click').on('click.attendance', function (event) {
+                event.preventDefault();
+
+                var $table = $(this).closest('table');
+                var employeeId = $('#employee_select').val();
+                var attendanceType = $('#type_select').val();
+                var attendanceTime = $('#attendance_time').val();
+
+                if (!employeeId) {
+                    alert('Select Employee');
+                    return;
+                }
+                if (!attendanceType) {
+                    alert('Select Type');
+                    return;
+                }
+                if (!attendanceTime) {
+                    alert('Time is Required');
+                    return;
+                }
+
+                var rowNumber = $table.find('tbody.erp_form__grid_body > tr').length + 1;
+                var $row = $('<tr>', {class: 'new-row'});
+                var $serialCell = $('<td>', {class: 'handle'})
+                    .append($('<i>', {class: 'fa fa-arrows-alt-v handle'}))
+                    .append($('<input>', {
+                        type: 'text',
+                        name: 'pd[' + rowNumber + '][sr_no]',
+                        value: rowNumber,
+                        title: rowNumber,
+                        class: 'form-control erp-form-control-sm handle',
+                        readonly: true
+                    }));
+
+                var $employee = $('#employee_select').clone()
+                    .removeAttr('id')
+                    .attr('data-id', 'employee_select')
+                    .attr('name', 'pd[' + rowNumber + '][employee_select]')
+                    .val(employeeId);
+                var $type = $('#type_select').clone()
+                    .removeAttr('id')
+                    .attr('data-id', 'type_select')
+                    .attr('name', 'pd[' + rowNumber + '][type_select]')
+                    .val(attendanceType);
+                var $source = $('<input>', {
+                    type: 'text',
+                    name: 'pd[' + rowNumber + '][attendance_source]',
+                    'data-id': 'attendance_source',
+                    value: 'web',
+                    class: 'form-control erp-form-control-sm',
+                    readonly: true
+                });
+                var $outsideBranch = $('<input>', {
+                    type: 'text',
+                    name: 'pd[' + rowNumber + '][out_side_branch_display]',
+                    'data-id': 'out_side_branch_display',
+                    value: $('#out_side_branch_display').val() || 'No',
+                    class: 'form-control erp-form-control-sm',
+                    readonly: true
+                });
+                var $time = $('<input>', {
+                    type: 'text',
+                    name: 'pd[' + rowNumber + '][attendance_time]',
+                    'data-id': 'attendance_time',
+                    value: attendanceTime,
+                    class: 'form-control erp-form-control-sm kt_datepicker_33',
+                    readonly: true
+                });
+                var $delete = $('<button>', {
+                    type: 'button',
+                    class: 'btn btn-danger gridBtn delData'
+                }).append($('<i>', {class: 'la la-trash'}));
+
+                $row.append($serialCell)
+                    .append($('<td>').append($employee))
+                    .append($('<td>').append($type))
+                    .append($('<td>').append($source))
+                    .append($('<td>').append($outsideBranch))
+                    .append($('<td>').append($time))
+                    .append($('<td>', {class: 'text-center'}).append(
+                        $('<div>', {class: 'btn-group btn-group-sm', role: 'group'}).append($delete)
+                    ));
+
+                $table.find('tbody.erp_form__grid_body').append($row);
+                $time.datetimepicker({
+                    rtl: KTUtil.isRTL(),
+                    todayBtn: 'linked',
+                    autoclose: true,
+                    pickerPosition: 'bottom-left',
+                    todayHighlight: true,
+                    templates: arrows,
+                    format: 'HH:ii P',
+                    showMeridian: true,
+                    startView: 1,
+                    minView: 0,
+                    maxView: 1,
+                    forceParse: 0,
+                    minuteStep: 5
+                });
+
+                $('#employee_select, #type_select').prop('selectedIndex', 0);
+                $('#all_employee_select').val('');
+                $('#attendance_source').val('web');
+                $('#out_side_branch_display').val('No');
+                $('#attendance_time').datetimepicker('setDate', new Date());
+
+                if (typeof updateKeys === 'function') {
+                    updateKeys();
+                }
+            });
+
+            $('#all_employee_select').on('change', function () {
+                var $selected = $(this).find('option:selected');
+                var employeeId = $selected.val();
+                if (!employeeId) {
+                    $('#employee_select').val('').trigger('change');
+                    return;
+                }
+
+                var $gridEmployee = $('#employee_select');
+                if (!$gridEmployee.find('option[value="' + employeeId + '"]').length) {
+                    $gridEmployee.append($('<option>', {
+                        value: employeeId,
+                        text: $selected.text().trim(),
+                        'data-out-side-branch': $selected.data('out-side-branch')
+                    }));
+                }
+                $gridEmployee.val(employeeId).trigger('change');
+            });
+
+            $('#employee_select').on('change', function () {
+                var outsideBranch = $(this).find('option:selected').data('out-side-branch');
+                $('#out_side_branch_display').val(outsideBranch == 1 ? 'Yes' : 'No');
+            });
+
+            $('#AccForm').on('change', 'tbody select[data-id="employee_select"]', function () {
+                var $row = $(this).closest('tr');
+                var outsideBranch = $(this).find('option:selected').data('out-side-branch');
+                if (String($(this).val()) === String($row.attr('data-original-employee'))) {
+                    outsideBranch = $row.attr('data-original-outside');
+                }
+                $row.find('input[data-id="out_side_branch_display"]').val(outsideBranch == 1 ? 'Yes' : 'No');
+            });
+        });
+    </script>
     <script src="{{ asset('js/pages/js/inline-help-func.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
 @endsection

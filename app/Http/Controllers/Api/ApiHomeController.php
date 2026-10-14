@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\TblHrEmployeeAttendance;
 use App\Http\Controllers\ApiController;
 use App\Library\Utilities;
+use App\Library\AttendancePersistence;
 use App\Models\TempPro;
 use App\Models\TempProDtl;
 use App\Models\TempTestProduct;
@@ -497,24 +498,23 @@ class ApiHomeController extends ApiController
 
         // dd($request->all());
         $validator = Validator::make($request->all(), [
-            'emp_id'          => 'required',
-            'attendance_time' => 'required',
-            'attendance_type' => 'required', // e.g., 'Check-In' or 'Check-Out'
-            'branch_id'       => 'required',
-            'latitude'        => 'required',
-            'longitude'       => 'required',
+            'emp_id'          => 'required|regex:/^[0-9]+$/',
+            'attendance_time' => 'required|date_format:Y-m-d H:i:s',
+            'attendance_type' => 'required|in:Check-In,Check-Out,check_in,check_out',
+            'branch_id'       => 'required|regex:/^[0-9]+$/',
+            'latitude'        => 'required|numeric|between:-90,90',
+            'longitude'       => 'required|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Attendance API validation failed', ['endpoint' => 'add_attendance', 'errors' => $validator->errors()->toArray()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 422);
         }
-   //we
-        // Wrap in a transaction to ensure data integrity
-        return DB::transaction(function () use ($request) {
+        return $this->attendanceTransaction('add_attendance', function () use ($request) {
 
             $employee_id = $request->input('emp_id');
             $att_date = date('Y-m-d', strtotime($request->attendance_time));
@@ -523,10 +523,31 @@ class ApiHomeController extends ApiController
             // 1. Verify Employee exists
             $employee = DB::table('tbl_payr_employee')
                 ->where('employee_id', $employee_id)
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
                 ->first();
 
             if (empty($employee)) {
                 return response()->json(['success' => false, 'message' => 'Employee not found.'], 404);
+            }
+
+            abort_unless(Utilities::documentBranchIsUserAccessible($request->branch_id), 403);
+            AttendancePersistence::lockBranch($employee->business_id, $employee->company_id, $request->branch_id);
+
+            $existingDetail = DB::table('Tbl_hr_attendence_dtl')
+                ->where('emp_id', $employee_id)
+                ->where('branch_id', $request->branch_id)
+                ->where('attendance_time', $att_full_time)
+                ->whereIn('attendance_type', $this->attendanceTypeVariants($request->attendance_type))
+                ->first();
+
+            if ($existingDetail) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Attendance logged successfully.',
+                    'type'    => $request->attendance_type,
+                    'time'    => $att_full_time
+                ], 200);
             }
 
             // Check if branch is allowed for employee (primary branch or assigned secondary branches)
@@ -549,9 +570,10 @@ class ApiHomeController extends ApiController
             if (!$attendance_header) {
                 // Create Header if it doesn't exist
                 // Using insertGetId is better than max() + 1
-                $att_id= DB::table('Tbl_hr_attendence')->max('id') +1;
+                $att_id = AttendancePersistence::id('Tbl_hr_attendence');
                 //  $max_voucher = TblHrEmployeeAttendance::where(Utilities::currentBCB())->max('att_no');
-                $max_voucher = TblHrEmployeeAttendance::max('att_no');
+                $max_voucher = TblHrEmployeeAttendance::where('business_id', $employee->business_id)
+                    ->where('company_id', $employee->company_id)->where('branch_id', $request->branch_id)->max('att_no');
                 $att_no = $this->documentCode($max_voucher,'ATT');
 
                 DB::table('Tbl_hr_attendence')->insert([
@@ -569,7 +591,7 @@ class ApiHomeController extends ApiController
                 $att_id = $attendance_header->id;
             }
 
-            $p_id= DB::table('Tbl_hr_attendence_dtl')->max('id') +1;
+            $p_id = AttendancePersistence::id('Tbl_hr_attendence_dtl');
             // 3. Insert into Attendance Detail
             $detail_data = [
                 'id'=>$p_id,
@@ -601,16 +623,24 @@ class ApiHomeController extends ApiController
 
    public function add_bulk_attendance(Request $request)
     {
+        $records = $request->all();
+        if (!$records || array_keys($records) !== range(0, count($records) - 1)
+            || count(array_filter($records, 'is_array')) !== count($records)) {
+            Log::warning('Attendance API invalid bulk payload', ['endpoint' => 'add_bulk_attendance']);
+            return response()->json(['success' => false, 'message' => 'Validation failed.',
+                'errors' => ['attendances' => ['A nonempty list of attendance records is required.']]], 422);
+        }
         $validator = Validator::make($request->all(), [
-            '*.attendance_time' => 'required|date',
-            '*.attendance_type' => 'required|in:Check-In,Check-Out',
-            '*.employees'       => 'required|numeric',
-            '*.branch_id'       => 'required|numeric',
-            '*.latitude'        => 'required',
-            '*.longitude'       => 'required',
+            '*.attendance_time' => 'required|date_format:Y-m-d H:i:s',
+            '*.attendance_type' => 'required|in:Check-In,Check-Out,check_in,check_out',
+            '*.employees'       => 'required|regex:/^[0-9]+$/',
+            '*.branch_id'       => 'required|regex:/^[0-9]+$/',
+            '*.latitude'        => 'required|numeric|between:-90,90',
+            '*.longitude'       => 'required|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Attendance API validation failed', ['endpoint' => 'add_bulk_attendance', 'errors' => $validator->errors()->toArray()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
@@ -618,10 +648,18 @@ class ApiHomeController extends ApiController
             ], 422);
         }
 
-        return DB::transaction(function () use ($request) {
+        return $this->attendanceTransaction('add_bulk_attendance', function () use ($request) {
 
             $success = [];
             $failed = [];
+
+            // Stable lock ordering prevents two multi-branch syncs deadlocking.
+            $branches = array_unique(array_column($request->all(), 'branch_id'));
+            sort($branches, SORT_NUMERIC);
+            foreach ($branches as $branchId) {
+                abort_unless(Utilities::documentBranchIsUserAccessible($branchId), 403);
+                AttendancePersistence::lockBranch(auth()->user()->business_id, auth()->user()->company_id, $branchId);
+            }
 
             foreach ($request->all() as $attendance) {
 
@@ -632,12 +670,30 @@ class ApiHomeController extends ApiController
 
                 $employee = DB::table('tbl_payr_employee')
                     ->where('employee_id', $employeeId)
+                    ->where('business_id', auth()->user()->business_id)
+                    ->where('company_id', auth()->user()->company_id)
                     ->first();
 
                 if (!$employee) {
                     $failed[] = [
                         'employee_id' => $employeeId,
                         'message' => 'Employee not found.'
+                    ];
+                    continue;
+                }
+
+                $existingDetail = DB::table('Tbl_hr_attendence_dtl')
+                    ->where('emp_id', $employeeId)
+                    ->where('branch_id', $branchId)
+                    ->where('attendance_time', $attendanceTime)
+                    ->whereIn('attendance_type', $this->attendanceTypeVariants($attendance['attendance_type']))
+                    ->first();
+
+                if ($existingDetail) {
+                    $success[] = [
+                        'employee_id' => $employeeId,
+                        'attendance_type' => $attendance['attendance_type'],
+                        'attendance_time' => $attendanceTime,
                     ];
                     continue;
                 }
@@ -659,9 +715,10 @@ class ApiHomeController extends ApiController
 
                 if (!$header) {
 
-                    $attId = DB::table('Tbl_hr_attendence')->max('id') + 1;
+                    $attId = AttendancePersistence::id('Tbl_hr_attendence');
 
-                    $maxVoucher = TblHrEmployeeAttendance::max('att_no');
+                    $maxVoucher = TblHrEmployeeAttendance::where('business_id', $employee->business_id)
+                        ->where('company_id', $employee->company_id)->where('branch_id', $branchId)->max('att_no');
                     $attNo = $this->documentCode($maxVoucher, 'ATT');
 
                     DB::table('Tbl_hr_attendence')->insert([
@@ -678,7 +735,7 @@ class ApiHomeController extends ApiController
                     $attId = $header->id;
                 }
 
-                $detailId = DB::table('Tbl_hr_attendence_dtl')->max('id') + 1;
+                $detailId = AttendancePersistence::id('Tbl_hr_attendence_dtl');
 
                 DB::table('Tbl_hr_attendence_dtl')->insert([
                     'id' => $detailId,
@@ -730,6 +787,31 @@ class ApiHomeController extends ApiController
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
 
         return $R * $c; // Distance in meters
+    }
+
+    private function attendanceTransaction($endpoint, callable $callback)
+    {
+        try {
+            return DB::transaction($callback);
+        } catch (ValidationException $e) {
+            Log::warning('Attendance API validation failed', ['endpoint' => $endpoint, 'errors' => $e->errors()]);
+            return response()->json(['success' => false, 'message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            Log::warning('Attendance API access denied', ['endpoint' => $endpoint, 'user_id' => auth()->id()]);
+            return response()->json(['success' => false, 'message' => 'Attendance branch access denied.'], $e->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('Attendance API save failed', ['endpoint' => $endpoint, 'user_id' => auth()->id(), 'exception' => $e]);
+            return response()->json(['success' => false, 'message' => 'Attendance could not be saved. Please retry.'], 500);
+        }
+    }
+
+    private function attendanceTypeVariants($type)
+    {
+        $normalized = strtolower(str_replace(['_', ' '], '-', trim((string) $type)));
+
+        return $normalized === 'check-in'
+            ? ['Check-In', 'check-in', 'check_in', 'check in']
+            : ['Check-Out', 'check-out', 'check_out', 'check out'];
     }
 
 ////////////////
