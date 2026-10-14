@@ -130,9 +130,27 @@
                                 VW_PURC_STOCK_DTL.BRANCH_ID, 
                                 '' BRANCH_NAME, 
                                 VW_PURC_STOCK_DTL.PRODUCT_ID,  
-                                SUM(QTY_BASE_UNIT_VALUE)  PRODUCT_QTY ,  
-                                SUM(QTY_BASE_UNIT_VALUE) * MAX(NET_TP) STOCK_AMOUNT  ,  
-                                SUM(QTY_BASE_UNIT_VALUE) * MAX(SALE_RATE)  SALE_STOCK_AMOUNT 
+                                SUM(
+                                    CASE
+                                        WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
+                                            THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+                                        ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
+                                    END
+                                ) PRODUCT_QTY,
+                                SUM(
+                                    CASE
+                                        WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
+                                            THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+                                        ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
+                                    END
+                                ) * MAX(NET_TP) STOCK_AMOUNT,
+                                SUM(
+                                    CASE
+                                        WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
+                                            THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+                                        ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
+                                    END
+                                ) * MAX(SALE_RATE) SALE_STOCK_AMOUNT
                             FROM 
                                 VW_PURC_STOCK_DTL 
                                 LEFT OUTER JOIN
@@ -148,6 +166,8 @@
                                 ) PROD_RATE ON VW_PURC_STOCK_DTL.PRODUCT_ID = PROD_RATE.PRODUCT_ID 
                                 AND  VW_PURC_STOCK_DTL.BRANCH_ID = PROD_RATE.BRANCH_ID 
                             where VW_PURC_STOCK_DTL.BRANCH_ID in (".implode(",",$data['branch_ids']).")
+                                and VW_PURC_STOCK_DTL.BUSINESS_ID = ".auth()->user()->business_id."
+                                and VW_PURC_STOCK_DTL.COMPANY_ID = ".auth()->user()->company_id."
                                 and VW_PURC_STOCK_DTL.posted = 1
                                 $date_field
                             GROUP BY VW_PURC_STOCK_DTL.BRANCH_ID, VW_PURC_STOCK_DTL.PRODUCT_ID 
@@ -189,7 +209,7 @@
                                     $gross_profit_amount = $list_row->sale_stock_amount - $list_row->stock_amount;
                                 
                                     $gross_profit_perc = 0;
-                                    if($gross_profit_amount != 0){
+                                    if((float)$list_row->stock_amount != 0){
                                         $gross_profit_perc = @(($gross_profit_amount / $list_row->stock_amount) * 100) ;
                                     }
                                 @endphp
