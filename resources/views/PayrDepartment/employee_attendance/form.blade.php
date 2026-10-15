@@ -7,7 +7,7 @@
 @section('content')
     @php
 
-   
+
             $employees = $data['employee'];
             $allEmployees = $data['all_employee'];
             $id = $data['att_id'];
@@ -25,11 +25,11 @@
     @endphp
 
 
-   
-  
+
+
     <!--begin::Form-->
         <form id="voucher_form" class="kt-form" method="post" action="{{action('PayrDepartment\EmployeeAttendanceController@store', [$id])}}">
- 
+
     @csrf
         @if(!empty($data['attendance_snapshot']))
             <input type="hidden" name="attendance_snapshot" value="{{ $data['attendance_snapshot'] }}">
@@ -52,7 +52,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        {{-- <div class="col-lg-4">
                             <div class="row">
                                 <label class="col-lg-5 erp-col-form-label">All Employees:</label>
                                 <div class="col-lg-7">
@@ -66,7 +66,7 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                     <div class="form-group-block row">
                         <div class="col-lg-4">
@@ -84,9 +84,9 @@
                                 </div>
                             </div>
                         </div>
-                       
+
                     </div>
-                
+
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
@@ -187,7 +187,7 @@
                                     <tbody class="erp_form__grid_body">
                                     @if(isset($att_data))
                                         @foreach($att_data as $rec)
-                                          
+
                                             <tr data-original-employee="{{ $rec->emp_id }}" data-original-outside="{{ (int) ($rec->out_side_branch ?? 0) }}">
                                                 <td class="handle"><i class="fa fa-arrows-alt-v handle"></i>
                                                     <input type="text" value="{{$loop->iteration}}" name="pd[{{$loop->iteration}}][sr_no]"  class="form-control erp-form-control-sm handle" readonly>
@@ -208,7 +208,7 @@
                                                         <option value="">{{ __('message.select') }}</option>
                                                         <option value="check_in" {{$rec->attendance_type == 'check_in'?'selected':''}}>Check-In</option>
                                                         <option value="check_out" {{$rec->attendance_type == 'check_out'?'selected':''}}>Check-Out</option>
-                                                    </select> 
+                                                    </select>
                                                 </td>
                                                 <td>
                                                     <input type="text" data-id="attendance_source" value="{{ strtolower($rec->type ?? 'app') }}" class="form-control erp-form-control-sm" readonly>
@@ -219,7 +219,7 @@
                                                 <td>
                                                 <input type="text" data-id="attendance_time" name="pd[{{$loop->iteration}}][attendance_time]" class="form-control erp-form-control-sm kt_datepicker_33" readonly
                                                     value="{{ !empty($rec->attendance_time) ? date('h:i A', strtotime($rec->attendance_time)) : '' }}"   />
-                                                    
+
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group btn-group-sm" role="group">
@@ -231,7 +231,7 @@
                                     @endif
                                     </tbody>
                                     <tbody>
-                                    
+
                                     </tbody>
                                 </table>
                             </div>
@@ -288,14 +288,14 @@
                             <textarea type="text" rows="2" id="att_note" name="att_note" class="form-control erp-form-control-sm">{{$att_note}}</textarea>
                         </div>
                     </div>
-                   
+
                 </div>
             </div>
         </div>
     </form>
                 <!--end::Form-->
 
-   
+
 @endsection
 @section('pageJS')
     <script src="/assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
@@ -333,7 +333,7 @@
             pickerPosition: 'bottom-left',
             todayHighlight: true,
             templates: arrows,
-            
+
             // The attendance date comes only from the header date field.
             format: "HH:ii P",
             showMeridian: true,
@@ -342,7 +342,7 @@
             maxView: 1,
             forceParse: 0,
             minuteStep: 5
-        }); 
+        });
 
         $('#attendance_time').datetimepicker('setDate', new Date());
 
@@ -386,12 +386,12 @@
                 'readonly':true,
 
             },
-           
-           
+
+
         ];
         var arr_hidden_field = [];
         var form_type = $('#form_type').val();
-       
+
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script>
