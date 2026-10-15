@@ -218,10 +218,12 @@
                     }
 
                     if($data['date_time_wise'] == 1){
-                        $date_field2 = " AND created_at < to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
+                        $date_field2 = " AND (created_at < to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')
+                            OR (DOCUMENT_TYPE = 'OS' AND created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')))";
                         $date_field = " AND (created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                     }else{
-                        $date_field2 = "AND document_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
+                        $date_field2 = "AND (document_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')
+                            OR (DOCUMENT_TYPE = 'OS' AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')))";
                         $date_field = "AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                     }
 /*
@@ -469,7 +471,11 @@ FROM
     (SELECT 
         BRANCH_ID,
         PRODUCT_ID,
-        QTY_BASE_UNIT_VALUE OPENING_BALANCE,
+        CASE
+            WHEN DOCUMENT_TYPE IN ('OS', 'ST', 'STR')
+                THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+            ELSE QTY_BASE_UNIT_VALUE
+        END OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
@@ -508,7 +514,7 @@ FROM
         PRODUCT_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
-        QTY_BASE_UNIT_VALUE STOCK_REC,
+        NVL(QTY_IN, 0) * NVL(PRODUCT_PACKING, 1) STOCK_REC,
         0 SALE_RETURN,
         0 SALE,
         0 STOCK_TRANSFER,
@@ -568,7 +574,7 @@ FROM
         0 STOCK_REC,
         0 SALE_RETURN,
         0 SALE,
-        QTY_BASE_UNIT_VALUE STOCK_TRANSFER,
+        (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1) STOCK_TRANSFER,
         0 PURCH_RETURN,
         0 STOCK_ADJUSTMENT 
     FROM
