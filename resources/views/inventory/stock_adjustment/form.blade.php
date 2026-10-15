@@ -198,7 +198,7 @@
                                             </button>
                                         </div>
                                         <div class="erp_form__grid_th_input">
-                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex on_click_event on_click_event  open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
                                         </div>
                                     </th>
                                     <th scope="col">
@@ -386,7 +386,7 @@
             // Function to filter stores based on selected branch
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
-                
+
                 // Reset the select element
                 $storeSelect.html('');
 
@@ -398,7 +398,7 @@
                 var $matchingOptions = $allStoreOptions.filter(function() {
                     return $(this).attr('data-branch') == selectedBranchId;
                 });
-                
+
                 $storeSelect.append($matchingOptions);
 
                 // CRITICAL: Trigger Select2 change to refresh its UI display

@@ -680,7 +680,7 @@ class ProductBarcodeController extends ApiController
              * */
             $q = "select s.stock_code from TBL_INVE_STOCK s
                     join TBL_INVE_STOCK_DTL sd on s.stock_id = sd.STOCK_ID
-                    where sd.product_id = '".$arr['data']['product_id']."' and upper(s.stock_code_type) = 'OS'
+                    where sd.product_id = '".$arr['data']['product_id']."' and lower(s.stock_code_type) = '".$arr['barcode_type']."'
                     and s.stock_date > to_date('01-12-2021', 'dd/mm/yyyy')
                     and s.branch_id = ".$arr['branch_id']." order by stock_code desc";
             $getStockCode = DB::selectOne($q);
@@ -774,15 +774,28 @@ class ProductBarcodeController extends ApiController
             $now = new \DateTime("now");
             $today_format = $now->format("d-m-Y");
             $date = date('Y-m-d', strtotime($today_format));
-            $itr = [
-                $arr['data']['product_id'],
-                $arr['data']['product_barcode_id'],
-                $arr['branch_id'],$arr['business_id'],$arr['company_id'],
-                $arr['store_id'],$date
-            ];
             $data_values['stock_quantity'] = 0;
             if(!isset($getStockCode->stock_code)){
-                $store_stock =  collect(DB::select('SELECT GET_STOCK_CURRENT_QTY_DATE_OPENING(?,?,?,?,?,?,?) AS qty from dual', $itr))->first()->qty;
+                $store_stock = DB::selectOne("SELECT NVL(SUM(
+                        CASE
+                            WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
+                                THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+                            ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
+                        END
+                    ), 0) AS qty
+                    FROM VW_PURC_STOCK_DTL
+                    WHERE PRODUCT_ID = ?
+                        AND BUSINESS_ID = ?
+                        AND COMPANY_ID = ?
+                        AND BRANCH_ID = ?
+                        AND POSTED = 1
+                        AND DOCUMENT_DATE <= TO_DATE(?, 'YYYY-MM-DD')", [
+                    $arr['data']['product_id'],
+                    $arr['business_id'],
+                    $arr['company_id'],
+                    $arr['branch_id'],
+                    $date,
+                ])->qty;
 
                 $data_values['stock_quantity'] = $store_stock / (float)$arr['data']['product_barcode_packing'];
             }
@@ -795,7 +808,7 @@ class ProductBarcodeController extends ApiController
              * */
             $q = "select s.stock_code from TBL_INVE_STOCK s
                     join TBL_INVE_STOCK_DTL sd on s.stock_id = sd.STOCK_ID
-                    where sd.product_id = '".$arr['data']['product_id']."' and lower(s.stock_code_type) = '".$arr['barcode_type']."'
+                    where sd.product_id = '".$arr['data']['product_id']."' and upper(s.stock_code_type) = 'OS'
                     and s.branch_id = ".Helper::$DefaultBranch." order by stock_code desc";
             $getStock = DB::selectOne($q);
 

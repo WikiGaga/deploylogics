@@ -765,15 +765,6 @@ class BarcodeController extends Controller
         $now = new \DateTime("now");
         $today_format = $now->format("d-m-Y");
         $date = date('Y-m-d', strtotime($today_format));
-        $iter = [
-            $data['current_product']->product_id,
-            $data['current_product']->product_barcode_id,
-            auth()->user()->business_id,
-            auth()->user()->company_id,
-            auth()->user()->branch_id,
-            $data['store_id'],
-            $date
-        ];
         /* start #1
          * if same Product (not barcode) scanned twice in another document no then system should inform
          * that "this product already entered in document no 'SA-?????'"
@@ -791,7 +782,26 @@ class BarcodeController extends Controller
         };
         $data['store_stock'] = 0;
         // if(!isset($getStockCode->stock_code)){
-            $store_stock_qty =  collect(DB::select('SELECT GET_STOCK_CURRENT_QTY_DATE_OPENING(?,?,?,?,?,?,?) AS qty from dual', $iter))->first()->qty;
+            $store_stock_qty = DB::selectOne("SELECT NVL(SUM(
+                    CASE
+                        WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
+                            THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
+                        ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
+                    END
+                ), 0) AS qty
+                FROM VW_PURC_STOCK_DTL
+                WHERE PRODUCT_ID = ?
+                    AND BUSINESS_ID = ?
+                    AND COMPANY_ID = ?
+                    AND BRANCH_ID = ?
+                    AND POSTED = 1
+                    AND DOCUMENT_DATE <= TO_DATE(?, 'YYYY-MM-DD')", [
+                $data['current_product']->product_id,
+                auth()->user()->business_id,
+                auth()->user()->company_id,
+                auth()->user()->branch_id,
+                $date,
+            ])->qty;
             $packing    = isset($data['current_product']['product_barcode_packing']) && !empty($data['current_product']['product_barcode_packing'])?$data['current_product']['product_barcode_packing']:1;
             $ss = $store_stock_qty / (float)$packing;
             $data['store_stock'] = number_format($ss,3,'.','');

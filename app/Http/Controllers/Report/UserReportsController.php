@@ -1666,10 +1666,14 @@ class UserReportsController extends Controller
                 if($data['report_case'] == 'branch_wise_stock_summary'){
                     $data['key'] = 'branch_wise_stock_summary';
                     $data['page_title'] = 'Branch Wise Stock Summary';
+                    $reportDate = !empty($date) && strtotime($date) !== false
+                        ? $date
+                        : date('Y-m-d');
                     if($date_time_wise == 1){
-                        $data['time_from'] = date('Y-m-d H:i', strtotime($date_time));
+                        $reportTime = !empty($time_from) ? $time_from : '23:59';
+                        $data['time_from'] = date('Y-m-d H:i', strtotime($reportDate.' '.$reportTime));
                     }else{
-                        $data['date'] = date('Y-m-d', strtotime($date));
+                        $data['date'] = date('Y-m-d', strtotime($reportDate));
                     }
                     $data['date_time_wise'] = $date_time_wise;
                     //$data['product_ids'] = $new_code;

@@ -684,7 +684,17 @@ class StockController extends Controller
                         $dtl->grm_net_amount =  isset($pd['net_amount'])?$this->addNo($pd['net_amount']):"";
                         $dtl->grn_rate =  isset($pd['unit_price'])?$this->addNo($pd['unit_price']):"";
                     }
-                    $dtl->stock_dtl_qty_base_unit =  $this->addNo($pd['quantity']);
+                    if (in_array($formType, ['os', 'st', 'str', 'sa'], true)) {
+                        $baseUnitQuantity = $formType == 'sa'
+                            ? $adjustmentQty
+                            : $this->addNo($pd['quantity']);
+                        $dtl->stock_dtl_qty_base_unit = Helper::conversionBaseUnitQty([
+                            'pd_packing' => $pd['pd_packing'] ?? 1,
+                            'quantity' => $baseUnitQuantity,
+                        ]);
+                    } else {
+                        $dtl->stock_dtl_qty_base_unit = $this->addNo($pd['quantity']);
+                    }
                     $dtl->stock_dtl_rate =  isset($pd['rate'])?$this->addNo($pd['rate']):"";
                     $dtl->stock_dtl_sale_rate =  isset($pd['sale_rate'])?$this->addNo($pd['sale_rate']):"";
                     $dtl->stock_dtl_sale_amount =  isset($pd['sale_amount'])?$this->addNo($pd['sale_amount']):"";
