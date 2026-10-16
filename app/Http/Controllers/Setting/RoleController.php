@@ -67,11 +67,12 @@ class RoleController extends Controller
                 $data['permission'] = self::$menu_dtl_id.'-edit';
                 $data['id'] = $id;
                 $data['role'] = Role::where('id',$id)->first();
-                $data['current'] = [];
-                $get_permission = PermissionRole::where('role_id',$id)->get();
-                foreach ($get_permission as $user_permission){
-                    array_push($data['current'] ,$user_permission->permission_id);
-                }
+                $data['current'] = PermissionRole::where('role_id', $id)
+                    ->pluck('permission_id')
+                    ->map(function ($permissionId) {
+                        return (string) $permissionId;
+                    })
+                    ->all();
             }else{
                 abort('404');
             }
@@ -80,7 +81,7 @@ class RoleController extends Controller
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
         }
 
-        $data['permission_head'] = PermissionHeading::get();
+        $data['permission_head'] = PermissionHeading::orderBy('id')->get();
         $data['modules'] = TblSoftMenu::where('menu_id','!=' , 0)
             ->with('children')->where(Utilities::currentBC())->orderBy('menu_sorting')->get();
 
@@ -91,11 +92,8 @@ class RoleController extends Controller
         if(!empty($userChangePass)) {
             // custom module
             $checked = false;
-            if (isset($get_permission)) {
-                $collect = collect($get_permission);
-                $ChangePassChecked = $collect->where('permission_id', $userChangePass->id)
-                    ->where('role_id', $id)->first();
-                $userChangePassChecked = ($ChangePassChecked == null) ? false : true;
+            if (isset($data['current'])) {
+                $userChangePassChecked = in_array((string) $userChangePass->id, $data['current'], true);
             }
             $data['custom_modules'] = [
                 [
@@ -180,24 +178,8 @@ class RoleController extends Controller
             $role->role_user_id = auth()->user()->id;
             $role->save();
 
-            if(isset($id)){
-                $get_permission = PermissionRole::where('role_id',$role->id)->get();
-                foreach ($get_permission as $role_permission){
-                    $role->detachPermission($role_permission->permission_id);
-                }
-            }
-            // Sync permissions (works for both create and edit)
-            // $permissions = ($request->has('permissions') && $request->filled('permissions'))?$request->permissions:[];
-            // $role->syncPermissions($permissions);
-            // Sync permissions (works for both create and edit)
-            $permissions = ($request->has('permissions') && $request->filled('permissions')) ? (array)$request->permissions : [];
-
-            // Crucial Fix: Filter out empty strings, null values, or zeros that cause ORA-01400
-            $permissions = array_filter($permissions, function($value) {
-                return $value !== null && $value !== '';
-            });
-
-            $role->syncPermissions($permissions);
+            $permissions = $this->permissionIdsFromRequest($request);
+            $this->syncPermissionIds($role, $permissions);
 
             if($request->has('vendor_modules') && $request->filled('vendor_modules')){
                 $vendorModules = $request->vendor_modules;
@@ -253,7 +235,7 @@ class RoleController extends Controller
                     ->where(Utilities::currentBC())
                     ->get();
                 foreach ($usersWithRole as $user){
-                    $user->syncPermissions($permissions);
+                    $this->syncPermissionIds($user, $permissions);
                 }
             }
 
@@ -327,5 +309,68 @@ class RoleController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    /**
+     * Permission ids posted by the role form.
+     * The form sends one JSON list so a large matrix is not cut off by max_input_vars.
+     * Comma-separated values are expanded so one checkbox can represent duplicate permission rows.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    private function permissionIdsFromRequest(Request $request)
+    {
+        if ($request->exists('permissions_payload')) {
+            $decoded = json_decode($request->input('permissions_payload'), true);
+            if (!is_array($decoded)) {
+                throw new Exception('Could not read the permission list. Reload the page and save again.');
+            }
+            $raw = $decoded;
+        } else {
+            $raw = (array) $request->input('permissions', []);
+        }
+
+        $ids = [];
+        foreach ($raw as $value) {
+            if (is_array($value)) {
+                continue;
+            }
+            foreach (explode(',', (string) $value) as $part) {
+                $part = trim($part);
+                if ($part !== '' && $part !== '0' && preg_match('/^\d+$/', $part)) {
+                    $ids[$part] = $part;
+                }
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    /**
+     * Replace a role or user permission set without a single Oracle IN-list over 1000 ids.
+     *
+     * @param  \App\Models\Role|\App\Models\User  $model
+     * @param  array  $desiredIds
+     * @return void
+     */
+    private function syncPermissionIds($model, array $desiredIds)
+    {
+        $desiredIds = array_values(array_unique(array_map('strval', $desiredIds)));
+        $current = $model->permissions()->pluck('permissions.id')->map(function ($permissionId) {
+            return (string) $permissionId;
+        })->all();
+
+        $detach = array_values(array_diff($current, $desiredIds));
+        $attach = array_values(array_diff($desiredIds, $current));
+
+        foreach (array_chunk($detach, 500) as $chunk) {
+            $model->permissions()->detach($chunk);
+        }
+        foreach (array_chunk($attach, 200) as $chunk) {
+            $model->permissions()->attach($chunk);
+        }
+
+        $model->flushCache();
     }
 }

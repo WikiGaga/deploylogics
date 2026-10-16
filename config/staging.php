@@ -1,22 +1,22 @@
 <?php
 
 return [
+    // menu_dtl_id => document primary key column (for staging / flow criteria lookups)
     'document_primary_keys_by_menu' => [
-        '38' => 'purchase_order_id',
-        '354' => 'session_id',
-        '65'    => 'stock_id',
-        '359'   => 'stock_id',
-        '54'    => 'stock_id',
-        '76'    => 'stock_id',
-        '23' => 'grn_id',
-        '28' => 'voucher_id',
-        '29' => 'voucher_id',
-        '31' => 'voucher_id',
-        '36' => 'voucher_id',
-        '37' => 'voucher_id',
-        '62' => 'voucher_id',
-        '336' => 'code',
-
+        '38' => 'purchase_order_id',   // Purchase Orders
+        '354' => 'session_id',         // Shift Sessions
+        '65' => 'stock_id',            // Stock Transfer
+        '359' => 'stock_id',           // Stock Distribution
+        '54' => 'stock_id',            // Opening Stock
+        '76' => 'stock_id',            // Stock Receiving
+        '23' => 'grn_id',              // Goods Received Notes (GRN)
+        '28' => 'voucher_id',          // Cash Receipt Voucher (CRV)
+        '29' => 'voucher_id',          // Bank Receipt Voucher (BRV)
+        '31' => 'voucher_id',          // Journal Voucher (JV)
+        '36' => 'voucher_id',          // Bank Payment Voucher (BPV)
+        '37' => 'voucher_id',          // Cash Payment Voucher (CPV)
+        '62' => 'voucher_id',          // Opening Balance Voucher (OBV)
+        '336' => 'code',               // Production & Consumption
     ],
 
     'voucher_type_by_menu' => [

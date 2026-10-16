@@ -34,7 +34,35 @@ var KTFormWidgets = function() {
             submitHandler: function (form) {
                 var $form = $(form);
                 $form.find(":submit").prop('disabled', true);
-                var formData = new FormData(form);
+                var formData = new FormData();
+                var permissionIds = [];
+                $.each(form.elements, function (_, element) {
+                    if (!element.name || element.disabled) {
+                        return;
+                    }
+                    if (element.name === 'permissions[]') {
+                        if (element.type === 'checkbox' && element.checked) {
+                            $.each(String(element.value || '').split(','), function (__, part) {
+                                part = $.trim(part);
+                                if (part !== '') {
+                                    permissionIds.push(part);
+                                }
+                            });
+                        }
+                        return;
+                    }
+                    if ((element.type === 'checkbox' || element.type === 'radio') && !element.checked) {
+                        return;
+                    }
+                    if (element.type === 'select-multiple') {
+                        $.each($(element).val() || [], function (__, selected) {
+                            formData.append(element.name, selected);
+                        });
+                        return;
+                    }
+                    formData.append(element.name, element.value);
+                });
+                formData.append('permissions_payload', JSON.stringify(permissionIds));
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
