@@ -132,6 +132,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeStockDocumentMasterRow($menu->menu_dtl_table_name, $query);
         $this->scopeProductionConsumptionMasterRow($menu->menu_dtl_table_name, $query);
 
         $result = $query->exists();
@@ -207,6 +208,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $menu->menu_dtl_table_name, $query);
+        $this->scopeStockDocumentMasterRow($menu->menu_dtl_table_name, $query);
         $this->scopeProductionConsumptionMasterRow($menu->menu_dtl_table_name, $query);
 
         $ids = $query->distinct()
@@ -1169,6 +1171,7 @@ class StagingService
 
         $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $documents);
         $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $documents);
+        $this->scopeStockDocumentMasterRow($tableName, $documents);
         $this->scopeProductionConsumptionMasterRow($tableName, $documents);
         $this->scopeAccessibleBranches($tableName, $documents);
 
@@ -1211,6 +1214,7 @@ class StagingService
 
             $this->scopeAccoVoucherByMenu($formNameOrMenuDtlId, $tableName, $count);
             $this->scopeStockDocumentByMenu($formNameOrMenuDtlId, $tableName, $count);
+            $this->scopeStockDocumentMasterRow($tableName, $count);
             $this->scopeProductionConsumptionMasterRow($tableName, $count);
 
             $counts[$flow->stg_flows_id] = $count->count();
@@ -1238,6 +1242,36 @@ class StagingService
             $query->where(function ($q) {
                 $q->where('sr_no', '1')->orWhere('sr_no', 1);
             });
+        } catch (\Throwable $e) {
+            return;
+        }
+    }
+
+    /**
+     * vw_inve_stock (and similar) expose one row per stock detail line.
+     * List/count each document once using the first detail line or partition row number.
+     */
+    public function scopeStockDocumentMasterRow($tableName, $query): void
+    {
+        $t = strtolower((string) $tableName);
+        if ($t === '' || strpos($t, 'inve_stock') === false) {
+            return;
+        }
+
+        try {
+            $cols = array_map('strtolower', DB::getSchemaBuilder()->getColumnListing($tableName));
+            if (in_array('stock_dtl_sr_no', $cols, true)) {
+                $query->where(function ($q) {
+                    $q->where('stock_dtl_sr_no', '1')->orWhere('stock_dtl_sr_no', 1);
+                });
+
+                return;
+            }
+            if (in_array('rn', $cols, true)) {
+                $query->where(function ($q) {
+                    $q->where('rn', '1')->orWhere('rn', 1);
+                });
+            }
         } catch (\Throwable $e) {
             return;
         }

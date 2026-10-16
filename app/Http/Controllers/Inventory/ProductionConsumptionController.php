@@ -113,23 +113,50 @@ class ProductionConsumptionController extends Controller
         $data['menu_id'] = self::$menu_dtl_id;
 
         if (isset($id)) {
-            $branchScope = function ($query) {
-                return $query->where('business_id', auth()->user()->business_id)
-                    ->where('company_id', auth()->user()->company_id)
-                    ->where('branch_id', auth()->user()->branch_id);
-            };
+            $allowCrossBranchView = (string) $request->query('view') === '1';
+            $accessibleBranchIds = Utilities::userAccessibleBranchIds();
 
-            if (TblProductionConsumption::where('code', 'LIKE', $id)->where($branchScope)->exists()) {
-                $data['permission'] = self::$menu_dtl_id . '-edit';
-                $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
-                $data['id'] = $id;
-                $lines = TblProductionConsumption::with(['barcode.product', 'barcode.uom'])
+            $documentExistsQuery = TblProductionConsumption::where('code', 'LIKE', $id)
+                ->where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id);
+
+            if (!$allowCrossBranchView && !empty($accessibleBranchIds)) {
+                $documentExistsQuery->whereIn('branch_id', $accessibleBranchIds);
+            }
+
+            if ($documentExistsQuery->exists()) {
+                $data['permission'] = [
+                    self::$menu_dtl_id . '-edit',
+                    self::$menu_dtl_id . '-view',
+                ];
+                if ($allowCrossBranchView) {
+                    $data['permission'][] = 'flow-dash-view';
+                }
+
+                $linesQuery = TblProductionConsumption::with(['barcode.product', 'barcode.uom'])
                     ->where('code', $id)
-                    ->where($branchScope)
-                    ->orderBy('sr_no')
-                    ->get();
-                $data['lines'] = $lines;
+                    ->where('business_id', auth()->user()->business_id)
+                    ->where('company_id', auth()->user()->company_id);
+
+                if (!$allowCrossBranchView && !empty($accessibleBranchIds)) {
+                    $linesQuery->whereIn('branch_id', $accessibleBranchIds);
+                }
+
+                $lines = $linesQuery->orderBy('sr_no')->get();
+                if ($lines->isEmpty()) {
+                    abort(404);
+                }
+
                 $data['current'] = $lines->first();
+                $canEdit = auth()->user()->isAbleTo(self::$menu_dtl_id . '-edit')
+                    && Utilities::documentBranchIsUserAccessible($data['current']->branch_id);
+                $data['page_data'] = array_merge(
+                    $data['page_data'],
+                    $canEdit ? Utilities::editForm() : Utilities::viewForm()
+                );
+
+                $data['id'] = $id;
+                $data['lines'] = $lines;
                 $data['document_code'] = $data['current']->code;
                 $data['page_data']['is_posted'] = isset($data['current']->posted) && (int) $data['current']->posted === 1;
                 $data['page_data']['is_canceled'] = isset($data['current']->posted) && (int) $data['current']->posted === 2;

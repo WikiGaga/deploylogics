@@ -182,6 +182,7 @@ class StagingDashboardController extends Controller
     protected function applyDashboardStagingTableScopes($menuDtlId, $tableName, $query): void
     {
         $this->applyDashboardDocumentQueryScope($menuDtlId, $tableName, $query);
+        $this->stagingService->scopeStockDocumentMasterRow($tableName, $query);
         $this->stagingService->scopeProductionConsumptionMasterRow($tableName, $query);
     }
 
