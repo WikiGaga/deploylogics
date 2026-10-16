@@ -174,7 +174,7 @@
                         <div class="row">
                             <label class="col-lg-3 erp-col-form-label text-center">Rate Type </label>
                             <div class="col-lg-9">
-                                <div class="input-group erp-select2-sm">
+                                <div class="ChangeRateBlock input-group erp-select2-sm">
                                     <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
                                         <option value="0">Select</option>
                                         @if($case == 'edit')
@@ -197,6 +197,9 @@
                                     <div class="input-group-append">
                                         <span class="input-group-text">
                                             <i class="fa fa-percent"></i>
+                                        </span>
+                                        <span class="input-group-text group-input-btn" id="changeGridItemRate" title="Change Rate Apply">
+                                            <i class="la la-refresh"></i>
                                         </span>
                                     </div>
                                 </div>
@@ -1122,5 +1125,6 @@
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>
 @endsection
 

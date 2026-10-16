@@ -522,23 +522,12 @@
                 },
             })
         }
-        $(document).on('keyup','.tblGridPhysicalQty',function(){
-            var thix = $(this);
-            var tr = thix.parents('tr');
-            var physical_quantity = thix.val();
-            if(physical_quantity == '' || physical_quantity == undefined || physical_quantity == null){
-                physical_quantity = 0;
+        $(document).on('keyup','.tblGridPhysicalQty,.tblGrid_stockQty,.tblGridCal_rate',function(){
+            var tr = $(this).parents('tr');
+            if (typeof adjustmentQty === 'function') {
+                adjustmentQty(tr);
             }
-            var store_quantity = tr.find('.tblGrid_stockQty').val();
-            if(store_quantity == '' || store_quantity == undefined || store_quantity == null){
-                store_quantity = 0;
-            }
-            var adj = 0;
-            if(parseFloat(physical_quantity) !== NaN && parseFloat(store_quantity) !== NaN ){
-                var adj = parseFloat(physical_quantity) - parseFloat(store_quantity);
-            }
-            tr.find('.tblGridAdjustment').val(adj);
-        })
+        });
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>

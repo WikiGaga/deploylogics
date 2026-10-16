@@ -1358,16 +1358,28 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     uomList(tr, uom_list, selected_uom_id);
     var pd_store_stock = response['store_stock'];
     tr.find('.pd_store_stock').val(pd_store_stock);
-    var rate = 0;
-    var qty = 0;
-    var amount = rate * qty;
-    tr.find('.tblGridCal_rate').val(notNullEmpty(rate,3));
-    tr.find('.tblGridCal_amount').val(notNullEmpty(amount,3));
+    tr.find('.tblGrid_stockQty').val(pd_store_stock);
 
-    // Temp Code
-    if(form_type == 'sa'){
+    var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
+    var rate = calc_rate.rate;
+    tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
+
+    if (form_type == 'sa') {
         tr.find('.tblGridPhysicalQty').val(1).focus();
         tr.find('.expiry-date').val('01-01-2025');
+        var storeQty = parseFloat(pd_store_stock) || 0;
+        var physicalQty = 1;
+        var adjustmentQty = physicalQty - storeQty;
+        tr.find('.tblGridAdjustment').val(adjustmentQty);
+        var amount = parseFloat(rate) * adjustmentQty;
+        tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
+        if (typeof totalStockAmount === 'function') {
+            totalStockAmount();
+        }
+    } else {
+        var qty = 0;
+        var amount = rate * qty;
+        tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
     }
 
 }

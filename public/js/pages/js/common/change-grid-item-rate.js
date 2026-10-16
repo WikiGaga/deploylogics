@@ -47,19 +47,43 @@ $(document).on('click','#changeGridItemRate',function(){
                     }
                 });
             });
-            total_amount()
+            if (typeof totalStockAmount === 'function' && $('#form_type').val() === 'sa') {
+                totalStockAmount();
+            } else if (typeof total_amount === 'function') {
+                total_amount();
+            }
         }
     });
 });
 
+function gridRowQty(tr) {
+    var form_type = $('#form_type').val();
+    if (form_type === 'sa') {
+        var adj = tr.find('.tblGridAdjustment').val();
+        if (!valueEmpty(adj)) {
+            return adj;
+        }
+        var physical = tr.find('.tblGridPhysicalQty').val();
+        var stock = tr.find('.tblGrid_stockQty').val();
+        if (!valueEmpty(physical) && !valueEmpty(stock)) {
+            return parseFloat(physical) - parseFloat(stock);
+        }
+        return physical || 0;
+    }
+    return tr.find('.tblGridCal_qty').val();
+}
+
 function update_rate(tr,rate){
     tr.find('.tblGridCal_rate').val(parseFloat(rate).toFixed(3));
     var id = "";
-    rowCalc(tr,id)
+    rowCalc(tr,id);
+    if ($('#form_type').val() === 'sa' && typeof adjustmentQty === 'function') {
+        adjustmentQty(tr);
+    }
 }
 
 function rowCalc(tr,id){
-    var qty = tr.find('.tblGridCal_qty').val();
+    var qty = gridRowQty(tr);
     var rate = tr.find('.tblGridCal_rate').val();
 
     var calc_amount =  parseFloat(qty) * parseFloat(rate);

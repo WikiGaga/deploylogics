@@ -152,7 +152,7 @@
                         <div class="row">
                             <label class="col-lg-3 erp-col-form-label text-center">Rate Type </label>
                             <div class="col-lg-9">
-                                <div class="input-group erp-select2-sm">
+                                <div class="ChangeRateBlock input-group erp-select2-sm">
                                     <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
                                         <option value="0">Select</option>
                                         @if($case == 'edit')
@@ -175,6 +175,9 @@
                                     <div class="input-group-append">
                                         <span class="input-group-text">
                                             <i class="fa fa-percent"></i>
+                                        </span>
+                                        <span class="input-group-text group-input-btn" id="changeGridItemRate" title="Change Rate Apply">
+                                            <i class="la la-refresh"></i>
                                         </span>
                                     </div>
                                 </div>
@@ -511,7 +514,14 @@
                     </div>
                 </div>
 
-                @include('inventory.stock_transfer.summary_total')
+                <div class="d-none" aria-hidden="true">
+                    <input value="0" type="text" name="summary_total_item" class="summary_total_item">
+                    <input value="0" type="text" id="summary_qty_wt" name="summary_qty_wt" class="summary_qty_wt">
+                    <input value="0" type="text" id="summary_net_amount" name="summary_net_amount" class="summary_net_amount">
+                    <input value="{{ isset($data['current']->stock_advance_tax_perc) ? $data['current']->stock_advance_tax_perc : '0' }}" type="text" id="overall_vat_perc" name="overall_vat_perc" class="overall_vat_perc">
+                    <input value="{{ isset($data['current']->stock_advance_tax_amount) ? $data['current']->stock_advance_tax_amount : '0' }}" type="text" id="overall_vat_amount" name="overall_vat_amount" class="overall_vat_amount">
+                    <input value="0" type="text" id="overall_net_amount" name="overall_net_amount" class="overall_net_amount">
+                </div>
 
                 <div class="row form-group-block">
                     <label class="col-lg-2 erp-col-form-label">Notes:</label>
@@ -1066,9 +1076,17 @@
             }
         </script>
 
-    @yield('summary_total_pageJS')
+    <script>
+        function funcGetOverallNetAmount() {
+            var summaryNet = parseFloat($('#summary_net_amount').val()) || 0;
+            var vatAmt = parseFloat($('#overall_vat_amount').val()) || 0;
+            $('.overall_net_amount').val((summaryNet + vatAmt).toFixed(3));
+        }
+        $(function () { funcGetOverallNetAmount(); });
+    </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js?v='.time()) }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>
 @endsection
 

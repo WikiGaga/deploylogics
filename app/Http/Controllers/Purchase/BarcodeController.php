@@ -748,11 +748,16 @@ class BarcodeController extends Controller
                     ->where(Utilities::currentBCB())->first('tbl_purc_grn_dtl_rate as rate');
             }
         }
-        $rate = isset($rate->rate)?$rate->rate:0;
+        if($rate_type == 'item_last_net_tp'){
+            $rate = TblPurcProductBarcodePurchRate::where('product_barcode_id',$barcode_id)
+                ->where('branch_id',auth()->user()->branch_id)
+                ->first('net_tp as rate');
+        }
+        $baseRate = isset($rate->rate) ? (float) $rate->rate : 0;
         if(!empty($rate_perc)){
-            $NewRate = ((float)$rate * (float)$rate_perc)/100;
+            $NewRate = $baseRate + ($baseRate * (float) $rate_perc / 100);
         }else{
-            $NewRate = $rate;
+            $NewRate = $baseRate;
         }
         $data['rate'] = $NewRate;
 

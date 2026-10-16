@@ -355,24 +355,17 @@ function totalStockAmount(){
 function adjustmentQty(tr){
     var pd_store_stock = (tr.find(".tblGrid_stockQty").val() == "")? 0 : tr.find(".tblGrid_stockQty").val();
     var tblGridCal_rate = (tr.find(".tblGridCal_rate").val() == "")? 0 : tr.find(".tblGridCal_rate").val();
-    var tblGridCal_amount = (tr.find(".tblGridCal_amount").val() == "")? 0 : tr.find(".tblGridCal_amount").val();
-    var physical_quantity = ($('form').find(".tblGridPhysicalQty").val() == "")?0:$('form').find(".tblGridPhysicalQty").val();
+    var physical_quantity = (tr.find(".tblGridPhysicalQty").val() == "") ? 0 : tr.find(".tblGridPhysicalQty").val();
 
-    if(pd_store_stock != ""){
-        var v = parseFloat(pd_store_stock) - parseFloat(physical_quantity);
-        v = valueEmpty(v)?0:v;
-        v = js__number_format(v);
-        tr.find(".tblGridAdjustment").val(v).attr('title',v);
-    }
-    if(tblGridCal_amount != ""){
-        var v = parseFloat(pd_store_stock) * parseFloat(tblGridCal_rate);
-        v = valueEmpty(v)?0:v;
-        v = js__number_format(v);
-        tr.find(".tblGridCal_amount").val(v).attr('title',v);
-    }
+    var adjustment = parseFloat(physical_quantity) - parseFloat(pd_store_stock);
+    adjustment = valueEmpty(adjustment) ? 0 : adjustment;
+    tr.find(".tblGridAdjustment").val(js__number_format(adjustment)).attr('title', js__number_format(adjustment));
 
-    $('.t_stock_gross_total').html(v);
+    var amount = parseFloat(tblGridCal_rate) * adjustment;
+    amount = valueEmpty(amount) ? 0 : amount;
+    tr.find(".tblGridCal_amount").val(js__number_format(amount)).attr('title', js__number_format(amount));
 
+    totalStockAmount();
 }
 
 function exRate(){
