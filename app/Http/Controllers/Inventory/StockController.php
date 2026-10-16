@@ -203,6 +203,9 @@ class StockController extends Controller
                     $menuPermissionPrefix.'-edit',
                     $menuPermissionPrefix.'-view',
                 ];
+                if ($allowCrossBranchView) {
+                    $data['permission'][] = 'flow-dash-view';
+                }
                 $data['id'] = $id;
                 $currentQuery = TblInveStock::with('stock_dtls','product','barcode','supplier','formulation')
                     ->where(Utilities::currentBC())

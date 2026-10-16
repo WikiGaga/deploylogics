@@ -3,6 +3,23 @@ var currentForm = null;
 var currenturl = null;
 var currentinLineHelp = null;
 
+window.dismissInlineHelp = function () {
+    if (window.inlineSearchTimeout) {
+        clearTimeout(window.inlineSearchTimeout);
+        window.inlineSearchTimeout = null;
+    }
+    if (currentRequest != null) {
+        try {
+            currentRequest.abort();
+        } catch (e) {
+            // ignore abort errors
+        }
+        currentRequest = null;
+    }
+    $('#inLineHelp').remove();
+    $('.erp_form__grid').find('input').removeClass('open_inline__help__focus');
+};
+
 $(document).on('focusin', '.open_inline__help', function(e) {
     $(document).find('.open_inline__help').removeClass('open_inline__help__focus');
     $(this).addClass('open_inline__help__focus');
@@ -224,7 +241,13 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
             }
 
             window.inlineSearchTimeout = setTimeout(function() {
+                if (table_block.find('#inLineHelp').length === 0) {
+                    return;
+                }
                 var inLineHelp = table_block.find('.inLineHelp');
+                if (inLineHelp.length === 0) {
+                    return;
+                }
                 inLineHelp.find('.data_tbody_row').removeClass('selected_row');
 
                 var data_url = that.attr('data-url');
@@ -280,6 +303,9 @@ $(document).on('keyup click', '.open_inline__help', function(e) {
                         }
                     },
                     success: function(response) {
+                        if (table_block.find('#inLineHelp').length === 0) {
+                            return;
+                        }
                         if (response['body'] != null) {
                             inLineHelp.html(response['body']);
                         }

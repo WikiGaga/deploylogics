@@ -210,8 +210,36 @@ class StagingDashboardController extends Controller
         }
     }
 
+    protected function getStockInventoryStagingDashboardConfig(int $menuDtlId): ?array
+    {
+        $paths = [
+            54 => '/stock/opening-stock/form/',
+            65 => '/stock/stock-transfer/form/',
+            76 => '/stock/stock-receiving/form/',
+            359 => '/stock/stock-distribution/form/',
+        ];
+
+        if (!isset($paths[$menuDtlId])) {
+            return null;
+        }
+
+        return [
+            'path' => $paths[$menuDtlId],
+            'pk' => 'stock_id',
+            'cols' => ['stock_code', 'stock_date'],
+            'titles' => ['Stock Code', 'Date'],
+        ];
+    }
+
     protected function getFormConfig($menuDtlId, $tableName)
     {
+        $menuDtlId = (int) $menuDtlId;
+
+        $stockInventoryConfig = $this->getStockInventoryStagingDashboardConfig($menuDtlId);
+        if ($stockInventoryConfig !== null) {
+            return $stockInventoryConfig;
+        }
+
         $configs = [
             38 => [
                 'path' => '/purchase-order/form/',
@@ -230,24 +258,6 @@ class StagingDashboardController extends Controller
                 'pk' => 'session_id',
                 'cols' => ['session_no', 'session_id'],
                 'titles' => ['Session no', 'ID'],
-            ],
-            54 => [
-                'path' => '/stock/opening-stock/form/',
-                'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_date'],
-                'titles' => ['Stock Code', 'Date'],
-            ],
-            65 => [
-                'path' => '/stock/stock-transfer/form/',
-                'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_date'],
-                'titles' => ['Stock Code', 'Date'],
-            ],
-            76 => [
-                'path' => '/stock/stock-receiving/form/',
-                'pk' => 'stock_id',
-                'cols' => ['stock_code', 'stock_date'],
-                'titles' => ['Stock Code', 'Date'],
             ],
             31 => [
                 'path' => '/accounts/jv/form/',
@@ -299,6 +309,27 @@ class StagingDashboardController extends Controller
 
         $configuredPk = config('staging.document_primary_keys_by_menu.' . $menuDtlId);
         if ($configuredPk !== null && $configuredPk !== '') {
+            if ($configuredPk === 'code') {
+                $codeMenuPaths = [
+                    336 => '/production-consumption/form/',
+                ];
+                if (isset($codeMenuPaths[$menuDtlId])) {
+                    return [
+                        'path' => $codeMenuPaths[$menuDtlId],
+                        'pk' => 'code',
+                        'cols' => ['code', 'record_date'],
+                        'titles' => ['Document No', 'Date'],
+                    ];
+                }
+
+                return [
+                    'path' => '/',
+                    'pk' => 'code',
+                    'cols' => ['code'],
+                    'titles' => ['Document No'],
+                ];
+            }
+
             return [
                 'path' => '/',
                 'pk' => $configuredPk,
@@ -358,15 +389,36 @@ class StagingDashboardController extends Controller
         return (string) $branchId;
     }
 
-    protected function stagingDashboardDocumentLink(string $path, $documentId, $documentBranchId): string
+    /**
+     * Flow dashboard open links use ?view=1 when the document branch is outside the user's
+     * branch list, or when the user cannot edit that form (read-only / flow-only reviewers).
+     * Form controllers honor view=1 via allowCrossBranchView (PO, GRN, stock, vouchers, etc.).
+     */
+    protected function stagingDashboardDocumentLink(string $path, $documentId, $documentBranchId, $menuDtlId = null): string
     {
         if ($documentId === null || $documentId === '') {
             return '#';
         }
         $href = url($path . $documentId);
-        if ($documentBranchId === null || $documentBranchId === '' || Utilities::documentBranchIsUserAccessible($documentBranchId)) {
+        $useViewMode = false;
+
+        if ($documentBranchId !== null && $documentBranchId !== ''
+            && !Utilities::documentBranchIsUserAccessible($documentBranchId)) {
+            $useViewMode = true;
+        }
+
+        $user = auth()->user();
+        if (!$useViewMode && $menuDtlId !== null && $user && method_exists($user, 'isAbleTo')) {
+            $menuKey = (string) (int) $menuDtlId;
+            if (!$user->isAbleTo($menuKey . '-edit')) {
+                $useViewMode = true;
+            }
+        }
+
+        if (!$useViewMode) {
             return $href;
         }
+
         $sep = strpos($href, '?') !== false ? '&' : '?';
 
         return $href . $sep . 'view=1';
@@ -413,7 +465,7 @@ class StagingDashboardController extends Controller
                         $row[$col] = $this->formatStagingDashboardCellValue($col, $raw);
                     }
                     $id = $arr[$pk] ?? $arr[strtoupper($pk)] ?? null;
-                    $row['link'] = $this->stagingDashboardDocumentLink($config['path'], $id, $branchId);
+                    $row['link'] = $this->stagingDashboardDocumentLink($config['path'], $id, $branchId, $menuDtlId);
                     $rows[] = $row;
                 }
 

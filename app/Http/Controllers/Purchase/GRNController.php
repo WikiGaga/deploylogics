@@ -320,6 +320,9 @@ class GRNController extends Controller
                     $menuPermissionPrefix.'-edit',
                     $menuPermissionPrefix.'-view',
                 ];
+                if ($allowCrossBranchView) {
+                    $data['permission'][] = 'flow-dash-view';
+                }
                 $data['id'] = $id;
 
                 $currentQuery = TblPurcGrn::with('grn_dtl','supplier','PO','grn_expense')

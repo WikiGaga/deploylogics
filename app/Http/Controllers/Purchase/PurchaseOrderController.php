@@ -353,6 +353,9 @@ class PurchaseOrderController extends Controller
                     $menuPermissionPrefix.'-edit',
                     $menuPermissionPrefix.'-view',
                 ];
+                if ($allowCrossBranchView) {
+                    $data['permission'][] = 'flow-dash-view';
+                }
                 $data['id'] = $id;
                 $currentQuery = TblPurcPurchaseOrder::with('po_details','supplier','lpo','comparative_quotation')
                     ->where('purchase_order_id',$id)

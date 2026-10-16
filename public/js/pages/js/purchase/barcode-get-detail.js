@@ -22,7 +22,17 @@ $(document).on('click', '.data_tbody_row', function() {
     var keycodeNo = 999; // mouse click
     var thix_val = thix.find('tr.data-dtl>td[data-field="product_barcode_barcode"]').text();
     if (caseType == 'productHelpSI' || caseType == 'productHelp') {
+        thix.addClass('selected_row');
         var tr = $('.open_inline__help__focus').parents('tr');
+        if (!tr.length) {
+            tr = thix.closest('.erp_form___block').find('.erp_form__grid_body tr.focus_selected_tr').first();
+        }
+        if (!tr.length) {
+            tr = thix.closest('.erp_form___block').find('.erp_form__grid_header tr').first();
+        }
+        if (typeof window.dismissInlineHelp === 'function') {
+            window.dismissInlineHelp();
+        }
         var formData = {
             form_type: form_type,
             val: thix_val,
@@ -375,6 +385,7 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
         dataType: 'json',
         data: formData,
         success: function(response) {
+            try {
             if (response['current_product'] != null) {
                 if (response['barcode_type'] == 'common') {
                     barcodeCommonData(tr, response, formData);
@@ -505,13 +516,19 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                     }
                 }*/
 
-                // TODO::Show Toast of Stock
-                $('.toast-modal').remove();
-                $('body').append(response['toast_stock_detail']);
-                $('.toast-modal').modal('show',{keyboard : false}).draggable({
-                    handle: ".modal-body,.modal-header"
-                });
-
+                if (response['toast_stock_detail']) {
+                    $('.toast-modal').remove();
+                    $('body').append(response['toast_stock_detail']);
+                    var $toast = $('.toast-modal');
+                    if ($toast.length) {
+                        $toast.modal('show', {keyboard: false});
+                        if ($toast.draggable) {
+                            $toast.draggable({
+                                handle: ".modal-body,.modal-header"
+                            });
+                        }
+                    }
+                }
 
             } else {
                 tr.find('.pd_barcode').focus();
@@ -531,12 +548,27 @@ function get_barcode_detail(keycodeNo, tr, form_type, formData) {
                     });
                 }
             }
-            $('#inLineHelp').remove();
-            $('.erp_form__grid').find('input').removeClass('open_inline__help__focus');
+            } catch (err) {
+                console.error('get_barcode_detail', err);
+            } finally {
+                if (typeof window.dismissInlineHelp === 'function') {
+                    window.dismissInlineHelp();
+                } else {
+                    $('#inLineHelp').remove();
+                    $('.erp_form__grid').find('input').removeClass('open_inline__help__focus');
+                }
+            }
 
             /* if(response['barcode_type'] == 'sale_invoice' || response['barcode_type'] == 'sale_return' || response['barcode_type'] == 'sale_fee'){
                  tr.find('#pd_barcode').focus();
              }*/
+        },
+        error: function () {
+            if (typeof window.dismissInlineHelp === 'function') {
+                window.dismissInlineHelp();
+            } else {
+                $('#inLineHelp').remove();
+            }
         }
     });
 }
@@ -1176,21 +1208,33 @@ function stockTransferBarcodeData(tr, response, formData) {
     var uom_name = barcode['uom_name'];
     var code = response['code'];
     default_qty = (barcode['demand_dtl_demand_quantity'] != '' || barcode['demand_dtl_demand_quantity'] != null) ? barcode['demand_dtl_demand_quantity'] : 1;
-    var current_sale_rate = response['rate'];
+    var current_sale_rate = response['rate'] || {};
     var tbl_purc_rate = response['purc_rate'];
+    if (tbl_purc_rate == null) {
+        tbl_purc_rate = {
+            product_barcode_purchase_rate: 0,
+            product_barcode_cost_rate: 0,
+            product_barcode_avg_rate: 0,
+            sale_rate: 0,
+            last_cost_rate: 0,
+            supplier_cost_rate: 0,
+            net_tp: 0
+        };
+    }
     var current_user_branch_id = response['current_user_branch_id'];
-    var rate = response['rate']['product_barcode_sale_rate_rate'];
+    var rate = current_sale_rate['product_barcode_sale_rate_rate'];
+    if (rate === undefined || rate === null || rate === '') {
+        rate = tbl_purc_rate['sale_rate'] || 0;
+    }
 
     // Calculate rate based on rate_type and rate_perc using rateFunc
     var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-    var purc_rate = calc_rate.rate; // Use calculated rate (with percentage applied)
+    var purc_rate = calc_rate && calc_rate.rate != null ? calc_rate.rate : 0;
 
     var vat = response['vat'];
     var vat_purc = 0;
-    if (vat != null || vat != "") {
-        if (vat['product_barcode_tax_apply'] == 1) {
-            vat_purc = vat['product_barcode_tax_value'];
-        }
+    if (vat && typeof vat === 'object' && vat['product_barcode_tax_apply'] == 1) {
+        vat_purc = vat['product_barcode_tax_value'];
     }
     var store_stock = !valueEmpty(response['store_stock'])?response['store_stock']:0;
     var amount = parseFloat(purc_rate) * parseFloat(default_qty);
@@ -1201,7 +1245,6 @@ function stockTransferBarcodeData(tr, response, formData) {
     tr.find('input.product_barcode_id').val(barcode['product_barcode_id']);
     tr.find('input.product_id').val(barcode['product_id']);
     tr.find('input.uom_id').val(selected_uom_id);
-    tr.find('.product_name').val(barcode['product_name']);
     tr.find('.pd_uom').val(uom_name);
     tr.find('.pd_packing').val(barcode['product_barcode_packing']);
     tr.find('.demand_qty').val(default_qty);
@@ -1212,6 +1255,11 @@ function stockTransferBarcodeData(tr, response, formData) {
     tr.find('.tblGridCal_vat_perc').val(notNullEmpty(vat_purc, 3));
     tr.find('.tblGridCal_vat_amount').val(notNullEmpty(vat_amt, 3));
     tr.find('.tblGridCal_gross_amount').val(notNullEmpty(gross_amount, 3));
+    if (barcode['product'] && barcode['product']['product_name']) {
+        tr.find('.product_name').val(barcode['product']['product_name']);
+    } else if (barcode['product_name']) {
+        tr.find('.product_name').val(barcode['product_name']);
+    }
     uomList(tr, uom_list, selected_uom_id);
 }
 
@@ -1419,10 +1467,14 @@ function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_r
 
     if (rate_type == 'item_retail_rate') {
         var item_retail_rate = 0;
-        for (var i = 0; barcode['sale_rate'].length > i; i++) {
-            if (barcode['sale_rate'][i]['product_category_id'] == 1 &&
-                barcode['sale_rate'][i]['branch_id'] == current_user_branch_id) {
-                item_retail_rate = barcode['sale_rate'][i]['product_barcode_sale_rate_rate'];
+        var saleRates = barcode['sale_rate'];
+        if (!saleRates || !saleRates.length) {
+            saleRates = [];
+        }
+        for (var i = 0; saleRates.length > i; i++) {
+            if (saleRates[i]['product_category_id'] == 1 &&
+                saleRates[i]['branch_id'] == current_user_branch_id) {
+                item_retail_rate = saleRates[i]['product_barcode_sale_rate_rate'];
             }
         }
         nowRate = item_retail_rate;
@@ -1431,10 +1483,14 @@ function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_r
 
     if (rate_type == 'item_whole_sale_rate') {
         var item_whole_sale_rate = 0;
-        for (var i = 0; barcode['sale_rate'].length > i; i++) {
-            if (barcode['sale_rate'][i]['product_category_id'] == 3 &&
-                barcode['sale_rate'][i]['branch_id'] == current_user_branch_id) {
-                item_whole_sale_rate = barcode['sale_rate'][i]['product_barcode_sale_rate_rate'];
+        var wholeSaleRates = barcode['sale_rate'];
+        if (!wholeSaleRates || !wholeSaleRates.length) {
+            wholeSaleRates = [];
+        }
+        for (var i = 0; wholeSaleRates.length > i; i++) {
+            if (wholeSaleRates[i]['product_category_id'] == 3 &&
+                wholeSaleRates[i]['branch_id'] == current_user_branch_id) {
+                item_whole_sale_rate = wholeSaleRates[i]['product_barcode_sale_rate_rate'];
             }
         }
         nowRate = item_whole_sale_rate;
@@ -1546,6 +1602,9 @@ function vegetableProduct(code, weight_apply) {
 }
 
 function uomList(tr, uom_list, selected_uom_id) {
+    if (!uom_list || !uom_list.length) {
+        return;
+    }
     var options = '';
     for (var i = 0; uom_list.length > i; i++) {
         options += '<option value=' + uom_list[i]['uom_id'] + '>' + uom_list[i]['uom_name'] + '</option>';

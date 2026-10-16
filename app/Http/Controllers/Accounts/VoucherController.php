@@ -465,6 +465,9 @@ class VoucherController extends Controller
                     $menuPermissionPrefix.'-edit',
                     $menuPermissionPrefix.'-view',
                 ];
+                if ($allowCrossBranchView) {
+                    $data['permission'][] = 'flow-dash-view';
+                }
                 $data['id'] = $id;
                 $currentQuery = TblAccoVoucher::where('voucher_id',$id)
                     ->where('voucher_type',$type)
