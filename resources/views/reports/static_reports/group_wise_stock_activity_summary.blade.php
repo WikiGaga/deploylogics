@@ -221,10 +221,14 @@
                         $date_field2 = " AND (created_at < to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')
                             OR (DOCUMENT_TYPE = 'OS' AND created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')))";
                         $date_field = " AND (created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
+                        $pc_opening_date_field = " AND PC.created_at < to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
+                        $pc_period_date_field = " AND PC.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')";
                     }else{
                         $date_field2 = "AND (document_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')
                             OR (DOCUMENT_TYPE = 'OS' AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')))";
                         $date_field = "AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                        $pc_opening_date_field = " AND PC.record_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
+                        $pc_period_date_field = " AND PC.record_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                     }
 /*
 $query = "select distinct  
@@ -427,26 +431,44 @@ from
 
 
 $query = "SELECT DISTINCT 
-    PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
+    abc.PRODUCT_BARCODE_BARCODE,
+    abc.PRODUCT_BARCODE_PACKING,
     abc.PRODUCT_ID,
-    BRANCH_ID,
-    BRANCH_NAME,
-    PRODUCT_NAME,
-    GROUP_ITEM_NAME,
-    OPENING_BALANCE,
-    PURCHASE,
-    STOCK_REC,
-    SALE_RETURN,
-    TOTAL_STOCK_IN,
-    SALE,
-    STOCK_TRANSFER,
-    PURCH_RETURN,
-    STOCK_ADJUSTMENT,
-    TOTAL_STOCK_OUT,
-    STOCK_BALANCE 
+    abc.BRANCH_ID,
+    abc.BRANCH_NAME,
+    abc.PRODUCT_NAME,
+    abc.GROUP_ITEM_NAME,
+    abc.OPENING_BALANCE,
+    abc.PURCHASE,
+    abc.STOCK_REC,
+    abc.SALE_RETURN,
+    abc.PRODUCTION,
+    abc.TOTAL_STOCK_IN,
+    abc.SALE,
+    abc.STOCK_TRANSFER,
+    abc.PURCH_RETURN,
+    abc.STOCK_ADJUSTMENT,
+    abc.CONSUMPTION,
+    abc.TOTAL_STOCK_OUT,
+    abc.STOCK_BALANCE,
+    NVL(BARCODE_RATE.PRODUCT_BARCODE_COST_RATE, 0) AVERAGE_PRICE,
+    NVL(BARCODE_RATE.PRODUCT_BARCODE_PURCHASE_RATE, 0) LAST_PRICE,
+    CASE
+        WHEN NVL(abc.PRODUCT_BARCODE_PACKING, 0) > 0
+            THEN (abc.STOCK_BALANCE / abc.PRODUCT_BARCODE_PACKING) * NVL(BARCODE_RATE.PRODUCT_BARCODE_COST_RATE, 0)
+        ELSE 0
+    END AVERAGE_AMOUNT,
+    CASE
+        WHEN NVL(abc.PRODUCT_BARCODE_PACKING, 0) > 0
+            THEN (abc.STOCK_BALANCE / abc.PRODUCT_BARCODE_PACKING) * NVL(BARCODE_RATE.PRODUCT_BARCODE_PURCHASE_RATE, 0)
+        ELSE 0
+    END LAST_PRICE_AMOUNT
 FROM
   (SELECT 
     STOCK.PRODUCT_ID,
+    STOCK.PRODUCT_BARCODE_ID,
+    PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
+    PROD_BARCODE.PRODUCT_BARCODE_PACKING,
     STOCK.BRANCH_ID,
     TBL_SOFT_BRANCH.BRANCH_NAME,
     PROD.PRODUCT_NAME,
@@ -455,22 +477,25 @@ FROM
     SUM(PURCHASE) PURCHASE,
     SUM(STOCK_REC) STOCK_REC,
     SUM(SALE_RETURN) SALE_RETURN,
-    SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN) TOTAL_STOCK_IN,
+    SUM(PRODUCTION) PRODUCTION,
+    SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN) + SUM(PRODUCTION) TOTAL_STOCK_IN,
     SUM(SALE * - 1) SALE,
     SUM(STOCK_TRANSFER * - 1) STOCK_TRANSFER,
     SUM(PURCH_RETURN * - 1) PURCH_RETURN,
     SUM(STOCK_ADJUSTMENT) STOCK_ADJUSTMENT,
-    SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT) TOTAL_STOCK_OUT,
+    SUM(CONSUMPTION) CONSUMPTION,
+    SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT) + SUM(CONSUMPTION) TOTAL_STOCK_OUT,
     (
-      SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN)
+      SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN) + SUM(PRODUCTION)
     ) - (
-      SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT)
+      SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT) + SUM(CONSUMPTION)
     ) STOCK_BALANCE 
     $sup
   FROM
     (SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         CASE
             WHEN DOCUMENT_TYPE IN ('OS', 'ST', 'STR')
                 THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
@@ -479,10 +504,12 @@ FROM
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE BRANCH_ID IN (".implode(",",$data['branch_ids']).") 
@@ -493,14 +520,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         QTY_BASE_UNIT_VALUE PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'GRN' 
@@ -512,14 +542,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         NVL(QTY_IN, 0) * NVL(PRODUCT_PACKING, 1) STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'STR' 
@@ -531,14 +564,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         ABS(QTY_BASE_UNIT_VALUE) SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'RPOS' 
@@ -550,14 +586,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         QTY_BASE_UNIT_VALUE SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'POS' 
@@ -569,14 +608,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1) STOCK_TRANSFER,
         0 PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'ST' 
@@ -588,14 +630,17 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
         QTY_BASE_UNIT_VALUE PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'PR' 
@@ -607,23 +652,108 @@ FROM
     SELECT 
         BRANCH_ID,
         PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
         0 OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
+        0 PRODUCTION,
         0 SALE,
         0 STOCK_TRANSFER,
-        QTY_BASE_UNIT_VALUE PURCH_RETURN,
-        0 STOCK_ADJUSTMENT 
+        0 PURCH_RETURN,
+        QTY_BASE_UNIT_VALUE STOCK_ADJUSTMENT,
+        0 CONSUMPTION
     FROM
         VW_PURC_STOCK_DTL 
     WHERE DOCUMENT_TYPE = 'SA' 
         AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field
-    ) STOCK, VW_PURC_PRODUCT PROD, TBL_SOFT_BRANCH 
+    UNION ALL
+    SELECT
+        PC.BRANCH_ID,
+        PB.PRODUCT_ID,
+        PB.PRODUCT_BARCODE_ID,
+        CASE
+            WHEN LOWER(PC.STOCK_TYPE) = 'production'
+                THEN NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1)
+            ELSE NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1) * -1
+        END OPENING_BALANCE,
+        0 PURCHASE,
+        0 STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        0 STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
+    FROM TBLPRODUCTIONCONSUMPTION PC
+        INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+            ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+    WHERE PC.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+        AND PC.COMPANY_ID = ".auth()->user()->company_id."
+        AND NVL(PC.POSTED, 0) = 1
+        AND NVL(PC.STATUS, 0) = 1
+        AND NVL(PC.CANCEL, 0) = 0
+        $pc_opening_date_field
+    UNION ALL
+    SELECT
+        PC.BRANCH_ID,
+        PB.PRODUCT_ID,
+        PB.PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        0 STOCK_REC,
+        0 SALE_RETURN,
+        NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1) PRODUCTION,
+        0 SALE,
+        0 STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION
+    FROM TBLPRODUCTIONCONSUMPTION PC
+        INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+            ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+    WHERE LOWER(PC.STOCK_TYPE) = 'production'
+        AND PC.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+        AND PC.COMPANY_ID = ".auth()->user()->company_id."
+        AND NVL(PC.POSTED, 0) = 1
+        AND NVL(PC.STATUS, 0) = 1
+        AND NVL(PC.CANCEL, 0) = 0
+        $pc_period_date_field
+    UNION ALL
+    SELECT
+        PC.BRANCH_ID,
+        PB.PRODUCT_ID,
+        PB.PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        0 STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        0 STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1) CONSUMPTION
+    FROM TBLPRODUCTIONCONSUMPTION PC
+        INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+            ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+    WHERE LOWER(PC.STOCK_TYPE) = 'consumption'
+        AND PC.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+        AND PC.COMPANY_ID = ".auth()->user()->company_id."
+        AND NVL(PC.POSTED, 0) = 1
+        AND NVL(PC.STATUS, 0) = 1
+        AND NVL(PC.CANCEL, 0) = 0
+        $pc_period_date_field
+    ) STOCK, VW_PURC_PRODUCT PROD, TBL_SOFT_BRANCH, TBL_PURC_PRODUCT_BARCODE PROD_BARCODE
         $inner_where
     WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID 
+        AND STOCK.PRODUCT_BARCODE_ID = PROD_BARCODE.PRODUCT_BARCODE_ID
         AND STOCK.BRANCH_ID = TBL_SOFT_BRANCH.BRANCH_ID
         $forsupplier
         $wheresupplier
@@ -631,24 +761,31 @@ FROM
     GROUP BY STOCK.BRANCH_ID,
         PROD.PRODUCT_NAME,
         STOCK.PRODUCT_ID,
+        STOCK.PRODUCT_BARCODE_ID,
+        PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
+        PROD_BARCODE.PRODUCT_BARCODE_PACKING,
         GROUP_ITEM_NAME,
         TBL_SOFT_BRANCH.BRANCH_NAME
         $groupsup
-    ) abc 
-    LEFT OUTER JOIN 
-    (SELECT 
-        MAX(PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
-        PRODUCT_ID 
-    FROM
-        tbl_purc_product_barcode 
-    WHERE BASE_BARCODE = 1 
-    GROUP BY PRODUCT_ID
-    ) PROD_BARCODE 
-    ON abc.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID 
-ORDER BY BRANCH_NAME,
-  GROUP_ITEM_NAME,
-  PRODUCT_NAME,
-  PRODUCT_ID ";
+    ) abc
+    LEFT JOIN (
+        SELECT
+            BRANCH_ID,
+            PRODUCT_BARCODE_ID,
+            MAX(PRODUCT_BARCODE_COST_RATE) PRODUCT_BARCODE_COST_RATE,
+            MAX(PRODUCT_BARCODE_PURCHASE_RATE) PRODUCT_BARCODE_PURCHASE_RATE
+        FROM TBL_PURC_PRODUCT_BARCODE_PURCH_RATE
+        WHERE BUSINESS_ID = ".auth()->user()->business_id."
+            AND COMPANY_ID = ".auth()->user()->company_id."
+        GROUP BY BRANCH_ID, PRODUCT_BARCODE_ID
+    ) BARCODE_RATE
+        ON BARCODE_RATE.BRANCH_ID = abc.BRANCH_ID
+        AND BARCODE_RATE.PRODUCT_BARCODE_ID = abc.PRODUCT_BARCODE_ID
+ORDER BY abc.BRANCH_NAME,
+  abc.GROUP_ITEM_NAME,
+  abc.PRODUCT_NAME,
+  abc.PRODUCT_ID,
+  abc.PRODUCT_BARCODE_BARCODE ";
 
 
                         
@@ -701,22 +838,32 @@ ORDER BY BRANCH_NAME,
                     @endphp
                     <table width="100%" id="rep_group_wise_activity_summary_datatable" class="static_report_table table bt-datatable table-bordered">
                         <tr class="sticky-header">
-                            <th width="31%" class="dtl-head" colspan="4" rowspan="2"></th>
-                            <th width="27%" class="dtl-head" colspan="5">STOCK IN</th>
-                            <th width="27%" class="dtl-head" colspan="5">STOCK OUT</th>
+                            <th class="dtl-head" rowspan="2">Branch</th>
+                            <th class="dtl-head" rowspan="2">Group</th>
+                            <th class="dtl-head" rowspan="2">Barcode</th>
+                            <th class="dtl-head" rowspan="2">Product</th>
+                            <th class="dtl-head" rowspan="2">Packing</th>
+                            <th class="dtl-head" colspan="6">STOCK IN</th>
+                            <th class="dtl-head" colspan="6">STOCK OUT</th>
                             <th width="15%" class="dtl-head" rowspan="2">BALANCE</th>
+                            <th class="dtl-head" rowspan="2">Average Price</th>
+                            <th class="dtl-head" rowspan="2">Last Price</th>
+                            <th class="dtl-head" rowspan="2">Average Amount</th>
+                            <th class="dtl-head" rowspan="2">Last Price Amount</th>
                         </tr>
                         <tr class="sticky-header-to">
                             <td width="10%" class="dtl-head">Opening</td>
                             <td width="10%" class="dtl-head">Purchase</td>
                             <td width="10%" class="dtl-head">Stock Receive</td>
                             <td width="10%" class="dtl-head">Sale Return</td>
+                            <td width="10%" class="dtl-head">Production</td>
                             <td width="10%" class="dtl-head">Total</td>
 
                             <td width="10%" class="dtl-head"> Sale</td>
                             <td width="10%" class="dtl-head">Stock Transfer</td>
                             <td width="10%" class="dtl-head">Purchase Return</td>
                             <td width="10%" class="dtl-head">Stock Adjustment</td>
+                            <td width="10%" class="dtl-head">Consumption</td>
                             <td width="10%" class="dtl-head">Total</td>
                         </tr>
                         @foreach($list_branch as $branch_key=>$branch_row)
@@ -725,13 +872,17 @@ ORDER BY BRANCH_NAME,
                                 $stot_purchase = 0;
                                 $stot_stock_rec = 0;
                                 $stot_sale_return = 0;
+                                $stot_production = 0;
                                 $stotal_stock_in = 0;
                                 $stot_sale = 0;
                                 $stot_stock_transfer = 0;
                                 $stot_purch_return = 0;
                                 $stot_stock_adjustment = 0;
+                                $stot_consumption = 0;
                                 $stotal_stock_out = 0;
                                 $stotal_stock_balance = 0;
+                                $stotal_average_amount = 0;
+                                $stotal_last_price_amount = 0;
                             @endphp
                            @foreach($branch_row as $group_item_name_key=>$group_item_name)
                                 @php
@@ -739,13 +890,17 @@ ORDER BY BRANCH_NAME,
                                     $tot_purchase = 0;
                                     $tot_stock_rec = 0;
                                     $tot_sale_return = 0;
+                                    $tot_production = 0;
                                     $total_stock_in = 0;
                                     $tot_sale = 0;
                                     $tot_stock_transfer = 0;
                                     $tot_purch_return = 0;
                                     $tot_stock_adjustment = 0;
+                                    $tot_consumption = 0;
                                     $total_stock_out = 0;
                                     $total_stock_balance = 0;
+                                    $total_average_amount = 0;
+                                    $total_last_price_amount = 0;
                                 @endphp
                             @foreach($group_item_name as $product_name_key=>$product_name)
                                 @foreach($product_name as $date_key=>$item)
@@ -765,13 +920,17 @@ ORDER BY BRANCH_NAME,
                                         $tot_purchase = $tot_purchase + $item->purchase;
                                         $tot_stock_rec = $tot_stock_rec + $item->stock_rec;
                                         $tot_sale_return = $tot_sale_return + $item->sale_return;
+                                        $tot_production = $tot_production + $item->production;
                                         $total_stock_in = $total_stock_in + $item->total_stock_in;
                                         $tot_sale = $tot_sale + $item->sale;
                                         $tot_stock_transfer = $tot_stock_transfer + $item->stock_transfer;
                                         $tot_purch_return = $tot_purch_return + $item->purch_return;
                                         $tot_stock_adjustment = $tot_stock_adjustment + $item->stock_adjustment;
+                                        $tot_consumption = $tot_consumption + $item->consumption;
                                         $total_stock_out = $total_stock_out + $item->total_stock_out;
                                         $total_stock_balance = $total_stock_balance + $item->stock_balance;
+                                        $total_average_amount = $total_average_amount + $item->average_amount;
+                                        $total_last_price_amount = $total_last_price_amount + $item->last_price_amount;
 
 
 
@@ -779,13 +938,17 @@ ORDER BY BRANCH_NAME,
                                         $stot_purchase = $stot_purchase + $item->purchase;
                                         $stot_stock_rec = $stot_stock_rec + $item->stock_rec;
                                         $stot_sale_return = $stot_sale_return + $item->sale_return;
+                                        $stot_production = $stot_production + $item->production;
                                         $stotal_stock_in = $stotal_stock_in + $item->total_stock_in;
                                         $stot_sale = $stot_sale + $item->sale;
                                         $stot_stock_transfer = $stot_stock_transfer + $item->stock_transfer;
                                         $stot_purch_return = $stot_purch_return + $item->purch_return;
                                         $stot_stock_adjustment = $stot_stock_adjustment + $item->stock_adjustment;
+                                        $stot_consumption = $stot_consumption + $item->consumption;
                                         $stotal_stock_out = $stotal_stock_out + $item->total_stock_out;
                                         $stotal_stock_balance = $stotal_stock_balance + $item->stock_balance;
+                                        $stotal_average_amount = $stotal_average_amount + $item->average_amount;
+                                        $stotal_last_price_amount = $stotal_last_price_amount + $item->last_price_amount;
 
                                     @endphp
                                     <tr>
@@ -797,18 +960,25 @@ ORDER BY BRANCH_NAME,
                                         @endif
                                         <td class="terminal_total">{{$item->product_barcode_barcode}}</td>
                                         <td class="terminal_total">{{$product_name_key}}</td>
+                                        <td class="text-right">{{number_format($item->product_barcode_packing,0)}}</td>
                                         <td class="text-right">{{number_format($item->opening_balance,0)}}</td>
                                         <td class="text-right">{{number_format($item->purchase,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_rec,0)}}</td>
                                         <td class="text-right">{{number_format($item->sale_return,0)}}</td>
+                                        <td class="text-right">{{number_format($item->production,0)}}</td>
                                         <td class="text-right">{{number_format($item->total_stock_in,0)}}</td>
 
                                         <td class="text-right">{{number_format($item->sale,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_transfer,0)}}</td>
                                         <td class="text-right">{{number_format($item->purch_return,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_adjustment,0)}}</td>
+                                        <td class="text-right">{{number_format($item->consumption,0)}}</td>
                                         <td class="text-right">{{number_format($item->total_stock_out,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_balance,0)}}</td>
+                                        <td class="text-right">{{number_format($item->average_price,3)}}</td>
+                                        <td class="text-right">{{number_format($item->last_price,3)}}</td>
+                                        <td class="text-right">{{number_format($item->average_amount,3)}}</td>
+                                        <td class="text-right">{{number_format($item->last_price_amount,3)}}</td>
                                     </tr>
                                     @php
                                         $branch_key = "";
@@ -818,33 +988,45 @@ ORDER BY BRANCH_NAME,
                                 @endforeach
                             @endforeach
                                 <tr>
-                                    <td class="text-right sale_type_color" colspan="3"><b>TOTAL : </b> </td>
+                                    <td class="text-right sale_type_color" colspan="4"><b>TOTAL : </b> </td>
                                     <td class="text-right sale_type_color">{{number_format($tot_opening_balance,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purchase,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_rec,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_sale_return,0)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_production,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_in,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_sale,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_transfer,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purch_return,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,0)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_consumption,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_out,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_balance,0)}}</td>
+                                    <td class="text-center sale_type_color">-</td>
+                                    <td class="text-center sale_type_color">-</td>
+                                    <td class="text-right sale_type_color">{{number_format($total_average_amount,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($total_last_price_amount,3)}}</td>
                                 </tr>
                            @endforeach
                                 <tr>
-                                    <td class="text-right barnch_color" colspan="4"><b>GRAND TOTAL : </b> </td>
+                                    <td class="text-right barnch_color" colspan="5"><b>GRAND TOTAL : </b> </td>
                                     <td class="text-right barnch_color">{{number_format($stot_opening_balance,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purchase,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_rec,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_sale_return,0)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_production,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_in,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_sale,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_transfer,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purch_return,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,0)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_consumption,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_out,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_balance,0)}}</td>
+                                    <td class="text-center barnch_color">-</td>
+                                    <td class="text-center barnch_color">-</td>
+                                    <td class="text-right barnch_color">{{number_format($stotal_average_amount,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stotal_last_price_amount,3)}}</td>
                                 </tr>
                         @endforeach
                     </table>
