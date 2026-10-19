@@ -433,6 +433,7 @@ from
 $query = "SELECT DISTINCT 
     abc.PRODUCT_BARCODE_BARCODE,
     abc.PRODUCT_BARCODE_PACKING,
+    abc.UOM_NAME,
     abc.PRODUCT_ID,
     abc.BRANCH_ID,
     abc.BRANCH_NAME,
@@ -469,6 +470,7 @@ FROM
     STOCK.PRODUCT_BARCODE_ID,
     PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
     PROD_BARCODE.PRODUCT_BARCODE_PACKING,
+    UOM.UOM_NAME,
     STOCK.BRANCH_ID,
     TBL_SOFT_BRANCH.BRANCH_NAME,
     PROD.PRODUCT_NAME,
@@ -750,10 +752,11 @@ FROM
         AND NVL(PC.STATUS, 0) = 1
         AND NVL(PC.CANCEL, 0) = 0
         $pc_period_date_field
-    ) STOCK, VW_PURC_PRODUCT PROD, TBL_SOFT_BRANCH, TBL_PURC_PRODUCT_BARCODE PROD_BARCODE
+    ) STOCK, VW_PURC_PRODUCT PROD, TBL_SOFT_BRANCH, TBL_PURC_PRODUCT_BARCODE PROD_BARCODE, TBL_DEFI_UOM UOM
         $inner_where
     WHERE STOCK.PRODUCT_ID = PROD.PRODUCT_ID 
         AND STOCK.PRODUCT_BARCODE_ID = PROD_BARCODE.PRODUCT_BARCODE_ID
+        AND PROD_BARCODE.UOM_ID = UOM.UOM_ID(+)
         AND STOCK.BRANCH_ID = TBL_SOFT_BRANCH.BRANCH_ID
         $forsupplier
         $wheresupplier
@@ -764,6 +767,7 @@ FROM
         STOCK.PRODUCT_BARCODE_ID,
         PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
         PROD_BARCODE.PRODUCT_BARCODE_PACKING,
+        UOM.UOM_NAME,
         GROUP_ITEM_NAME,
         TBL_SOFT_BRANCH.BRANCH_NAME
         $groupsup
@@ -843,6 +847,7 @@ ORDER BY abc.BRANCH_NAME,
                             <th class="dtl-head" rowspan="2">Barcode</th>
                             <th class="dtl-head" rowspan="2">Product</th>
                             <th class="dtl-head" rowspan="2">Packing</th>
+                            <th class="dtl-head" rowspan="2">UOM</th>
                             <th class="dtl-head" colspan="6">STOCK IN</th>
                             <th class="dtl-head" colspan="6">STOCK OUT</th>
                             <th width="15%" class="dtl-head" rowspan="2">BALANCE</th>
@@ -961,6 +966,7 @@ ORDER BY abc.BRANCH_NAME,
                                         <td class="terminal_total">{{$item->product_barcode_barcode}}</td>
                                         <td class="terminal_total">{{$product_name_key}}</td>
                                         <td class="text-right">{{number_format($item->product_barcode_packing,0)}}</td>
+                                        <td class="text-center">{{$item->uom_name ?? '-'}}</td>
                                         <td class="text-right">{{number_format($item->opening_balance,0)}}</td>
                                         <td class="text-right">{{number_format($item->purchase,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_rec,0)}}</td>
@@ -988,7 +994,7 @@ ORDER BY abc.BRANCH_NAME,
                                 @endforeach
                             @endforeach
                                 <tr>
-                                    <td class="text-right sale_type_color" colspan="4"><b>TOTAL : </b> </td>
+                                    <td class="text-right sale_type_color" colspan="5"><b>TOTAL : </b> </td>
                                     <td class="text-right sale_type_color">{{number_format($tot_opening_balance,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purchase,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_rec,0)}}</td>
@@ -1009,7 +1015,7 @@ ORDER BY abc.BRANCH_NAME,
                                 </tr>
                            @endforeach
                                 <tr>
-                                    <td class="text-right barnch_color" colspan="5"><b>GRAND TOTAL : </b> </td>
+                                    <td class="text-right barnch_color" colspan="6"><b>GRAND TOTAL : </b> </td>
                                     <td class="text-right barnch_color">{{number_format($stot_opening_balance,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purchase,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_rec,0)}}</td>

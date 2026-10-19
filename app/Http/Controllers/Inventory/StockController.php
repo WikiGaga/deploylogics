@@ -687,7 +687,7 @@ class StockController extends Controller
                         $dtl->grm_net_amount =  isset($pd['net_amount'])?$this->addNo($pd['net_amount']):"";
                         $dtl->grn_rate =  isset($pd['unit_price'])?$this->addNo($pd['unit_price']):"";
                     }
-                    if (in_array($formType, ['os', 'st', 'str', 'sa'], true)) {
+                    if (in_array($formType, ['os', 'st', 'str', 'sd', 'sa'], true)) {
                         $baseUnitQuantity = $formType == 'sa'
                             ? $adjustmentQty
                             : $this->addNo($pd['quantity']);
