@@ -26,7 +26,7 @@
             $date =  date('d-m-Y');
             $user_id = Auth::user()->id;
             $length = 0;
-            $selected_rate_type = 'item_sale_rate';
+            $selected_rate_type = config('constants.default_rate_type');
         }
         if($case == 'edit'){
             $id = $data['current']->sales_id;

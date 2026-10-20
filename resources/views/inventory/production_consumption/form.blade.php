@@ -17,6 +17,8 @@
             if($case == 'new'){
                 $code = $data['document_code'];
                 $date =  date('d-m-Y');
+                $selected_rate_type = config('constants.default_rate_type');
+                $rate_perc = '';
             }
             if($case == 'edit'){
                 $id = $data['current']->code;
@@ -26,6 +28,8 @@
                 $transferFrom = $data['current']->transfer_from;
                 $transferTo = $data['current']->transfer_to;
                 $remarks = $data['current']->remarks;
+                $selected_rate_type = $data['current']->rate_type ?? '';
+                $rate_perc = $data['current']->rate_perc ?? '';
                 $dtls = isset($data['lines']) ? $data['lines'] : collect([$data['current']]);
             }
             $form_type = $data['form_type'];
@@ -100,6 +104,38 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row form-group-block">
+                        <div class="col-lg-12">
+                            <div class="row">
+                                <label class="col-lg-2 erp-col-form-label">Rate Type:</label>
+                                <div class="col-lg-10">
+                                    <div class="ChangeRateBlock input-group erp-select2-sm">
+                                        <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
+                                            <option value="0">Select</option>
+                                            @php $selected_rate_type = isset($selected_rate_type) ? $selected_rate_type : ''; @endphp
+                                            @foreach($data['rate_types'] as $key => $rate_type_label)
+                                                <option value="{{ $key }}" {{ $selected_rate_type == $key ? 'selected' : '' }}>{{ $rate_type_label }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="la la-plus"></i>
+                                            </span>
+                                        </div>
+                                        <input type="text" id="rate_perc" name="rate_perc" value="{{ isset($rate_perc) ? $rate_perc : '' }}" class="moveIndex form-control erp-form-control-sm validNumber">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">
+                                                <i class="fa fa-percent"></i>
+                                            </span>
+                                            <span class="input-group-text group-input-btn" id="changeGridItemRate" title="Change Rate Apply">
+                                                <i class="la la-refresh"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-lg-12 text-right">
                             <div class="data_entry_header">
@@ -148,9 +184,9 @@
                                                     <i class="la la-barcode"></i>
                                                 </button>
                                             </div>
-                                            
 
- 
+
+
 
 
                                             <div class="erp_form__grid_th_input d-flex align-items-center" style="position:relative;display:inline-block;width:100%;">
@@ -238,7 +274,7 @@
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][product_id]" data-id="product_id" value="{{isset($dtl->barcode->product->product_id)?$dtl->barcode->product->product_id:""}}" class="product_id form-control erp-form-control-sm handle" readonly>
                                                     <input type="hidden" name="pd[{{$loop->iteration}}][uom_id]" data-id="uom_id" value="{{isset($dtl->barcode->uom->uom_id)?$dtl->barcode->uom->uom_id:""}}" class="uom_id form-control erp-form-control-sm handle" readonly>
                                                     {{-- <input type="hidden" name="pd[{{$loop->iteration}}][constants_id]" data-id="constants_id" value="{{isset($dtl->constants->constants_id)?$dtl->constants->constants_id:""}}" class="constants_id form-control erp-form-control-sm handle" readonly> --}}
-                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{ $dtl->item_code }}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
+                                                    <input type="hidden" name="pd[{{$loop->iteration}}][product_barcode_id]" data-id="product_barcode_id" value="{{ isset($dtl->barcode->product_barcode_id) ? $dtl->barcode->product_barcode_id : '' }}" class="product_barcode_id form-control erp-form-control-sm handle" readonly>
                                                 </td>
                                                 <td><input type="text" data-id="pd_barcode" name="pd[{{$loop->iteration}}][pd_barcode]" value="{{ $dtl->item_code }}" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}" class="pd_barcode tb_moveIndex form-control erp-form-control-sm" readonly></td>
                                                 <td><input type="text" data-id="product_name" name="pd[{{$loop->iteration}}][product_name]" value="{{isset($dtl->barcode->product->product_name)?$dtl->barcode->product->product_name:""}}" class="product_name form-control erp-form-control-sm" readonly></td>
@@ -412,4 +448,5 @@ $(document).ready(function () {
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>
 @endsection

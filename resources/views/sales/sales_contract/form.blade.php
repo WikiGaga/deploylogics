@@ -29,7 +29,7 @@
                     $date =  date('d-m-Y');
                     $customer_id = $data['customer']->customer_id;
                     $customer_name = $data['customer']->customer_name;
-                    $selected_rate_type = 'item_sale_rate';
+                    $selected_rate_type = config('constants.default_rate_type');
                     $start_date = date('d-m-Y');
                     $end_date = date('d-m-Y');
                 }

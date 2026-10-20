@@ -16,7 +16,7 @@
                 $customer_name = isset($data['customer']->customer_name)?$data['customer']->customer_name:'';
                 $expense_dtls = isset($data['current']->expense)? $data['current']->expense :[];
                 $length = count($expense_dtls);
-                $selected_rate_type = 'item_sale_rate';
+                $selected_rate_type = config('constants.default_rate_type');
                 $select_bank_acc = "";
                 $dtls = isset($data['current']->dtls)? $data['current']->dtls :[];
                 $sales_quotation_code = isset($data['current']->sales_order_code)? $data['current']->sales_order_code :'';

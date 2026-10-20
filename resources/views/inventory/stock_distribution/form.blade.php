@@ -30,6 +30,8 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
+                $selected_rate_type = config('constants.default_rate_type');
+                $rate_perc = '';
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;
@@ -172,7 +174,7 @@
                     </div>
                     <div class="col-lg-8">
                         <div class="row">
-                            <label class="col-lg-3 erp-col-form-label text-center">Rate Type </label>
+                            <label class="col-lg-3 erp-col-form-label">Rate Type </label>
                             <div class="col-lg-9">
                                 <div class="ChangeRateBlock input-group erp-select2-sm">
                                     <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
@@ -184,7 +186,7 @@
                                             @endforeach
                                         @else
                                             @foreach($data['rate_types'] as $key=>$rate_type)
-                                                <option value="{{$key}}" {{$key=='item_last_net_tp'?"selected":""}}>{{$rate_type}}</option>
+                                                <option value="{{$key}}" {{$key==config('constants.default_rate_type')?"selected":""}}>{{$rate_type}}</option>
                                             @endforeach
                                         @endif
                                     </select>

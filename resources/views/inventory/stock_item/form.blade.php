@@ -15,11 +15,7 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
-                if($data['stock_code_type'] == 'di'){
-                    $selected_rate_type = 'item_cost_rate';
-                }else{
-                    $selected_rate_type = 'item_sale_rate';
-                }
+                $selected_rate_type = config('constants.default_rate_type');
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;
