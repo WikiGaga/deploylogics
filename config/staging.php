@@ -9,6 +9,7 @@ return [
         '359' => 'stock_id',           // Stock Distribution
         '54' => 'stock_id',            // Opening Stock
         '76' => 'stock_id',            // Stock Receiving
+        '57' => 'stock_id',            // Damaged Items
         '23' => 'grn_id',              // Goods Received Notes (GRN)
         '28' => 'voucher_id',          // Cash Receipt Voucher (CRV)
         '29' => 'voucher_id',          // Bank Receipt Voucher (BRV)

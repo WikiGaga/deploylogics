@@ -8,6 +8,7 @@
 
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            $user_branches = isset($data['user_branches']) ? $data['user_branches'] : [];
             if($case == 'view'){
                 $case = 'edit';
             }
@@ -16,6 +17,10 @@
                 $date =  date('d-m-Y');
                 $id = '';
                 $selected_rate_type = config('constants.default_rate_type');
+                $defaultStore = \App\Models\TblDefiStore::where('branch_id', auth()->user()->branch_id)
+                    ->where('store_default_value', 1)
+                    ->first();
+                $storeid = isset($defaultStore->store_id) ? $defaultStore->store_id : '';
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;
@@ -35,9 +40,10 @@
     @csrf
     <input type="hidden" name="stock_code_type" value='{{$data['stock_code_type']}}' id="form_type">
     <input type="hidden" name="stock_menu_id" value='{{$data['stock_menu_id']}}'>
+    <input type="hidden" id="stock_id" name="stock_id" value="{{ isset($id) ? $id : '' }}">
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
         <div class="kt-portlet kt-portlet--mobile">
-            <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky">
+            <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
                 @include('elements.page_header',['page_data' => $data['page_data']])
             </div>
             <div class="kt-portlet__body">
@@ -71,18 +77,17 @@
                     <div class="col-lg-4"></div>
                     <div class="col-lg-4">
                         <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">Store:</label>
+                            <label class="col-lg-6 erp-col-form-label text-center">Store:<span class="required">*</span></label>
                             <div class="col-lg-6">
                                 <div class="erp-select2">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" name="store">
+                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
                                         <option value="0">Select</option>
+                                        @php $storeid = isset($storeid)?$storeid:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            @if(isset($data['id']))
-                                                @php $store_id = isset($data['current']->stock_store_from_id)?$data['current']->stock_store_from_id:0; @endphp
-                                            @else
-                                                @php $store_id = $store->store_default_value == 1 ? $store->store_id : 0 ; @endphp
+                                            @if($case == 'new' && $store->store_default_value == 1 && (int) $store->branch_id === (int) auth()->user()->branch_id)
+                                                @php $storeid = $store->store_id @endphp
                                             @endif
-                                            <option value="{{$store->store_id}}" {{ $store->store_id == $store_id?'selected':'' }}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" data-default="{{ (int) $store->store_default_value }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -121,6 +126,7 @@
                                 </div>
                             </div>
                         </div>
+                    @include('layouts.branchSelect')
                     </div>
            
                 <div class="row">
@@ -171,8 +177,9 @@
                                                 <i class="la la-barcode"></i>
                                             </button>
                                         </div>
-                                        <div class="erp_form__grid_th_input">
-                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                        <div class="erp_form__grid_th_input" style="position:relative;display:inline-block;width:100%;">
+                                            <input id="pd_barcode" type="text" class="pd_barcode tb_moveIndex open_inline__help on_click_event form-control erp-form-control-sm" data-url="{{action('Common\DataTableController@inlineHelpOpen','productHelp')}}">
+                                         @include('layouts.selectview')
                                         </div>
                                     </th>
                                     <th scope="col">
@@ -303,6 +310,7 @@
             </div>
         </div>
     </div>
+    @include('staging_activity.auto_include')
     </form>
                 <!--end::Form-->
     @endpermission
@@ -319,6 +327,70 @@
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         var formcase = '{{$case}}';
+        var type = "{{ $type }}";
+        $(document).ready(function() {
+            var $storeSelect = $('#store_id');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            function filterStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                $storeSelect.html('');
+
+                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
+                $storeSelect.append($placeholder);
+
+                var $matchingOptions = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                $storeSelect.append($matchingOptions);
+                var $defaultStore = $matchingOptions.filter(function() { return $(this).attr('data-default') === '1'; });
+                if ($defaultStore.length) {
+                    $storeSelect.val($defaultStore.first().val());
+                } else if ($matchingOptions.length) {
+                    $storeSelect.val($matchingOptions.first().val());
+                } else {
+                    $storeSelect.val('0');
+                }
+                $storeSelect.trigger('change.select2');
+            }
+
+            filterStores();
+            $('#new_branch_id').on('change', function() {
+                filterStores();
+            });
+        });
+        var stockMenuId = "{{ $data['stock_menu_id'] }}";
+        function voucher_posted(){
+            var stock_id = $('#stock_id').val();
+            erpVoucherPostedUpdateThenPost({
+                documentId: stock_id,
+                idMissingMsg: 'Stock id not found',
+                postUrl: '/stock/' + type + '/post',
+                postData: { stock_id: stock_id },
+                form: '#stock_item_form',
+                canUpdate: {{ (auth()->check() && (auth()->user()->isAbleTo($data['stock_menu_id'].'-edit') || auth()->user()->isAbleTo($data['stock_menu_id'].'-create'))) ? 'true' : 'false' }}
+            });
+        }
+        function voucher_unposted(){
+            var stock_id = $('#stock_id').val();
+            if(!stock_id){
+                toastr.error('Stock id not found');
+                return;
+            }
+            $.ajax({
+                headers:{ 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                type:'POST',
+                url: '/stock/' + type + '/unposted',
+                dataType: 'json',
+                data: { data: [stock_id] },
+                success: function(response, textStatus, xhr) {
+                    erpDocumentAjaxDone(response, xhr, { successMsg: 'Successfully Un-Posted.' });
+                },
+                error: function(xhr) {
+                    erpDocumentAjaxDone(null, xhr, { errorMsg: 'Unable to unpost.' });
+                }
+            });
+        }
     </script>
     <script>
         var productHelpUrl = "{{url('/common/inline-help/productHelp')}}";
@@ -327,7 +399,7 @@
 
             {
                 'id':'pd_barcode',
-                'fieldClass':'pd_barcode tb_moveIndex open_inline__help',
+                'fieldClass':'pd_barcode tb_moveIndex open_inline__help on_click_event',
                 'require':true,
                 'readonly':true
                 //  'data-url' : productHelpUrl

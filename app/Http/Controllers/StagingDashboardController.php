@@ -218,6 +218,7 @@ class StagingDashboardController extends Controller
             65 => '/stock/stock-transfer/form/',
             76 => '/stock/stock-receiving/form/',
             359 => '/stock/stock-distribution/form/',
+            57 => '/stock/damaged-items/form/',
         ];
 
         if (!isset($paths[$menuDtlId])) {

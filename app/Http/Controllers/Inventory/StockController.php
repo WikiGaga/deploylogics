@@ -347,7 +347,8 @@ class StockController extends Controller
         ];
 
        $new_branch_id = $request->new_branch_id;
-        if($formType == 'os' || $formType == 'sd'){
+        $storeFromFormTypes = ['di', 'ei', 'sp', 'ri', 'sa'];
+        if($formType == 'os' || $formType == 'sd' || in_array($formType, $storeFromFormTypes, true)){
             $valid['store'] = 'required|numeric|not_in:0';
         }
         if($formType == 'st'){
@@ -398,6 +399,15 @@ class StockController extends Controller
                 ->exists();
             if (!$destinationStoreExists) {
                 return $this->jsonErrorResponse($data, 'The receiving store does not belong to the selected branch.', 422);
+            }
+        }
+        if (in_array($formType, array_merge($storeFromFormTypes, ['os', 'sd']), true)) {
+            $sourceStoreExists = TblDefiStore::where('store_id', $request->store)
+                ->where('branch_id', $request->new_branch_id)
+                ->where(Utilities::currentBC())
+                ->exists();
+            if (!$sourceStoreExists) {
+                return $this->jsonErrorResponse($data, 'The selected store does not belong to the selected branch.', 422);
             }
         }
         if(isset($request->selected_barcode_rate) && !empty($request->selected_barcode_rate)){
@@ -593,6 +603,9 @@ class StockController extends Controller
                 $stock->stock_branch_from_id =  $new_branch_id;
                 $stock->stock_store_to_id =  "";
                 $stock->stock_branch_to_id =  "";
+            }
+            if (in_array($formType, $storeFromFormTypes, true)) {
+                $stock->stock_store_from_id = isset($request->store) ? $request->store : '';
             }
             $stock->sales_sales_type =  isset($request->sales_sales_type)?$request->sales_sales_type:"";
             $stock->stock_rate_by =  isset($request->selected_barcode_rate)?$request->selected_barcode_rate:"";
