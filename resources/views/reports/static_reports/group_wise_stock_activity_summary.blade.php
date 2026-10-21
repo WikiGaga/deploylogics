@@ -441,11 +441,10 @@ from
 
 
 $query = "SELECT
-    abc.PRODUCT_BARCODE_BARCODE,
-    abc.PRODUCT_BARCODE_PACKING,
     abc.UOM_NAME,
     abc.PRODUCT_ID,
     abc.PRODUCT_BARCODE_ID,
+    abc.PRODUCT_BARCODE_BARCODE,
     abc.BRANCH_ID,
     abc.BRANCH_NAME,
     abc.PRODUCT_NAME,
@@ -464,13 +463,9 @@ $query = "SELECT
     abc.DAMAGED_ITEMS,
     abc.TOTAL_STOCK_OUT,
     abc.STOCK_BALANCE,
-    NVL(AVERAGE_RATE.AVERAGE_PRICE, 0) AVERAGE_PRICE,
-    NVL(
-        LAST_INBOUND_RATE.PACK_RATE,
-        NVL(AVERAGE_RATE.AVERAGE_PRICE, 0)
-    ) LAST_PRICE,
-    abc.STOCK_BALANCE
-        * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
+    NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_PRICE,
+    NVL(LAST_INBOUND_RATE.BASE_UNIT_RATE, NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)) LAST_PRICE,
+    abc.STOCK_BALANCE * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
     abc.STOCK_BALANCE * NVL(
         LAST_INBOUND_RATE.BASE_UNIT_RATE,
         NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)
@@ -478,10 +473,9 @@ $query = "SELECT
 FROM
   (SELECT 
     STOCK.PRODUCT_ID,
-    STOCK.PRODUCT_BARCODE_ID,
-    PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
-    PROD_BARCODE.PRODUCT_BARCODE_PACKING,
-    UOM.UOM_NAME,
+    MAX(PROD_BARCODE.PRODUCT_BARCODE_ID) PRODUCT_BARCODE_ID,
+    MAX(PROD_BARCODE.PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
+    MAX(UOM.UOM_NAME) UOM_NAME,
     STOCK.BRANCH_ID,
     TBL_SOFT_BRANCH.BRANCH_NAME,
     PROD.PRODUCT_NAME,
@@ -808,10 +802,6 @@ FROM
     GROUP BY STOCK.BRANCH_ID,
         PROD.PRODUCT_NAME,
         STOCK.PRODUCT_ID,
-        STOCK.PRODUCT_BARCODE_ID,
-        PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
-        PROD_BARCODE.PRODUCT_BARCODE_PACKING,
-        UOM.UOM_NAME,
         GROUP_ITEM_NAME,
         TBL_SOFT_BRANCH.BRANCH_NAME
         $groupsup
@@ -819,15 +809,12 @@ FROM
     LEFT JOIN AVERAGE_RATE
         ON AVERAGE_RATE.BRANCH_ID = abc.BRANCH_ID
         AND AVERAGE_RATE.PRODUCT_ID = abc.PRODUCT_ID
-        AND AVERAGE_RATE.PRODUCT_BARCODE_ID = abc.PRODUCT_BARCODE_ID
     LEFT JOIN LAST_INBOUND_RATE
         ON LAST_INBOUND_RATE.BRANCH_ID = abc.BRANCH_ID
         AND LAST_INBOUND_RATE.PRODUCT_ID = abc.PRODUCT_ID
-        AND LAST_INBOUND_RATE.PRODUCT_BARCODE_ID = abc.PRODUCT_BARCODE_ID
 ORDER BY abc.BRANCH_NAME,
   abc.GROUP_ITEM_NAME,
   abc.PRODUCT_NAME,
-  abc.PRODUCT_BARCODE_PACKING,
   abc.UOM_NAME ";
 
 // The activity query uses the same posted ledger rows for opening and every
@@ -867,8 +854,6 @@ $query = "WITH STOCK_LEDGER AS (
     SELECT
         BRANCH_ID,
         PRODUCT_ID,
-        PRODUCT_BARCODE_ID,
-        NVL(SUM(INBOUND_AMOUNT) / NULLIF(SUM(INBOUND_PACK_QTY), 0), 0) AVERAGE_PRICE,
         NVL(SUM(INBOUND_AMOUNT) / NULLIF(SUM(INBOUND_BASE_QTY), 0), 0) BASE_UNIT_RATE
     FROM (
         SELECT
@@ -902,18 +887,13 @@ $query = "WITH STOCK_LEDGER AS (
                   AND NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE) > 0)
           )
     ) INBOUND_RATES
-    GROUP BY BRANCH_ID, PRODUCT_ID, PRODUCT_BARCODE_ID
+    GROUP BY BRANCH_ID, PRODUCT_ID
 ), LAST_INBOUND_RATE AS (
-    SELECT BRANCH_ID, PRODUCT_ID, PRODUCT_BARCODE_ID, PACK_RATE, BASE_UNIT_RATE
+    SELECT BRANCH_ID, PRODUCT_ID, BASE_UNIT_RATE
     FROM (
         SELECT
             LEDGER.BRANCH_ID,
             LEDGER.PRODUCT_ID,
-            LEDGER.PRODUCT_BARCODE_ID,
-            CASE
-                WHEN LEDGER.DOCUMENT_TYPE = 'GRN' THEN NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0)
-                ELSE NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE)
-            END PACK_RATE,
             CASE
                 WHEN LEDGER.DOCUMENT_TYPE = 'GRN'
                     THEN NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) / NULLIF(LEDGER.PRODUCT_PACKING, 0)
@@ -921,7 +901,7 @@ $query = "WITH STOCK_LEDGER AS (
                      / NULLIF(LEDGER.PRODUCT_PACKING, 0)
             END BASE_UNIT_RATE,
             ROW_NUMBER() OVER (
-                PARTITION BY LEDGER.BRANCH_ID, LEDGER.PRODUCT_ID, LEDGER.PRODUCT_BARCODE_ID
+                PARTITION BY LEDGER.BRANCH_ID, LEDGER.PRODUCT_ID
                 ORDER BY LEDGER.DOCUMENT_DATE DESC, LEDGER.CREATED_AT DESC
             ) RN
         FROM STOCK_LEDGER LEDGER
@@ -999,9 +979,7 @@ $query = "WITH STOCK_LEDGER AS (
                         <tr class="sticky-header">
                             <th class="dtl-head" rowspan="2">Branch</th>
                             <th class="dtl-head" rowspan="2">Group</th>
-                            <th class="dtl-head" rowspan="2">Barcode</th>
                             <th class="dtl-head" rowspan="2">Product</th>
-                            <th class="dtl-head" rowspan="2">Packing</th>
                             <th class="dtl-head" rowspan="2">UOM</th>
                             <th class="dtl-head" colspan="6">STOCK IN</th>
                             <th class="dtl-head" colspan="7">STOCK OUT</th>
@@ -1131,7 +1109,6 @@ $query = "WITH STOCK_LEDGER AS (
                                         @if($group_item_name_key != "")
                                         <td class="vertical sale_type_color" rowspan="{{$rowspans[$branch_key_new.'_'.$group_item_name_key_new]}}">{{$group_item_name_key}}</td>
                                         @endif
-                                        <td>{{$item->product_barcode_barcode}}</td>
                                         <td data-id="pd_product_name"
                                             data-product-id="{{$item->product_id}}"
                                             data-barcode-id="{{$item->product_barcode_id}}"
@@ -1139,7 +1116,6 @@ $query = "WITH STOCK_LEDGER AS (
                                             data-barcode="{{$item->product_barcode_barcode}}">
                                             <strong>{{$product_name_key}}</strong>
                                         </td>
-                                        <td class="text-right">{{number_format($item->product_barcode_packing,0)}}</td>
                                         <td class="text-center">{{$item->uom_name ?? '-'}}</td>
                                         <td class="text-right">{{number_format($item->opening_balance,0)}}</td>
                                         <td class="text-right">{{number_format($item->purchase,0)}}</td>
@@ -1169,7 +1145,7 @@ $query = "WITH STOCK_LEDGER AS (
                                 @endforeach
                             @endforeach
                                 <tr>
-                                    <td class="text-right sale_type_color" colspan="5"><b>TOTAL : </b> </td>
+                                    <td class="text-right sale_type_color" colspan="3"><b>TOTAL : </b> </td>
                                     <td class="text-right sale_type_color">{{number_format($tot_opening_balance,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purchase,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_rec,0)}}</td>
@@ -1191,7 +1167,7 @@ $query = "WITH STOCK_LEDGER AS (
                                 </tr>
                            @endforeach
                                 <tr>
-                                    <td class="text-right barnch_color" colspan="6"><b>GRAND TOTAL : </b> </td>
+                                    <td class="text-right barnch_color" colspan="4"><b>GRAND TOTAL : </b> </td>
                                     <td class="text-right barnch_color">{{number_format($stot_opening_balance,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purchase,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_rec,0)}}</td>
