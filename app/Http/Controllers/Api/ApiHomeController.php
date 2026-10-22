@@ -277,6 +277,9 @@ class ApiHomeController extends ApiController
                     $query->orWhereRaw(
                         "REGEXP_REPLACE(TO_CHAR(e.EMPLOYEE_LOCAL_PHONE_NO), '[^0-9]', '') LIKE ?",
                         ['%' . $phoneSearch . '%']
+                    )->orWhereRaw(
+                        "REGEXP_REPLACE(TO_CHAR(e.EMPLOYEE_LOCAL_MOBILE_NO), '[^0-9]', '') LIKE ?",
+                        ['%' . $phoneSearch . '%']
                     );
                 }
             })
