@@ -235,9 +235,19 @@ class ApiHomeController extends ApiController
         }
 
         $search = trim((string) $request->input('search'));
-        $searchTerm = '%' . strtolower($search) . '%';
+        if ($search === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provide an employee code or local phone number in the search field.',
+            ], 422);
+        }
 
-        $employee = DB::table('tbl_payr_employee as e')
+        $searchTerm = '%' . mb_strtolower($search) . '%';
+        // Phone fields often contain country codes, spaces, dashes or brackets.
+        // Normalize both stored and searched phone values to digits for matching.
+        $phoneSearch = preg_replace('/\D+/', '', $search);
+
+        $employees = DB::table('tbl_payr_employee as e')
             ->leftJoin('tbl_payr_gender as g', 'g.gender_id', '=', 'e.GENDER_ID')
             ->leftJoin('tbl_defi_city as cty', 'cty.city_id', '=', 'e.EMPLOYEE_LOCAL_CITY_ID')
             ->leftJoin('tbl_defi_country as c', 'c.country_id', '=', 'e.EMPLOYEE_LOCAL_COUNTRY_ID')
@@ -259,12 +269,28 @@ class ApiHomeController extends ApiController
                 'e.IMAGE_EMBEDED_CODE',
                 'e.CREATED_AT'
             )
-          ->where(function ($query) use ($searchTerm) {
-        $query->whereRaw('LOWER(e.EMPLOYEE_CODE) LIKE ?', [$searchTerm])
-              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PHONE_NO) LIKE ?', [$searchTerm])
-              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PERSONAL_EMAIL) LIKE ?', [$searchTerm]);
-    })
-            ->first();
+            ->where(function ($query) use ($searchTerm, $phoneSearch) {
+                $query->whereRaw('LOWER(e.EMPLOYEE_CODE) LIKE ?', [$searchTerm])
+                    ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PERSONAL_EMAIL) LIKE ?', [$searchTerm]);
+
+                if ($phoneSearch !== '') {
+                    $query->orWhereRaw(
+                        "REGEXP_REPLACE(TO_CHAR(e.EMPLOYEE_LOCAL_PHONE_NO), '[^0-9]', '') LIKE ?",
+                        ['%' . $phoneSearch . '%']
+                    );
+                }
+            })
+            ->limit(2)
+            ->get();
+
+        if ($employees->count() > 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search matched more than one employee. Please provide a more specific employee code or phone number.',
+            ], 409);
+        }
+
+        $employee = $employees->first();
 
         if (!$employee) {
             return response()->json([
