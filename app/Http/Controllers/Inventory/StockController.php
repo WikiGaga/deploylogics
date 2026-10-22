@@ -331,6 +331,27 @@ class StockController extends Controller
         }
         $formType = $expectedFormTypes[$type];
         $request->merge(['stock_code_type' => $formType]);
+        $stagingActionCode = strtolower(str_replace([' ', '-'], '_', trim((string) $request->input('staging_action_code', ''))));
+        $isWorkflowStagingAction = in_array($stagingActionCode, [
+            'forward', 'send_forward', 'back', 'send_back', 'sendback', 'post', 'cancel', 'un_post', 'unpost',
+        ], true);
+
+        // Grid amounts are displayed with thousands separators. Normalize the
+        // Damaged Items numeric fields before Laravel's numeric validation,
+        // using the same conversion already used when the detail is saved.
+        if ($formType === 'di' && !$isWorkflowStagingAction && is_array($request->input('pd'))) {
+            $damagedItems = $request->input('pd');
+            foreach ($damagedItems as &$damagedItem) {
+                foreach (['pd_packing', 'quantity', 'rate', 'amount'] as $numericField) {
+                    if (array_key_exists($numericField, $damagedItem)
+                        && trim((string) $damagedItem[$numericField]) !== '') {
+                        $damagedItem[$numericField] = $this->addNo($damagedItem[$numericField]);
+                    }
+                }
+            }
+            unset($damagedItem);
+            $request->merge(['pd' => $damagedItems]);
+        }
 
         $valid = [
             'stock_date' => 'required|date_format:d-m-Y',
@@ -366,11 +387,26 @@ class StockController extends Controller
             $valid['store_to'] = 'required|numeric|not_in:0';
             $valid['stock_from_id'] = 'required|numeric';
         }
+        if($formType == 'di' && !$isWorkflowStagingAction){
+            $valid['store'] = 'required|numeric|not_in:0';
+            $valid['pd'] = 'required|array|min:1';
+            $valid['pd.*.product_id'] = 'required|numeric';
+            $valid['pd.*.product_barcode_id'] = 'required|numeric';
+            $valid['pd.*.uom_id'] = 'required|numeric';
+            $valid['pd.*.pd_barcode'] = 'required|max:100';
+            $valid['pd.*.pd_packing'] = 'required|numeric|gt:0';
+            $valid['pd.*.quantity'] = 'required|numeric|gt:0';
+            $valid['pd.*.rate'] = 'required|numeric|min:0';
+            $valid['pd.*.amount'] = 'required|numeric|min:0';
+        }
         //dd($valid);
         $validator = Validator::make($request->all(), $valid);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
-            return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
+            $message = $formType === 'di'
+                ? $validator->errors()->first()
+                : trans('message.required_fields');
+            return $this->jsonErrorResponse($data, $message, 422);
         }
         $allowedBranchIds = DB::table('tbl_soft_user_branch')
             ->where('user_id', auth()->user()->id)
@@ -410,6 +446,28 @@ class StockController extends Controller
                 return $this->jsonErrorResponse($data, 'The selected store does not belong to the selected branch.', 422);
             }
         }
+
+        if ($formType === 'di' && !$isWorkflowStagingAction) {
+
+            $seenBarcodes = [];
+            foreach ($request->pd as $pd) {
+                $barcodeId = (string) $pd['product_barcode_id'];
+                if (isset($seenBarcodes[$barcodeId])) {
+                    return $this->jsonErrorResponse($data, 'The same product barcode cannot be entered more than once.', 422);
+                }
+                $seenBarcodes[$barcodeId] = true;
+
+                $validProduct = TblPurcProductBarcode::where('product_barcode_id', $pd['product_barcode_id'])
+                    ->where('product_id', $pd['product_id'])
+                    ->where('uom_id', $pd['uom_id'])
+                    ->where('product_barcode_barcode', $pd['pd_barcode'])
+                    ->where('business_id', auth()->user()->business_id)
+                    ->exists();
+                if (!$validProduct) {
+                    return $this->jsonErrorResponse($data, 'An invalid product, barcode or UOM was submitted.', 422);
+                }
+            }
+        }
         if(isset($request->selected_barcode_rate) && !empty($request->selected_barcode_rate)){
             $rate_by = config('constants.rate_by');
             $rate_by=array_flip($rate_by);
@@ -417,11 +475,6 @@ class StockController extends Controller
                 return $this->jsonErrorResponse($data, trans('message.required_fields'), 422);
             }
         }
-        $stagingActionCode = strtolower(str_replace([' ', '-'], '_', trim((string) $request->input('staging_action_code', ''))));
-        $isWorkflowStagingAction = in_array($stagingActionCode, [
-            'forward', 'send_forward', 'back', 'send_back', 'sendback', 'post', 'cancel', 'un_post', 'unpost',
-        ], true);
-
         if(empty($request->pd) && !$isWorkflowStagingAction && $formType !== 'str'){
             return $this->returnjsonerror("Please Enter Product Detail",201);
         }
@@ -528,6 +581,9 @@ class StockController extends Controller
                 $criteriaApplies = $stagingService->shouldUseStagingForDocument($this->menu_id, $form_id, $stock, $wasInStaging, false);
 
                 if ($criteriaApplies) {
+                    if ($formType === 'di' && $stagingActionCode === 'post') {
+                        $this->assertDamagedItemsStockAvailable($stock);
+                    }
                     $this->handleStaging($request, $this->menu_id, $form_id, $stock, false, [
                         'listing_view' => 'vw_inve_stock',
                         'form_path' => '/stock/' . $type . '/form',
@@ -606,6 +662,9 @@ class StockController extends Controller
             }
             if (in_array($formType, $storeFromFormTypes, true)) {
                 $stock->stock_store_from_id = isset($request->store) ? $request->store : '';
+            }
+            if($formType == 'di') {
+                $stock->stock_branch_from_id = $new_branch_id;
             }
             $stock->sales_sales_type =  isset($request->sales_sales_type)?$request->sales_sales_type:"";
             $stock->stock_rate_by =  isset($request->selected_barcode_rate)?$request->selected_barcode_rate:"";
@@ -700,7 +759,7 @@ class StockController extends Controller
                         $dtl->grm_net_amount =  isset($pd['net_amount'])?$this->addNo($pd['net_amount']):"";
                         $dtl->grn_rate =  isset($pd['unit_price'])?$this->addNo($pd['unit_price']):"";
                     }
-                    if (in_array($formType, ['os', 'st', 'str', 'sd', 'sa'], true)) {
+                    if (in_array($formType, ['os', 'st', 'str', 'sd', 'di', 'sa'], true)) {
                         $baseUnitQuantity = $formType == 'sa'
                             ? $adjustmentQty
                             : $this->addNo($pd['quantity']);
@@ -1153,6 +1212,9 @@ class StockController extends Controller
                 'posted_when_exempt' => 0,
                 'stg_log_posted_when_exempt' => 0,
                 'sync_after_save' => function ($model) {
+                    if ($model->stock_code_type === 'di' && (int) ($model->posted ?? 0) === 1) {
+                        $this->assertDamagedItemsStockAvailable($model);
+                    }
                     if ($model->stock_code_type === 'str' && (int) ($model->posted ?? 0) === 2) {
                         $this->releaseReceivingSourceTransfer($model);
                     } elseif ($model->stock_code_type === 'str' && (int) ($model->posted ?? 0) === 1) {
@@ -1327,8 +1389,21 @@ class StockController extends Controller
         }
 
         if(isset($id)){
-            if(TblInveStock::where('stock_id','LIKE',$id)->exists()){
-                $data['current'] = TblInveStock::with('stock_dtls','product','barcode')->where('stock_id',$id)->where('stock_code_type',$data['stock_code_type'])->first();
+            $printQuery = TblInveStock::where('stock_id', $id)
+                ->where('stock_code_type', $data['stock_code_type'])
+                ->where(Utilities::currentBC());
+            if ($type === 'damaged-items') {
+                $printQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+            }
+            if($printQuery->exists()){
+                $data['current'] = TblInveStock::with('stock_dtls','product','barcode')
+                    ->where('stock_id',$id)
+                    ->where('stock_code_type',$data['stock_code_type'])
+                    ->where(Utilities::currentBC());
+                if ($type === 'damaged-items') {
+                    $data['current']->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+                }
+                $data['current'] = $data['current']->first();
                 if(!empty($data['current']->supplier_id) && isset($data['current']->supplier_id)){
                     $data['supplier'] = TblPurcSupplier::where('supplier_id',$data['current']->supplier_id)->select('supplier_id','supplier_name')->first();
                 }
@@ -2013,6 +2088,38 @@ class StockController extends Controller
         }
     }
 
+    protected function assertDamagedItemsStockAvailable($stock): void
+    {
+        if (empty($stock) || strtolower((string) $stock->stock_code_type) !== 'di') {
+            return;
+        }
+
+        $stock->loadMissing('stock_dtls');
+        foreach ($stock->stock_dtls as $detail) {
+            $available = DB::table('VW_PURC_STOCK_DTL')
+                ->where('business_id', $stock->business_id)
+                ->where('company_id', $stock->company_id)
+                ->where('branch_id', $stock->branch_id)
+                ->where('sales_store_id', $stock->stock_store_from_id)
+                ->where('product_id', $detail->product_id)
+                ->where('product_barcode_id', $detail->product_barcode_id)
+                ->where('posted', 1)
+                ->where('document_id', '<>', $stock->stock_id)
+                ->whereDate('document_date', '<=', $stock->stock_date)
+                ->sum('qty_base_unit_value');
+
+            $required = (float) $detail->stock_dtl_qty_base_unit;
+            if ((float) $available + 0.000001 < $required) {
+                throw new \RuntimeException(
+                    'Insufficient stock for barcode '.$detail->product_barcode_barcode
+                    .'. Available base quantity: '.number_format((float) $available, 3, '.', '')
+                    .', required: '.number_format($required, 3, '.', '').'.',
+                    422
+                );
+            }
+        }
+    }
+
     protected function releaseReceivingSourceTransfer($receiving): void
     {
         if (empty($receiving) || $receiving->stock_code_type !== 'str' || empty($receiving->stock_request_id)) {
@@ -2045,9 +2152,13 @@ class StockController extends Controller
                 DB::rollBack();
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)
+            $rowQuery = TblInveStock::where('stock_id', $stock_id)
                 ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
-                ->where(Utilities::currentBC())->first();
+                ->where(Utilities::currentBC());
+            if ($type === 'damaged-items') {
+                $rowQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+            }
+            $row = $rowQuery->first();
             $this->assertTransferNotReceived($row, 'canceled');
             $this->guardUmDocumentAction($this->menu_id, $row, 'cancel', 'cancel');
             $row->posted = 2;
@@ -2075,10 +2186,15 @@ class StockController extends Controller
             if (empty($stock_id)) {
                 return response()->json(['status' => 'error', 'message' => 'Stock id not found.'], 422);
             }
-            $row = TblInveStock::where('stock_id', $stock_id)
+            $rowQuery = TblInveStock::where('stock_id', $stock_id)
                 ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
-                ->where(Utilities::currentBC())->first();
+                ->where(Utilities::currentBC());
+            if ($type === 'damaged-items') {
+                $rowQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+            }
+            $row = $rowQuery->first();
             $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
+            $this->assertDamagedItemsStockAvailable($row);
             $row->posted = 1;
             $row->update();
             $this->setReceivingSourceStatus($row, 1);
@@ -2099,17 +2215,26 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)
+                    $rowQuery = TblInveStock::where('stock_id', $id)
                         ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
-                        ->where(Utilities::currentBC())->first();
+                        ->where(Utilities::currentBC());
+                    if ($type === 'damaged-items') {
+                        $rowQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+                    }
+                    $row = $rowQuery->first();
                     $this->guardUmDocumentAction($this->menu_id, $row, 'post', 'post');
+                    $this->assertDamagedItemsStockAvailable($row);
                 } catch (\RuntimeException $e) {
                     return $this->jsonErrorResponse([], $e->getMessage(), $e->getCode() >= 400 ? $e->getCode() : 422);
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->first();
+                $postQuery = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC());
+                if ($type === 'damaged-items') {
+                    $postQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+                }
+                if($postQuery->exists()){
+                    $row = $postQuery->first();
                     $row->posted = 1;
                     $row->update();
                     $this->setReceivingSourceStatus($row, 1);
@@ -2133,9 +2258,13 @@ class StockController extends Controller
         if(is_array($ids) && count($ids) > 0){
             foreach($ids as $id){
                 try {
-                    $row = TblInveStock::where('stock_id', $id)
+                    $rowQuery = TblInveStock::where('stock_id', $id)
                         ->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))
-                        ->where(Utilities::currentBC())->first();
+                        ->where(Utilities::currentBC());
+                    if ($type === 'damaged-items') {
+                        $rowQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+                    }
+                    $row = $rowQuery->first();
                     $this->assertTransferNotReceived($row, 'un-posted');
                     $this->guardUmDocumentAction($this->menu_id, $row, 'un_post_module', 'unpost');
                 } catch (\RuntimeException $e) {
@@ -2143,8 +2272,12 @@ class StockController extends Controller
                 }
             }
             foreach($ids as $id){
-                if(TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->exists()){
-                    $row = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC())->first();
+                $unpostQuery = TblInveStock::where('stock_id',$id)->where('stock_code_type', $this->resolveStockCodeTypeFromType($type))->where(Utilities::currentBC());
+                if ($type === 'damaged-items') {
+                    $unpostQuery->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+                }
+                if($unpostQuery->exists()){
+                    $row = $unpostQuery->first();
                     $row->posted = 0;
                     $row->update();
                     $this->setReceivingSourceStatus($row, 2);

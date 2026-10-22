@@ -685,6 +685,9 @@
         });
         $(document).on('click' , '.branch-item' , function(e){
             e.preventDefault();
+            if (window.GRNFormAutoSave) {
+                window.GRNFormAutoSave.autoSaveEnabled = false;
+            }
             var thix = $(this);
             var branch = thix.data('id');
             var formData = {

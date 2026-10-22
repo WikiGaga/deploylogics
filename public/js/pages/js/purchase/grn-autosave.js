@@ -37,8 +37,55 @@ const GRNFormAutoSave = {
         });
     },
 
+    getStorageKey: function() {
+        const branchId = $('#new_branch_id').val() || $('input[name="branch"]').val() || '';
+        return branchId ? `${this.storageKey}_branch_${branchId}` : this.storageKey;
+    },
+
+    hasMeaningfulData: function() {
+        const $gridRows = $('.erp_form__grid_body tr').not('.erp_form__grid_body_total tr');
+        if ($gridRows.length > 0) {
+            return true;
+        }
+
+        const supplierId = $('#supplier_id').val();
+        if (supplierId && supplierId !== '' && supplierId !== '0') {
+            return true;
+        }
+
+        const poId = $('#purchase_order_id').val();
+        if (poId && poId !== '' && poId !== '0') {
+            return true;
+        }
+
+        const billNo = $('#grn_bill_no').val();
+        if (billNo && billNo.trim() !== '') {
+            return true;
+        }
+
+        const notes = $('#grn_notes').val();
+        if (notes && notes.trim() !== '') {
+            return true;
+        }
+
+        return false;
+    },
+
     checkAndRestoreData: function() {
-        const savedData = localStorage.getItem(this.storageKey);
+        // Purge legacy unscoped autosave data if present
+        if (localStorage.getItem(this.storageKey)) {
+            try {
+                const legacy = JSON.parse(localStorage.getItem(this.storageKey));
+                if (!legacy.version || legacy.version < 4) {
+                    localStorage.removeItem(this.storageKey);
+                }
+            } catch (e) {
+                localStorage.removeItem(this.storageKey);
+            }
+        }
+
+        const storageKey = this.getStorageKey();
+        const savedData = localStorage.getItem(storageKey);
 
         if (!savedData) {
             return;
@@ -47,9 +94,15 @@ const GRNFormAutoSave = {
         try {
             const formData = JSON.parse(savedData);
 
-            if (!formData.version || formData.version < 3) {
+            if (!formData.version || formData.version < 4) {
                 console.log('Clearing old version autosave data');
                 this.clearSavedData();
+                return;
+            }
+
+            const currentBranchId = $('#new_branch_id').val() || $('input[name="branch"]').val() || '';
+            if (formData.branchId && currentBranchId && formData.branchId != currentBranchId) {
+                console.log('Autosaved data branch mismatch (' + formData.branchId + ' vs ' + currentBranchId + '), skipping restore');
                 return;
             }
 
@@ -77,13 +130,20 @@ const GRNFormAutoSave = {
             return;
         }
 
+        if (!this.hasMeaningfulData()) {
+            return;
+        }
+
+        const currentBranchId = $('#new_branch_id').val() || $('input[name="branch"]').val() || '';
+
         const formData = {
             timestamp: new Date().toISOString(),
+            branchId: currentBranchId,
             headerFields: {},
             gridRows: [],
             select2Values: {},
             gridBodyHtml: '',
-            version: 3
+            version: 4
         };
 
         try {
@@ -97,7 +157,9 @@ const GRNFormAutoSave = {
                     $field.closest('.erp_form__grid_body').length ||
                     $field.attr('type') === 'file' ||
                     $field.attr('type') === 'submit' ||
-                    $field.attr('type') === 'button') {
+                    $field.attr('type') === 'button' ||
+                    identifier === 'new_branch_id' ||
+                    identifier === 'branch') {
                     return;
                 }
 
@@ -184,7 +246,7 @@ const GRNFormAutoSave = {
 
             console.log('Grid rows found:', totalRows, 'Grid rows saved:', formData.gridRows.length);
 
-            localStorage.setItem(this.storageKey, JSON.stringify(formData));
+            localStorage.setItem(this.getStorageKey(), JSON.stringify(formData));
             this.updateClearButtonVisibility();
             console.log('GRN form data auto-saved', formData);
         } catch (e) {
@@ -205,6 +267,11 @@ const GRNFormAutoSave = {
             if (formData && formData.headerFields) {
                 for (const identifier in formData.headerFields) {
                     if (!Object.prototype.hasOwnProperty.call(formData.headerFields, identifier)) {
+                        continue;
+                    }
+
+                    // Never overwrite branch fields from autosave
+                    if (identifier === 'new_branch_id' || identifier === 'branch') {
                         continue;
                     }
 
@@ -314,6 +381,13 @@ const GRNFormAutoSave = {
     setFieldValue: function($field, value) {
         if (!$field.length || value === undefined || value === null) {
             return;
+        }
+
+        if ($field.is('select') && value !== '') {
+            // Verify option exists in select before setting
+            if (!$field.find('option[value="' + value + '"]').length) {
+                return;
+            }
         }
 
         $field.val(value);
@@ -649,14 +723,16 @@ const GRNFormAutoSave = {
     },
 
     clearSavedData: function() {
-        const key = this.storageKey;
+        const key = this.getStorageKey();
         localStorage.removeItem(key);
+        localStorage.removeItem(this.storageKey);
 
         const verify = localStorage.getItem(key);
         if (verify !== null) {
             console.error('Failed to clear localStorage. Key still exists:', key);
             try {
                 delete localStorage[key];
+                delete localStorage[this.storageKey];
             } catch (e) {
                 console.error('Error deleting from localStorage:', e);
             }
@@ -674,12 +750,13 @@ const GRNFormAutoSave = {
 
     clearForm: function() {
         const self = this;
-        const storageKey = this.storageKey;
+        const storageKey = this.getStorageKey();
 
         function performClear() {
             self.autoSaveEnabled = false;
 
             localStorage.removeItem(storageKey);
+            localStorage.removeItem(self.storageKey);
             sessionStorage.setItem(self.clearFlagKey, 'true');
 
             const verify = localStorage.getItem(storageKey);
@@ -687,6 +764,7 @@ const GRNFormAutoSave = {
                 console.error('Failed to clear localStorage. Attempting alternative method...');
                 try {
                     delete localStorage[storageKey];
+                    delete localStorage[self.storageKey];
                 } catch (e) {
                     console.error('Error with alternative clear method:', e);
                 }
@@ -750,7 +828,8 @@ const GRNFormAutoSave = {
 
         $('#' + this.formId + ' select').each(function() {
             const $field = $(this);
-            if (!$field.closest('.erp_form__grid_body').length) {
+            if (!$field.closest('.erp_form__grid_body').length &&
+                $field.attr('id') !== 'new_branch_id') {
                 if ($field.hasClass('kt-select2') || $field.hasClass('select2-hidden-accessible')) {
                     $field.val(null).trigger('change.select2');
                 } else {
@@ -768,7 +847,7 @@ const GRNFormAutoSave = {
     },
 
     getStorageInfo: function() {
-        const savedData = localStorage.getItem(this.storageKey);
+        const savedData = localStorage.getItem(this.getStorageKey());
 
         if (!savedData) {
             return null;
@@ -792,7 +871,7 @@ const GRNFormAutoSave = {
         const self = this;
         const $btn = $('#clearFormBtn');
 
-        if (localStorage.getItem(this.storageKey)) {
+        if (localStorage.getItem(this.getStorageKey())) {
             $btn.show();
         }
 
@@ -803,7 +882,7 @@ const GRNFormAutoSave = {
 
     updateClearButtonVisibility: function() {
         const $btn = $('#clearFormBtn');
-        if (localStorage.getItem(this.storageKey)) {
+        if (localStorage.getItem(this.getStorageKey())) {
             $btn.show();
         } else {
             $btn.hide();

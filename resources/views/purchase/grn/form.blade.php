@@ -1183,7 +1183,7 @@
 @section('customJS')
     <script src="{{ asset('js/pages/js/grn.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/purchase/grn-autosave.js?v=3') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/purchase/grn-autosave.js?v=4') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
         $(document).ready(function() {

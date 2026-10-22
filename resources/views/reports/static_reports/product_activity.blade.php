@@ -96,6 +96,12 @@
                             <th class="text-center">Outputs</th>
                             <th class="text-center">Out Rate</th>
                             <th class="text-center">Balance</th>
+                            <th class="text-center">Packing</th>
+                            <th class="text-center">Inputs per item</th>
+                            <th class="text-center">In Rate per item</th>
+                            <th class="text-center">Outputs per item</th>
+                            <th class="text-center">Out Rate per item</th>
+                            <th class="text-center">Balance per item</th>
                             {{--<th class="text-center">Price</th>--}}
                             {{--<th class="text-center">Expire Date</th>--}}
                         </tr>
@@ -222,6 +228,16 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             $store_stock = DB::selectOne($store_qry);
                             $store_stock = ($store_stock->qty != null)?$store_stock->qty:0;
 
+                            $store_stock_item_qry = "SELECT NVL(SUM(NVL(QTY_BASE_UNIT_VALUE, 0)), 0) qty
+                                   FROM VW_PURC_STOCK_DTL GRN
+                                   WHERE GRN.PRODUCT_ID = $productDtl->product_id
+                                    AND GRN.BUSINESS_ID = ".auth()->user()->business_id."
+                                    AND GRN.COMPANY_ID = ".auth()->user()->company_id."
+                                    AND GRN.branch_id in( ".implode(",",$data['branch_ids']).")
+                                    AND GRN.posted = 1
+                                    $date_field";
+                            $store_stock_item = DB::selectOne($store_stock_item_qry)->qty ?? 0;
+
                                $dt = '';
                                if(count($data['all_document_type']) != 0){
                                    $dt .= "AND STOCK.DOCUMENT_TYPE in( '".implode("','",$data['all_document_type'])."') ";
@@ -230,8 +246,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                    $dt .= "AND STOCK.SALES_STORE_ID in( '".implode("','",$data['store'])."') ";
                                }
                                 if(isset($data['month_wise']) && $data['month_wise']){
-                                    $query = "SELECT PRODUCT_NAME, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
-                                            SELECT PROD.PRODUCT_NAME , STOCK.STOCK_EXPIRY,
+                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                            SELECT PROD.PRODUCT_NAME , NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING, STOCK.STOCK_EXPIRY,
                                             STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                             STOCK.DOCUMENT_CODE ,
                                             NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
@@ -265,7 +281,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
 
                                                 union all
                                                 SELECT
-                                                    PROD.PRODUCT_NAME ,MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
+                                                    PROD.PRODUCT_NAME ,MAX(STOCK.PRODUCT_PACKING) PRODUCT_BARCODE_PACKING, MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
                                                     MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,
                                                     MAX(BR.BRANCH_NAME) BRANCH_NAME ,
                                                     MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
@@ -302,12 +318,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                     AND STOCK.BRANCH_ID in( ".implode(",",$data['branch_ids']).")
                                                     and DOCUMENT_TYPE in ('POS','RPOS')
                                                 GROUP BY to_char(STOCK.DOCUMENT_DATE, 'YYYY-MM'),
-                                                    PROD.PRODUCT_NAME ,  STOCK.DOCUMENT_TYPE
+                                                    PROD.PRODUCT_NAME, STOCK.DOCUMENT_TYPE, STOCK.PRODUCT_PACKING
 
                                             UNION ALL
 
                                             SELECT
-                                                PROD.PRODUCT_NAME , NULL STOCK_EXPIRY,
+                                                PROD.PRODUCT_NAME , 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
                                                 USAGE.USAGE_DATE DOCUMENT_DATE ,
                                                 USAGE.ID DOCUMENT_ID,
                                                 'USAGE' DOCUMENT_TYPE ,
@@ -336,7 +352,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 }else{
                                     $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                         SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
-                                        '' UOM_NAME ,  '' PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
+                                        '' UOM_NAME ,  NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
                                         STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                         STOCK.DOCUMENT_CODE ,
                                         NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
@@ -373,7 +389,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
 
                                     SELECT
                                         PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
-                                        '' UOM_NAME , '' PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
+                                        '' UOM_NAME , 1 PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
                                         USAGE.USAGE_DATE DOCUMENT_DATE ,
                                         USAGE.ID DOCUMENT_ID,
                                         'USAGE' DOCUMENT_TYPE ,
@@ -407,6 +423,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                $totInQty = 0;
                                $totOutQty = 0;
                                $BalQty = 0;
+                               $totInQtyPerItem = 0;
+                               $totOutQtyPerItem = 0;
+                               $BalQtyPerItem = (float)$store_stock_item;
                                $BalPrice = 0;
                         @endphp
                         <tr>
@@ -417,6 +436,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center">{{number_format($store_stock,3)}}</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center">{{number_format($store_stock_item,3)}}</td>
                            {{-- <td></td>--}}
                         </tr>
                         @foreach($listdata as $row)
@@ -437,9 +462,18 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 if($qty_in == 0){$InRate = 0;}else{$InRate = $in_rate;}
                                 if($qty_out == 0){$OutRate = 0;}else{$OutRate = $row->out_rate;}
 
+                                $packing = max(1, (float)($row->product_barcode_packing ?? 1));
+                                $qty_in_per_item = (float)$qty_in * $packing;
+                                $qty_out_per_item = (float)$qty_out * $packing;
+                                $in_rate_per_item = (float)$InRate / $packing;
+                                $out_rate_per_item = (float)$OutRate / $packing;
+                                $BalQtyPerItem += $qty_in_per_item - $qty_out_per_item;
+
                                 $totInQty += $qty_in;
                                 $totOutQty += $qty_out;
                                 $BalQty += $Qty;
+                                $totInQtyPerItem += $qty_in_per_item;
+                                $totOutQtyPerItem += $qty_out_per_item;
                                 if($qty_in != 0 && in_array(strtolower(strtoupper($row->document_type)),['grn','str','os']))
                                 {
                                     $BalPrice = $in_rate;
@@ -484,6 +518,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 <td class="text-center">{{$qty_out==0?"":number_format($qty_out,3)}}</td>
                                 <td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>
                                 <td class="text-center">{{number_format($BalQty,3)}}</td>
+                                <td class="text-center">{{number_format($packing,3)}}</td>
+                                <td class="text-center">{{$qty_in_per_item==0?"":number_format($qty_in_per_item,3)}}</td>
+                                <td class="text-center">{{$in_rate_per_item==0?"":number_format($in_rate_per_item,3)}}</td>
+                                <td class="text-center">{{$qty_out_per_item==0?"":number_format($qty_out_per_item,3)}}</td>
+                                <td class="text-center">{{$out_rate_per_item==0?"":number_format($out_rate_per_item,3)}}</td>
+                                <td class="text-center">{{number_format($BalQtyPerItem,3)}}</td>
                                 {{--<td class="text-center">{{number_format($BalPrice,3)}}</td>--}}
                                 {{--<td class="text-center">{{$expire_date}}</td>--}}
                            </tr>
@@ -495,6 +535,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td class="text-center rep-font-bold">{{number_format($totOutQty,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($BalQty,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
+                            <td class="text-center rep-font-bold">{{number_format($totInQtyPerItem,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
+                            <td class="text-center rep-font-bold">{{number_format($totOutQtyPerItem,3)}}</td>
+                            <td class="text-right rep-font-bold"></td>
+                            <td class="text-center rep-font-bold">{{number_format($BalQtyPerItem,3)}}</td>
                             {{--<td class="text-right rep-font-bold"></td>--}}
                             {{--<td class="text-right rep-font-bold"></td>--}}
                         </tr>

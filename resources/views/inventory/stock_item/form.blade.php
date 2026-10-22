@@ -74,7 +74,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4"></div>
+                    @include('layouts.branchSelect', ['user_branches' => $data['user_branches']])
                     <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label text-center">Store:<span class="required">*</span></label>
@@ -322,7 +322,6 @@
 @section('customJS')
     <script src="{{ asset('js/pages/js/stock.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
 
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
@@ -334,6 +333,7 @@
 
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
+                var selectedStoreId = $storeSelect.val();
                 $storeSelect.html('');
 
                 var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
@@ -344,7 +344,9 @@
                 });
                 $storeSelect.append($matchingOptions);
                 var $defaultStore = $matchingOptions.filter(function() { return $(this).attr('data-default') === '1'; });
-                if ($defaultStore.length) {
+                if ($storeSelect.find('option[value="' + selectedStoreId + '"]').length) {
+                    $storeSelect.val(selectedStoreId);
+                } else if ($defaultStore.length) {
                     $storeSelect.val($defaultStore.first().val());
                 } else if ($matchingOptions.length) {
                     $storeSelect.val($matchingOptions.first().val());
