@@ -365,9 +365,10 @@
         $("body").on("contextmenu", 'td[data-id="pd_product_name"],input[data-id="pd_product_name"],input[data-id="product_name"]', function(e) {
             var thix = $(this);
             var val = thix.val();
-            var product_id = thix.parents('tr').find('td:first-child>.product_id').val();
-            var pd_barcode = thix.parents('tr').find('.pd_barcode').val();
-            var pd_barcode_id = thix.parents('tr').find('.product_barcode_id').val();
+            var $row = thix.closest('tr');
+            var product_id = thix.attr('data-product-id') || $row.find('.product_id').first().val();
+            var pd_barcode = thix.attr('data-barcode') || $row.find('.pd_barcode').first().val();
+            var pd_barcode_id = thix.attr('data-barcode-id') || $row.find('.product_barcode_id').first().val();
 
             $("#contextMenu li a").attr('data-id',product_id);
             $("#contextMenu li a").attr('data-val',val);
@@ -471,9 +472,16 @@
             var product_id = thix.attr('data-id');
             var product_val = thix.attr('data-val');
             var barcode_val = thix.attr('data-barcode');
+            var barcode_id = thix.attr('data-barcode_id');
+            if (!product_id) {
+                e.preventDefault();
+                toastr.error('Unable to load product activity: product information is missing.');
+                return;
+            }
             var data = {
                 'title':'Product Activity Report',
                 'product_id':product_id,
+                'product_barcode_id':barcode_id,
                 'code_val':barcode_val,
                 'name_val':product_val,
                 'btn_id':'generate_report_popup',
@@ -483,7 +491,12 @@
                     'X-CSRF-TOKEN': "{{ csrf_token() }}"
                 }
             });
-            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,data);
+            var $modalContent = $('#kt_modal_md').modal('show').find('.modal-content');
+            $modalContent.load(data_url, data, function(response, status, xhr) {
+                if (status === 'error') {
+                    $modalContent.html('<div class="modal-body"><div class="alert alert-danger mb-0">Unable to load Product Activity criteria (HTTP ' + xhr.status + '). Please try again or contact support.</div></div>');
+                }
+            });
             $('.modal-dialog').draggable({
                 handle: ".modal-header"
             });

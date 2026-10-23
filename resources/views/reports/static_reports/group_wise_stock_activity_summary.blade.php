@@ -460,13 +460,14 @@ $query = "SELECT
     abc.PURCH_RETURN,
     abc.STOCK_ADJUSTMENT,
     abc.CONSUMPTION,
+    NVL(SALES_USAGE.SALES_CONSUMPTION, 0) SALES_CONSUMPTION,
     abc.DAMAGED_ITEMS,
-    abc.TOTAL_STOCK_OUT,
-    abc.STOCK_BALANCE,
+    abc.TOTAL_STOCK_OUT + NVL(SALES_USAGE.SALES_CONSUMPTION, 0) TOTAL_STOCK_OUT,
+    abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0) STOCK_BALANCE,
     NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_PRICE,
     NVL(LAST_INBOUND_RATE.BASE_UNIT_RATE, NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)) LAST_PRICE,
-    abc.STOCK_BALANCE * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
-    abc.STOCK_BALANCE * NVL(
+    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0)) * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
+    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0)) * NVL(
         LAST_INBOUND_RATE.BASE_UNIT_RATE,
         NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)
     ) LAST_PRICE_AMOUNT
@@ -812,6 +813,9 @@ FROM
     LEFT JOIN LAST_INBOUND_RATE
         ON LAST_INBOUND_RATE.BRANCH_ID = abc.BRANCH_ID
         AND LAST_INBOUND_RATE.PRODUCT_ID = abc.PRODUCT_ID
+LEFT JOIN SALES_USAGE
+    ON SALES_USAGE.BRANCH_ID = abc.BRANCH_ID
+    AND SALES_USAGE.PRODUCT_ID = abc.PRODUCT_ID
 ORDER BY abc.BRANCH_NAME,
   abc.GROUP_ITEM_NAME,
   abc.PRODUCT_NAME,
@@ -823,8 +827,20 @@ ORDER BY abc.BRANCH_NAME,
 $ledgerCteDateFilter = $data['date_time_wise'] == 1
     ? "AND CREATED_AT <= to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')"
     : "AND DOCUMENT_DATE <= to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+$salesUsageDateFilter = $data['date_time_wise'] == 1
+    ? "TRUNC(USAGE_DATE) BETWEEN TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))"
+    : "USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
 $query = str_replace('VW_PURC_STOCK_DTL', 'STOCK_LEDGER', $query);
-$query = "WITH STOCK_LEDGER AS (
+$query = "WITH SALES_USAGE AS (
+    SELECT
+        RESTAURANT_ID BRANCH_ID,
+        PRODUCT_ID,
+        SUM(PRODUCT_QUANTITY_USED) SALES_CONSUMPTION
+    FROM ORDER_RECIPE_USAGES
+    WHERE RESTAURANT_ID IN (".implode(",", $data['branch_ids']).")
+      AND ".$salesUsageDateFilter."
+    GROUP BY RESTAURANT_ID, PRODUCT_ID
+), STOCK_LEDGER AS (
     SELECT /*+ MATERIALIZE */
         BRANCH_ID,
         BUSINESS_ID,
@@ -982,7 +998,7 @@ $query = "WITH STOCK_LEDGER AS (
                             <th class="dtl-head" rowspan="2">Product</th>
                             <th class="dtl-head" rowspan="2">UOM</th>
                             <th class="dtl-head" colspan="6">STOCK IN</th>
-                            <th class="dtl-head" colspan="7">STOCK OUT</th>
+                            <th class="dtl-head" colspan="8">STOCK OUT</th>
                             <th width="15%" class="dtl-head" rowspan="2">BALANCE</th>
                             <th class="dtl-head" rowspan="2">Average Price</th>
                             <th class="dtl-head" rowspan="2">Last Price</th>
@@ -1002,6 +1018,7 @@ $query = "WITH STOCK_LEDGER AS (
                             <td width="10%" class="dtl-head">Purchase Return</td>
                             <td width="10%" class="dtl-head">Stock Adjustment</td>
                             <td width="10%" class="dtl-head">Consumption</td>
+                            <td width="10%" class="dtl-head">Sales Consumption</td>
                             <td width="10%" class="dtl-head">Damaged Items</td>
                             <td width="10%" class="dtl-head">Total</td>
                         </tr>
@@ -1018,6 +1035,7 @@ $query = "WITH STOCK_LEDGER AS (
                                 $stot_purch_return = 0;
                                 $stot_stock_adjustment = 0;
                                 $stot_consumption = 0;
+                                $stot_sales_consumption = 0;
                                 $stot_damaged_items = 0;
                                 $stotal_stock_out = 0;
                                 $stotal_stock_balance = 0;
@@ -1037,6 +1055,7 @@ $query = "WITH STOCK_LEDGER AS (
                                     $tot_purch_return = 0;
                                     $tot_stock_adjustment = 0;
                                     $tot_consumption = 0;
+                                    $tot_sales_consumption = 0;
                                     $tot_damaged_items = 0;
                                     $total_stock_out = 0;
                                     $total_stock_balance = 0;
@@ -1076,6 +1095,7 @@ $query = "WITH STOCK_LEDGER AS (
                                         $tot_purch_return = $tot_purch_return + $item->purch_return;
                                         $tot_stock_adjustment = $tot_stock_adjustment + $item->stock_adjustment;
                                         $tot_consumption = $tot_consumption + $item->consumption;
+                                        $tot_sales_consumption = $tot_sales_consumption + $item->sales_consumption;
                                         $tot_damaged_items = $tot_damaged_items + $item->damaged_items;
                                         $total_stock_out = $total_stock_out + $item->total_stock_out;
                                         $total_stock_balance = $total_stock_balance + $item->stock_balance;
@@ -1095,6 +1115,7 @@ $query = "WITH STOCK_LEDGER AS (
                                         $stot_purch_return = $stot_purch_return + $item->purch_return;
                                         $stot_stock_adjustment = $stot_stock_adjustment + $item->stock_adjustment;
                                         $stot_consumption = $stot_consumption + $item->consumption;
+                                        $stot_sales_consumption = $stot_sales_consumption + $item->sales_consumption;
                                         $stot_damaged_items = $stot_damaged_items + $item->damaged_items;
                                         $stotal_stock_out = $stotal_stock_out + $item->total_stock_out;
                                         $stotal_stock_balance = $stotal_stock_balance + $item->stock_balance;
@@ -1129,6 +1150,7 @@ $query = "WITH STOCK_LEDGER AS (
                                         <td class="text-right">{{number_format($item->purch_return,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_adjustment,0)}}</td>
                                         <td class="text-right">{{number_format($item->consumption,0)}}</td>
+                                        <td class="text-right">{{number_format($item->sales_consumption,0)}}</td>
                                         <td class="text-right">{{number_format($item->damaged_items,0)}}</td>
                                         <td class="text-right">{{number_format($item->total_stock_out,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_balance,0)}}</td>
@@ -1157,6 +1179,7 @@ $query = "WITH STOCK_LEDGER AS (
                                     <td class="text-right sale_type_color">{{number_format($tot_purch_return,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_consumption,0)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_sales_consumption,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_damaged_items,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_out,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_balance,0)}}</td>
@@ -1179,6 +1202,7 @@ $query = "WITH STOCK_LEDGER AS (
                                     <td class="text-right barnch_color">{{number_format($stot_purch_return,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_consumption,0)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_sales_consumption,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_damaged_items,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_out,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_balance,0)}}</td>
@@ -1195,7 +1219,7 @@ $query = "WITH STOCK_LEDGER AS (
         @include('reports.template.footer')
     </div>
 @endsection
-@section('pageJS')
+@section('customJS')
     <script>
         $(function () {
             $('body').on('contextmenu', '#rep_group_wise_activity_summary_datatable td[data-id="pd_product_name"]', function (e) {
@@ -1229,10 +1253,6 @@ $query = "WITH STOCK_LEDGER AS (
             });
         });
     </script>
-@endsection
-
-@section('customJS')
-
 @endsection
 @section('exportXls')
     @if($data['form_file_type'] == 'xls')

@@ -583,8 +583,18 @@ Route::group(['middleware' => ['auth']], function () {
         Route::prefix('report')->group(function () {
             Route::any('criteria-list',function(\Illuminate\Http\Request $request){
                 $data = $request;
-                if(!isset($request->code_val) && empty($request->code_val)){
-                    $productDetail = TblPurcProductBarcode::where('product_id' , $request->product_id)->with('product')->first();
+                if(empty($request->input('code_val'))){
+                    $productQuery = TblPurcProductBarcode::with('product');
+                    if($request->filled('product_barcode_id')){
+                        $productQuery->where('product_barcode_id', $request->input('product_barcode_id'));
+                    }else{
+                        $productQuery->where('product_id', $request->input('product_id'));
+                    }
+                    $productDetail = $productQuery->first();
+
+                    if(!$productDetail || !$productDetail->product){
+                        return response('Product/barcode details were not found for this selection.', 422);
+                    }
 
                     $data['code_val'] = $productDetail->product_barcode_barcode;
                     $data['name_val'] = $productDetail->product->product_name;

@@ -41,8 +41,6 @@ class OrderRecipeUsageController extends Controller
             'option_list_ids' => [],
         ];
 
-        $cancelledDetailIds = $this->cancelledOrDeletedDetailIds($branchId, $dateFrom, $dateTo);
-
         $orderDetails = DB::table('order_details as od')
             ->join('orders as o', 'o.id', '=', 'od.order_id')
             ->select([
@@ -56,9 +54,10 @@ class OrderRecipeUsageController extends Controller
             ])
             ->where('o.restaurant_id', $branchId)
             ->whereBetween('o.order_date', [$dateFrom, $dateTo])
+            ->whereRaw("LOWER(TRIM(o.payment_status)) = 'paid'")
             ->where(function ($query) {
                 $query->whereNull('o.order_status')
-                    ->orWhereRaw("LOWER(o.order_status) NOT IN ('canceled', 'cancelled')");
+                    ->orWhereRaw("LOWER(TRIM(o.order_status)) NOT IN ('canceled', 'cancelled')");
             })
             ->where(function ($query) {
                 $query->whereNull('od.is_deleted')
@@ -67,7 +66,7 @@ class OrderRecipeUsageController extends Controller
             ->get();
 
         if ($orderDetails->isEmpty()) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -112,7 +111,7 @@ class OrderRecipeUsageController extends Controller
         $optionListIds = array_values(array_unique(array_filter($optionListIds)));
 
         if (empty($optionListIds)) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -135,7 +134,7 @@ class OrderRecipeUsageController extends Controller
         if ($recipesByFood->isEmpty()) {
             $unmatched['no_recipe'] = count($optionListIds);
             $unmatched['option_list_ids'] = array_slice($optionListIds, 0, 50);
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -206,7 +205,7 @@ class OrderRecipeUsageController extends Controller
         $unmatched['option_list_ids'] = array_slice($unmatched['option_list_ids'], 0, 50);
 
         if (empty($rowsToPersist)) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -224,27 +223,12 @@ class OrderRecipeUsageController extends Controller
         DB::beginTransaction();
 
         try {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            // Rebuild the selected range so changes to order quantities,
+            // variations, or recipes cannot leave stale ingredient rows behind.
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             foreach ($rowsToPersist as $row) {
-                OrderRecipeUsage::updateOrCreate(
-                    [
-                        'order_detail_id' => $row['order_detail_id'],
-                        'product_id'      => $row['product_id'],
-                    ],
-                    [
-                        'order_id'        => $row['order_id'],
-                        'restaurant_id'   => $row['restaurant_id'],
-                        'food_id'         => $row['food_id'],
-                        'option_list_id'  => $row['option_list_id'],
-                        'food_recipe_id'  => $row['food_recipe_id'],
-                        'order_quantity'  => $row['order_quantity'],
-                        'product_quantity'=> $row['product_quantity'],
-                        'product_quantity_used'=> $row['product_quantity_used'],
-                        'usage_date'      => $row['usage_date'],
-                        'measure_unit'    => $row['measure_unit'],
-                    ]
-                );
+                OrderRecipeUsage::create($row);
 
                 $summaryKey = $row['product_id'].'-'.$row['usage_date'];
 
@@ -283,37 +267,11 @@ class OrderRecipeUsageController extends Controller
         ]);
     }
 
-    private function cancelledOrDeletedDetailIds($branchId, Carbon $dateFrom, Carbon $dateTo)
+    private function deleteUsageForRange($branchId, Carbon $dateFrom, Carbon $dateTo)
     {
-        return DB::table('order_details as od')
-            ->join('orders as o', 'o.id', '=', 'od.order_id')
-            ->where('o.restaurant_id', $branchId)
-            ->whereBetween('o.order_date', [$dateFrom, $dateTo])
-            ->where(function ($query) {
-                $query->whereRaw("LOWER(o.order_status) IN ('canceled', 'cancelled')")
-                    ->orWhereRaw("UPPER(od.is_deleted) = 'Y'");
-            })
-            ->pluck('od.id')
-            ->map(function ($id) {
-                return (int) $id;
-            })
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function deleteUsageForDetailIds(array $detailIds)
-    {
-        if (empty($detailIds)) {
-            return 0;
-        }
-
-        $deleted = 0;
-        foreach (array_chunk($detailIds, 900) as $chunk) {
-            $deleted += OrderRecipeUsage::whereIn('order_detail_id', $chunk)->delete();
-        }
-
-        return $deleted;
+        return OrderRecipeUsage::where('restaurant_id', $branchId)
+            ->whereBetween('usage_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->delete();
     }
 
     private function pickRecipeAsOf($recipesByFood, $optionListId, Carbon $orderDate)
