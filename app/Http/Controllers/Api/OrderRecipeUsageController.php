@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FoodRecipe;
 use App\Models\OrderRecipeUsage;
+use App\Models\TblPurcProduct;
+use App\Models\TblPurcProductBarcode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +40,7 @@ class OrderRecipeUsageController extends Controller
             'no_option_ids' => 0,
             'no_recipe' => 0,
             'empty_recipe' => 0,
+            'invalid_product' => 0,
             'option_list_ids' => [],
         ];
 
@@ -147,6 +150,7 @@ class OrderRecipeUsageController extends Controller
         }
 
         $rowsToPersist = [];
+        $resolvedProductIds = [];
 
         foreach ($structuredDetails as $detail) {
             foreach ($detail['option_list_ids'] as $optionListId) {
@@ -169,7 +173,15 @@ class OrderRecipeUsageController extends Controller
                     $productQty = (float) $component->quantity;
                     $packing = $this->packingMultiplier($component->packing_id);
                     $productQtyUsed = round($productQty * $packing * $orderQty, 4);
-                    $productId = (int) $component->product_id;
+                    $storedProductId = trim((string) $component->product_id);
+                    if (!array_key_exists($storedProductId, $resolvedProductIds)) {
+                        $resolvedProductIds[$storedProductId] = $this->resolveInventoryProductId($storedProductId);
+                    }
+                    $productId = $resolvedProductIds[$storedProductId];
+                    if (!$productId) {
+                        $unmatched['invalid_product']++;
+                        continue;
+                    }
                     $rowKey = $detail['order_detail_id'] . '-' . $productId;
 
                     if (!isset($rowsToPersist[$rowKey])) {
@@ -272,6 +284,33 @@ class OrderRecipeUsageController extends Controller
         return OrderRecipeUsage::where('restaurant_id', $branchId)
             ->whereBetween('usage_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
             ->delete();
+    }
+
+    /**
+     * Recipe detail rows historically stored the selected barcode in product_id.
+     * Keep old recipes usable, but always persist the inventory product's real ID.
+     */
+    private function resolveInventoryProductId($storedValue): ?int
+    {
+        $storedValue = trim((string) $storedValue);
+        if ($storedValue === '') {
+            return null;
+        }
+
+        $productId = TblPurcProduct::where('product_id', $storedValue)->value('product_id');
+        if ($productId !== null) {
+            return (int) $productId;
+        }
+
+        $barcodeProductId = TblPurcProductBarcode::where('product_barcode_barcode', $storedValue)
+            ->value('product_id');
+
+        if ($barcodeProductId === null && ctype_digit($storedValue)) {
+            $barcodeProductId = TblPurcProductBarcode::where('product_barcode_id', $storedValue)
+                ->value('product_id');
+        }
+
+        return $barcodeProductId === null ? null : (int) $barcodeProductId;
     }
 
     private function pickRecipeAsOf($recipesByFood, $optionListId, Carbon $orderDate)

@@ -25,6 +25,15 @@
     @php
         $data = Session::get('data');
         $productDtl = \Illuminate\Support\Facades\DB::table('vw_purc_product_barcode')->where('product_id',$data['product'])->first();
+        $productBarcodesByPacking = \Illuminate\Support\Facades\DB::table('vw_purc_product_barcode')
+            ->where('product_id', $data['product'])
+            ->get(['product_barcode_packing', 'product_barcode_barcode'])
+            ->groupBy(function ($barcode) {
+                return (string) (float) $barcode->product_barcode_packing;
+            })
+            ->map(function ($barcodes) {
+                return $barcodes->first()->product_barcode_barcode;
+            });
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -90,13 +99,14 @@
                             <th class="text-center" width="10%">Document Type</th>
                             <th class="text-center" width="12%">Branch Name</th>
                             <th class="text-center" width="10%">Document Code</th>
+                            <th class="text-center">Barcode</th>
                             <th class="text-center" width="20%">Remarks</th>
+                            <th class="text-center">Packing</th>
                             <th class="text-center">Inputs</th>
                             <th class="text-center">In Rate</th>
                             <th class="text-center">Outputs</th>
                             <th class="text-center">Out Rate</th>
                             <th class="text-center">Balance</th>
-                            <th class="text-center">Packing</th>
                             <th class="text-center">Inputs per item</th>
                             <th class="text-center">In Rate per item</th>
                             <th class="text-center">Outputs per item</th>
@@ -198,11 +208,13 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             if($data['date_time_wise'] == 1){
                                 $date_field2 = " AND (STOCK.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                                 $date_field = " AND GRN.created_at <= to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
-                                $usage_date_field = " AND (USAGE.USAGE_DATE between to_date ('".date('Y-m-d', strtotime($date_time_from))."', 'yyyy/mm/dd') and to_date ('".date('Y-m-d', strtotime($date_time_to))."', 'yyyy/mm/dd'))";
+                                $usage_date_field = " AND USAGE.USAGE_DATE >= TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')) + 1";
+                                $usage_report_date = "TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                             }else{
                                 $date_field2 = "AND (STOCK.DOCUMENT_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
-                                $usage_date_field = " AND (USAGE.USAGE_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
+                                $usage_date_field = " AND USAGE.USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE.USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
+                                $usage_report_date = "to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                             }
 
 
@@ -323,28 +335,29 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             UNION ALL
 
                                             SELECT
-                                                PROD.PRODUCT_NAME , 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
-                                                USAGE.USAGE_DATE DOCUMENT_DATE ,
-                                                USAGE.ID DOCUMENT_ID,
-                                                'USAGE' DOCUMENT_TYPE ,
+                                                MAX(PROD.PRODUCT_NAME) , 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
+                                                $usage_report_date DOCUMENT_DATE ,
+                                                NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
+                                                'Recipe Consumption' DOCUMENT_TYPE ,
                                                 BRU.BRANCH_NAME ,
-                                                'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
+                                                'RECIPE-CONSUMPTION' DOCUMENT_CODE ,
                                                 0 QTY_IN  ,
                                                 0 IN_RATE ,
-                                                USAGE.PRODUCT_QUANTITY_USED QTY_OUT,
+                                                NVL(SUM(USAGE.PRODUCT_QUANTITY_USED), 0) QTY_OUT,
                                                 0 OUT_RATE ,
                                                 0 BAL_RATE ,
                                                 0 BONUS_QTY_IN ,
                                                 NULL TRANSFER_FROM_BRANCH_ID,
                                                 NULL TRANSFER_TO_BRANCH_ID,
                                                 999999 SORTING_ID
-                                            FROM
-                                                ORDER_RECIPE_USAGES USAGE
-                                            INNER JOIN VW_PURC_PRODUCT PROD ON USAGE.PRODUCT_ID = PROD.PRODUCT_ID
-                                            LEFT JOIN TBL_SOFT_BRANCH BRU ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
-                                            WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                            FROM TBL_SOFT_BRANCH BRU
+                                            INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                            LEFT JOIN ORDER_RECIPE_USAGES USAGE
+                                                ON USAGE.RESTAURANT_ID = BRU.BRANCH_ID
+                                                AND USAGE.PRODUCT_ID = PROD.PRODUCT_ID
                                                 $usage_date_field
-                                                AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
+                                            WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+                                            GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
 
                                             ) STOCK
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
@@ -388,29 +401,30 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     UNION ALL
 
                                     SELECT
-                                        PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
+                                        MAX(PROD.PRODUCT_NAME) , '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME , 1 PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
-                                        USAGE.USAGE_DATE DOCUMENT_DATE ,
-                                        USAGE.ID DOCUMENT_ID,
-                                        'USAGE' DOCUMENT_TYPE ,
+                                        $usage_report_date DOCUMENT_DATE ,
+                                        NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
+                                        'Recipe Consumption' DOCUMENT_TYPE ,
                                         BRU.BRANCH_NAME ,
-                                        'USAGE-' || USAGE.ORDER_ID DOCUMENT_CODE ,
+                                        'RECIPE-CONSUMPTION' DOCUMENT_CODE ,
                                         0 QTY_IN  ,
                                         0 IN_RATE ,
-                                        USAGE.PRODUCT_QUANTITY_USED QTY_OUT,
+                                        NVL(SUM(USAGE.PRODUCT_QUANTITY_USED), 0) QTY_OUT,
                                         0 OUT_RATE ,
                                         0 BAL_RATE ,
                                         0 BONUS_QTY_IN ,
                                         NULL TRANSFER_FROM_BRANCH_ID,
                                         NULL TRANSFER_TO_BRANCH_ID,
                                         999999 SORTING_ID
-                                    FROM
-                                        ORDER_RECIPE_USAGES USAGE
-                                    INNER JOIN VW_PURC_PRODUCT PROD ON USAGE.PRODUCT_ID = PROD.PRODUCT_ID
-                                    LEFT JOIN TBL_SOFT_BRANCH BRU ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
-                                    WHERE PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                    FROM TBL_SOFT_BRANCH BRU
+                                    INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = ".$productDtl->product_id."
+                                    LEFT JOIN ORDER_RECIPE_USAGES USAGE
+                                        ON USAGE.RESTAURANT_ID = BRU.BRANCH_ID
+                                        AND USAGE.PRODUCT_ID = PROD.PRODUCT_ID
                                         $usage_date_field
-                                        AND USAGE.RESTAURANT_ID in( ".implode(",",$data['branch_ids']).")
+                                    WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+                                    GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
                                     ) STOCK_RESULT
                                     ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }
@@ -430,13 +444,13 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                         @endphp
                         <tr>
                             <td class="text-center">{{date('d-m-Y',strtotime($from_date))}}</td>
-                            <td colspan="4"> - - - - Opening Stock - - - - </td>
+                            <td colspan="5"> - - - - Opening Stock - - - - </td>
+                            <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center">{{number_format($store_stock,3)}}</td>
-                            <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
@@ -489,14 +503,26 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 }else{
                                     $expire_date = session('expire_date');
                                 }
-                                $bg = in_array(strtolower(strtoupper($row->document_type)),['pos','rpos'])?'#faebd7':""
+                                $bg = in_array(strtolower(strtoupper($row->document_type)),['pos','rpos'])?'#faebd7':"";
+                                $isRecipeConsumption = strtolower(trim((string) $row->document_type)) === 'recipe consumption';
+                            @endphp
+                            @php
+                                $rowPackingKey = (string) (float) ($row->product_barcode_packing ?? 1);
+                                $rowBarcode = $productBarcodesByPacking->get($rowPackingKey, '');
                             @endphp
                             <tr class="{{isset($row->document_type)? strtolower(strtoupper($row->document_type)):''}}" style="background: {{$bg}};">
                                 <td class="text-center">{{date('d-m-Y', strtotime($row->document_date))}}</td>
                                 <td class="text-center">{{isset($row->document_type)? $row->document_type:''}}</td>
                                 <td class="text-center">{{isset($row->branch_name)? $row->branch_name:''}}</td>
                                 <td class="text-center"><span class="generate_report" data-id="{{$row->document_id}}" data-type="{{$row->document_type}}">{{isset($row->document_code)? $row->document_code:''}}</span></td>
+                                <td class="text-center">{{$rowBarcode}}</td>
                                 <td style="font-size: 12px;">
+                                    @if($isRecipeConsumption)
+                                        <span style="color: #2196f3 !important; font-size: 12px;">Recipe Consumption</span><br>
+                                    @endif
+                                    @if(strtolower((string) $row->document_type) === 'di')
+                                        <span style="color: #2196f3 !important; font-size: 12px;">Damaged Items</span><br>
+                                    @endif
                                     @if($row->bonus_qty_in != null && abs($row->bonus_qty_in) != 0)
                                         <span style="color: #2196f3 !important; font-size: 12px;">FOC Qty :</span> {{$row->bonus_qty_in}} ,
                                     @endif
@@ -504,7 +530,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         @php
                                             $branch = \App\Models\TblSoftBranch::where('branch_id',$row->transfer_from_branch_id)->first(['branch_short_name']);
                                         @endphp
-                                        <span style="color: #2196f3 !important; font-size: 12px;">Transfer From :</span> {{$branch->branch_short_name ?? ''}} <br>
+                                        @if(strtolower((string) $row->document_type) !== 'di')
+                                            <span style="color: #2196f3 !important; font-size: 12px;">Transfer From :</span> {{$branch->branch_short_name ?? ''}} <br>
+                                        @endif
                                     @endif
                                     @if($row->transfer_to_branch_id != null && $row->transfer_to_branch_id != "" && $row->transfer_to_branch_id != 0)
                                         @php
@@ -515,13 +543,13 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 </td>
                                 <td class="text-center">{{$qty_in==0?"":number_format($qty_in,3)}}</td>
                                 <td class="text-center">{{$InRate==0?"":number_format($InRate,3)}}</td>
-                                <td class="text-center">{{$qty_out==0?"":number_format($qty_out,3)}}</td>
+                                <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($qty_out,3)}}</td>
                                 <td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>
                                 <td class="text-center">{{number_format($BalQty,3)}}</td>
                                 <td class="text-center">{{number_format($packing,3)}}</td>
                                 <td class="text-center">{{$qty_in_per_item==0?"":number_format($qty_in_per_item,3)}}</td>
                                 <td class="text-center">{{$in_rate_per_item==0?"":number_format($in_rate_per_item,3)}}</td>
-                                <td class="text-center">{{$qty_out_per_item==0?"":number_format($qty_out_per_item,3)}}</td>
+                                <td class="text-center">{{$qty_out_per_item==0 && !$isRecipeConsumption ? "" : number_format($qty_out_per_item,3)}}</td>
                                 <td class="text-center">{{$out_rate_per_item==0?"":number_format($out_rate_per_item,3)}}</td>
                                 <td class="text-center">{{number_format($BalQtyPerItem,3)}}</td>
                                 {{--<td class="text-center">{{number_format($BalPrice,3)}}</td>--}}
@@ -529,13 +557,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                            </tr>
                         @endforeach
                         <tr class="grand_total">
-                            <td colspan="5" class="rep-font-bold">Total:</td>
-                            <td class="text-center rep-font-bold">{{number_format($totInQty,3)}}</td>
+                            <td colspan="7" class="rep-font-bold">Total:</td>
+                            <td class="text-center rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
-                            <td class="text-center rep-font-bold">{{number_format($totOutQty,3)}}</td>
+                            <td class="text-center rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
-                            <td class="text-center rep-font-bold">{{number_format($BalQty,3)}}</td>
-                            <td class="text-right rep-font-bold"></td>
+                            <td class="text-center rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($totInQtyPerItem,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($totOutQtyPerItem,3)}}</td>

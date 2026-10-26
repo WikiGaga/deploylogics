@@ -7,6 +7,7 @@ use App\Models\OptionsList;
 use App\Models\FoodRecipe;
 use App\Models\FoodRecipeDtl;
 use App\Models\TblPurcProduct;
+use App\Models\TblPurcProductBarcode;
 use App\Library\Utilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,33 @@ class FoodRecipeController extends Controller
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
                 $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.uom', 'dtls.packing', 'option'])->where('id', $id)->first();
+                foreach ($data['current']->dtls as $detail) {
+                    $storedProductValue = trim((string) $detail->product_id);
+                    $barcode = null;
+
+                    if (!TblPurcProduct::where('product_id', $storedProductValue)->exists()) {
+                        $barcode = TblPurcProductBarcode::with('product')
+                            ->where('product_barcode_barcode', $storedProductValue)
+                            ->first();
+
+                        if (!$barcode && ctype_digit($storedProductValue)) {
+                            $barcode = TblPurcProductBarcode::with('product')
+                                ->where('product_barcode_id', $storedProductValue)
+                                ->first();
+                        }
+
+                        if ($barcode && $barcode->product) {
+                            $detail->legacy_barcode = $barcode->product_barcode_barcode;
+                            $detail->product_id = $barcode->product_id;
+                            $detail->product_name = $barcode->product->product_name;
+                        }
+                    } else {
+                        $barcode = TblPurcProductBarcode::where('product_id', $storedProductValue)
+                            ->where('uom_id', $detail->uom_id)
+                            ->first();
+                        $detail->legacy_barcode = $barcode->product_barcode_barcode ?? '';
+                    }
+                }
                 // dd($data['current']);
                 $data['page_data']['print'] = '/' . self::$redirect_url . '/print/' . $id;
                 $data['document_code'] = $data['current']->id;
@@ -82,6 +110,7 @@ class FoodRecipeController extends Controller
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
             'food_id' => 'required|numeric',
+            'pd.*.product_id' => 'nullable|numeric|exists:tbl_purc_product,product_id',
             'pd.*.pd_barcode' => 'nullable|numeric',
             'pd.*.pd_uom' => 'nullable|numeric',
             'pd.*.quantity' => 'nullable|numeric',
@@ -122,7 +151,7 @@ class FoodRecipeController extends Controller
                         $dtl = new FoodRecipeDtl();
                         $dtl->id = FoodRecipeDtl::max('id') + 1;
                         $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['pd_barcode'];
+                        $dtl->product_id = $pd['product_id'];
                         $dtl->product_name = $pd['product_name'];
                         $dtl->uom_id = isset($pd['pd_uom']) ? $pd['pd_uom'] : null;
                         $dtl->packing_id = isset($pd['pd_packing']) ? $pd['pd_packing'] : null;
