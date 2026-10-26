@@ -1232,6 +1232,9 @@ $query = "WITH SALES_USAGE AS (
                 var barcode = $cell.data('barcode');
                 var barcodeId = $cell.data('barcode-id');
                 var $links = $('#contextMenu li a');
+                var reportBranchIds = @json(array_values($data['branch_ids'] ?? []));
+                var reportDateFrom = @json(date('d-m-Y', strtotime($data['date_time_wise'] == 1 ? $data['time_from'] : $data['from_date'])));
+                var reportDateTo = @json(date('d-m-Y', strtotime($data['date_time_wise'] == 1 ? $data['time_to'] : $data['to_date'])));
 
                 $links.attr('data-id', productId)
                     .attr('data-val', productName)
@@ -1239,6 +1242,10 @@ $query = "WITH SALES_USAGE AS (
                     .attr('data-barcode_id', barcodeId);
                 $('#contextMenu li.product_card a').attr('href', '/product/view/' + productId);
                 $('#contextMenu li.tp_analysis a').attr('href', '/smart-product/tp-analysis');
+                $('#contextMenu li.product_activity a')
+                    .attr('data-report-branch-ids', JSON.stringify(reportBranchIds))
+                    .attr('data-report-date-from', reportDateFrom)
+                    .attr('data-report-date-to', reportDateTo);
 
                 localStorage.setItem('product_barcode_barcode', barcode);
                 localStorage.setItem('product_barcode_id', barcodeId);

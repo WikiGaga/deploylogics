@@ -461,12 +461,23 @@ class ApiHomeController extends ApiController
                 $folder = 'images/employee_face';
                 $destinationPath = public_path($folder);
 
-                // Create directory if it doesn't exist
+                // Create directory if it doesn't exist and ensure it is writable
                 if (!File::exists($destinationPath)) {
                     File::makeDirectory($destinationPath, 0777, true, true);
+                    @chmod($destinationPath, 0777);
+                } elseif (!is_writable($destinationPath)) {
+                    @chmod($destinationPath, 0777);
                 }
 
                 $filename = time() . '_' . $employee_id . '.' . $image->getClientOriginalExtension();
+
+                // Delete previous face image if exists
+                if (!empty($employee->attendance_image)) {
+                    $oldFilePath = $destinationPath . '/' . $employee->attendance_image;
+                    if (File::exists($oldFilePath)) {
+                        @File::delete($oldFilePath);
+                    }
+                }
 
                 // Use native move() instead of Intervention Image to bypass permission locks
                 $image->move($destinationPath, $filename);
