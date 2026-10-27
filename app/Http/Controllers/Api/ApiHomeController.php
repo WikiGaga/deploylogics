@@ -869,6 +869,7 @@ class ApiHomeController extends ApiController
                 'app_name' => $app_version->app_name,
                 'app_version' => $app_version->app_version,
                 'app_url' => $app_version->app_url,
+                'offline_attendance' => $app_version->offline_attendance,
             ], 200);
         } else {
             return response()->json([
