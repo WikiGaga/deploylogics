@@ -880,6 +880,32 @@ class ApiHomeController extends ApiController
 
     }
 
+    public function attendanceCurrentTime(Request $request)
+    {
+        $appVersion = DB::table('tbl_app_version')
+            ->where('app_name', 'malik pizza hr')
+            ->first(['time_zone']);
+
+        $timezone = $appVersion && !empty($appVersion->time_zone) ? $appVersion->time_zone : 'UTC';
+        try {
+            $timezoneObject = new \DateTimeZone($timezone);
+        } catch (\Throwable $e) {
+            $timezone = 'UTC';
+            $timezoneObject = new \DateTimeZone($timezone);
+        }
+
+        $now = new \DateTimeImmutable('now', $timezoneObject);
+
+        return response()->json([
+            'success' => true,
+            'time_zone' => $timezone,
+            'current_date' => $now->format('Y-m-d'),
+            'current_time' => $now->format('H:i:s'),
+            'current_datetime' => $now->format('Y-m-d H:i:s'),
+            'iso8601' => $now->format(\DateTimeInterface::ATOM),
+        ]);
+    }
+
     public function store_app_version(Request $request)
     {
         $validator = Validator::make($request->all(), [

@@ -21,6 +21,7 @@ Route::get('get_app_version', 'Api\ApiHomeController@get_app_version');
 Route::post('store_app_version', 'Api\ApiHomeController@store_app_version');
 Route::get('markAttendance', 'Api\ApiHomeController@markAttendance');
 Route::get('markAttendance', 'Api\ApiHomeController@markAttendance');
+Route::get('attendance/current-time', 'Api\ApiHomeController@attendanceCurrentTime');
 Route::get('branches-list', 'Api\Auth\LoginController@BranchList');
 Route::get('verify-branch/test', 'Api\Auth\LoginController@verifyBranchtest');
 Route::get('public-config', 'Api\Auth\LoginController@publicConfig');

@@ -937,6 +937,8 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     Route::prefix('Employee-Attendance')->group(function(){
+        Route::get('settings','PayrDepartment\EmployeeAttendanceController@settings');
+        Route::post('settings','PayrDepartment\EmployeeAttendanceController@saveSettings');
         Route::get('form/{id?}','PayrDepartment\EmployeeAttendanceController@create');
         Route::post('form/{id?}','PayrDepartment\EmployeeAttendanceController@store');
         Route::post('delete/{id}','PayrDepartment\EmployeeAttendanceController@destroy');
