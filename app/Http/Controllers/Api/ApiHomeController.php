@@ -860,7 +860,7 @@ class ApiHomeController extends ApiController
     {
 
         $app_version = DB::table('tbl_app_version')
-            ->select('id', 'app_name', 'app_version', 'app_url')
+            ->select('id', 'app_name', 'app_version', 'app_url', 'offline_attendance', 'time_zone')
             ->where('app_name', 'malik pizza hr')
             ->first();
 
@@ -869,7 +869,8 @@ class ApiHomeController extends ApiController
                 'app_name' => $app_version->app_name,
                 'app_version' => $app_version->app_version,
                 'app_url' => $app_version->app_url,
-                'offline_attendance' => $app_version->offline_attendance,
+                'offline_attendance' => (int) ($app_version->offline_attendance ?? 0),
+                'time_zone' => $app_version->time_zone ?? 'UTC',
             ], 200);
         } else {
             return response()->json([
