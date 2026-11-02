@@ -34,6 +34,67 @@
             ->map(function ($barcodes) {
                 return $barcodes->first()->product_barcode_barcode;
             });
+        $averagePriceBranches = array_values(array_filter(array_map('intval', $data['branch_ids'] ?? [])));
+        $averagePriceProductId = (int) ($data['product'] ?? 0);
+        $averagePriceBusinessId = (int) auth()->user()->business_id;
+        $averagePriceCompanyId = (int) auth()->user()->company_id;
+        $averagePriceEndDateFilter = $data['date_time_wise'] == 1
+            ? "AND STOCK.CREATED_AT <= TO_DATE('" . str_replace("'", "''", $data['time_to']) . "', 'yyyy/mm/dd HH24:MI')"
+            : "AND STOCK.DOCUMENT_DATE <= TO_DATE('" . str_replace("'", "''", $data['to_date']) . "', 'yyyy/mm/dd')";
+        $averagePriceOpeningDateFilter = $data['date_time_wise'] == 1
+            ? "AND STOCK.CREATED_AT < TO_DATE('" . str_replace("'", "''", $data['time_from']) . "', 'yyyy/mm/dd HH24:MI')"
+            : "AND STOCK.DOCUMENT_DATE < TO_DATE('" . str_replace("'", "''", $data['from_date']) . "', 'yyyy/mm/dd')";
+        $averagePricePerItem = 0;
+        $runningAverageAmount = 0;
+        $runningAverageBaseQty = 0;
+        if ($averagePriceProductId && count($averagePriceBranches)) {
+            $getAveragePriceTotals = function ($dateFilter) use (
+                $averagePriceProductId,
+                $averagePriceBusinessId,
+                $averagePriceCompanyId,
+                $averagePriceBranches
+            ) {
+                $averagePriceQuery = "SELECT
+                    NVL(SUM((CASE WHEN STOCK.DOCUMENT_TYPE = 'GRN'
+                        THEN NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0)
+                        ELSE NVL(NULLIF(STOCK.STOCK_RATE, 0), STOCK.DOCUMENT_ACT_RATE)
+                    END) * (NVL(STOCK.QTY_IN, 0) + NVL(STOCK.BONUS_QTY_IN, 0))), 0) INBOUND_AMOUNT,
+                    NVL(SUM((NVL(STOCK.QTY_IN, 0) + NVL(STOCK.BONUS_QTY_IN, 0))
+                        * NVL(STOCK.PRODUCT_PACKING, 1)), 0) INBOUND_BASE_QTY
+                FROM VW_PURC_STOCK_DTL STOCK
+                LEFT JOIN TBL_PURC_GRN_DTL GRN_RATE
+                    ON GRN_RATE.GRN_ID = STOCK.DOCUMENT_ID
+                    AND GRN_RATE.PRODUCT_ID = STOCK.PRODUCT_ID
+                    AND GRN_RATE.PRODUCT_BARCODE_ID = STOCK.PRODUCT_BARCODE_ID
+                    AND GRN_RATE.BUSINESS_ID = STOCK.BUSINESS_ID
+                    AND GRN_RATE.COMPANY_ID = STOCK.COMPANY_ID
+                    AND GRN_RATE.BRANCH_ID = STOCK.BRANCH_ID
+                    AND GRN_RATE.GRN_TYPE = 'GRN'
+                WHERE STOCK.PRODUCT_ID = $averagePriceProductId
+                    AND STOCK.BUSINESS_ID = $averagePriceBusinessId
+                    AND STOCK.COMPANY_ID = $averagePriceCompanyId
+                    AND STOCK.BRANCH_ID IN (" . implode(',', $averagePriceBranches) . ")
+                    AND STOCK.POSTED = 1
+                    $dateFilter
+                    AND NVL(STOCK.QTY_IN, 0) + NVL(STOCK.BONUS_QTY_IN, 0) > 0
+                    AND NVL(STOCK.PRODUCT_PACKING, 0) > 0
+                    AND ((STOCK.DOCUMENT_TYPE = 'GRN' AND NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) > 0)
+                        OR (STOCK.DOCUMENT_TYPE <> 'GRN'
+                            AND NVL(NULLIF(STOCK.STOCK_RATE, 0), STOCK.DOCUMENT_ACT_RATE) > 0))";
+                return \Illuminate\Support\Facades\DB::selectOne($averagePriceQuery);
+            };
+
+            $openingAverageTotals = $getAveragePriceTotals($averagePriceOpeningDateFilter);
+            $runningAverageAmount = (float) ($openingAverageTotals->inbound_amount ?? 0);
+            $runningAverageBaseQty = (float) ($openingAverageTotals->inbound_base_qty ?? 0);
+
+            $finalAverageTotals = $getAveragePriceTotals($averagePriceEndDateFilter);
+            $finalAverageAmount = (float) ($finalAverageTotals->inbound_amount ?? 0);
+            $finalAverageBaseQty = (float) ($finalAverageTotals->inbound_base_qty ?? 0);
+            $averagePricePerItem = $finalAverageBaseQty > 0
+                ? $finalAverageAmount / $finalAverageBaseQty
+                : 0;
+        }
     @endphp
     <div class="kt-portlet" id="kt_portlet_table">
         <div class="kt-portlet__head">
@@ -112,6 +173,8 @@
                             <th class="text-center">Outputs per item</th>
                             <th class="text-center">Out Rate per item</th>
                             <th class="text-center">Balance per item</th>
+                            <th class="text-center">Inbound Value</th>
+                            <th class="text-center">Average Price per item</th>
                             {{--<th class="text-center">Price</th>--}}
                             {{--<th class="text-center">Expire Date</th>--}}
                         </tr>
@@ -269,6 +332,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                     FROM TBL_PURC_GRN_DTL DTL
                                                     WHERE DTL.GRN_ID = STOCK.DOCUMENT_ID
                                                       AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                                      AND DTL.PRODUCT_BARCODE_ID = STOCK.PRODUCT_BARCODE_ID
                                                       AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
                                                       AND DTL.COMPANY_ID = STOCK.COMPANY_ID
                                                       AND DTL.BRANCH_ID = STOCK.BRANCH_ID
@@ -305,6 +369,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                                 FROM TBL_PURC_GRN_DTL DTL
                                                                 WHERE DTL.GRN_ID = MAX(STOCK.DOCUMENT_ID)
                                                                   AND DTL.PRODUCT_ID = MAX(STOCK.PRODUCT_ID)
+                                                                  AND DTL.PRODUCT_BARCODE_ID = MAX(STOCK.PRODUCT_BARCODE_ID)
                                                                   AND DTL.BUSINESS_ID = MAX(STOCK.BUSINESS_ID)
                                                                   AND DTL.COMPANY_ID = MAX(STOCK.COMPANY_ID)
                                                                   AND DTL.BRANCH_ID = MAX(STOCK.BRANCH_ID)
@@ -375,6 +440,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 FROM TBL_PURC_GRN_DTL DTL
                                                 WHERE DTL.GRN_ID = STOCK.DOCUMENT_ID
                                                   AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                                  AND DTL.PRODUCT_BARCODE_ID = STOCK.PRODUCT_BARCODE_ID
                                                   AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
                                                   AND DTL.COMPANY_ID = STOCK.COMPANY_ID
                                                   AND DTL.BRANCH_ID = STOCK.BRANCH_ID
@@ -439,8 +505,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                $BalQty = 0;
                                $totInQtyPerItem = 0;
                                $totOutQtyPerItem = 0;
+                               $totalInboundValue = 0;
                                $BalQtyPerItem = (float)$store_stock_item;
                                $BalPrice = 0;
+                               $runningAveragePrice = $runningAverageBaseQty > 0
+                                   ? $runningAverageAmount / $runningAverageBaseQty
+                                   : 0;
                         @endphp
                         <tr>
                             <td class="text-center">{{date('d-m-Y',strtotime($from_date))}}</td>
@@ -456,6 +526,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center">{{number_format($store_stock_item,3)}}</td>
+                            <td class="text-center"></td>
+                            <td class="text-center">{{number_format($runningAveragePrice,3)}}</td>
                            {{-- <td></td>--}}
                         </tr>
                         @foreach($listdata as $row)
@@ -481,6 +553,17 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $qty_out_per_item = (float)$qty_out * $packing;
                                 $in_rate_per_item = (float)$InRate / $packing;
                                 $out_rate_per_item = (float)$OutRate / $packing;
+                                $inboundValue = ((float)$qty_in > 0 && (float)$InRate > 0)
+                                    ? (float)$qty_in * (float)$InRate
+                                    : 0;
+                                $totalInboundValue += $inboundValue;
+                                if ((float)$qty_in > 0 && (float)$InRate > 0) {
+                                    $runningAverageAmount += (float)$qty_in * (float)$InRate;
+                                    $runningAverageBaseQty += (float)$qty_in * $packing;
+                                }
+                                $runningAveragePrice = $runningAverageBaseQty > 0
+                                    ? $runningAverageAmount / $runningAverageBaseQty
+                                    : 0;
                                 $BalQtyPerItem += $qty_in_per_item - $qty_out_per_item;
 
                                 $totInQty += $qty_in;
@@ -552,6 +635,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 <td class="text-center">{{$qty_out_per_item==0 && !$isRecipeConsumption ? "" : number_format($qty_out_per_item,3)}}</td>
                                 <td class="text-center">{{$out_rate_per_item==0?"":number_format($out_rate_per_item,3)}}</td>
                                 <td class="text-center">{{number_format($BalQtyPerItem,3)}}</td>
+                                <td class="text-center">{{$inboundValue==0?"":number_format($inboundValue,3)}}</td>
+                                <td class="text-center">{{number_format($runningAveragePrice,3)}}</td>
                                 {{--<td class="text-center">{{number_format($BalPrice,3)}}</td>--}}
                                 {{--<td class="text-center">{{$expire_date}}</td>--}}
                            </tr>
@@ -568,6 +653,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td class="text-center rep-font-bold">{{number_format($totOutQtyPerItem,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($BalQtyPerItem,3)}}</td>
+                            <td class="text-center rep-font-bold">{{number_format($totalInboundValue,3)}}</td>
+                            <td class="text-center rep-font-bold">{{number_format($averagePricePerItem,3)}}</td>
                             {{--<td class="text-right rep-font-bold"></td>--}}
                             {{--<td class="text-right rep-font-bold"></td>--}}
                         </tr>

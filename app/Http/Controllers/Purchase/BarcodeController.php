@@ -525,7 +525,7 @@ class BarcodeController extends Controller
             }
 
             if($form_type == 'sa'){
-                $data = $this->getStockAdj($data);
+                $data = $this->getStockAdj($data, $request);
             }
             //Supplier Product Registration
             if($form_type == 'sup_prod_reg'){
@@ -632,7 +632,7 @@ class BarcodeController extends Controller
         }
 
         if($form_type == 'sa'){
-            $data = $this->getStockAdj($data);
+            $data = $this->getStockAdj($data, $request);
         }
 
         return response()->json($data);
@@ -764,12 +764,24 @@ class BarcodeController extends Controller
         return response()->json(['data'=>$data]);
     }
 
-    public function getStockAdj($data){
+    public function getStockAdj($data, Request $request){
         $data['barcode_type'] = 'sa';
         $data['product_exists'] =   false;
-        $now = new \DateTime("now");
-        $today_format = $now->format("d-m-Y");
-        $date = date('Y-m-d', strtotime($today_format));
+        $branchId = (int) $request->input('branch_id', auth()->user()->branch_id);
+        abort_unless(Utilities::documentBranchIsUserAccessible($branchId), 403);
+
+        $storeId = (int) $request->input('store_id', 0);
+        $storeIsValid = $storeId > 0 && DB::table('tbl_defi_store')
+            ->where('store_id', $storeId)
+            ->where('business_id', auth()->user()->business_id)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('branch_id', $branchId)
+            ->exists();
+        abort_unless($storeIsValid, 422, 'Please select a valid store for the selected branch.');
+
+        $requestedDate = trim((string) $request->input('stock_date', ''));
+        $dateTimestamp = $requestedDate !== '' ? strtotime(str_replace('/', '-', $requestedDate)) : false;
+        $date = $dateTimestamp !== false ? date('Y-m-d', $dateTimestamp) : date('Y-m-d');
         /* start #1
          * if same Product (not barcode) scanned twice in another document no then system should inform
          * that "this product already entered in document no 'SA-?????'"
@@ -778,7 +790,7 @@ class BarcodeController extends Controller
                     join TBL_INVE_STOCK_DTL sd on s.stock_id = sd.STOCK_ID
                     where sd.product_id = '".$data['current_product']->product_id."' and lower(s.stock_code_type) = 'sa'
                     and s.stock_date > to_date('01-12-2021', 'dd/mm/yyyy')
-                    and s.branch_id = ".auth()->user()->branch_id." order by stock_code desc";
+                    and s.branch_id = ".$branchId." order by stock_code desc";
 
         $getStockCode = DB::selectOne($q);
         if(isset($getStockCode->stock_code)){
@@ -799,12 +811,16 @@ class BarcodeController extends Controller
                     AND BUSINESS_ID = ?
                     AND COMPANY_ID = ?
                     AND BRANCH_ID = ?
+                    AND PRODUCT_BARCODE_ID = ?
+                    AND SALES_STORE_ID = ?
                     AND POSTED = 1
                     AND DOCUMENT_DATE <= TO_DATE(?, 'YYYY-MM-DD')", [
                 $data['current_product']->product_id,
                 auth()->user()->business_id,
                 auth()->user()->company_id,
-                auth()->user()->branch_id,
+                $branchId,
+                $data['current_product']->product_barcode_id,
+                $storeId,
                 $date,
             ])->qty;
             $packing    = isset($data['current_product']['product_barcode_packing']) && !empty($data['current_product']['product_barcode_packing'])?$data['current_product']['product_barcode_packing']:1;
@@ -827,7 +843,7 @@ class BarcodeController extends Controller
         $getStock = DB::selectOne($q);
 
         if(empty($getStock) && !isset($getStockCode->stock_code)){
-            if(Helper::$DefaultBranch == auth()->user()->branch_id){
+            if((int) Helper::$DefaultBranch === $branchId){
                 $data['product_exists'] =   false;
             }else{
                 $data['product_exists'] =   true;

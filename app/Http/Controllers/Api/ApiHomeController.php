@@ -908,6 +908,38 @@ class ApiHomeController extends ApiController
         ]);
     }
 
+    public function updateOfflineAttendance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'offline_attendance' => 'required|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $updated = DB::table('tbl_app_version')
+            ->where('app_name', 'malik pizza hr')
+            ->update(['offline_attendance' => (int) $request->input('offline_attendance')]);
+
+        if (!$updated && !DB::table('tbl_app_version')->where('app_name', 'malik pizza hr')->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Attendance app version record was not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Offline attendance setting updated successfully.',
+            'offline_attendance' => (int) $request->input('offline_attendance'),
+        ], 200);
+    }
+
     public function store_app_version(Request $request)
     {
         $validator = Validator::make($request->all(), [

@@ -40,6 +40,8 @@ Route::get('search_employee', 'Api\ApiHomeController@search_employee');
 
 Route::group(['middleware'=>['auth:api']], function () {
 
+    Route::post('attendance/offline-setting', 'Api\ApiHomeController@updateOfflineAttendance');
+
     Route::post('ingredient-usage', 'Api\OrderRecipeUsageController@store');
 
     Route::get('test', 'Api\ApiHomeController@index');

@@ -337,20 +337,23 @@ class StockController extends Controller
         ], true);
 
         // Grid amounts are displayed with thousands separators. Normalize the
-        // Damaged Items numeric fields before Laravel's numeric validation,
+        // relevant numeric fields before Laravel's numeric validation,
         // using the same conversion already used when the detail is saved.
-        if ($formType === 'di' && !$isWorkflowStagingAction && is_array($request->input('pd'))) {
-            $damagedItems = $request->input('pd');
-            foreach ($damagedItems as &$damagedItem) {
-                foreach (['pd_packing', 'quantity', 'rate', 'amount'] as $numericField) {
-                    if (array_key_exists($numericField, $damagedItem)
-                        && trim((string) $damagedItem[$numericField]) !== '') {
-                        $damagedItem[$numericField] = $this->addNo($damagedItem[$numericField]);
+        if (in_array($formType, ['di', 'sa'], true) && !$isWorkflowStagingAction && is_array($request->input('pd'))) {
+            $normalizedItems = $request->input('pd');
+            $numericFields = $formType === 'sa'
+                ? ['pd_packing', 'rate', 'amount', 'physical_quantity', 'stock_quantity', 'quantity']
+                : ['pd_packing', 'quantity', 'rate', 'amount'];
+            foreach ($normalizedItems as &$normalizedItem) {
+                foreach ($numericFields as $numericField) {
+                    if (array_key_exists($numericField, $normalizedItem)
+                        && trim((string) $normalizedItem[$numericField]) !== '') {
+                        $normalizedItem[$numericField] = $this->addNo($normalizedItem[$numericField]);
                     }
                 }
             }
-            unset($damagedItem);
-            $request->merge(['pd' => $damagedItems]);
+            unset($normalizedItem);
+            $request->merge(['pd' => $normalizedItems]);
         }
 
         $valid = [
@@ -398,6 +401,18 @@ class StockController extends Controller
             $valid['pd.*.quantity'] = 'required|numeric|gt:0';
             $valid['pd.*.rate'] = 'required|numeric|min:0';
             $valid['pd.*.amount'] = 'required|numeric|min:0';
+        }
+        if($formType == 'sa' && !$isWorkflowStagingAction){
+            $valid['pd'] = 'required|array|min:1';
+            $valid['pd.*.product_id'] = 'required|numeric';
+            $valid['pd.*.product_barcode_id'] = 'required|numeric|distinct';
+            $valid['pd.*.uom_id'] = 'required|numeric';
+            $valid['pd.*.pd_barcode'] = 'required|max:100';
+            $valid['pd.*.pd_packing'] = 'required|numeric|gt:0';
+            $valid['pd.*.physical_quantity'] = 'required|numeric|min:0';
+            $valid['pd.*.stock_quantity'] = 'required|numeric';
+            $valid['pd.*.rate'] = 'required|numeric|min:0';
+            $valid['pd.*.amount'] = 'required|numeric';
         }
         //dd($valid);
         $validator = Validator::make($request->all(), $valid);
@@ -447,7 +462,7 @@ class StockController extends Controller
             }
         }
 
-        if ($formType === 'di' && !$isWorkflowStagingAction) {
+        if (in_array($formType, ['di', 'sa'], true) && !$isWorkflowStagingAction) {
 
             $seenBarcodes = [];
             foreach ($request->pd as $pd) {

@@ -264,9 +264,15 @@ $(document).on('change', '.pd_uom', function(e) {
     if (form_type == 'grn') {
         formData.po_id = $('#grn_form').find('#purchase_order_id').val();
     }
-    /*if (form_type == 'sa') { // stock Adjustment
+    if (form_type == 'sa') { // stock Adjustment
         formData.store_id = $('#stock_adjustment_form').find('#store_id').val();
-    }*/
+        formData.branch_id = $('#stock_adjustment_form').find('#new_branch_id').val();
+        formData.stock_date = $('#stock_adjustment_form').find('input[name="stock_date"]').val();
+        if (!formData.store_id || formData.store_id == '0') {
+            toastr.error('Please select Store first');
+            return false;
+        }
+    }
     //initBarcode(keycodeNo,tr,form_type,formData);
     $.ajax({
         headers: {
@@ -357,9 +363,15 @@ function initBarcode(keycodeNo, tr, form_type, formData) {
     if (form_type == 'multi_barcode_labels') { // stock receiving
         formData.branch_id = $('#dynamic_barcode_tag_form').find('#branch_id').val();
     }
-    /*if (form_type == 'sa') { // stock Adjustment
+    if (form_type == 'sa') { // stock Adjustment
         formData.store_id = $('#stock_adjustment_form').find('#store_id').val();
-    }*/
+        formData.branch_id = $('#stock_adjustment_form').find('#new_branch_id').val();
+        formData.stock_date = $('#stock_adjustment_form').find('input[name="stock_date"]').val();
+        if (!formData.store_id || formData.store_id == '0') {
+            toastr.error('Please select Store first');
+            return false;
+        }
+    }
     if (form_type == 'purc_demand' || form_type == 'purc_return') { // Purchase Demand & Return (Supplier)
         if($('#supplier_id').val() != ""){
             formData.sup_id = $('#supplier_id').val();
@@ -1420,14 +1432,9 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
 
     if (form_type == 'sa') {
-        tr.find('.tblGridPhysicalQty').val(1).focus();
-        tr.find('.expiry-date').val('01-01-2025');
-        var storeQty = parseFloat(pd_store_stock) || 0;
-        var physicalQty = 1;
-        var adjustmentQty = physicalQty - storeQty;
-        tr.find('.tblGridAdjustment').val(adjustmentQty);
-        var amount = parseFloat(rate) * adjustmentQty;
-        tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
+        tr.find('.tblGridPhysicalQty').val('').focus();
+        tr.find('.tblGridAdjustment').val('');
+        tr.find('.tblGridCal_amount').val(notNullEmpty(0, 3));
         if (typeof totalStockAmount === 'function') {
             totalStockAmount();
         }
