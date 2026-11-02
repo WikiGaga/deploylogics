@@ -45,6 +45,9 @@ class Kernel extends ConsoleKernel
                 $schedule->command('cheque:notify')->timezone('Asia/Muscat')->dailyAt("09:00");
             }
         }
+
+        $schedule->command('voucher:posting')->everyTenMinutes()->withoutOverlapping();
+
         // $schedule->command('inspire')->hourly();
        // $schedule->command('cronJobs:createPerson')->everyMinute();
         

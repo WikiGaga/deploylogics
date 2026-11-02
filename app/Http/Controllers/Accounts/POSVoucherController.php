@@ -133,7 +133,7 @@ class POSVoucherController extends Controller
                     $cash_in_hand_ac = $config->sale_cash_ac;
                     $payment_receive_db = $config->payment_receive_dr_ac;
                     $payment_receive_cr = $config->payment_receive_cr_ac;
-
+                    
                     $table_name = 'tbl_acco_voucher';
                     $action = 'add';
                     $where_clause = '';
@@ -147,7 +147,7 @@ class POSVoucherController extends Controller
                     $sum_net_total = 0;
                     foreach ($sales_ids_data as $sales){
                         $sale_invoice = DB::table('VW_REST_SUMMARY_ORDER_WISE')
-                        // ->where('branch_id', $branch_id)
+                        ->where('branch_id', $branch_id)
                         ->where('order_id', $sales->order_id)
                         ->first();
                         
@@ -178,6 +178,41 @@ class POSVoucherController extends Controller
                             $ac = $sale_invoice->partner_account_id;
                             $descrip = 'Delivery Partner - '.$sale_invoice->partner_name;
                             $payment_method = 'delivery_partner';
+                        }
+
+                        // Convert amounts to thousandths for comparison at 3 decimal places.
+                        $toUnits = static function ($value) {
+                            return (int) round((float) ($value ?? 0) * 1000);
+                        };
+
+                        $totalCharges =
+                            $toUnits($sale_invoice->items_amount)
+                            + $toUnits($sale_invoice->total_add_on_price)
+                            + $toUnits($sale_invoice->delivery_charges)
+                            + $toUnits($sale_invoice->vat);
+
+                        // order_total_discounts already includes coupon discount.
+                        $totalDiscounts =
+                            $toUnits($sale_invoice->discount_on_items)
+                            + $toUnits($sale_invoice->order_total_discounts);
+
+                        $isFullyDiscounted =
+                            $sale_invoice->payment_status === 'paid'
+                            && strtolower(trim((string) $sale_invoice->order_status)) !== 'canceled'
+                            && $totalCharges > 0
+                            && $totalDiscounts === $totalCharges
+                            && $toUnits($sale_invoice->net_sales) === 0;
+
+                        $hasNoPayments =
+                            $toUnits($sale_invoice->cash_sales) === 0
+                            && $toUnits($sale_invoice->card_sales) === 0
+                            && $toUnits($sale_invoice->credit_sales) === 0
+                            && $toUnits($sale_invoice->delivery_partner_sales) === 0;
+
+                        if ($isFullyDiscounted && $hasNoPayments) {
+                            $ac = (int) $cash_in_hand_ac;
+                            $descrip = '100% Discount - Zero Cash';
+                            $payment_method = 'fully_discounted';
                         }
                        
                         // "CADJ"
@@ -267,7 +302,7 @@ class POSVoucherController extends Controller
 
                             // Food Extra Discount
                             $data['chart_account_id'] = 11916726021355;
-                            $data['voucher_debit'] = (abs(number_format((float)$sale_invoice->order_total_discounts,3)) + abs(number_format((float)$sale_invoice->coupon_discount,3)));
+                            $data['voucher_debit'] = (abs(number_format((float)$sale_invoice->order_total_discounts,3)));
                             $data['voucher_credit'] = 0;
                             $data['voucher_sr_no'] = 5;
                             // for credit entry amount_total
