@@ -28,7 +28,7 @@
             $customer_id        = $data['customer']->customer_id ?? '';
             $customer_name      = $data['current']->customer->customer_name ?? '';
             $customer_code      = $data['current']->customer->customer_code ?? '';
-            $selected_rate_type = 'item_sale_rate';
+            $selected_rate_type = config('constants.default_rate_type');
             $select_bank_acc    = "";
             $mobile             = $data['current']->sales_order_mobile_no ?? '';
             $services_order_id      = $data['current']->sales_order_id ?? '';

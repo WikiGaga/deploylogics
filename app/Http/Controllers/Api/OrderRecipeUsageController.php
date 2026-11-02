@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FoodRecipe;
 use App\Models\OrderRecipeUsage;
+use App\Models\TblPurcProduct;
+use App\Models\TblPurcProductBarcode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -38,10 +40,9 @@ class OrderRecipeUsageController extends Controller
             'no_option_ids' => 0,
             'no_recipe' => 0,
             'empty_recipe' => 0,
+            'invalid_product' => 0,
             'option_list_ids' => [],
         ];
-
-        $cancelledDetailIds = $this->cancelledOrDeletedDetailIds($branchId, $dateFrom, $dateTo);
 
         $orderDetails = DB::table('order_details as od')
             ->join('orders as o', 'o.id', '=', 'od.order_id')
@@ -56,9 +57,10 @@ class OrderRecipeUsageController extends Controller
             ])
             ->where('o.restaurant_id', $branchId)
             ->whereBetween('o.order_date', [$dateFrom, $dateTo])
+            ->whereRaw("LOWER(TRIM(o.payment_status)) = 'paid'")
             ->where(function ($query) {
                 $query->whereNull('o.order_status')
-                    ->orWhereRaw("LOWER(o.order_status) NOT IN ('canceled', 'cancelled')");
+                    ->orWhereRaw("LOWER(TRIM(o.order_status)) NOT IN ('canceled', 'cancelled')");
             })
             ->where(function ($query) {
                 $query->whereNull('od.is_deleted')
@@ -67,7 +69,7 @@ class OrderRecipeUsageController extends Controller
             ->get();
 
         if ($orderDetails->isEmpty()) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -112,7 +114,7 @@ class OrderRecipeUsageController extends Controller
         $optionListIds = array_values(array_unique(array_filter($optionListIds)));
 
         if (empty($optionListIds)) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -135,7 +137,7 @@ class OrderRecipeUsageController extends Controller
         if ($recipesByFood->isEmpty()) {
             $unmatched['no_recipe'] = count($optionListIds);
             $unmatched['option_list_ids'] = array_slice($optionListIds, 0, 50);
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -148,6 +150,7 @@ class OrderRecipeUsageController extends Controller
         }
 
         $rowsToPersist = [];
+        $resolvedProductIds = [];
 
         foreach ($structuredDetails as $detail) {
             foreach ($detail['option_list_ids'] as $optionListId) {
@@ -170,7 +173,15 @@ class OrderRecipeUsageController extends Controller
                     $productQty = (float) $component->quantity;
                     $packing = $this->packingMultiplier($component->packing_id);
                     $productQtyUsed = round($productQty * $packing * $orderQty, 4);
-                    $productId = (int) $component->product_id;
+                    $storedProductId = trim((string) $component->product_id);
+                    if (!array_key_exists($storedProductId, $resolvedProductIds)) {
+                        $resolvedProductIds[$storedProductId] = $this->resolveInventoryProductId($storedProductId);
+                    }
+                    $productId = $resolvedProductIds[$storedProductId];
+                    if (!$productId) {
+                        $unmatched['invalid_product']++;
+                        continue;
+                    }
                     $rowKey = $detail['order_detail_id'] . '-' . $productId;
 
                     if (!isset($rowsToPersist[$rowKey])) {
@@ -206,7 +217,7 @@ class OrderRecipeUsageController extends Controller
         $unmatched['option_list_ids'] = array_slice($unmatched['option_list_ids'], 0, 50);
 
         if (empty($rowsToPersist)) {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
                 'success' => true,
@@ -224,27 +235,12 @@ class OrderRecipeUsageController extends Controller
         DB::beginTransaction();
 
         try {
-            $deletedStale = $this->deleteUsageForDetailIds($cancelledDetailIds);
+            // Rebuild the selected range so changes to order quantities,
+            // variations, or recipes cannot leave stale ingredient rows behind.
+            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             foreach ($rowsToPersist as $row) {
-                OrderRecipeUsage::updateOrCreate(
-                    [
-                        'order_detail_id' => $row['order_detail_id'],
-                        'product_id'      => $row['product_id'],
-                    ],
-                    [
-                        'order_id'        => $row['order_id'],
-                        'restaurant_id'   => $row['restaurant_id'],
-                        'food_id'         => $row['food_id'],
-                        'option_list_id'  => $row['option_list_id'],
-                        'food_recipe_id'  => $row['food_recipe_id'],
-                        'order_quantity'  => $row['order_quantity'],
-                        'product_quantity'=> $row['product_quantity'],
-                        'product_quantity_used'=> $row['product_quantity_used'],
-                        'usage_date'      => $row['usage_date'],
-                        'measure_unit'    => $row['measure_unit'],
-                    ]
-                );
+                OrderRecipeUsage::create($row);
 
                 $summaryKey = $row['product_id'].'-'.$row['usage_date'];
 
@@ -283,37 +279,38 @@ class OrderRecipeUsageController extends Controller
         ]);
     }
 
-    private function cancelledOrDeletedDetailIds($branchId, Carbon $dateFrom, Carbon $dateTo)
+    private function deleteUsageForRange($branchId, Carbon $dateFrom, Carbon $dateTo)
     {
-        return DB::table('order_details as od')
-            ->join('orders as o', 'o.id', '=', 'od.order_id')
-            ->where('o.restaurant_id', $branchId)
-            ->whereBetween('o.order_date', [$dateFrom, $dateTo])
-            ->where(function ($query) {
-                $query->whereRaw("LOWER(o.order_status) IN ('canceled', 'cancelled')")
-                    ->orWhereRaw("UPPER(od.is_deleted) = 'Y'");
-            })
-            ->pluck('od.id')
-            ->map(function ($id) {
-                return (int) $id;
-            })
-            ->unique()
-            ->values()
-            ->all();
+        return OrderRecipeUsage::where('restaurant_id', $branchId)
+            ->whereBetween('usage_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
+            ->delete();
     }
 
-    private function deleteUsageForDetailIds(array $detailIds)
+    /**
+     * Recipe detail rows historically stored the selected barcode in product_id.
+     * Keep old recipes usable, but always persist the inventory product's real ID.
+     */
+    private function resolveInventoryProductId($storedValue): ?int
     {
-        if (empty($detailIds)) {
-            return 0;
+        $storedValue = trim((string) $storedValue);
+        if ($storedValue === '') {
+            return null;
         }
 
-        $deleted = 0;
-        foreach (array_chunk($detailIds, 900) as $chunk) {
-            $deleted += OrderRecipeUsage::whereIn('order_detail_id', $chunk)->delete();
+        $productId = TblPurcProduct::where('product_id', $storedValue)->value('product_id');
+        if ($productId !== null) {
+            return (int) $productId;
         }
 
-        return $deleted;
+        $barcodeProductId = TblPurcProductBarcode::where('product_barcode_barcode', $storedValue)
+            ->value('product_id');
+
+        if ($barcodeProductId === null && ctype_digit($storedValue)) {
+            $barcodeProductId = TblPurcProductBarcode::where('product_barcode_id', $storedValue)
+                ->value('product_id');
+        }
+
+        return $barcodeProductId === null ? null : (int) $barcodeProductId;
     }
 
     private function pickRecipeAsOf($recipesByFood, $optionListId, Carbon $orderDate)

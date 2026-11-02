@@ -10,6 +10,7 @@ use App\Models\TblDefiStore;
 use App\Services\StagingService;
 use App\Traits\HasStaging;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
@@ -76,6 +77,19 @@ class ProductionConsumptionController extends Controller
             'current_stg_id' => $master->current_stg_id,
             'posted' => (int) ($master->posted ?? 0),
         ];
+    }
+
+    protected function productionConsumptionRateColumns(Request $request): array
+    {
+        $columns = [];
+        if (Schema::hasColumn('tblproductionconsumption', 'rate_type')) {
+            $columns['rate_type'] = $request->input('rate_type', '');
+        }
+        if (Schema::hasColumn('tblproductionconsumption', 'rate_perc')) {
+            $columns['rate_perc'] = $request->input('rate_perc', '');
+        }
+
+        return $columns;
     }
 
     protected function syncProductionConsumptionStagingRows($master, string $code): void
@@ -177,6 +191,7 @@ class ProductionConsumptionController extends Controller
         }
 
         $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where(Utilities::currentBCB())->get();
+        $data['rate_types'] = config('constants.rate_type');
 
         return view('inventory.production_consumption.form', compact('data'));
     }
@@ -267,6 +282,8 @@ class ProductionConsumptionController extends Controller
                 $code = Utilities::documentCode($doc_data);
             }
 
+            $rateHeader = $this->productionConsumptionRateColumns($request);
+
             $srNo = 1;
             foreach ($request->pd as $entry) {
                 $row = [
@@ -294,6 +311,8 @@ class ProductionConsumptionController extends Controller
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ];
+
+                $row = array_merge($row, $rateHeader);
 
                 if ($preservedStaging !== null) {
                     $row['staging_apply'] = $preservedStaging['staging_apply'];

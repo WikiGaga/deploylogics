@@ -365,9 +365,10 @@
         $("body").on("contextmenu", 'td[data-id="pd_product_name"],input[data-id="pd_product_name"],input[data-id="product_name"]', function(e) {
             var thix = $(this);
             var val = thix.val();
-            var product_id = thix.parents('tr').find('td:first-child>.product_id').val();
-            var pd_barcode = thix.parents('tr').find('.pd_barcode').val();
-            var pd_barcode_id = thix.parents('tr').find('.product_barcode_id').val();
+            var $row = thix.closest('tr');
+            var product_id = thix.attr('data-product-id') || $row.find('.product_id').first().val();
+            var pd_barcode = thix.attr('data-barcode') || $row.find('.pd_barcode').first().val();
+            var pd_barcode_id = thix.attr('data-barcode-id') || $row.find('.product_barcode_id').first().val();
 
             $("#contextMenu li a").attr('data-id',product_id);
             $("#contextMenu li a").attr('data-val',val);
@@ -471,19 +472,43 @@
             var product_id = thix.attr('data-id');
             var product_val = thix.attr('data-val');
             var barcode_val = thix.attr('data-barcode');
+            var barcode_id = thix.attr('data-barcode_id');
+            var reportBranchIds = thix.attr('data-report-branch-ids');
+            var reportDateFrom = thix.attr('data-report-date-from');
+            var reportDateTo = thix.attr('data-report-date-to');
+            if (!product_id) {
+                e.preventDefault();
+                toastr.error('Unable to load product activity: product information is missing.');
+                return;
+            }
             var data = {
                 'title':'Product Activity Report',
                 'product_id':product_id,
+                'product_barcode_id':barcode_id,
                 'code_val':barcode_val,
                 'name_val':product_val,
                 'btn_id':'generate_report_popup',
             }
+            if (reportBranchIds) {
+                try {
+                    data.branch_ids = JSON.parse(reportBranchIds);
+                } catch (error) {
+                    data.branch_ids = [];
+                }
+            }
+            if (reportDateFrom) data.date_from = reportDateFrom;
+            if (reportDateTo) data.date_to = reportDateTo;
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': "{{ csrf_token() }}"
                 }
             });
-            $('#kt_modal_md').modal('show').find('.modal-content').load(data_url,data);
+            var $modalContent = $('#kt_modal_md').modal('show').find('.modal-content');
+            $modalContent.load(data_url, data, function(response, status, xhr) {
+                if (status === 'error') {
+                    $modalContent.html('<div class="modal-body"><div class="alert alert-danger mb-0">Unable to load Product Activity criteria (HTTP ' + xhr.status + '). Please try again or contact support.</div></div>');
+                }
+            });
             $('.modal-dialog').draggable({
                 handle: ".modal-header"
             });
@@ -498,8 +523,12 @@
             var stores = thix.parents('.modal-content').find('.store').select2().val();
             var all_document_type = thix.parents('.modal-content').find('.all_document_type').select2().val();
             var month_wise_check = thix.parents('.modal-content').find('input[name="month_wise"]').prop('checked');
+            var $modal = thix.parents('.modal-content');
+            var selectedStoreBranchIds = $modal.find('.store option:selected').map(function(){ return $(this).data('branch-id'); }).get();
+            selectedStoreBranchIds = [...new Set(selectedStoreBranchIds.filter(Boolean).map(String))];
+            var reportBranchIds = selectedStoreBranchIds.length ? selectedStoreBranchIds : $modal.find('input[name="report_branch_ids[]"]').map(function(){ return $(this).val(); }).get();
             var formData = {
-                report_branch_ids : [{{auth()->user()->branch_id}}],
+                report_branch_ids : reportBranchIds.length ? reportBranchIds : [{{auth()->user()->branch_id}}],
                 product_id : product_id,
                 date_from : from_date,
                 store   : stores,
@@ -685,6 +714,9 @@
         });
         $(document).on('click' , '.branch-item' , function(e){
             e.preventDefault();
+            if (window.GRNFormAutoSave) {
+                window.GRNFormAutoSave.autoSaveEnabled = false;
+            }
             var thix = $(this);
             var branch = thix.data('id');
             var formData = {

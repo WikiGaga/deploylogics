@@ -57,6 +57,7 @@ return [
         'item_cost_rate' => 'Purchase Rate',
         'item_sale_rate' => 'Sale Rate',
     ],
+    'default_rate_type' => 'item_cost_rate',
     'week_days' => 7,
     'column_types'=>[
         'varchar2' => 'Text',

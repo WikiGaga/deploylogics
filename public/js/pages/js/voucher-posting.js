@@ -178,7 +178,8 @@ var KTFormWidgets = function() {
                         var unmatchedTotal = (unmatched.no_variation || 0)
                             + (unmatched.no_option_ids || 0)
                             + (unmatched.no_recipe || 0)
-                            + (unmatched.empty_recipe || 0);
+                            + (unmatched.empty_recipe || 0)
+                            + (unmatched.invalid_product || 0);
                         var message = response.inserted_rows > 0
                             ? 'Ingredient usage synced successfully. Rows: ' + response.inserted_rows + '.'
                             : (response.message || 'No ingredient usage records were generated.');
@@ -187,7 +188,8 @@ var KTFormWidgets = function() {
                                 + ' (no variation: ' + (unmatched.no_variation || 0)
                                 + ', no option: ' + (unmatched.no_option_ids || 0)
                                 + ', no recipe: ' + (unmatched.no_recipe || 0)
-                                + ', empty recipe: ' + (unmatched.empty_recipe || 0) + ').';
+                                + ', empty recipe: ' + (unmatched.empty_recipe || 0)
+                                + ', invalid product ID: ' + (unmatched.invalid_product || 0) + ').';
                         }
                         if (response.inserted_rows > 0 && unmatchedTotal === 0) {
                             toastr.success(message);

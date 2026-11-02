@@ -63,7 +63,11 @@
             </div>
         </div>
         @php
-            $stores = App\Models\TblDefiStore::where(App\Library\Utilities::currentBCB())->get();
+            $accessibleBranchIds = App\Library\Utilities::userAccessibleBranchIds();
+            $stores = App\Models\TblDefiStore::where('business_id', auth()->user()->business_id)
+                ->where('company_id', auth()->user()->company_id)
+                ->whereIn('branch_id', $accessibleBranchIds)
+                ->get();
         @endphp
         <div class="row form-group-block">
             <div class="col-lg-3">
@@ -77,7 +81,7 @@
                 <div class="erp-select2">
                     <select class="form-control erp-form-control-sm kt_select2_options store" multiple name="store[]">
                         @foreach($stores as $store)
-                            <option value="{{$store->store_id}}" >{{$store->store_name}}</option>
+                            <option value="{{$store->store_id}}" data-branch-id="{{$store->branch_id}}">{{$store->store_name}} ({{optional(\Illuminate\Support\Facades\DB::table('tbl_soft_branch')->where('branch_id', $store->branch_id)->first())->branch_name}})</option>
                         @endforeach
                     </select>
                 </div>

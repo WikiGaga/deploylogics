@@ -221,6 +221,7 @@ if(isset($data['supplier_ids']) && count($data['supplier_ids']) != 0){
 
 $qry = "SELECT 
   PROD_BARCODE.PRODUCT_BARCODE_BARCODE,
+  PROD_BARCODE.UOM_NAME,
   PR.BRANCH_ID,
   PR.BRANCH_NAME,
   PR.product_id,
@@ -229,6 +230,8 @@ $qry = "SELECT
   PR.product_name,
   PR.product_arabic_name,
   PR.PRODUCT_QTY,
+  NVL(PROD_RATE.PRODUCT_BARCODE_COST_RATE, 0) AVERAGE_PRICE,
+  NVL(PROD_RATE.PRODUCT_BARCODE_PURCHASE_RATE, 0) LAST_PRICE,
   NET_TP,
   SALE_RATE 
 FROM
@@ -260,25 +263,34 @@ FROM
     $where
     $nagetivestock
   ) PR 
-  LEFT OUTER JOIN 
-    (SELECT DISTINCT 
-      PRODUCT_ID,
-      MAX(NET_TP) NET_TP,
-      MAX(SALE_RATE) SALE_RATE 
-    FROM
-      TBL_PURC_PRODUCT_BARCODE_PURCH_RATE PROD_RATE 
-    WHERE branch_id in (".implode(",",$data['branch_ids']).") 
-    GROUP BY PRODUCT_ID) PROD_RATE 
-    ON PR.PRODUCT_ID = PROD_RATE.PRODUCT_ID 
-  LEFT OUTER JOIN 
+  LEFT OUTER JOIN
     (SELECT 
       MAX(PRODUCT_BARCODE_BARCODE) PRODUCT_BARCODE_BARCODE,
+      MAX(PRODUCT_BARCODE_ID) PRODUCT_BARCODE_ID,
+      MAX(UOM.UOM_NAME) UOM_NAME,
       PRODUCT_ID 
     FROM
-      tbl_purc_product_barcode 
+      TBL_PURC_PRODUCT_BARCODE BARCODE
+      LEFT JOIN TBL_DEFI_UOM UOM ON UOM.UOM_ID = BARCODE.UOM_ID
     WHERE BASE_BARCODE = 1 
     GROUP BY PRODUCT_ID) PROD_BARCODE 
     ON PR.PRODUCT_ID = PROD_BARCODE.PRODUCT_ID 
+  LEFT OUTER JOIN
+    (SELECT
+      BRANCH_ID,
+      PRODUCT_BARCODE_ID,
+      MAX(NET_TP) NET_TP,
+      MAX(SALE_RATE) SALE_RATE,
+      MAX(PRODUCT_BARCODE_COST_RATE) PRODUCT_BARCODE_COST_RATE,
+      MAX(PRODUCT_BARCODE_PURCHASE_RATE) PRODUCT_BARCODE_PURCHASE_RATE
+    FROM
+      TBL_PURC_PRODUCT_BARCODE_PURCH_RATE
+    WHERE branch_id in (".implode(",",$data['branch_ids']).")
+      AND BUSINESS_ID = ".auth()->user()->business_id."
+      AND COMPANY_ID = ".auth()->user()->company_id."
+    GROUP BY BRANCH_ID, PRODUCT_BARCODE_ID) PROD_RATE
+    ON PR.BRANCH_ID = PROD_RATE.BRANCH_ID
+    AND PROD_BARCODE.PRODUCT_BARCODE_ID = PROD_RATE.PRODUCT_BARCODE_ID
 ORDER BY PR.product_name";
                 
                     //dd($qry);
@@ -291,7 +303,10 @@ ORDER BY PR.product_name";
                             <th width="5%" class="text-left">Sr. No</th>
                             <th width="15%" class="text-center">BarCode</th>
                             <th width="24%" class="text-center">Product Name</th>
+                            <th class="text-center">UOM</th>
                             <th width="8%" class="text-right">Stock Qty</th>
+                            <th class="text-right" {{$with_value_wise}}>Average Price</th>
+                            <th class="text-right" {{$with_value_wise}}>Last Price</th>
                             <th width="8%" class="text-right" {{$with_value_wise}}>Net TP Rate</th>
                             <th width="8%" class="text-right" {{$with_value_wise}}>TP Stock Amount</th>
                             <th width="8%" class="text-right" {{$with_value_wise}}>Sale Rate</th>
@@ -332,12 +347,15 @@ ORDER BY PR.product_name";
                                 <td>{{$loop->iteration}}</td>
                                 <td>{{ $list->product_barcode_barcode }}</td>
                                 <td>{{ $list->product_name }}</td>
+                                <td class="text-center">{{ $list->uom_name ?? '-' }}</td>
                                 <td class="text-right">
                                     @php
                                         $total_Stock += (int)$list->product_qty;
                                     @endphp
                                     {{ $list->product_qty }}
                                 </td>
+                                <td class="text-right" {{$with_value_wise}}>{{ number_format($list->average_price,3) }}</td>
+                                <td class="text-right" {{$with_value_wise}}>{{ number_format($list->last_price,3) }}</td>
                                 <td class="text-right" {{$with_value_wise}}>{{ number_format($list->net_tp,3) }}</td>
 
                                 <td class="text-right" {{$with_value_wise}}>
@@ -374,8 +392,10 @@ ORDER BY PR.product_name";
                             </tr>
                         @endforeach
                         <tr class="grand_total">
-                            <td class="rep-font-bold text-right" colspan="3"><b> Total: </b></td>
+                            <td class="rep-font-bold text-right" colspan="4"><b> Total: </b></td>
                             <td class="text-right rep-font-bold">{{number_format($total_Stock,3)}}</td>
+                            <td class="text-right rep-font-bold" {{$with_value_wise}}></td>
+                            <td class="text-right rep-font-bold" {{$with_value_wise}}></td>
                             <td class="text-right rep-font-bold" {{$with_value_wise}}></td></td>
                             <td class="text-right rep-font-bold" {{$with_value_wise}}>{{number_format($total_tp_amount,3)}}</td>
                             <td class="text-right rep-font-bold" {{$with_value_wise}}></td>

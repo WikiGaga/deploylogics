@@ -264,9 +264,15 @@ $(document).on('change', '.pd_uom', function(e) {
     if (form_type == 'grn') {
         formData.po_id = $('#grn_form').find('#purchase_order_id').val();
     }
-    /*if (form_type == 'sa') { // stock Adjustment
+    if (form_type == 'sa') { // stock Adjustment
         formData.store_id = $('#stock_adjustment_form').find('#store_id').val();
-    }*/
+        formData.branch_id = $('#stock_adjustment_form').find('#new_branch_id').val();
+        formData.stock_date = $('#stock_adjustment_form').find('input[name="stock_date"]').val();
+        if (!formData.store_id || formData.store_id == '0') {
+            toastr.error('Please select Store first');
+            return false;
+        }
+    }
     //initBarcode(keycodeNo,tr,form_type,formData);
     $.ajax({
         headers: {
@@ -357,9 +363,15 @@ function initBarcode(keycodeNo, tr, form_type, formData) {
     if (form_type == 'multi_barcode_labels') { // stock receiving
         formData.branch_id = $('#dynamic_barcode_tag_form').find('#branch_id').val();
     }
-    /*if (form_type == 'sa') { // stock Adjustment
+    if (form_type == 'sa') { // stock Adjustment
         formData.store_id = $('#stock_adjustment_form').find('#store_id').val();
-    }*/
+        formData.branch_id = $('#stock_adjustment_form').find('#new_branch_id').val();
+        formData.stock_date = $('#stock_adjustment_form').find('input[name="stock_date"]').val();
+        if (!formData.store_id || formData.store_id == '0') {
+            toastr.error('Please select Store first');
+            return false;
+        }
+    }
     if (form_type == 'purc_demand' || form_type == 'purc_return') { // Purchase Demand & Return (Supplier)
         if($('#supplier_id').val() != ""){
             formData.sup_id = $('#supplier_id').val();
@@ -746,17 +758,16 @@ function barcodeCommonData(tr, response, formData) {
 
     var amount = (parseFloat(default_qty) * parseFloat(rate));
 
-    var for_purc_rate = ['st', 'sd', 'ist', 'str', 'sup_prod_reg'];
+    var for_purc_rate = ['st', 'sd', 'ist', 'str', 'sup_prod_reg', 'production-consumption'];
     if (for_purc_rate.includes(formData.form_type)) {
         if (formData.form_type == 'ist' || formData.form_type == 'sup_prod_reg') {
             var purc_rate = tbl_purc_rate['product_barcode_purchase_rate'];
         } else {
-            // For stock transfer ('st'), calculate rate based on rate_type and rate_perc
+            // Calculate rate based on rate_type and rate_perc
             var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-            var purc_rate = calc_rate.rate; // Use calculated rate with percentage applied
+            var purc_rate = calc_rate.rate;
         }
-        // For stock transfer, update the rate field with calculated rate
-        if (formData.form_type == 'st' || formData.form_type == 'sd') {
+        if (formData.form_type == 'st' || formData.form_type == 'sd' || formData.form_type == 'production-consumption') {
             tr.find('.tblGridCal_rate').val(notNullEmpty(purc_rate, 3));
         } else {
             tr.find('.tblGridCal_purc_rate').val(notNullEmpty(purc_rate, 3));
@@ -935,14 +946,22 @@ function barcodeCommonData(tr, response, formData) {
     if (form_type == 'change_rate') {
         setProductChangeRate(tr, response, formData)
     }
-    if(form_type == 'st' || form_type == 'sd'){
-        var sale_rate = !valueEmpty(tbl_purc_rate['sale_rate'])?tbl_purc_rate['sale_rate']:0;
-        tr.find('.tblGridSale_rate').val(sale_rate);
-        // Calculate rate based on rate_type and rate_perc
+    if(form_type == 'st' || form_type == 'sd' || form_type == 'production-consumption'){
         var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
         tr.find('.tblGridCal_rate').val(notNullEmpty(calc_rate.rate, 3));
+        var qtyForAmount = tr.find('.tblGridCal_qty').val();
+        if (valueEmpty(qtyForAmount)) {
+            qtyForAmount = default_qty || 0;
+        }
+        var lineAmount = parseFloat(qtyForAmount) * parseFloat(calc_rate.rate);
+        tr.find('.tblGridCal_amount').val(notNullEmpty(lineAmount, 3));
+
+        if (form_type == 'st' || form_type == 'sd') {
+        var sale_rate = !valueEmpty(tbl_purc_rate['sale_rate'])?tbl_purc_rate['sale_rate']:0;
+        tr.find('.tblGridSale_rate').val(sale_rate);
         var store_stock = !valueEmpty(response['store_stock'])?response['store_stock']:0;
         $('#current_product_stock').val(store_stock);
+        }
 
         if(form_type == 'st'){
         var grn_qty = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity']:0;
@@ -1413,14 +1432,9 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
 
     if (form_type == 'sa') {
-        tr.find('.tblGridPhysicalQty').val(1).focus();
-        tr.find('.expiry-date').val('01-01-2025');
-        var storeQty = parseFloat(pd_store_stock) || 0;
-        var physicalQty = 1;
-        var adjustmentQty = physicalQty - storeQty;
-        tr.find('.tblGridAdjustment').val(adjustmentQty);
-        var amount = parseFloat(rate) * adjustmentQty;
-        tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
+        tr.find('.tblGridPhysicalQty').val('').focus();
+        tr.find('.tblGridAdjustment').val('');
+        tr.find('.tblGridCal_amount').val(notNullEmpty(0, 3));
         if (typeof totalStockAmount === 'function') {
             totalStockAmount();
         }

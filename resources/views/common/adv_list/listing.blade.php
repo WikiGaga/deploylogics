@@ -197,6 +197,11 @@
                                     <i class="la la-plus"></i>
                                 </a>
                             @endpermission
+                            @if(strcasecmp($data['case'], 'Employee-Attendance') === 0)
+                                <button type="button" class="btn btn-bold btn-label-brand btn-sm" id="attendance_settings_button" title="Attendance settings" aria-label="Attendance settings">
+                                    <i class="fa fa-cog"></i>
+                                </button>
+                            @endif
                             <button type="button"
                                 data-url="{{ action('Common\ListingController@openListingUserFilterModal', $data['case']) }}"
                                 class="btn btn-bold btn-label-brand btn-sm" data-toggle="modal" id="listing_user_filter"
@@ -420,6 +425,11 @@
             </div>
         </div>
     </div>
+    @if(strcasecmp($data['case'], 'Employee-Attendance') === 0)
+        <div class="modal fade" id="attendance_settings_modal" tabindex="-1" role="dialog" aria-labelledby="attendanceSettingsTitle" aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document"><div class="modal-content"></div></div>
+        </div>
+    @endif
     <script>
         // alert('cccccccccccccc');
 
@@ -514,6 +524,26 @@
         $('#listing_user_filter').on('click', function(e) {
             var data_url = $(this).attr('data-url');
             $('#kt_modal_1').modal('show').find('.modal-content').load(data_url);
+        });
+        $('#attendance_settings_button').on('click', function () {
+            var $modal = $('#attendance_settings_modal');
+            $modal.modal('show').find('.modal-content').html('<div class="modal-body text-center">Loading attendance settings...</div>')
+                .load('/Employee-Attendance/settings');
+        });
+        $(document).on('submit', '#attendance_settings_form', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            $.ajax({
+                url: '/Employee-Attendance/settings', type: 'POST', data: $form.serialize(),
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                success: function (response) {
+                    toastr.success(response.message || 'Attendance settings saved.');
+                    $('#attendance_settings_modal').modal('hide');
+                },
+                error: function (xhr) {
+                    toastr.error(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Unable to save attendance settings.');
+                }
+            });
         });
         $('#listing_user_downloads').on('click', function(e) {
             var data_url = $(this).attr('data-url');

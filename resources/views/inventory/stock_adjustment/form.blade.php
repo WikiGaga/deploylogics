@@ -19,11 +19,7 @@
                 $id = '';
                 $store = \App\Models\TblDefiStore::where('branch_id',auth()->user()->branch_id)->where('store_default_value',1)->first();
                 $storeid = isset($store->store_id)?$store->store_id:"";
-                if($data['stock_code_type'] == 'sa'){
-                    $rate_type  = 'item_cost_rate';
-                }else{
-                    $rate_type  = 'item_sale_rate';
-                }
+                $rate_type = config('constants.default_rate_type');
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;
@@ -301,7 +297,7 @@
                                             <td><input type="text" data-id="rate" name="pd[{{$loop->iteration}}][rate]" value="{{number_format($dtl->stock_dtl_rate,2)}}" class="tblGridCal_rate form-control erp-form-control-sm validNumber" ></td>
                                             <td><input type="text" data-id="amount" name="pd[{{$loop->iteration}}][amount]" value="{{number_format($dtl->stock_dtl_amount,3)}}" class="tblGridCal_amount stock_amount form-control erp-form-control-sm validNumber" readonly></td>
                                             <td><input type="text" data-id="physical_quantity" name="pd[{{$loop->iteration}}][physical_quantity]" value="{{$dtl->stock_dtl_physical_quantity}}" class="tblGridPhysicalQty tb_moveIndex form-control erp-form-control-sm validNumber" ></td>
-                                            <td><input type="text" data-id="stock_quantity" name="pd[{{$loop->iteration}}][stock_quantity]" value="{{$dtl->stock_dtl_stock_quantity}}" class="  tblGrid_stockQty form-control erp-form-control-sm validNumber"></td>
+                                            <td><input type="text" data-id="stock_quantity" name="pd[{{$loop->iteration}}][stock_quantity]" value="{{$dtl->stock_dtl_stock_quantity}}" class="tblGrid_stockQty form-control erp-form-control-sm validNumber" readonly></td>
                                             <td><input type="text" data-id="quantity" name="pd[{{$loop->iteration}}][quantity]" value="{{$dtl->stock_dtl_quantity}}" class="tblGridAdjustment validNumber validOnlyNumber  form-control erp-form-control-sm" readonly></td>
                                             <td><input type="text" data-id="batch_no" name="pd[{{$loop->iteration}}][batch_no]" value="{{isset($dtl->stock_dtl_batch_no)?$dtl->stock_dtl_batch_no:""}}" class=" form-control erp-form-control-sm"></td>
                                             @php $prod_date= date('d-m-Y', strtotime(trim(str_replace('/','-',$dtl->stock_dtl_production_date)))); @endphp

@@ -235,9 +235,19 @@ class ApiHomeController extends ApiController
         }
 
         $search = trim((string) $request->input('search'));
-        $searchTerm = '%' . strtolower($search) . '%';
+        if ($search === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provide an employee code or local phone number in the search field.',
+            ], 422);
+        }
 
-        $employee = DB::table('tbl_payr_employee as e')
+        $searchTerm = '%' . mb_strtolower($search) . '%';
+        // Phone fields often contain country codes, spaces, dashes or brackets.
+        // Normalize both stored and searched phone values to digits for matching.
+        $phoneSearch = preg_replace('/\D+/', '', $search);
+
+        $employees = DB::table('tbl_payr_employee as e')
             ->leftJoin('tbl_payr_gender as g', 'g.gender_id', '=', 'e.GENDER_ID')
             ->leftJoin('tbl_defi_city as cty', 'cty.city_id', '=', 'e.EMPLOYEE_LOCAL_CITY_ID')
             ->leftJoin('tbl_defi_country as c', 'c.country_id', '=', 'e.EMPLOYEE_LOCAL_COUNTRY_ID')
@@ -259,12 +269,31 @@ class ApiHomeController extends ApiController
                 'e.IMAGE_EMBEDED_CODE',
                 'e.CREATED_AT'
             )
-          ->where(function ($query) use ($searchTerm) {
-        $query->whereRaw('LOWER(e.EMPLOYEE_CODE) LIKE ?', [$searchTerm])
-              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PHONE_NO) LIKE ?', [$searchTerm])
-              ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PERSONAL_EMAIL) LIKE ?', [$searchTerm]);
-    })
-            ->first();
+            ->where(function ($query) use ($searchTerm, $phoneSearch) {
+                $query->whereRaw('LOWER(e.EMPLOYEE_CODE) LIKE ?', [$searchTerm])
+                    ->orWhereRaw('LOWER(e.EMPLOYEE_LOCAL_PERSONAL_EMAIL) LIKE ?', [$searchTerm]);
+
+                if ($phoneSearch !== '') {
+                    $query->orWhereRaw(
+                        "REGEXP_REPLACE(TO_CHAR(e.EMPLOYEE_LOCAL_PHONE_NO), '[^0-9]', '') LIKE ?",
+                        ['%' . $phoneSearch . '%']
+                    )->orWhereRaw(
+                        "REGEXP_REPLACE(TO_CHAR(e.EMPLOYEE_LOCAL_MOBILE_NO), '[^0-9]', '') LIKE ?",
+                        ['%' . $phoneSearch . '%']
+                    );
+                }
+            })
+            ->limit(2)
+            ->get();
+
+        if ($employees->count() > 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search matched more than one employee. Please provide a more specific employee code or phone number.',
+            ], 409);
+        }
+
+        $employee = $employees->first();
 
         if (!$employee) {
             return response()->json([
@@ -432,12 +461,23 @@ class ApiHomeController extends ApiController
                 $folder = 'images/employee_face';
                 $destinationPath = public_path($folder);
 
-                // Create directory if it doesn't exist
+                // Create directory if it doesn't exist and ensure it is writable
                 if (!File::exists($destinationPath)) {
                     File::makeDirectory($destinationPath, 0777, true, true);
+                    @chmod($destinationPath, 0777);
+                } elseif (!is_writable($destinationPath)) {
+                    @chmod($destinationPath, 0777);
                 }
 
                 $filename = time() . '_' . $employee_id . '.' . $image->getClientOriginalExtension();
+
+                // Delete previous face image if exists
+                if (!empty($employee->attendance_image)) {
+                    $oldFilePath = $destinationPath . '/' . $employee->attendance_image;
+                    if (File::exists($oldFilePath)) {
+                        @File::delete($oldFilePath);
+                    }
+                }
 
                 // Use native move() instead of Intervention Image to bypass permission locks
                 $image->move($destinationPath, $filename);
@@ -820,7 +860,7 @@ class ApiHomeController extends ApiController
     {
 
         $app_version = DB::table('tbl_app_version')
-            ->select('id', 'app_name', 'app_version', 'app_url')
+            ->select('id', 'app_name', 'app_version', 'app_url', 'offline_attendance', 'time_zone')
             ->where('app_name', 'malik pizza hr')
             ->first();
 
@@ -829,6 +869,8 @@ class ApiHomeController extends ApiController
                 'app_name' => $app_version->app_name,
                 'app_version' => $app_version->app_version,
                 'app_url' => $app_version->app_url,
+                'offline_attendance' => (int) ($app_version->offline_attendance ?? 0),
+                'time_zone' => $app_version->time_zone ?? 'UTC',
             ], 200);
         } else {
             return response()->json([
@@ -838,6 +880,64 @@ class ApiHomeController extends ApiController
             ], 404);
         }
 
+    }
+
+    public function attendanceCurrentTime(Request $request)
+    {
+        $appVersion = DB::table('tbl_app_version')
+            ->where('app_name', 'malik pizza hr')
+            ->first(['time_zone']);
+
+        $timezone = $appVersion && !empty($appVersion->time_zone) ? $appVersion->time_zone : 'UTC';
+        try {
+            $timezoneObject = new \DateTimeZone($timezone);
+        } catch (\Throwable $e) {
+            $timezone = 'UTC';
+            $timezoneObject = new \DateTimeZone($timezone);
+        }
+
+        $now = new \DateTimeImmutable('now', $timezoneObject);
+
+        return response()->json([
+            'success' => true,
+            'time_zone' => $timezone,
+            'current_date' => $now->format('Y-m-d'),
+            'current_time' => $now->format('H:i:s'),
+            'current_datetime' => $now->format('Y-m-d H:i:s'),
+            'iso8601' => $now->format(\DateTimeInterface::ATOM),
+        ]);
+    }
+
+    public function updateOfflineAttendance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'offline_attendance' => 'required|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $updated = DB::table('tbl_app_version')
+            ->where('app_name', 'malik pizza hr')
+            ->update(['offline_attendance' => (int) $request->input('offline_attendance')]);
+
+        if (!$updated && !DB::table('tbl_app_version')->where('app_name', 'malik pizza hr')->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Attendance app version record was not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Offline attendance setting updated successfully.',
+            'offline_attendance' => (int) $request->input('offline_attendance'),
+        ], 200);
     }
 
     public function store_app_version(Request $request)

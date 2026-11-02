@@ -16,7 +16,7 @@
             $customer_id = isset($data['customer']->customer_id)?$data['customer']->customer_id:'';
             $customer_name = isset($data['customer']->customer_name)?$data['customer']->customer_name:'';
             $length = 0;
-            $selected_rate_type = 'item_sale_rate';
+            $selected_rate_type = config('constants.default_rate_type');
         }
         if($case == 'edit'){
             $id = $data['current']->protection_id;

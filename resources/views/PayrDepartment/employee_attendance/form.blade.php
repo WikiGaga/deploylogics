@@ -52,7 +52,7 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- <div class="col-lg-4">
+                        <div class="col-lg-4">
                             <div class="row">
                                 <label class="col-lg-5 erp-col-form-label">All Employees:</label>
                                 <div class="col-lg-7">
@@ -66,7 +66,7 @@
                                     </select>
                                 </div>
                             </div>
-                        </div> --}}
+                        </div>
                     </div>
                     <div class="form-group-block row">
                         <div class="col-lg-4">

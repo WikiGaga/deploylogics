@@ -21,6 +21,44 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class EmployeeAttendanceController extends Controller
 {
+    private const ATTENDANCE_APP_NAME = 'malik pizza hr';
+
+    public function settings()
+    {
+        abort_unless(auth()->user()->isAbleTo(self::$menu_dtl_id . '-view'), 403);
+
+        $settings = DB::table('tbl_app_version')
+            ->where('app_name', self::ATTENDANCE_APP_NAME)
+            ->first(['offline_attendance', 'time_zone']);
+        $timezones = \DateTimeZone::listIdentifiers();
+
+        return view('PayrDepartment.employee_attendance.settings_modal', compact('settings', 'timezones'));
+    }
+
+    public function saveSettings(Request $request)
+    {
+        abort_unless(auth()->user()->isAbleTo(self::$menu_dtl_id . '-view'), 403);
+
+        $validated = $request->validate([
+            'offline_attendance' => 'nullable|in:0,1',
+            'time_zone' => 'required|string|timezone',
+        ]);
+        $settings = [
+            'offline_attendance' => (int) ($request->input('offline_attendance') === '1'),
+            'time_zone' => $validated['time_zone'],
+        ];
+
+        $updated = DB::table('tbl_app_version')
+            ->where('app_name', self::ATTENDANCE_APP_NAME)
+            ->update($settings);
+
+        if (!$updated && !DB::table('tbl_app_version')->where('app_name', self::ATTENDANCE_APP_NAME)->exists()) {
+            return response()->json(['message' => 'Attendance app settings row was not found in tbl_app_version.'], 404);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Attendance settings saved successfully.']);
+    }
+
     /**
      * Display a listing of the resource.
      *

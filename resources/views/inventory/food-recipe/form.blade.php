@@ -242,7 +242,7 @@
                                                         </td>
                                                         <td><input type="text" data-id="pd_barcode"
                                                                 name="pd[{{ $loop->iteration }}][pd_barcode]"
-                                                                value="{{ $dtl->product_id }}"
+                                                                value="{{ $dtl->legacy_barcode ?? '' }}"
                                                                 data-url="{{ action('Common\DataTableController@inlineHelpOpen', 'productHelp') }}"
                                                                 class="pd_barcode tb_moveIndex form-control erp-form-control-sm"
                                                                 readonly></td>
