@@ -132,6 +132,12 @@ class LoginController extends ApiController
             return $this->ApiJsonErrorResponse([], 'Your account has been disabled.');
         }
 
+        if ((int) $user->attendance_app_login !== 1) {
+            $this->guard()->logout();
+
+            return $this->ApiJsonErrorResponse([], 'Attendance app login is not allowed for this account.');
+        }
+
         $data = [
             'user_id' => $user->id,
             'access_token' => $token,

@@ -817,11 +817,12 @@ function barcodeCommonData(tr, response, formData) {
         if (rate_list.includes(selected_barcode_rate)) {
             // if barcode found in dropdown
             var rateFound = {
-                rate: tbl_purc_rate['product_barcode_purchase_rate'],
                 selected_barcode_rate: selected_barcode_rate,
                 barcode_id: barcode['product_barcode_id'],
                 barcode_barcode: barcode['product_barcode_barcode'],
                 store_id: $('#opening_stock_form').find('#store_id').val(),
+                branch_id: $('#opening_stock_form').find('#new_branch_id').val(),
+                stock_id: $('#opening_stock_form').find('#stock_id').val(),
                 tr: tr
             }
             $('#opening_stock_form').find('.erp_form___block').addClass('pointerEventsNone');
@@ -1629,17 +1630,14 @@ function uomList(tr, uom_list, selected_uom_id) {
 
 function barcode_already_exits_in_grid(rateFound) {
     var barcode_found_current_grid = false;
-    var barcode_found_current_grid_rate = 0;
-    $('.erp_form__grid_body>tr>td:first-child').each(function() {
+    $('#opening_stock_form .erp_form__grid_body>tr').each(function() {
+        if (this === rateFound.tr[0]) return;
         var bar_id = $(this).find('input[data-id="product_barcode_id"]').val();
         if (bar_id == rateFound.barcode_id) {
-            barcode_found_current_grid = false;
-            barcode_found_current_grid_rate = $(this).parents('tr').find('input[data-id="rate"]').val();
+            barcode_found_current_grid = true;
         }
     });
     if (barcode_found_current_grid) {
-        rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(barcode_found_current_grid_rate, 3));
-        $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
         var documentNo = $('#opening_stock_form').find('.erp-page--title').text();
         swal.fire({
             title: rateFound.barcode_barcode,
@@ -1647,12 +1645,11 @@ function barcode_already_exits_in_grid(rateFound) {
             type: 'warning',
             showConfirmButton: true,
         });
+    }
+    if (rateFound.store_id != 0) {
+        barcode_already_exits_in_OS_DBtable(rateFound);
     } else {
-        if (rateFound.store_id != 0) {
-            barcode_already_exits_in_OS_DBtable(rateFound);
-        } else {
-            $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-        }
+        apply_opening_stock_rate(rateFound);
     }
 }
 
@@ -1660,6 +1657,8 @@ function barcode_already_exits_in_OS_DBtable(rateFound) {
     var formData = {
         barcode_id: rateFound.barcode_id,
         store_id: rateFound.store_id,
+        branch_id: rateFound.branch_id,
+        stock_id: rateFound.stock_id,
     };
     $.ajax({
         headers: {
@@ -1671,58 +1670,51 @@ function barcode_already_exits_in_OS_DBtable(rateFound) {
         data: formData,
         success: function(response) {
             if (response['status'] == 'success') {
-                rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(response['os_barcode'][0].stock_dtl_rate, 3));
-                $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
                 swal.fire({
                     title: rateFound.barcode_barcode,
                     html: 'Product already exists. <br>Document No: ' + response['os_barcode'][0].stock_code,
                     type: 'warning',
                     showConfirmButton: true,
                 });
-            } else {
-                if (rateFound.selected_barcode_rate == '0') {
-                    rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(0, 3));
-                    $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-                }
-                if (rateFound.selected_barcode_rate == 'cost_rate') {
-                    rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(rateFound.rate, 3));
-                    $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-                }
-                if (rateFound.selected_barcode_rate == 'last_purchase_rate') {
-                    barcode_already_exits_in_GRN_DBtable(rateFound);
-                }
-                if (rateFound.selected_barcode_rate == "average_rate") {
-                    $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-                }
-                if (rateFound.selected_barcode_rate == "last_stock_rate") {
-                    $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-                }
             }
-        }
+        },
+        complete: function() { apply_opening_stock_rate(rateFound); }
     });
 }
 
-function barcode_already_exits_in_GRN_DBtable(rateFound) {
+function apply_opening_stock_rate(rateFound) {
     var formData = {
         barcode_id: rateFound.barcode_id,
+        branch_id: rateFound.branch_id,
+        stock_date: $('#opening_stock_form').find('input[name="stock_date"]').val(),
+        rate_type: rateFound.selected_barcode_rate,
+        form_type: 'os'
     };
+    if (formData.rate_type === '0') {
+        update_rate(rateFound.tr, 0);
+        if (typeof totalStockAmount === 'function') totalStockAmount();
+        $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
+        return;
+    }
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
         type: 'POST',
-        url: '/barcode/get-barcode-rate-grn-table',
+        url: '/barcode/change-grid-item-rate',
         dataType: 'json',
         data: formData,
         success: function(response) {
-            if (response['status'] == 'success') {
-                rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(response['grn_barcode'].tbl_purc_grn_dtl_rate, 3));
-                $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
-            } else {
-                rateFound.tr.find('.tblGridCal_rate').val(notNullEmpty(0, 3));
-                $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
+            if (response.data && response.data.found && rateFound.tr.find('.product_barcode_id').val() == rateFound.barcode_id) {
+                update_rate(rateFound.tr, response.data.rate);
+            } else if (!response.data || !response.data.found) {
+                update_rate(rateFound.tr, 0);
+                toastr.warning('No rate found for this barcode and date. Enter the rate manually.');
             }
-        }
+            if (typeof totalStockAmount === 'function') totalStockAmount();
+        },
+        error: function() { toastr.error('Unable to load the selected barcode rate.'); },
+        complete: function() { $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone'); }
     });
 }
 

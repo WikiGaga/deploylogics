@@ -23,6 +23,52 @@ $(document).on('click','#changeGridItemRate',function(){
         showConfirmButton: true
     }).then(function(result){
         if(result.value){
+            if (form_type === 'os') {
+                var $form = $('#opening_stock_form');
+                var branchId = $form.find('#new_branch_id').val();
+                var stockDate = $form.find('input[name="stock_date"]').val();
+                if (!branchId || !stockDate || !formData.rate_type || formData.rate_type === '0') {
+                    toastr.error('Select a branch, date and Rate By option first.');
+                    return;
+                }
+                var $rows = $form.find('.erp_form__grid>.erp_form__grid_body>tr').filter(function () {
+                    return !!$(this).find('input[data-id="product_barcode_id"]').val();
+                });
+                if (!$rows.length) return;
+                var remaining = $rows.length;
+                var missing = 0;
+                $form.find('.erp_form___block').addClass('pointerEventsNone');
+                $rows.each(function () {
+                    var tr = $(this);
+                    var barcodeId = tr.find('input[data-id="product_barcode_id"]').val();
+                    $.ajax({
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        type: 'POST', url: url, dataType: 'json',
+                        data: {
+                            form_type: 'os', rate_type: formData.rate_type,
+                            barcode_id: barcodeId, branch_id: branchId, stock_date: stockDate
+                        },
+                        success: function (response) {
+                            if (response.data && response.data.found &&
+                                tr.find('input[data-id="product_barcode_id"]').val() == barcodeId) {
+                                update_rate(tr, response.data.rate);
+                            } else {
+                                missing++;
+                            }
+                        },
+                        error: function () { missing++; },
+                        complete: function () {
+                            remaining--;
+                            if (remaining === 0) {
+                                $form.find('.erp_form___block').removeClass('pointerEventsNone');
+                                if (typeof totalStockAmount === 'function') totalStockAmount();
+                                if (missing) toastr.warning(missing + ' row(s) had no available rate; their rates were kept.');
+                            }
+                        }
+                    });
+                });
+                return;
+            }
             $('.erp_form__grid>.erp_form__grid_body>tr').each(function(){
                 var tr = $(this);
                 formData.product_id = tr.find('input[data-id="product_id"]').val();

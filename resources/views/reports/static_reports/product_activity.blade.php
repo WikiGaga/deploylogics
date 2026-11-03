@@ -624,12 +624,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         <span style="color: #2196f3 !important; font-size: 12px;">Transfer To :</span> {{$branch->branch_short_name ?? ''}} <br>
                                     @endif
                                 </td>
+                                <td class="text-center">{{number_format($packing,3)}}</td>
                                 <td class="text-center">{{$qty_in==0?"":number_format($qty_in,3)}}</td>
                                 <td class="text-center">{{$InRate==0?"":number_format($InRate,3)}}</td>
                                 <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($qty_out,3)}}</td>
                                 <td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>
                                 <td class="text-center">{{number_format($BalQty,3)}}</td>
-                                <td class="text-center">{{number_format($packing,3)}}</td>
                                 <td class="text-center">{{$qty_in_per_item==0?"":number_format($qty_in_per_item,3)}}</td>
                                 <td class="text-center">{{$in_rate_per_item==0?"":number_format($in_rate_per_item,3)}}</td>
                                 <td class="text-center">{{$qty_out_per_item==0 && !$isRecipeConsumption ? "" : number_format($qty_out_per_item,3)}}</td>

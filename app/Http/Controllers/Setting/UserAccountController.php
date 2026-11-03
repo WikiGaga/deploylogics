@@ -187,6 +187,7 @@ class UserAccountController extends Controller
                 $user->degital_signature_url = isset($filename)?$filename:'';
             }
             $user->user_entry_status = isset($request->user_entry_status)?"1":"0";
+            $user->attendance_app_login = $request->has('attendance_app_login') ? 1 : 0;
             $user->branch_id = $request->user_branch;
             $user->restaurant_id = $request->user_branch;
             $user->vendor_id = 5;

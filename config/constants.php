@@ -10,7 +10,7 @@ return [
         'Variant' => 'Variant'
     ],
     'rate_by'=>[
-        'cost_rate' => 'Cost Rate',
+        'cost_rate' => 'Last basic purchase rate',
         'last_stock_rate' => 'Last Stock Rate',
         'last_purchase_rate' => 'Last Purchase Rate',
         'average_rate' => 'Average Rate'

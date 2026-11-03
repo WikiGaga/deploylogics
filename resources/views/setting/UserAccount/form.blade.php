@@ -41,6 +41,7 @@
             $two_step_verification = $data['current']->two_step_verification;
             $two_step_verification_type = $data['current']->two_step_verification_type;
             $status = $data['current']->user_entry_status;
+            $attendance_app_login = $data['current']->attendance_app_login;
             $picture = $data['current']->image_url;
             $signature = $data['current']->degital_signature_url;
             $user_type = $data['current']->user_type;
@@ -485,6 +486,19 @@
                                                 @else
                                                     <input type="checkbox" name="user_entry_status" checked>
                                                 @endif
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label" for="attendance_app_login">Attendance App Login:</label>
+                                    <div class="col-lg-6">
+                                        <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                            <label>
+                                                <input type="checkbox" id="attendance_app_login" name="attendance_app_login" {{ ($case == 'new' || (int) ($attendance_app_login ?? 0) === 1) ? 'checked' : '' }}>
                                                 <span></span>
                                             </label>
                                         </span>
