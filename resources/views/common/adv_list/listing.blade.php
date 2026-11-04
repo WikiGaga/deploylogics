@@ -198,9 +198,11 @@
                                 </a>
                             @endpermission
                             @if(strcasecmp($data['case'], 'Employee-Attendance') === 0)
+                                @permission('85-edit')
                                 <button type="button" class="btn btn-bold btn-label-brand btn-sm" id="attendance_settings_button" title="Attendance settings" aria-label="Attendance settings">
                                     <i class="fa fa-cog"></i>
                                 </button>
+                                @endpermission
                             @endif
                             <button type="button"
                                 data-url="{{ action('Common\ListingController@openListingUserFilterModal', $data['case']) }}"

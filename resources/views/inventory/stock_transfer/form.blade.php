@@ -17,7 +17,7 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
-                $selected_rate_type = config('constants.default_rate_type');
+                $selected_rate_type = 'cost_rate';
                 $rate_perc = '';
             }
             if($case == 'edit'){
@@ -157,15 +157,11 @@
                                 <div class="ChangeRateBlock input-group erp-select2-sm">
                                     <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
                                         <option value="0">Select</option>
-                                        @if($case == 'edit')
-                                            @php $selected_rate_type = isset($selected_rate_type)?$selected_rate_type:''; @endphp
-                                            @foreach($data['rate_types'] as $key=>$rate_type)
-                                                <option value="{{$key}}" {{$selected_rate_type==$key?"selected":""}}>{{$rate_type}}</option>
-                                            @endforeach
-                                        @else
-                                            @foreach($data['rate_types'] as $key=>$rate_type)
-                                                <option value="{{$key}}" {{$key==config('constants.default_rate_type')?"selected":""}}>{{$rate_type}}</option>
-                                            @endforeach
+                                        @foreach($data['rate_by'] as $key=>$rate_type)
+                                            <option value="{{$key}}" {{$selected_rate_type==$key?"selected":""}}>{{$rate_type}}</option>
+                                        @endforeach
+                                        @if($case == 'edit' && !array_key_exists($selected_rate_type, $data['rate_by']) && isset($data['rate_types'][$selected_rate_type]))
+                                            <option value="{{$selected_rate_type}}" selected>{{$data['rate_types'][$selected_rate_type]}} (legacy)</option>
                                         @endif
                                     </select>
                                     <div class="input-group-prepend">

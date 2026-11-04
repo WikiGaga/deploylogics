@@ -28,11 +28,13 @@ class CoreFunc
                     ? implode(",", $paras['branch_ids'])
                     : "0";
 
+        $postWise = $paras['post_wise'] ?? 'post';
+        $postedClause = $postWise === 'all' ? '' : ($postWise === 'unposted' ? 'and nvl(posted, 0) = 0' : 'and posted = 1');
         $qry = "select nvl(sum(voucher_debit) - sum(voucher_credit), 0) as opening_bal
                 from tbl_acco_voucher
                 where $chart_account_condition
                 and voucher_date <= to_date('" . $date . "', 'yyyy/mm/dd')
-                and posted = 1
+                $postedClause
                 and business_id = " . auth()->user()->business_id . "
                 and company_id = " . auth()->user()->company_id . "
                 and branch_id in (" . $branch_list . ")";
@@ -72,10 +74,12 @@ class CoreFunc
             $chart_account_condition = " chart_account_id  = " . $paras['chart_account_id'] ;
         }
 
+        $postWise = $paras['post_wise'] ?? 'post';
+        $postedClause = $postWise === 'all' ? '' : ($postWise === 'unposted' ? 'and nvl(posted, 0) = 0' : 'and posted = 1');
         $qry = "select nvl(sum(voucher_debit) - sum(voucher_credit), 0) opening_bal from tbl_acco_voucher
                 where $chart_account_condition
                 and voucher_mode_date <= to_date('".$date."','yyyy/mm/dd')
-                and posted = 1
+                $postedClause
                 and business_id = ".auth()->user()->business_id."
                 and company_id = ".auth()->user()->company_id."
                 and branch_id in(".implode(",",$paras['branch_ids']).")";

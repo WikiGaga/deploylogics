@@ -25,22 +25,17 @@
     @php
         $data = Session::get('data');
         $productDtl = \Illuminate\Support\Facades\DB::table('vw_purc_product_barcode')->where('product_id',$data['product'])->first();
-        $productBarcodesByPacking = \Illuminate\Support\Facades\DB::table('vw_purc_product_barcode')
+        $productBarcodes = \Illuminate\Support\Facades\DB::table('vw_purc_product_barcode')
             ->where('product_id', $data['product'])
-            ->get(['product_barcode_packing', 'product_barcode_barcode'])
-            ->groupBy(function ($barcode) {
-                return (string) (float) $barcode->product_barcode_packing;
-            })
-            ->map(function ($barcodes) {
-                return $barcodes->first()->product_barcode_barcode;
-            });
+            ->get(['product_barcode_id', 'product_barcode_barcode', 'product_barcode_packing', 'uom_name']);
+        $productBarcodesById = $productBarcodes->pluck('product_barcode_barcode', 'product_barcode_id');
         $averagePriceBranches = array_values(array_filter(array_map('intval', $data['branch_ids'] ?? [])));
         $averagePriceProductId = (int) ($data['product'] ?? 0);
         $averagePriceBusinessId = (int) auth()->user()->business_id;
         $averagePriceCompanyId = (int) auth()->user()->company_id;
         $averagePriceEndDateFilter = $data['date_time_wise'] == 1
             ? "AND STOCK.CREATED_AT <= TO_DATE('" . str_replace("'", "''", $data['time_to']) . "', 'yyyy/mm/dd HH24:MI')"
-            : "AND STOCK.DOCUMENT_DATE <= TO_DATE('" . str_replace("'", "''", $data['to_date']) . "', 'yyyy/mm/dd')";
+            : "AND STOCK.DOCUMENT_DATE < TO_DATE('" . str_replace("'", "''", $data['to_date']) . "', 'yyyy/mm/dd') + 1";
         $averagePriceOpeningDateFilter = $data['date_time_wise'] == 1
             ? "AND STOCK.CREATED_AT < TO_DATE('" . str_replace("'", "''", $data['time_from']) . "', 'yyyy/mm/dd HH24:MI')"
             : "AND STOCK.DOCUMENT_DATE < TO_DATE('" . str_replace("'", "''", $data['from_date']) . "', 'yyyy/mm/dd')";
@@ -131,14 +126,10 @@
                         <span style="color: #5578eb;">{{" ".$productDtl->product_name." "}}</span>
                     </h6>
                     <h6 class="kt-invoice__criteria">
-                        <span style="color: #e27d00;">Barcode:</span>
-                        <span style="color: #5578eb;">{{" ".$productDtl->product_barcode_barcode." "}}</span>
-                    </h6>
-                    <h6 class="kt-invoice__criteria">
-                        <span style="color: #e27d00;">UOM:</span>
-                        <span style="color: #5578eb;">{{" ".$productDtl->uom_name." "}}</span>
-                        <span style="color: #e27d00;">Packing:</span>
-                        <span style="color: #5578eb;">{{" ".$productDtl->product_barcode_packing." "}}</span>
+                        <span style="color: #e27d00;">Barcodes (UOM, Packing):</span>
+                        @foreach($productBarcodes as $productBarcode)
+                            <span style="color: #5578eb;">{{ $productBarcode->product_barcode_barcode }} ({{ $productBarcode->uom_name }}, {{ number_format((float) $productBarcode->product_barcode_packing, 3) }})</span>@if(!$loop->last), @endif
+                        @endforeach
                     </h6>
                 @endif
             </div>
@@ -274,7 +265,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')) + 1";
                                 $usage_report_date = "TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                             }else{
-                                $date_field2 = "AND (STOCK.DOCUMENT_DATE between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd'))";
+                                $date_field2 = "AND (STOCK.DOCUMENT_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') and STOCK.DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1)";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE.USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                                 $usage_report_date = "to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
@@ -321,8 +312,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                    $dt .= "AND STOCK.SALES_STORE_ID in( '".implode("','",$data['store'])."') ";
                                }
                                 if(isset($data['month_wise']) && $data['month_wise']){
-                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
-                                            SELECT PROD.PRODUCT_NAME , NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING, STOCK.STOCK_EXPIRY,
+                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_ID, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                            SELECT PROD.PRODUCT_NAME , STOCK.PRODUCT_BARCODE_ID, NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING, STOCK.STOCK_EXPIRY,
                                             STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                             STOCK.DOCUMENT_CODE ,
                                             NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
@@ -357,7 +348,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
 
                                                 union all
                                                 SELECT
-                                                    PROD.PRODUCT_NAME ,MAX(STOCK.PRODUCT_PACKING) PRODUCT_BARCODE_PACKING, MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
+                                                    PROD.PRODUCT_NAME ,CASE WHEN MIN(STOCK.PRODUCT_BARCODE_ID) = MAX(STOCK.PRODUCT_BARCODE_ID) THEN MIN(STOCK.PRODUCT_BARCODE_ID) END PRODUCT_BARCODE_ID, MAX(STOCK.PRODUCT_PACKING) PRODUCT_BARCODE_PACKING, MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
                                                     MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,
                                                     MAX(BR.BRANCH_NAME) BRANCH_NAME ,
                                                     MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
@@ -400,7 +391,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             UNION ALL
 
                                             SELECT
-                                                MAX(PROD.PRODUCT_NAME) , 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
+                                                MAX(PROD.PRODUCT_NAME) , NULL PRODUCT_BARCODE_ID, 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
                                                 $usage_report_date DOCUMENT_DATE ,
                                                 NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
                                                 'Recipe Consumption' DOCUMENT_TYPE ,
@@ -428,8 +419,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
 
                                 }else{
-                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
-                                        SELECT PROD.PRODUCT_NAME , '' PRODUCT_BARCODE_BARCODE,
+                                    $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_ID, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
+                                        SELECT PROD.PRODUCT_NAME , STOCK.PRODUCT_BARCODE_ID, '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME ,  NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
                                         STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                         STOCK.DOCUMENT_CODE ,
@@ -467,7 +458,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     UNION ALL
 
                                     SELECT
-                                        MAX(PROD.PRODUCT_NAME) , '' PRODUCT_BARCODE_BARCODE,
+                                        MAX(PROD.PRODUCT_NAME) , NULL PRODUCT_BARCODE_ID, '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME , 1 PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
                                         $usage_report_date DOCUMENT_DATE ,
                                         NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
@@ -548,7 +539,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 if($qty_in == 0){$InRate = 0;}else{$InRate = $in_rate;}
                                 if($qty_out == 0){$OutRate = 0;}else{$OutRate = $row->out_rate;}
 
-                                $packing = max(1, (float)($row->product_barcode_packing ?? 1));
+                                $packing = (float) ($row->product_barcode_packing ?? 1);
+                                if ($packing <= 0) $packing = 1;
                                 $qty_in_per_item = (float)$qty_in * $packing;
                                 $qty_out_per_item = (float)$qty_out * $packing;
                                 $in_rate_per_item = (float)$InRate / $packing;
@@ -590,8 +582,11 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $isRecipeConsumption = strtolower(trim((string) $row->document_type)) === 'recipe consumption';
                             @endphp
                             @php
-                                $rowPackingKey = (string) (float) ($row->product_barcode_packing ?? 1);
-                                $rowBarcode = $productBarcodesByPacking->get($rowPackingKey, '');
+                                $rowBarcode = $productBarcodesById->get($row->product_barcode_id ?? null, '');
+                                if (($data['month_wise'] ?? false) && !$rowBarcode
+                                    && in_array(strtoupper((string) $row->document_type), ['POS', 'RPOS'], true)) {
+                                    $rowBarcode = 'Multiple barcodes';
+                                }
                             @endphp
                             <tr class="{{isset($row->document_type)? strtolower(strtoupper($row->document_type)):''}}" style="background: {{$bg}};">
                                 <td class="text-center">{{date('d-m-Y', strtotime($row->document_date))}}</td>

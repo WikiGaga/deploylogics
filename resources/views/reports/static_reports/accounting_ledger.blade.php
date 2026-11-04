@@ -71,6 +71,10 @@
                         @endforeach
                     </h6>
                 @endif
+                <h6 class="kt-invoice__criteria">
+                    <span style="color: #e27d00;">Status:</span>
+                    <span style="color: #5578eb;">{{ ['post' => 'Posted', 'unposted' => 'Unposted', 'all' => 'All'][$data['post_wise'] ?? 'all'] }}</span>
+                </h6>
                 @if(isset($data['voucher_mode_date']) && $data['voucher_mode_date'] == 1)
                     <h6 class="kt-invoice__criteria">
                         <span style="color: #e27d00;">Dispatch Date:</span>
@@ -197,6 +201,11 @@
 
                             $where .= " AND (VOUCH.business_id = ".auth()->user()->business_id." AND VOUCH.branch_id in (".implode(",",$data['branch_ids']).") )";
                             $where .= $where_voucher_type;
+                            if(($data['post_wise'] ?? 'all') === 'post'){
+                                $where .= ' AND VOUCH.posted = 1';
+                            }elseif(($data['post_wise'] ?? 'all') === 'unposted'){
+                                $where .= ' AND NVL(VOUCH.posted, 0) = 0';
+                            }
                             if($data['voucher_mode_date'] == 1){
                                 $date_field = "AND VOUCH.voucher_mode_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                             }else if($data['date_time_wise'] == 1){

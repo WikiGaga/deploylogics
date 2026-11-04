@@ -141,6 +141,18 @@
         </div>
     </div>
 @endif
+@if($data['case_name'] == 'accounting_ledger' && !in_array('posted_wise', $data['selected_criteria']))
+    <div class="row form-group-block">
+        <div class="col-lg-3"><label class="erp-col-form-label">Posted:</label></div>
+        <div class="col-lg-6" style="padding:10px;">
+            <div class="kt-radio-inline">
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0"><input type="radio" name="post_wise" value="all" checked> All <span></span></label>
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0"><input type="radio" name="post_wise" value="post"> Posted <span></span></label>
+                <label class="kt-radio kt-radio--bold kt-radio--warning mb-0"><input type="radio" name="post_wise" value="unposted"> Unposted <span></span></label>
+            </div>
+        </div>
+    </div>
+@endif
 @if($data['case_name'] == 'accounting_ledger' || $data['case_name'] == 'temp_accounting_ledger' || $data['case_name'] == 'general_ledger')
     <div class="row form-group-block">
         <div class="col-lg-3">

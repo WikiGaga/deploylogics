@@ -23,6 +23,59 @@ $(document).on('click','#changeGridItemRate',function(){
         showConfirmButton: true
     }).then(function(result){
         if(result.value){
+            if (['sa', 'st', 'sd'].includes(form_type) &&
+                (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes(formData.rate_type) ||
+                    (form_type === 'sa' && formData.rate_type === 'item_average_rate'))) {
+                var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
+                var $adjustmentForm = $(formIds[form_type]);
+                var adjustmentBranch = $adjustmentForm.find('#new_branch_id').val();
+                var adjustmentDate = $adjustmentForm.find('input[name="stock_date"]').val();
+                if (!adjustmentBranch || !adjustmentDate) {
+                    toastr.error('Select a branch and date first.');
+                    return;
+                }
+                var $adjustmentRows = $adjustmentForm.find('.erp_form__grid>.erp_form__grid_body>tr').filter(function () {
+                    return !!$(this).find('input[data-id="product_barcode_id"]').val();
+                });
+                if (!$adjustmentRows.length) return;
+                var pending = $adjustmentRows.length;
+                var missingRates = 0;
+                $adjustmentForm.find('.erp_form___block').addClass('pointerEventsNone');
+                $adjustmentRows.each(function () {
+                    var row = $(this);
+                    var barcodeId = row.find('input[data-id="product_barcode_id"]').val();
+                    $.ajax({
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        type: 'POST', url: url, dataType: 'json',
+                        data: {
+                            form_type: form_type, rate_type: formData.rate_type, barcode_id: barcodeId,
+                            branch_id: adjustmentBranch, stock_date: adjustmentDate, rate_perc: formData.rate_perc
+                        },
+                        success: function (response) {
+                            if (response.data && response.data.found &&
+                                row.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
+                                $adjustmentForm.find('#new_branch_id').val() === adjustmentBranch &&
+                                $adjustmentForm.find('input[name="stock_date"]').val() === adjustmentDate &&
+                                $adjustmentForm.find('#rate_type').val() === formData.rate_type &&
+                                $adjustmentForm.find('#rate_perc').val() === formData.rate_perc) {
+                                update_rate(row, response.data.rate);
+                            } else {
+                                missingRates++;
+                            }
+                        },
+                        error: function () { missingRates++; },
+                        complete: function () {
+                            if (--pending === 0) {
+                                $adjustmentForm.find('.erp_form___block').removeClass('pointerEventsNone');
+                                if (form_type === 'sa' && typeof totalStockAmount === 'function') totalStockAmount();
+                                else if (typeof total_amount === 'function') total_amount();
+                                if (missingRates) toastr.warning(missingRates + ' row(s) had no available rate; their rates were kept.');
+                            }
+                        }
+                    });
+                });
+                return;
+            }
             if (form_type === 'os') {
                 var $form = $('#opening_stock_form');
                 var branchId = $form.find('#new_branch_id').val();
@@ -50,7 +103,10 @@ $(document).on('click','#changeGridItemRate',function(){
                         },
                         success: function (response) {
                             if (response.data && response.data.found &&
-                                tr.find('input[data-id="product_barcode_id"]').val() == barcodeId) {
+                                tr.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
+                                $form.find('#new_branch_id').val() === branchId &&
+                                $form.find('input[name="stock_date"]').val() === stockDate &&
+                                $form.find('#selected_barcode_rate').val() === formData.rate_type) {
                                 update_rate(tr, response.data.rate);
                             } else {
                                 missing++;
@@ -73,6 +129,10 @@ $(document).on('click','#changeGridItemRate',function(){
                 var tr = $(this);
                 formData.product_id = tr.find('input[data-id="product_id"]').val();
                 formData.barcode_id = tr.find('input[data-id="product_barcode_id"]').val();
+                if (['sa', 'st', 'sd'].includes(form_type)) {
+                    var legacyFormIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
+                    formData.branch_id = $(legacyFormIds[form_type]).find('#new_branch_id').val();
+                }
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -162,10 +222,11 @@ function rowCalc(tr,id){
             disc_amount = 0;
         }
     }
+    var taxable_amount = parseFloat(amount) - parseFloat(disc_amount);
     var tax_perc = tr.find('.tblGridCal_vat_perc').val();
     var tax_amount = 0;
     if(tax_perc){
-        var calc_tax_amount = parseFloat(amount) * parseFloat(tax_perc) / 100;
+        var calc_tax_amount = taxable_amount * parseFloat(tax_perc) / 100;
         if(calc_tax_amount){
             tr.find('.tblGridCal_vat_amount').val(float3(calc_tax_amount));
             tax_amount = tr.find('.tblGridCal_vat_amount').val();
@@ -174,8 +235,8 @@ function rowCalc(tr,id){
         }
     }else{
         tax_amount = tr.find('.tblGridCal_vat_amount').val();
-        if(tax_amount){
-            var calc_tax_perc = parseFloat(tax_amount) * 100 / parseFloat(amount);
+        if(tax_amount && taxable_amount){
+            var calc_tax_perc = parseFloat(tax_amount) * 100 / taxable_amount;
             if(calc_tax_perc){
                 tr.find('.tblGridCal_vat_perc').val(float3(calc_tax_perc));
             }else{
@@ -183,6 +244,7 @@ function rowCalc(tr,id){
             }
         }else{
             tax_amount = 0;
+            tr.find('.tblGridCal_vat_amount').val(float3(0));
         }
     }
     var gross_amount = parseFloat(amount) + parseFloat(tax_amount);

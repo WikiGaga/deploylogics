@@ -407,72 +407,81 @@
     <script>
 
         $(document).ready(function() {
-            // 1. Keep a clone copy of all original store options in memory
             var $storeSelect = $('#store_id');
+            var $locationSelect = $('#opening_stock_form .stock_location_id');
             var $allStoreOptions = $storeSelect.find('option').clone();
+            var initialStoreId = $storeSelect.val();
+            var initialLocationId = @json((string) $stock_location_id);
+            var initialLoad = true;
+            var readOnlyDocument = @json(($data['page_data']['type'] ?? '') === 'view');
+            var locationRequest = null;
 
-            // Function to filter stores based on selected branch
-            function filterStores() {
-                var selectedBranchId = $('#new_branch_id').val();
-                
-                // Reset the select element
-                $storeSelect.html('');
-
-                // Re-add the placeholder first if it exists
-                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
-                $storeSelect.append($placeholder);
-
-                // Find options matching the selected branch and append them
-                var $matchingOptions = $allStoreOptions.filter(function() {
-                    return $(this).attr('data-branch') == selectedBranchId;
-                });
-                
-                $storeSelect.append($matchingOptions);
-
-                // CRITICAL: Trigger Select2 change to refresh its UI display
-                $storeSelect.trigger('change.select2');
+            function clearLocations() {
+                $locationSelect.empty().append($('<option>', { value: '0', text: 'Select' }))
+                    .val('0').trigger('change.select2');
             }
 
-            // 2. Run immediately on page load to handle initial or saved state
-            filterStores();
+            function loadLocations() {
+                var storeId = $storeSelect.val();
+                if (locationRequest) locationRequest.abort();
+                var preserveInitial = initialLoad && storeId === initialStoreId;
+                initialLoad = false;
+                if (!preserveInitial) clearLocations();
+                if (!storeId || storeId === '0') return;
+                if (readOnlyDocument) return;
 
-            // 3. Run whenever the branch dropdown changes
-            $('#new_branch_id').on('change', function() {
-                filterStores();
-            });
-        });
-
-        $('#store_id').change(function(event){
-            $('#opening_stock_form').find('.display_stock_location>.select2').addClass('pointerEventsNone')
-            var formData = {
-                store_id : $(this).val(),
-            }
-            console.log(formData);
-            var url = '{{action('Inventory\StockController@getLocationByStore',$type)}}';
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type        : 'POST',
-                url         : url,
-                dataType	: 'json',
-                data        : formData,
-                success: function(response) {
-                    if(response['status'] == 'success'){
-                        var option = '<option value="0">Select</option>';
-                        response['locations'].forEach(function(row){
-                            option += '<option value="'+row.display_location_id+'">'+row.display_location_name_string+'</option>';
+                var $locationBlock = $('#opening_stock_form .display_stock_location>.select2');
+                $locationBlock.addClass('pointerEventsNone');
+                locationRequest = $.ajax({
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    type: 'POST',
+                    url: '{{action('Inventory\StockController@getLocationByStore',$type)}}',
+                    dataType: 'json',
+                    data: { store_id: storeId },
+                    success: function(response) {
+                        if ($storeSelect.val() !== storeId) return;
+                        clearLocations();
+                        (response.locations || []).forEach(function(row) {
+                            $locationSelect.append($('<option>', {
+                                value: row.display_location_id,
+                                text: row.display_location_name_string
+                            }));
                         });
-                        $('#opening_stock_form').find('.stock_location_id').html(option);
-                        $('#opening_stock_form').find('.display_stock_location>.select2').removeClass('pointerEventsNone')
+                        if (storeId === initialStoreId && initialLocationId &&
+                            $locationSelect.find('option[value="' + initialLocationId + '"]').length) {
+                            $locationSelect.val(initialLocationId);
+                        }
+                        initialLocationId = '0';
+                        $locationSelect.trigger('change.select2');
+                    },
+                    error: function(xhr) {
+                        if (xhr.status !== 0) toastr.error('Unable to load stock locations for this store.');
+                    },
+                    complete: function() {
+                        $locationBlock.removeClass('pointerEventsNone');
+                        locationRequest = null;
                     }
-                    if(response['status'] == 'error'){
-                        var option = '<option value="0">Select</option>';
-                        $('#opening_stock_form').find('.stock_location_id').html(option);
-                        $('#opening_stock_form').find('.display_stock_location>.select2').removeClass('pointerEventsNone')
-                    }
-                },
-            })
+                });
+            }
+
+            function filterStores(resetStore) {
+                var selectedBranchId = $('#new_branch_id').val();
+                var selectedStoreId = resetStore ? '0' : $storeSelect.val();
+                $storeSelect.empty().append($allStoreOptions.filter(function() {
+                    return !$(this).attr('data-branch') || $(this).attr('data-branch') == selectedBranchId;
+                }).clone());
+                $storeSelect.val(selectedStoreId);
+                if (!$storeSelect.val()) $storeSelect.val('0');
+                $storeSelect.trigger('change.select2');
+                loadLocations();
+            }
+
+            $storeSelect.on('change', loadLocations);
+            filterStores(false);
+            $('#new_branch_id').on('change', function() {
+                initialLocationId = '0';
+                filterStores(true);
+            });
         });
         $(document).on('click','#openTree',function(event){
             event.preventDefault();

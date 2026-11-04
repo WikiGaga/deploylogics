@@ -21,6 +21,14 @@
                 @endforeach
             </select>
         </div>
+        <div class="form-group">
+            <label for="attendance_app_version">App version</label>
+            <input type="text" class="form-control" id="attendance_app_version" name="app_version" value="{{ $settings->app_version ?? '' }}" maxlength="50" required>
+        </div>
+        <div class="form-group">
+            <label for="attendance_app_url">App URL</label>
+            <input type="text" class="form-control" id="attendance_app_url" name="app_url" value="{{ $settings->app_url ?? '' }}" maxlength="50" required>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>

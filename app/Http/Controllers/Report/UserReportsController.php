@@ -2059,6 +2059,7 @@ class UserReportsController extends Controller
                 if($data['report_case'] == 'accounting_ledger') {
                     $data['key'] = 'accounting_ledger';
                     $data['page_title'] = 'Accounting Ledger';
+                    $data['post_wise'] = in_array($post_wise, ['post', 'unposted', 'all'], true) ? $post_wise : 'all';
                     $data['voucher_types'] = $voucher_types;
                     $data['opening_bal_toggle'] = isset($request->accounting_ledger_ob_toggle)?1:0;
                     $data['al_ref_acc_toggle'] = isset($request->al_ref_acc_toggle)?1:0;
@@ -2086,6 +2087,7 @@ class UserReportsController extends Controller
                             'chart_account_id' => $chart_account_ids,
                             'voucher_date' => $from_date,
                             'branch_ids' => $data['branch_ids'],
+                            'post_wise' => $data['post_wise'],
                         ];
                         if($data['voucher_mode_date'] == 1){
                             $data['opening_balance'] = CoreFunc::acco_dispatch_opening_bal($paras);

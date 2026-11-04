@@ -19,7 +19,7 @@
                 $id = '';
                 $store = \App\Models\TblDefiStore::where('branch_id',auth()->user()->branch_id)->where('store_default_value',1)->first();
                 $storeid = isset($store->store_id)?$store->store_id:"";
-                $rate_type = config('constants.default_rate_type');
+                $rate_type = 'cost_rate';
             }
             if($case == 'edit'){
                 $id = $data['current']->stock_id;
@@ -121,9 +121,12 @@
                                     @php $rate_type = isset($rate_type)?$rate_type:''; @endphp
                                     <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
                                         <option value="0">Select</option>
-                                        @foreach($data['rate_types'] as $key => $value)
+                                        @foreach($data['rate_by'] as $key => $value)
                                             <option value="{{$key}}" {{$rate_type == $key ? "selected" :""}}>{{$value}}</option>
                                         @endforeach
+                                        @if($case == 'edit' && !array_key_exists($rate_type, $data['rate_by']) && isset($data['rate_types'][$rate_type]))
+                                            <option value="{{$rate_type}}" selected>{{$data['rate_types'][$rate_type]}} (legacy)</option>
+                                        @endif
                                     </select>
                                     <div class="input-group-prepend">
                                             <span class="input-group-text">

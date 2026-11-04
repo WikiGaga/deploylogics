@@ -234,7 +234,7 @@ class StockController extends Controller
                 }
 
                // dd($data['current']->toArray());
-                $data['display_location'] = ViewInveDisplayLocation::where('branch_id',auth()->user()->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();
+                $data['display_location'] = ViewInveDisplayLocation::where('branch_id',$data['current']->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();
                 $data['page_data']['print'] = '/stock/'.$type.'/print/'.$id;
                 $data['stock_code'] = $data['current']->stock_code;
                 if($type === 'stock-receiving' && !empty($data['current']->stock_request_id)){
@@ -1268,16 +1268,21 @@ class StockController extends Controller
 
     public function getLocationByStore(Request $request)
     {
-        $store_id  = $request->store_id;
-        $data = [];
-        $data['locations'] = ViewInveDisplayLocation::where('branch_id',auth()->user()->branch_id)->where('store_id',$store_id)->orderBy('display_location_name_string')->get();
-
-        if(!empty($data['locations'])){
-            $data['status'] = 'success';
-        }else{
-            $data['status'] = 'error';
+        $validated = $request->validate(['store_id' => 'required|integer']);
+        $store = TblDefiStore::where('store_id', $validated['store_id'])
+            ->where(Utilities::currentBC())->first();
+        if (!$store) {
+            return response()->json(['status' => 'error', 'locations' => []]);
         }
-        return response()->json($data);
+        abort_unless(Utilities::documentBranchIsUserAccessible($store->branch_id), 403);
+
+        $locations = ViewInveDisplayLocation::where('branch_id', $store->branch_id)
+            ->where('store_id', $store->store_id)
+            ->orderBy('display_location_name_string')->get();
+        return response()->json([
+            'status' => $locations->isNotEmpty() ? 'success' : 'error',
+            'locations' => $locations,
+        ]);
     }
     /**
      * Display the specified resource.

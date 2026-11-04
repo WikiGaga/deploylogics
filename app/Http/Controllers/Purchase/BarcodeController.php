@@ -690,7 +690,11 @@ class BarcodeController extends Controller
 
     public function changeGridItemRate(Request $request){
 
-        if ($request->input('form_type') === 'os') {
+        if (in_array($request->input('form_type'), ['os', 'sa', 'st', 'sd'], true)
+            && in_array($request->input('rate_type'), ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'], true)) {
+            return $this->openingStockRate($request);
+        }
+        if ($request->input('form_type') === 'sa' && $request->input('rate_type') === 'item_average_rate') {
             return $this->openingStockRate($request);
         }
 
@@ -701,13 +705,20 @@ class BarcodeController extends Controller
         $rate_type = isset($request->rate_type)?$request->rate_type:"";
         $rate_perc = isset($request->rate_perc)?$request->rate_perc:"";
         $sales_contract = isset($request->sales_contract)?$request->sales_contract:"";
+        $rateBranchId = auth()->user()->branch_id;
+        if (in_array($form_type, ['sa', 'st', 'sd'], true)) {
+            $rateBranchId = (int) $request->input('branch_id');
+            abort_unless(Utilities::documentBranchIsUserAccessible($rateBranchId)
+                && DB::table('tbl_soft_branch')->where('branch_id', $rateBranchId)
+                    ->where(Utilities::currentBC())->exists(), 403);
+        }
 
         $sale_rate_types = ['item_retail_rate','item_sale_rate','item_whole_sale_rate'];
         $purc_rate_types = ['item_purchase_rate','item_cost_rate','item_average_rate','cost_rate','average_rate'];
         $rate = 0;
         if(in_array($rate_type,$sale_rate_types)){
             $qry = TblPurcProductBarcodeSaleRate::where('product_barcode_id',$barcode_id)
-                ->where('branch_id',auth()->user()->branch_id);
+                ->where('branch_id',$rateBranchId);
             if($rate_type == 'item_retail_rate'){
                 $qry = $qry->where('product_category_id',1);
             }
@@ -721,7 +732,7 @@ class BarcodeController extends Controller
         }
         if(in_array($rate_type,$purc_rate_types)){
             $qry = TblPurcProductBarcodePurchRate::where('product_barcode_id',$barcode_id)
-                ->where('branch_id',auth()->user()->branch_id);
+                ->where('branch_id',$rateBranchId);
             if($rate_type == 'item_purchase_rate'){
                 $rate = $qry->first('product_barcode_purchase_rate as rate');
             }
@@ -766,7 +777,7 @@ class BarcodeController extends Controller
         }
         if($rate_type == 'item_last_net_tp'){
             $rate = TblPurcProductBarcodePurchRate::where('product_barcode_id',$barcode_id)
-                ->where('branch_id',auth()->user()->branch_id)
+                ->where('branch_id',$rateBranchId)
                 ->first('net_tp as rate');
         }
         $baseRate = isset($rate->rate) ? (float) $rate->rate : 0;
@@ -786,7 +797,7 @@ class BarcodeController extends Controller
             'barcode_id' => 'required|integer',
             'branch_id' => 'required|integer',
             'stock_date' => 'required|date_format:d-m-Y',
-            'rate_type' => 'required|in:cost_rate,last_stock_rate,last_purchase_rate,average_rate',
+            'rate_type' => 'required|in:cost_rate,last_stock_rate,last_purchase_rate,average_rate,item_average_rate',
         ]);
 
         $branchId = (int) $validated['branch_id'];
@@ -810,7 +821,7 @@ class BarcodeController extends Controller
                 ->where('branch_id', $branchId)
                 ->first(['product_barcode_purchase_rate']);
             $rate = $record ? (float) $record->product_barcode_purchase_rate : null;
-        } elseif ($rateType === 'average_rate') {
+        } elseif ($rateType === 'average_rate' || $rateType === 'item_average_rate') {
             // Same weighted inbound basis as Stock Activity Summary, limited to this barcode.
             // The summary gives a base-item rate; multiply by packing for this form's Rate field.
             $totals = DB::selectOne("SELECT
@@ -889,9 +900,14 @@ class BarcodeController extends Controller
             $rate = $record ? (float) $record->rate_per_pack : null;
         }
 
+        if (in_array($request->input('form_type'), ['sa', 'st', 'sd'], true) && $rate !== null) {
+            $percentage = $request->validate(['rate_perc' => 'nullable|numeric|between:-100,1000'])['rate_perc'] ?? 0;
+            $rate *= 1 + (float) $percentage / 100;
+        }
+
         return response()->json([
             'data' => [
-                'found' => $rate !== null && $rate > 0,
+                'found' => $rate !== null,
                 'rate' => $rate !== null ? round($rate, 3) : null,
             ],
         ]);
@@ -902,6 +918,14 @@ class BarcodeController extends Controller
         $data['product_exists'] =   false;
         $branchId = (int) $request->input('branch_id', auth()->user()->branch_id);
         abort_unless(Utilities::documentBranchIsUserAccessible($branchId), 403);
+
+        $data['current_user_branch_id'] = $branchId;
+        $data['purc_rate'] = TblPurcProductBarcodePurchRate::where('product_barcode_id', $data['current_product']->product_barcode_id)
+            ->where('business_id', auth()->user()->business_id)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('branch_id', $branchId)->first();
+        $data['rate'] = TblPurcProductBarcodeSaleRate::where('product_barcode_id', $data['current_product']->product_barcode_id)
+            ->where('branch_id', $branchId)->where('product_category_id', 2)->first();
 
         $storeId = (int) $request->input('store_id', 0);
         $storeIsValid = $storeId > 0 && DB::table('tbl_defi_store')

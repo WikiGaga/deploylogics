@@ -998,6 +998,10 @@ function barcodeCommonData(tr, response, formData) {
         var sale_rate = !valueEmpty(tbl_purc_rate['product_barcode_cost_rate'])?tbl_purc_rate['product_barcode_cost_rate']:0;
         tr.find('.tblGridCal_rate').val(sale_rate);
     }
+    if (['st', 'sd'].includes(form_type) &&
+        ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
+        apply_inventory_document_rate(tr, barcode['product_barcode_id'], form_type);
+    }
     if (formData && formData.from_favorite) {
         $(document).trigger('favoriteRowReady');
     }
@@ -1281,6 +1285,9 @@ function stockTransferBarcodeData(tr, response, formData) {
         tr.find('.product_name').val(barcode['product_name']);
     }
     uomList(tr, uom_list, selected_uom_id);
+    if (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
+        apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'st');
+    }
 }
 
 function stockReceivingBarcodeData(tr, response, formData) {
@@ -1406,7 +1413,7 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     var uomDtl = response['current_product']['uom'];
     var uom_list = response['uom_list'];
     var current_sale_rate = response['rate'];
-    var tbl_purc_rate = response['purc_rate'];
+    var tbl_purc_rate = response['purc_rate'] || {};
     var current_user_branch_id = response['current_user_branch_id'];
     var form_type = formData.form_type;
     if (uomDtl != null) {
@@ -1429,7 +1436,8 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     tr.find('.tblGrid_stockQty').val(pd_store_stock);
 
     var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-    var rate = calc_rate.rate;
+    var rate = form_type === 'sa' && ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate', 'item_average_rate'].includes($('#stock_adjustment_form #rate_type').val())
+        ? 0 : calc_rate.rate;
     tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
 
     if (form_type == 'sa') {
@@ -1439,12 +1447,50 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
         if (typeof totalStockAmount === 'function') {
             totalStockAmount();
         }
+        if (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate', 'item_average_rate'].includes($('#stock_adjustment_form #rate_type').val())) {
+            apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'sa');
+        }
     } else {
         var qty = 0;
         var amount = rate * qty;
         tr.find('.tblGridCal_amount').val(notNullEmpty(amount, 3));
     }
 
+}
+
+function apply_inventory_document_rate(tr, barcodeId, formType) {
+    var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
+    var $form = $(formIds[formType]);
+    var branchId = $form.find('#new_branch_id').val();
+    var stockDate = $form.find('input[name="stock_date"]').val();
+    var ratePercentage = $form.find('#rate_perc').val();
+    var rateType = $form.find('#rate_type').val();
+    $.ajax({
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        type: 'POST',
+        url: '/barcode/change-grid-item-rate',
+        dataType: 'json',
+        data: {
+            form_type: formType, rate_type: rateType, barcode_id: barcodeId,
+            branch_id: branchId, stock_date: stockDate, rate_perc: ratePercentage
+        },
+        success: function(response) {
+            if (tr.find('input[data-id="product_barcode_id"]').val() != barcodeId ||
+                $form.find('#rate_type').val() !== rateType ||
+                $form.find('#new_branch_id').val() != branchId ||
+                $form.find('input[name="stock_date"]').val() !== stockDate ||
+                $form.find('#rate_perc').val() !== ratePercentage) return;
+            if (response.data && response.data.found) {
+                update_rate(tr, response.data.rate);
+            } else {
+                update_rate(tr, 0);
+                toastr.warning('No rate found for this barcode and date. Enter the rate manually.');
+            }
+            if (formType === 'sa' && typeof totalStockAmount === 'function') totalStockAmount();
+            else if (typeof total_amount === 'function') total_amount();
+        },
+        error: function() { toastr.error('Unable to load the selected rate.'); }
+    });
 }
 
 function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate) {
@@ -1460,8 +1506,11 @@ function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_r
         data.origRate = tbl_purc_rate['product_barcode_cost_rate'];
     }
     if (rate_type == 'item_sale_rate') {
-        nowRate = tbl_purc_rate['sale_rate'];
-        data.origRate = tbl_purc_rate['sale_rate'];
+        nowRate = $('#form_type').val() === 'sa'
+            ? (current_sale_rate && current_sale_rate['product_barcode_sale_rate_rate']
+                ? current_sale_rate['product_barcode_sale_rate_rate'] : 0)
+            : tbl_purc_rate['sale_rate'];
+        data.origRate = nowRate;
     }
     if (rate_type == 'item_average_rate') {
         nowRate = tbl_purc_rate['product_barcode_avg_rate'];
@@ -1696,6 +1745,13 @@ function apply_opening_stock_rate(rateFound) {
         $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone');
         return;
     }
+    var $openingForm = $('#opening_stock_form');
+    function rateRequestStillCurrent() {
+        return rateFound.tr.find('.product_barcode_id').val() == rateFound.barcode_id &&
+            $openingForm.find('#new_branch_id').val() == formData.branch_id &&
+            $openingForm.find('input[name="stock_date"]').val() === formData.stock_date &&
+            $openingForm.find('#selected_barcode_rate').val() === formData.rate_type;
+    }
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1705,7 +1761,8 @@ function apply_opening_stock_rate(rateFound) {
         dataType: 'json',
         data: formData,
         success: function(response) {
-            if (response.data && response.data.found && rateFound.tr.find('.product_barcode_id').val() == rateFound.barcode_id) {
+            if (!rateRequestStillCurrent()) return;
+            if (response.data && response.data.found) {
                 update_rate(rateFound.tr, response.data.rate);
             } else if (!response.data || !response.data.found) {
                 update_rate(rateFound.tr, 0);
@@ -1713,7 +1770,12 @@ function apply_opening_stock_rate(rateFound) {
             }
             if (typeof totalStockAmount === 'function') totalStockAmount();
         },
-        error: function() { toastr.error('Unable to load the selected barcode rate.'); },
+        error: function() {
+            if (!rateRequestStillCurrent()) return;
+            update_rate(rateFound.tr, 0);
+            if (typeof totalStockAmount === 'function') totalStockAmount();
+            toastr.error('Unable to load the selected barcode rate. Enter the rate manually.');
+        },
         complete: function() { $('#opening_stock_form').find('.erp_form___block').removeClass('pointerEventsNone'); }
     });
 }

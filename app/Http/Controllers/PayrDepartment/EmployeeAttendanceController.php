@@ -29,7 +29,7 @@ class EmployeeAttendanceController extends Controller
 
         $settings = DB::table('tbl_app_version')
             ->where('app_name', self::ATTENDANCE_APP_NAME)
-            ->first(['offline_attendance', 'time_zone']);
+            ->first(['app_version', 'app_url', 'offline_attendance', 'time_zone']);
         $timezones = \DateTimeZone::listIdentifiers();
 
         return view('PayrDepartment.employee_attendance.settings_modal', compact('settings', 'timezones'));
@@ -37,15 +37,19 @@ class EmployeeAttendanceController extends Controller
 
     public function saveSettings(Request $request)
     {
-        abort_unless(auth()->user()->isAbleTo(self::$menu_dtl_id . '-view'), 403);
+        abort_unless(auth()->user()->isAbleTo(self::$menu_dtl_id . '-edit'), 403);
 
         $validated = $request->validate([
             'offline_attendance' => 'nullable|in:0,1',
             'time_zone' => 'required|string|timezone',
+            'app_version' => 'required|string|max:50',
+            'app_url' => 'required|string|max:50',
         ]);
         $settings = [
             'offline_attendance' => (int) ($request->input('offline_attendance') === '1'),
             'time_zone' => $validated['time_zone'],
+            'app_version' => $validated['app_version'],
+            'app_url' => $validated['app_url'],
         ];
 
         $updated = DB::table('tbl_app_version')

@@ -458,11 +458,11 @@
                                             <div class="col-lg-6" style="padding:10px;">
                                                 <div class="kt-radio-inline" style="float:left;">
                                                     <label class="kt-radio kt-radio--bold kt-radio--warning mb-0" id="all">
-                                                        <input type="radio" name="post_wise" value="all"> ALL
+                                                        <input type="radio" name="post_wise" value="all" {{ $data['case_name'] == 'accounting_ledger' ? 'checked' : '' }}> ALL
                                                         <span></span>
                                                     </label>
                                                     <label class="kt-radio kt-radio--bold kt-radio--warning mb-0" id="post">
-                                                        <input type="radio" name="post_wise" value="post" checked> Posted
+                                                        <input type="radio" name="post_wise" value="post" {{ $data['case_name'] != 'accounting_ledger' ? 'checked' : '' }}> Posted
                                                         <span></span>
                                                     </label>
                                                     <label class="kt-radio kt-radio--bold kt-radio--warning mb-0" id="unposted">
