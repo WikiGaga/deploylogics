@@ -331,7 +331,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
                                             END IN_RATE ,
                                             STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                            NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) OUT_RATE ,
+                                            CASE WHEN UPPER(STOCK.DOCUMENT_TYPE) = 'ST' THEN NVL((
+                                                SELECT MAX(DTL.STOCK_DTL_RATE)
+                                                FROM TBL_INVE_STOCK_DTL DTL
+                                                WHERE DTL.STOCK_ID = STOCK.DOCUMENT_ID
+                                                  AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                                  AND DTL.PRODUCT_BARCODE_ID = STOCK.PRODUCT_BARCODE_ID
+                                                  AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
+                                                  AND DTL.COMPANY_ID = STOCK.COMPANY_ID
+                                            ), 0) ELSE NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) END OUT_RATE ,
                                             NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                             STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID , SORTING_ID
                                             FROM  VW_PURC_STOCK_DTL  STOCK
@@ -439,7 +447,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
                                         END IN_RATE ,
                                         STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                        NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) OUT_RATE ,
+                                        CASE WHEN UPPER(STOCK.DOCUMENT_TYPE) = 'ST' THEN NVL((
+                                            SELECT MAX(DTL.STOCK_DTL_RATE)
+                                            FROM TBL_INVE_STOCK_DTL DTL
+                                            WHERE DTL.STOCK_ID = STOCK.DOCUMENT_ID
+                                              AND DTL.PRODUCT_ID = STOCK.PRODUCT_ID
+                                              AND DTL.PRODUCT_BARCODE_ID = STOCK.PRODUCT_BARCODE_ID
+                                              AND DTL.BUSINESS_ID = STOCK.BUSINESS_ID
+                                              AND DTL.COMPANY_ID = STOCK.COMPANY_ID
+                                        ), 0) ELSE NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) END OUT_RATE ,
                                         NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                         STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID,
                                         NVL(STOCK.SORTING_ID, 0) SORTING_ID
@@ -554,9 +570,6 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     ? $runningAverageAmount / $runningAverageBaseQty
                                     : 0;
                                 $OutRate = (float)$qty_out == 0 ? 0 : (float)$row->out_rate;
-                                if ((float)$qty_out != 0 && $OutRate == 0) {
-                                    $OutRate = $runningAveragePrice * $packing;
-                                }
                                 $out_rate_per_item = $OutRate / $packing;
                                 $outAmount = (float)$qty_out * $OutRate;
                                 $totalOutAmount += $outAmount;
