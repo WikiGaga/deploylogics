@@ -24,8 +24,7 @@ $(document).on('click','#changeGridItemRate',function(){
     }).then(function(result){
         if(result.value){
             if (['sa', 'st', 'sd'].includes(form_type) &&
-                (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes(formData.rate_type) ||
-                    (form_type === 'sa' && formData.rate_type === 'item_average_rate'))) {
+                ['cost_rate', 'last_purchase_rate', 'average_rate'].includes(formData.rate_type)) {
                 var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
                 var $adjustmentForm = $(formIds[form_type]);
                 var adjustmentBranch = $adjustmentForm.find('#new_branch_id').val();
@@ -52,13 +51,12 @@ $(document).on('click','#changeGridItemRate',function(){
                             branch_id: adjustmentBranch, stock_date: adjustmentDate, rate_perc: formData.rate_perc
                         },
                         success: function (response) {
-                            if (response.data && response.data.found &&
-                                row.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
+                            if (row.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
                                 $adjustmentForm.find('#new_branch_id').val() === adjustmentBranch &&
                                 $adjustmentForm.find('input[name="stock_date"]').val() === adjustmentDate &&
                                 $adjustmentForm.find('#rate_type').val() === formData.rate_type &&
                                 $adjustmentForm.find('#rate_perc').val() === formData.rate_perc) {
-                                update_rate(row, response.data.rate);
+                                update_rate(row, response.data && response.data.found ? response.data.rate : 0);
                             } else {
                                 missingRates++;
                             }
@@ -102,12 +100,11 @@ $(document).on('click','#changeGridItemRate',function(){
                             barcode_id: barcodeId, branch_id: branchId, stock_date: stockDate
                         },
                         success: function (response) {
-                            if (response.data && response.data.found &&
-                                tr.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
+                            if (tr.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
                                 $form.find('#new_branch_id').val() === branchId &&
                                 $form.find('input[name="stock_date"]').val() === stockDate &&
                                 $form.find('#selected_barcode_rate').val() === formData.rate_type) {
-                                update_rate(tr, response.data.rate);
+                                update_rate(tr, response.data && response.data.found ? response.data.rate : 0);
                             } else {
                                 missing++;
                             }

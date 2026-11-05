@@ -691,7 +691,7 @@ class BarcodeController extends Controller
     public function changeGridItemRate(Request $request){
 
         if (in_array($request->input('form_type'), ['os', 'sa', 'st', 'sd'], true)
-            && in_array($request->input('rate_type'), ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'], true)) {
+            && in_array($request->input('rate_type'), ['cost_rate', 'last_purchase_rate', 'average_rate'], true)) {
             return $this->openingStockRate($request);
         }
         if ($request->input('form_type') === 'sa' && $request->input('rate_type') === 'item_average_rate') {
@@ -797,7 +797,7 @@ class BarcodeController extends Controller
             'barcode_id' => 'required|integer',
             'branch_id' => 'required|integer',
             'stock_date' => 'required|date_format:d-m-Y',
-            'rate_type' => 'required|in:cost_rate,last_stock_rate,last_purchase_rate,average_rate,item_average_rate',
+            'rate_type' => 'required|in:cost_rate,last_purchase_rate,average_rate,item_average_rate',
         ]);
 
         $branchId = (int) $validated['branch_id'];
@@ -809,21 +809,14 @@ class BarcodeController extends Controller
             ->where('business_id', auth()->user()->business_id)
             ->firstOrFail();
         $barcodeId = (int) $barcode->product_barcode_id;
+        $productId = (int) $barcode->product_id;
+        $selectedPacking = (float) $barcode->product_barcode_packing;
         $date = date('Y-m-d', strtotime($validated['stock_date']));
         $rateType = $validated['rate_type'];
         $rate = null;
 
-        if ($rateType === 'cost_rate') {
-            // The stored legacy key is cost_rate; the basic GRN rate is held in purchase_rate.
-            $record = TblPurcProductBarcodePurchRate::where('product_barcode_id', $barcodeId)
-                ->where('business_id', auth()->user()->business_id)
-                ->where('company_id', auth()->user()->company_id)
-                ->where('branch_id', $branchId)
-                ->first(['product_barcode_purchase_rate']);
-            $rate = $record ? (float) $record->product_barcode_purchase_rate : null;
-        } elseif ($rateType === 'average_rate' || $rateType === 'item_average_rate') {
-            // Same weighted inbound basis as Stock Activity Summary, limited to this barcode.
-            // The summary gives a base-item rate; multiply by packing for this form's Rate field.
+        if ($rateType === 'average_rate' || $rateType === 'item_average_rate') {
+            // Posted GRN, opening stock and stock receiving, weighted by base-item quantity.
             $totals = DB::selectOne("SELECT
                     SUM(RATE_PER_PACK * PACK_QTY) TOTAL_AMOUNT,
                     SUM(PACK_QTY * PRODUCT_PACKING) TOTAL_BASE_QTY
@@ -844,60 +837,57 @@ class BarcodeController extends Controller
                         AND GRN_RATE.COMPANY_ID = LEDGER.COMPANY_ID
                         AND GRN_RATE.BRANCH_ID = LEDGER.BRANCH_ID
                         AND GRN_RATE.GRN_TYPE = 'GRN'
-                    WHERE LEDGER.PRODUCT_BARCODE_ID = ?
+                    WHERE LEDGER.PRODUCT_ID = ?
                         AND LEDGER.BUSINESS_ID = ?
                         AND LEDGER.COMPANY_ID = ?
                         AND LEDGER.BRANCH_ID = ?
                         AND LEDGER.POSTED = 1
+                        AND LEDGER.DOCUMENT_TYPE IN ('GRN', 'OS', 'STR')
                         AND LEDGER.DOCUMENT_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
                         AND NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0) > 0
                         AND NVL(LEDGER.PRODUCT_PACKING, 0) > 0
                         AND ((LEDGER.DOCUMENT_TYPE = 'GRN'
                                 AND NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) > 0)
-                            OR (LEDGER.DOCUMENT_TYPE <> 'GRN'
+                            OR (LEDGER.DOCUMENT_TYPE IN ('OS', 'STR')
                                 AND NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE) > 0))
-                )", [$barcodeId, auth()->user()->business_id, auth()->user()->company_id, $branchId, $date]);
+                )", [$productId, auth()->user()->business_id, auth()->user()->company_id, $branchId, $date]);
             if ($totals && (float) $totals->total_base_qty > 0) {
                 $rate = (float) $totals->total_amount / (float) $totals->total_base_qty
-                    * (float) $barcode->product_barcode_packing;
+                    * $selectedPacking;
             }
         } else {
-            $documentType = $rateType === 'last_purchase_rate' ? 'GRN' : null;
-            $query = "SELECT RATE_PER_PACK FROM (
-                SELECT CASE WHEN LEDGER.DOCUMENT_TYPE = 'GRN'
-                        THEN NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0)
-                        ELSE NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE)
-                    END RATE_PER_PACK
-                FROM VW_PURC_STOCK_DTL LEDGER
-                LEFT JOIN TBL_PURC_GRN_DTL GRN_RATE
-                    ON GRN_RATE.GRN_ID = LEDGER.DOCUMENT_ID
-                    AND GRN_RATE.PRODUCT_ID = LEDGER.PRODUCT_ID
-                    AND GRN_RATE.PRODUCT_BARCODE_ID = LEDGER.PRODUCT_BARCODE_ID
-                    AND GRN_RATE.BUSINESS_ID = LEDGER.BUSINESS_ID
-                    AND GRN_RATE.COMPANY_ID = LEDGER.COMPANY_ID
-                    AND GRN_RATE.BRANCH_ID = LEDGER.BRANCH_ID
-                    AND GRN_RATE.GRN_TYPE = 'GRN'
-                WHERE LEDGER.PRODUCT_BARCODE_ID = ?
-                    AND LEDGER.BUSINESS_ID = ?
-                    AND LEDGER.COMPANY_ID = ?
-                    AND LEDGER.BRANCH_ID = ?
-                    AND LEDGER.POSTED = 1
-                    AND LEDGER.DOCUMENT_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
-                    AND NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0) > 0
-                    AND NVL(LEDGER.PRODUCT_PACKING, 0) > 0
-                    AND ((LEDGER.DOCUMENT_TYPE = 'GRN'
-                            AND NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) > 0)
-                        OR (LEDGER.DOCUMENT_TYPE <> 'GRN'
-                            AND NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE) > 0))";
-            $bindings = [$barcodeId, auth()->user()->business_id, auth()->user()->company_id, $branchId, $date];
-            if ($documentType) {
-                $query .= " AND LEDGER.DOCUMENT_TYPE = ?";
-                $bindings[] = $documentType;
+            // Basic purchase rate follows the latest GRN of any packing;
+            // last purchase rate follows the latest GRN of this exact barcode.
+            $query = "SELECT RATE_PER_PACK, SOURCE_PACKING FROM (
+                SELECT D.TBL_PURC_GRN_DTL_RATE RATE_PER_PACK,
+                    D.TBL_PURC_GRN_DTL_PACKING SOURCE_PACKING
+                FROM TBL_PURC_GRN H
+                JOIN TBL_PURC_GRN_DTL D
+                    ON D.GRN_ID = H.GRN_ID
+                    AND D.BUSINESS_ID = H.BUSINESS_ID
+                    AND D.COMPANY_ID = H.COMPANY_ID
+                    AND D.BRANCH_ID = H.BRANCH_ID
+                WHERE D.PRODUCT_ID = ?
+                    AND H.BUSINESS_ID = ?
+                    AND H.COMPANY_ID = ?
+                    AND H.BRANCH_ID = ?
+                    AND H.POSTED = 1
+                    AND D.GRN_TYPE = 'GRN'
+                    AND H.GRN_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
+                    AND NVL(D.TBL_PURC_GRN_DTL_PACKING, 0) > 0
+                    AND D.TBL_PURC_GRN_DTL_RATE > 0";
+            $bindings = [$productId, auth()->user()->business_id, auth()->user()->company_id, $branchId, $date];
+            if ($rateType === 'last_purchase_rate') {
+                $query .= " AND D.PRODUCT_BARCODE_ID = ?";
+                $bindings[] = $barcodeId;
             }
-            $query .= " ORDER BY LEDGER.DOCUMENT_DATE DESC, LEDGER.CREATED_AT DESC
+            $query .= " ORDER BY H.GRN_DATE DESC, H.CREATED_AT DESC, D.SR_NO DESC,
+                D.PURC_GRN_DTL_ID DESC
             ) WHERE ROWNUM = 1";
             $record = DB::selectOne($query, $bindings);
-            $rate = $record ? (float) $record->rate_per_pack : null;
+            $rate = $record && (float) $record->source_packing > 0
+                ? (float) $record->rate_per_pack / (float) $record->source_packing * $selectedPacking
+                : null;
         }
 
         if (in_array($request->input('form_type'), ['sa', 'st', 'sd'], true) && $rate !== null) {

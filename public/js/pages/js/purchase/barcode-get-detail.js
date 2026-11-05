@@ -813,7 +813,7 @@ function barcodeCommonData(tr, response, formData) {
     }
     if (form_type == 'os') { // os = Opening Stock
         var selected_barcode_rate = $('#opening_stock_form').find('#selected_barcode_rate').val();
-        var rate_list = ['0', 'cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'];
+        var rate_list = ['0', 'cost_rate', 'last_purchase_rate', 'average_rate'];
         if (rate_list.includes(selected_barcode_rate)) {
             // if barcode found in dropdown
             var rateFound = {
@@ -999,7 +999,7 @@ function barcodeCommonData(tr, response, formData) {
         tr.find('.tblGridCal_rate').val(sale_rate);
     }
     if (['st', 'sd'].includes(form_type) &&
-        ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
+        ['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
         apply_inventory_document_rate(tr, barcode['product_barcode_id'], form_type);
     }
     if (formData && formData.from_favorite) {
@@ -1285,7 +1285,7 @@ function stockTransferBarcodeData(tr, response, formData) {
         tr.find('.product_name').val(barcode['product_name']);
     }
     uomList(tr, uom_list, selected_uom_id);
-    if (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
+    if (['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
         apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'st');
     }
 }
@@ -1436,7 +1436,7 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
     tr.find('.tblGrid_stockQty').val(pd_store_stock);
 
     var calc_rate = rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_rate);
-    var rate = form_type === 'sa' && ['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate', 'item_average_rate'].includes($('#stock_adjustment_form #rate_type').val())
+    var rate = form_type === 'sa' && ['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#stock_adjustment_form #rate_type').val())
         ? 0 : calc_rate.rate;
     tr.find('.tblGridCal_rate').val(notNullEmpty(rate, 3));
 
@@ -1447,7 +1447,7 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
         if (typeof totalStockAmount === 'function') {
             totalStockAmount();
         }
-        if (['cost_rate', 'last_stock_rate', 'last_purchase_rate', 'average_rate', 'item_average_rate'].includes($('#stock_adjustment_form #rate_type').val())) {
+        if (['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#stock_adjustment_form #rate_type').val())) {
             apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'sa');
         }
     } else {
@@ -1484,7 +1484,7 @@ function apply_inventory_document_rate(tr, barcodeId, formType) {
                 update_rate(tr, response.data.rate);
             } else {
                 update_rate(tr, 0);
-                toastr.warning('No rate found for this barcode and date. Enter the rate manually.');
+                toastr.warning('No rate found for this product and date. Enter the rate manually.');
             }
             if (formType === 'sa' && typeof totalStockAmount === 'function') totalStockAmount();
             else if (typeof total_amount === 'function') total_amount();
@@ -1501,21 +1501,7 @@ function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_r
         percentage = 0;
     }
     var nowRate = 0;
-    // Stock documents use the form-level rate keys. Set a useful immediate
-    // value from the barcode response; the date/branch-aware AJAX lookup
-    // replaces it immediately afterwards for these rate types.
-    if (rate_type == 'cost_rate' || rate_type == 'last_purchase_rate') {
-        nowRate = tbl_purc_rate['product_barcode_purchase_rate'];
-        data.origRate = nowRate;
-    }
-    if (rate_type == 'last_stock_rate') {
-        nowRate = tbl_purc_rate['product_barcode_cost_rate'];
-        data.origRate = nowRate;
-    }
-    if (rate_type == 'average_rate') {
-        nowRate = tbl_purc_rate['product_barcode_avg_rate'];
-        data.origRate = nowRate;
-    }
+    // The three stock-document rate options are resolved by the dated server lookup.
     if (rate_type == 'item_cost_rate') {
         nowRate = tbl_purc_rate['product_barcode_cost_rate'];
         data.origRate = tbl_purc_rate['product_barcode_cost_rate'];
@@ -1781,7 +1767,7 @@ function apply_opening_stock_rate(rateFound) {
                 update_rate(rateFound.tr, response.data.rate);
             } else if (!response.data || !response.data.found) {
                 update_rate(rateFound.tr, 0);
-                toastr.warning('No rate found for this barcode and date. Enter the rate manually.');
+                toastr.warning('No rate found for this product and date. Enter the rate manually.');
             }
             if (typeof totalStockAmount === 'function') totalStockAmount();
         },
