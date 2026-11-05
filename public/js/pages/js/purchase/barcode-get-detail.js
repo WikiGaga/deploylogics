@@ -1475,7 +1475,7 @@ function apply_inventory_document_rate(tr, barcodeId, formType) {
             branch_id: branchId, stock_date: stockDate, rate_perc: ratePercentage
         },
         success: function(response) {
-            if (tr.find('input[data-id="product_barcode_id"]').val() != barcodeId ||
+            if (tr.find('input.product_barcode_id').val() != barcodeId ||
                 $form.find('#rate_type').val() !== rateType ||
                 $form.find('#new_branch_id').val() != branchId ||
                 $form.find('input[name="stock_date"]').val() !== stockDate ||
