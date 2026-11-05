@@ -154,17 +154,17 @@
                             <th class="text-center">Barcode</th>
                             <th class="text-center" width="20%">Remarks</th>
                             <th class="text-center">Packing</th>
-                            <th class="text-center">Inputs</th>
+                            <th class="text-center">In Qty</th>
                             <th class="text-center">In Rate</th>
                             <th class="text-center">In Amount</th>
-                            <th class="text-center">Outputs</th>
+                            <th class="text-center">Out Qty</th>
                             <th class="text-center">Out Rate</th>
                             <th class="text-center">Out Amount</th>
-                            <th class="text-center">Inputs per item</th>
+                            <th class="text-center">In Qty per item</th>
                             <th class="text-center">In Rate per item</th>
-                            <th class="text-center">Outputs per item</th>
+                            <th class="text-center">Out Qty per item</th>
                             <th class="text-center">Out Rate per item</th>
-                            <th class="text-center">Balance per item</th>
+                            <th class="text-center">Balance Qty per item</th>
                             <th class="text-center">Average Price per item</th>
                             {{--<th class="text-center">Price</th>--}}
                             {{--<th class="text-center">Expire Date</th>--}}
