@@ -603,7 +603,7 @@ function barcodeCommonData(tr, response, formData) {
     var uom_list = response['uom_list'];
     var current_sale_rate = response['rate'];
     var tbl_purc_rate = response['purc_rate'];
-    var tbl_grn_purc_rate = response['grn_purc_rate'];
+    var tbl_grn_purc_rate = response['grn_purc_rate'] || {};
     var current_user_branch_id = response['current_user_branch_id'];
     var central_rate = response['central_rate'];
     if (tbl_purc_rate == null) {
