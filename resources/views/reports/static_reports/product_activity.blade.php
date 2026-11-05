@@ -156,15 +156,15 @@
                             <th class="text-center">Packing</th>
                             <th class="text-center">Inputs</th>
                             <th class="text-center">In Rate</th>
+                            <th class="text-center">In Amount</th>
                             <th class="text-center">Outputs</th>
                             <th class="text-center">Out Rate</th>
-                            <th class="text-center">Balance</th>
+                            <th class="text-center">Out Amount</th>
                             <th class="text-center">Inputs per item</th>
                             <th class="text-center">In Rate per item</th>
                             <th class="text-center">Outputs per item</th>
                             <th class="text-center">Out Rate per item</th>
                             <th class="text-center">Balance per item</th>
-                            <th class="text-center">Inbound Value</th>
                             <th class="text-center">Average Price per item</th>
                             {{--<th class="text-center">Price</th>--}}
                             {{--<th class="text-center">Expire Date</th>--}}
@@ -331,7 +331,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
                                             END IN_RATE ,
                                             STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                            NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0))  OUT_RATE ,
+                                            NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) OUT_RATE ,
                                             NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                             STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID , SORTING_ID
                                             FROM  VW_PURC_STOCK_DTL  STOCK
@@ -369,7 +369,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                         END
                                                     )  IN_RATE ,
                                                     SUM(STOCK.QTY_OUT  +   BONUS_QTY_OUT)   QTY_OUT,
-                                                    MAX(NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0)))  OUT_RATE ,
+                                                    MAX(NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0)))) OUT_RATE ,
                                                     MAX(NVL(STOCK.DOCUMENT_RATE, 0)) BAL_RATE ,
                                                     SUM(STOCK.BONUS_QTY_IN) BONUS_QTY_IN ,   MAX(STOCK.TRANSFER_FROM_BRANCH_ID) TRANSFER_FROM_BRANCH_ID , MAX(STOCK.TRANSFER_TO_BRANCH_ID) TRANSFER_TO_BRANCH_ID ,
                                                     MAX(SORTING_ID ) SORTING_ID
@@ -439,7 +439,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             ELSE NVL(STOCK.STOCK_RATE, NVL(DOCUMENT_ACT_RATE, 0))
                                         END IN_RATE ,
                                         STOCK.QTY_OUT  +   BONUS_QTY_OUT   QTY_OUT,
-                                        NVL(STOCK.STOCK_RATE, NVL(STOCK.DOCUMENT_RATE, 0))  OUT_RATE ,
+                                        NVL(NULLIF(STOCK.STOCK_RATE, 0), NVL(NULLIF(STOCK.DOCUMENT_ACT_RATE, 0), NVL(STOCK.DOCUMENT_RATE, 0))) OUT_RATE ,
                                         NVL(STOCK.DOCUMENT_RATE, 0) BAL_RATE ,
                                         STOCK.BONUS_QTY_IN ,  STOCK.TRANSFER_FROM_BRANCH_ID, STOCK.TRANSFER_TO_BRANCH_ID,
                                         NVL(STOCK.SORTING_ID, 0) SORTING_ID
@@ -496,7 +496,8 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                $BalQty = 0;
                                $totInQtyPerItem = 0;
                                $totOutQtyPerItem = 0;
-                               $totalInboundValue = 0;
+                               $totalInAmount = 0;
+                               $totalOutAmount = 0;
                                $BalQtyPerItem = (float)$store_stock_item;
                                $BalPrice = 0;
                                $runningAveragePrice = $runningAverageBaseQty > 0
@@ -511,13 +512,13 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
-                            <td class="text-center">{{number_format($store_stock,3)}}</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center"></td>
                             <td class="text-center">{{number_format($store_stock_item,3)}}</td>
-                            <td class="text-center"></td>
                             <td class="text-center">{{number_format($runningAveragePrice,3)}}</td>
                            {{-- <td></td>--}}
                         </tr>
@@ -537,25 +538,28 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     $Qty = $qty_in - $qty_out;
                                 }
                                 if($qty_in == 0){$InRate = 0;}else{$InRate = $in_rate;}
-                                if($qty_out == 0){$OutRate = 0;}else{$OutRate = $row->out_rate;}
 
                                 $packing = (float) ($row->product_barcode_packing ?? 1);
                                 if ($packing <= 0) $packing = 1;
                                 $qty_in_per_item = (float)$qty_in * $packing;
                                 $qty_out_per_item = (float)$qty_out * $packing;
                                 $in_rate_per_item = (float)$InRate / $packing;
-                                $out_rate_per_item = (float)$OutRate / $packing;
-                                $inboundValue = ((float)$qty_in > 0 && (float)$InRate > 0)
-                                    ? (float)$qty_in * (float)$InRate
-                                    : 0;
-                                $totalInboundValue += $inboundValue;
+                                $inAmount = (float)$qty_in * (float)$InRate;
+                                $totalInAmount += $inAmount;
                                 if ((float)$qty_in > 0 && (float)$InRate > 0) {
-                                    $runningAverageAmount += (float)$qty_in * (float)$InRate;
+                                    $runningAverageAmount += $inAmount;
                                     $runningAverageBaseQty += (float)$qty_in * $packing;
                                 }
                                 $runningAveragePrice = $runningAverageBaseQty > 0
                                     ? $runningAverageAmount / $runningAverageBaseQty
                                     : 0;
+                                $OutRate = (float)$qty_out == 0 ? 0 : (float)$row->out_rate;
+                                if ((float)$qty_out != 0 && $OutRate == 0) {
+                                    $OutRate = $runningAveragePrice * $packing;
+                                }
+                                $out_rate_per_item = $OutRate / $packing;
+                                $outAmount = (float)$qty_out * $OutRate;
+                                $totalOutAmount += $outAmount;
                                 $BalQtyPerItem += $qty_in_per_item - $qty_out_per_item;
 
                                 $totInQty += $qty_in;
@@ -622,15 +626,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 <td class="text-center">{{number_format($packing,3)}}</td>
                                 <td class="text-center">{{$qty_in==0?"":number_format($qty_in,3)}}</td>
                                 <td class="text-center">{{$InRate==0?"":number_format($InRate,3)}}</td>
+                                <td class="text-center">{{$inAmount==0?"":number_format($inAmount,3)}}</td>
                                 <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($qty_out,3)}}</td>
-                                <td class="text-center">{{$OutRate==0?"":number_format($OutRate,3)}}</td>
-                                <td class="text-center">{{number_format($BalQty,3)}}</td>
+                                <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($OutRate,3)}}</td>
+                                <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($outAmount,3)}}</td>
                                 <td class="text-center">{{$qty_in_per_item==0?"":number_format($qty_in_per_item,3)}}</td>
                                 <td class="text-center">{{$in_rate_per_item==0?"":number_format($in_rate_per_item,3)}}</td>
                                 <td class="text-center">{{$qty_out_per_item==0 && !$isRecipeConsumption ? "" : number_format($qty_out_per_item,3)}}</td>
-                                <td class="text-center">{{$out_rate_per_item==0?"":number_format($out_rate_per_item,3)}}</td>
+                                <td class="text-center">{{$qty_out==0 && !$isRecipeConsumption ? "" : number_format($out_rate_per_item,3)}}</td>
                                 <td class="text-center">{{number_format($BalQtyPerItem,3)}}</td>
-                                <td class="text-center">{{$inboundValue==0?"":number_format($inboundValue,3)}}</td>
                                 <td class="text-center">{{number_format($runningAveragePrice,3)}}</td>
                                 {{--<td class="text-center">{{number_format($BalPrice,3)}}</td>--}}
                                 {{--<td class="text-center">{{$expire_date}}</td>--}}
@@ -640,15 +644,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             <td colspan="7" class="rep-font-bold">Total:</td>
                             <td class="text-center rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
+                            <td class="text-center rep-font-bold">{{number_format($totalInAmount,3)}}</td>
                             <td class="text-center rep-font-bold"></td>
                             <td class="text-right rep-font-bold"></td>
-                            <td class="text-center rep-font-bold"></td>
+                            <td class="text-center rep-font-bold">{{number_format($totalOutAmount,3)}}</td>
                             <td class="text-center rep-font-bold">{{number_format($totInQtyPerItem,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($totOutQtyPerItem,3)}}</td>
                             <td class="text-right rep-font-bold"></td>
                             <td class="text-center rep-font-bold">{{number_format($BalQtyPerItem,3)}}</td>
-                            <td class="text-center rep-font-bold">{{number_format($totalInboundValue,3)}}</td>
                             <td class="text-center rep-font-bold">{{number_format($averagePricePerItem,3)}}</td>
                             {{--<td class="text-right rep-font-bold"></td>--}}
                             {{--<td class="text-right rep-font-bold"></td>--}}
