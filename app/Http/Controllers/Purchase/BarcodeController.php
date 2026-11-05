@@ -1092,7 +1092,7 @@ class BarcodeController extends Controller
             $whereSale = "where product_id = $product_id and  product_barcode_id = $product_barcode_id and branch_id = $branch_id";
 
             $qry = "select 'Purc Rate' name ,   product_barcode_purchase_rate as rate from tbl_purc_product_barcode_purch_rate $where union all
-                    select 'Cost Rate' name ,   product_barcode_cost_rate as rate from tbl_purc_product_barcode_purch_rate $where union all
+                    select 'Last basic purchase rate' name ,   product_barcode_cost_rate as rate from tbl_purc_product_barcode_purch_rate $where union all
                     select 'Avg Rate' name ,   product_barcode_purchase_rate as rate from tbl_purc_product_barcode_purch_rate $where ";
             $data['rates'] = DB::select($qry);
 

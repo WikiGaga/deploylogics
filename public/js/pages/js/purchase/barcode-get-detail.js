@@ -1501,6 +1501,21 @@ function rateFunc(current_user_branch_id, barcode, current_sale_rate, tbl_purc_r
         percentage = 0;
     }
     var nowRate = 0;
+    // Stock documents use the form-level rate keys. Set a useful immediate
+    // value from the barcode response; the date/branch-aware AJAX lookup
+    // replaces it immediately afterwards for these rate types.
+    if (rate_type == 'cost_rate' || rate_type == 'last_purchase_rate') {
+        nowRate = tbl_purc_rate['product_barcode_purchase_rate'];
+        data.origRate = nowRate;
+    }
+    if (rate_type == 'last_stock_rate') {
+        nowRate = tbl_purc_rate['product_barcode_cost_rate'];
+        data.origRate = nowRate;
+    }
+    if (rate_type == 'average_rate') {
+        nowRate = tbl_purc_rate['product_barcode_avg_rate'];
+        data.origRate = nowRate;
+    }
     if (rate_type == 'item_cost_rate') {
         nowRate = tbl_purc_rate['product_barcode_cost_rate'];
         data.origRate = tbl_purc_rate['product_barcode_cost_rate'];

@@ -46,7 +46,7 @@ return [
     'rate_type2'=>[
         'item_average_rate' => 'Average Rate',
         'item_contract_rate' => 'Contract Rate',
-        'item_cost_rate' => 'Cost Rate',
+        'item_cost_rate' => 'Last basic purchase rate',
         'item_purchase_rate' => 'Purchase Rate',
         'item_sale_rate' => 'Sale Rate',
         'item_retail_rate' => 'Retail Rate',
