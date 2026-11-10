@@ -1834,8 +1834,18 @@ class StockController extends Controller
             if (!auth()->user()->isAbleTo($this->menu_id . '-delete')) {
                 throw new Exception('You do not have permission to delete this document.');
             }
-            if ($type === 'stock-transfer' && (int) $stock->stock_receive_status > 0) {
-                throw new Exception('A received stock transfer cannot be deleted.');
+            if ($type === 'stock-transfer') {
+                if ((int) $stock->stock_receive_status > 0) {
+                    throw new Exception('A received stock transfer cannot be deleted.');
+                }
+                $hasReceiving = TblInveStock::where('stock_request_id', $stock->stock_id)
+                    ->where('stock_code_type', 'str')
+                    ->where(Utilities::currentBC())
+                    ->where('posted', '!=', 2)
+                    ->exists();
+                if ($hasReceiving) {
+                    throw new Exception('Stock transfer cannot be deleted because stock has already been received against it.');
+                }
             }
             if ((int) ($stock->posted ?? 0) === 1 || ((int) ($stock->posted ?? 0) === 0 && ((int) ($stock->staging_apply ?? 0) === 1 || !empty($stock->current_stg_id)))) {
                 throw new Exception('A posted or staged document must be canceled through its workflow before deletion.');
@@ -2120,8 +2130,18 @@ class StockController extends Controller
 
     protected function assertTransferNotReceived($row, string $action): void
     {
-        if (!empty($row) && $row->stock_code_type === 'st' && (int) $row->stock_receive_status > 0) {
-            throw new \RuntimeException('A received stock transfer cannot be ' . $action . '.', 422);
+        if (!empty($row) && $row->stock_code_type === 'st') {
+            if ((int) $row->stock_receive_status > 0) {
+                throw new \RuntimeException('A received stock transfer cannot be ' . $action . '.', 422);
+            }
+            $hasReceiving = TblInveStock::where('stock_request_id', $row->stock_id)
+                ->where('stock_code_type', 'str')
+                ->where(Utilities::currentBC())
+                ->where('posted', '!=', 2)
+                ->exists();
+            if ($hasReceiving) {
+                throw new \RuntimeException('Stock transfer cannot be ' . $action . ' because stock has already been received against it.', 422);
+            }
         }
     }
 

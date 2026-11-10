@@ -151,7 +151,7 @@ class FoodRecipeController extends Controller
                         $dtl = new FoodRecipeDtl();
                         $dtl->id = FoodRecipeDtl::max('id') + 1;
                         $dtl->food_recipe_id = $foodRecipe->id;
-                        $dtl->product_id = $pd['product_id'];
+                        $dtl->product_id = $pd['product_id'] ?? null;
                         $dtl->product_name = $pd['product_name'];
                         $dtl->uom_id = isset($pd['pd_uom']) ? $pd['pd_uom'] : null;
                         $dtl->packing_id = isset($pd['pd_packing']) ? $pd['pd_packing'] : null;
