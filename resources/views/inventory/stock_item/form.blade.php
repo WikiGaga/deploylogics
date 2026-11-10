@@ -16,7 +16,9 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
-                $selected_rate_type = config('constants.default_rate_type');
+                $selected_rate_type = $data['stock_code_type'] === 'di'
+                    ? 'cost_rate'
+                    : config('constants.default_rate_type');
                 $defaultStore = \App\Models\TblDefiStore::where('branch_id', auth()->user()->branch_id)
                     ->where('store_default_value', 1)
                     ->first();
@@ -99,7 +101,7 @@
                     <div class="row form-group-block">
                         <div class="col-lg-8">
                             <div class="row">
-                                <label class="col-lg-3 erp-col-form-label">Rate Type <span class="required">*</span></label>
+                                <label class="col-lg-3 erp-col-form-label">{{ $form_type === 'di' ? 'Rate By' : 'Rate Type' }} <span class="required">*</span></label>
                                 <div class="col-lg-9">
                                     <div class="ChangeRateBlock input-group erp-select2-sm">
                                         <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
@@ -107,6 +109,9 @@
                                             @foreach($data['rate_types'] as $key=>$rate_type)
                                                 <option value="{{$key}}" {{$selected_rate_type==$key?"selected":""}}>{{$rate_type}}</option>
                                             @endforeach
+                                            @if($form_type === 'di' && $case === 'edit' && !array_key_exists($selected_rate_type, $data['rate_types']))
+                                                <option value="{{ $selected_rate_type }}" selected>{{ $data['legacy_rate_types'][$selected_rate_type] ?? $selected_rate_type }}</option>
+                                            @endif
                                         </select>
                                         <div class="input-group-prepend">
                                                 <span class="input-group-text">

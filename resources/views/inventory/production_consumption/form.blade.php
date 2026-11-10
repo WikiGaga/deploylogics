@@ -17,7 +17,7 @@
             if($case == 'new'){
                 $code = $data['document_code'];
                 $date =  date('d-m-Y');
-                $selected_rate_type = config('constants.default_rate_type');
+                $selected_rate_type = 'cost_rate';
                 $rate_perc = '';
             }
             if($case == 'edit'){
@@ -37,6 +37,7 @@
     @permission($data['permission'])
     <form id="formulation_form" class="kt-form" method="post" action="{{ action('Inventory\ProductionConsumptionController@store', isset($id)?$id:"") }}">
         <input type="hidden" value='{{$data['form_type']}}' id="form_type">
+        <input type="hidden" id="new_branch_id" value="{{ $case == 'edit' ? $data['current']->branch_id : auth()->user()->branch_id }}">
         @csrf
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
@@ -107,15 +108,18 @@
                     <div class="row form-group-block">
                         <div class="col-lg-12">
                             <div class="row">
-                                <label class="col-lg-2 erp-col-form-label">Rate Type:</label>
+                                <label class="col-lg-2 erp-col-form-label">Rate By: <span class="required">*</span></label>
                                 <div class="col-lg-10">
                                     <div class="ChangeRateBlock input-group erp-select2-sm">
-                                        <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="rate_type" name="rate_type">
+                                        <select class="form-control erp-form-control-sm kt-select2 moveIndex" id="selected_barcode_rate" name="rate_type">
                                             <option value="0">Select</option>
                                             @php $selected_rate_type = isset($selected_rate_type) ? $selected_rate_type : ''; @endphp
                                             @foreach($data['rate_types'] as $key => $rate_type_label)
                                                 <option value="{{ $key }}" {{ $selected_rate_type == $key ? 'selected' : '' }}>{{ $rate_type_label }}</option>
                                             @endforeach
+                                            @if($case == 'edit' && !array_key_exists($selected_rate_type, $data['rate_types']) && isset($data['legacy_rate_types'][$selected_rate_type]))
+                                                <option value="{{ $selected_rate_type }}" selected>{{ $data['legacy_rate_types'][$selected_rate_type] }} (legacy)</option>
+                                            @endif
                                         </select>
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">

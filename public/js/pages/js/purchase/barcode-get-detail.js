@@ -963,6 +963,9 @@ function barcodeCommonData(tr, response, formData) {
         var store_stock = !valueEmpty(response['store_stock'])?response['store_stock']:0;
         $('#current_product_stock').val(store_stock);
         }
+        if (form_type == 'production-consumption') {
+            apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'production-consumption');
+        }
 
         if(form_type == 'st'){
         var grn_qty = !valueEmpty(tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity'])?tbl_grn_purc_rate['tbl_purc_grn_dtl_quantity']:0;
@@ -1001,6 +1004,10 @@ function barcodeCommonData(tr, response, formData) {
     if (['st', 'sd'].includes(form_type) &&
         ['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#rate_type').val())) {
         apply_inventory_document_rate(tr, barcode['product_barcode_id'], form_type);
+    }
+    if (form_type === 'di' &&
+        ['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#stock_item_form #rate_type').val())) {
+        apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'di');
     }
     if (formData && formData.from_favorite) {
         $(document).trigger('favoriteRowReady');
@@ -1459,12 +1466,14 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
 }
 
 function apply_inventory_document_rate(tr, barcodeId, formType) {
-    var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
+    var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form', di: '#stock_item_form', 'production-consumption': '#formulation_form' };
     var $form = $(formIds[formType]);
     var branchId = $form.find('#new_branch_id').val();
-    var stockDate = $form.find('input[name="stock_date"]').val();
+    var dateFieldName = formType === 'production-consumption' ? 'record_date' : 'stock_date';
+    var rateFieldSelector = formType === 'production-consumption' ? '#selected_barcode_rate' : '#rate_type';
+    var stockDate = $form.find('input[name="' + dateFieldName + '"]').val();
     var ratePercentage = $form.find('#rate_perc').val();
-    var rateType = $form.find('#rate_type').val();
+    var rateType = $form.find(rateFieldSelector).val();
     $.ajax({
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
         type: 'POST',
@@ -1476,9 +1485,9 @@ function apply_inventory_document_rate(tr, barcodeId, formType) {
         },
         success: function(response) {
             if (tr.find('input.product_barcode_id').val() != barcodeId ||
-                $form.find('#rate_type').val() !== rateType ||
+                $form.find(rateFieldSelector).val() !== rateType ||
                 $form.find('#new_branch_id').val() != branchId ||
-                $form.find('input[name="stock_date"]').val() !== stockDate ||
+                $form.find('input[name="' + dateFieldName + '"]').val() !== stockDate ||
                 $form.find('#rate_perc').val() !== ratePercentage) return;
             if (response.data && response.data.found) {
                 update_rate(tr, response.data.rate);

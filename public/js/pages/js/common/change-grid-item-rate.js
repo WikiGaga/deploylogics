@@ -11,7 +11,7 @@ $(document).on('click','#changeGridItemRate',function(){
         rate_perc: rate_perc,
         sales_contract: sales_contract
     }
-    if(form_type == 'os'){
+    if(form_type == 'os' || form_type == 'production-consumption'){
         formData.rate_type = block.find('#selected_barcode_rate>option:selected').val();
     }
     var url = '/barcode/change-grid-item-rate';
@@ -23,12 +23,14 @@ $(document).on('click','#changeGridItemRate',function(){
         showConfirmButton: true
     }).then(function(result){
         if(result.value){
-            if (['sa', 'st', 'sd'].includes(form_type) &&
+            if (['sa', 'st', 'sd', 'di', 'production-consumption'].includes(form_type) &&
                 ['cost_rate', 'last_purchase_rate', 'average_rate'].includes(formData.rate_type)) {
-                var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form' };
+                var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form', di: '#stock_item_form', 'production-consumption': '#formulation_form' };
                 var $adjustmentForm = $(formIds[form_type]);
                 var adjustmentBranch = $adjustmentForm.find('#new_branch_id').val();
-                var adjustmentDate = $adjustmentForm.find('input[name="stock_date"]').val();
+                var dateFieldName = form_type === 'production-consumption' ? 'record_date' : 'stock_date';
+                var rateFieldSelector = form_type === 'production-consumption' ? '#selected_barcode_rate' : '#rate_type';
+                var adjustmentDate = $adjustmentForm.find('input[name="' + dateFieldName + '"]').val();
                 if (!adjustmentBranch || !adjustmentDate) {
                     toastr.error('Select a branch and date first.');
                     return;
@@ -53,8 +55,8 @@ $(document).on('click','#changeGridItemRate',function(){
                         success: function (response) {
                             if (row.find('input[data-id="product_barcode_id"]').val() == barcodeId &&
                                 $adjustmentForm.find('#new_branch_id').val() === adjustmentBranch &&
-                                $adjustmentForm.find('input[name="stock_date"]').val() === adjustmentDate &&
-                                $adjustmentForm.find('#rate_type').val() === formData.rate_type &&
+                                $adjustmentForm.find('input[name="' + dateFieldName + '"]').val() === adjustmentDate &&
+                                $adjustmentForm.find(rateFieldSelector).val() === formData.rate_type &&
                                 $adjustmentForm.find('#rate_perc').val() === formData.rate_perc) {
                                 update_rate(row, response.data && response.data.found ? response.data.rate : 0);
                             } else {

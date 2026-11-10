@@ -298,7 +298,10 @@ class StockController extends Controller
             $data['transfer_branches'] = $data['branch'];
         }
         $data['rate_by'] = config('constants.rate_by');
-        $data['rate_types'] = config('constants.rate_type');
+        $data['rate_types'] = $type === 'damaged-items'
+            ? config('constants.rate_by')
+            : config('constants.rate_type');
+        $data['legacy_rate_types'] = config('constants.rate_type');
         $data['payment_type'] = TblDefiPaymentType::where(Utilities::currentBC())->where('payment_type_entry_status',1)->get();
 
         $arr = [
@@ -408,6 +411,8 @@ class StockController extends Controller
             $valid['stock_from_id'] = 'required|numeric';
         }
         if($formType == 'di' && !$isWorkflowStagingAction){
+            $valid['rate_type'] = 'required|in:cost_rate,last_purchase_rate,average_rate,item_last_net_tp,item_cost_rate,item_sale_rate';
+            $valid['rate_perc'] = 'nullable|numeric|between:-100,1000';
             $valid['store'] = 'required|numeric|not_in:0';
             $valid['pd'] = 'required|array|min:1';
             $valid['pd.*.product_id'] = 'required|numeric';

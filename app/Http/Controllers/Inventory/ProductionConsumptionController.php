@@ -191,7 +191,8 @@ class ProductionConsumptionController extends Controller
         }
 
         $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where(Utilities::currentBCB())->get();
-        $data['rate_types'] = config('constants.rate_type');
+        $data['rate_types'] = config('constants.rate_by');
+        $data['legacy_rate_types'] = config('constants.rate_type');
 
         return view('inventory.production_consumption.form', compact('data'));
     }
@@ -203,6 +204,8 @@ class ProductionConsumptionController extends Controller
             'record_date'       => 'required|date_format:d-m-Y',
             'transfer_from'     => 'required|numeric|not_in:0',
             'transfer_to'       => 'required|numeric|not_in:0',
+            'rate_type'         => 'required|in:cost_rate,last_purchase_rate,average_rate,item_last_net_tp,item_cost_rate,item_sale_rate',
+            'rate_perc'         => 'nullable|numeric|between:-100,1000',
             'pd'           => 'required|array',
             'pd.*.sr_no'   => 'required|integer',
             'pd.*.pd_barcode' => 'required|string|max:50',

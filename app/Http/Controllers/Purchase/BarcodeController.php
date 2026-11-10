@@ -689,7 +689,7 @@ class BarcodeController extends Controller
 
     public function changeGridItemRate(Request $request){
 
-        if (in_array($request->input('form_type'), ['os', 'sa', 'st', 'sd'], true)
+        if (in_array($request->input('form_type'), ['os', 'sa', 'st', 'sd', 'di', 'production-consumption'], true)
             && in_array($request->input('rate_type'), ['cost_rate', 'last_purchase_rate', 'average_rate'], true)) {
             return $this->openingStockRate($request);
         }
@@ -705,7 +705,7 @@ class BarcodeController extends Controller
         $rate_perc = isset($request->rate_perc)?$request->rate_perc:"";
         $sales_contract = isset($request->sales_contract)?$request->sales_contract:"";
         $rateBranchId = auth()->user()->branch_id;
-        if (in_array($form_type, ['sa', 'st', 'sd'], true)) {
+        if (in_array($form_type, ['sa', 'st', 'sd', 'di'], true)) {
             $rateBranchId = (int) $request->input('branch_id');
             abort_unless(Utilities::documentBranchIsUserAccessible($rateBranchId)
                 && DB::table('tbl_soft_branch')->where('branch_id', $rateBranchId)
@@ -889,7 +889,7 @@ class BarcodeController extends Controller
                 : null;
         }
 
-        if (in_array($request->input('form_type'), ['sa', 'st', 'sd'], true) && $rate !== null) {
+        if (in_array($request->input('form_type'), ['sa', 'st', 'sd', 'di', 'production-consumption'], true) && $rate !== null) {
             $percentage = $request->validate(['rate_perc' => 'nullable|numeric|between:-100,1000'])['rate_perc'] ?? 0;
             $rate *= 1 + (float) $percentage / 100;
         }

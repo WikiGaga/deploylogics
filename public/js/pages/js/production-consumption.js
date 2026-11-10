@@ -20,6 +20,14 @@ var KTFormWidgets = function() {
                     required: true,
                     valueNotEquals: '0',
                 },
+                rate_type: {
+                    required: true,
+                    valueNotEquals: '0',
+                },
+                rate_perc: {
+                    number: true,
+                    range: [-100, 1000],
+                },
             },
             submitHandler: function(form) {
                 if ($('.erp_form__grid_body tr').length === 0) {
