@@ -677,7 +677,9 @@ FROM
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        QTY_BASE_UNIT_VALUE STOCK_ADJUSTMENT,
+        -- Adjustments are signed ledger movements, while this column belongs
+        -- to STOCK OUT and is subtracted when calculating the balance.
+        QTY_BASE_UNIT_VALUE * -1 STOCK_ADJUSTMENT,
         0 CONSUMPTION,
         0 DAMAGED_ITEMS
     FROM
