@@ -486,18 +486,18 @@ FROM
     SUM(STOCK_REC) STOCK_REC,
     SUM(SALE_RETURN) SALE_RETURN,
     SUM(PRODUCTION) PRODUCTION,
-    SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN) + SUM(PRODUCTION) TOTAL_STOCK_IN,
+    SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(STOCK_ADJUSTMENT) + SUM(SALE_RETURN) + SUM(PRODUCTION) TOTAL_STOCK_IN,
     SUM(SALE * - 1) SALE,
     SUM(STOCK_TRANSFER * - 1) STOCK_TRANSFER,
     SUM(PURCH_RETURN * - 1) PURCH_RETURN,
     SUM(STOCK_ADJUSTMENT) STOCK_ADJUSTMENT,
     SUM(CONSUMPTION) CONSUMPTION,
     SUM(DAMAGED_ITEMS * -1) DAMAGED_ITEMS,
-    SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT) + SUM(CONSUMPTION) + SUM(DAMAGED_ITEMS * -1) TOTAL_STOCK_OUT,
+    SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(CONSUMPTION) + SUM(DAMAGED_ITEMS * -1) TOTAL_STOCK_OUT,
     (
-      SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(SALE_RETURN) + SUM(PRODUCTION)
+      SUM(OPENING_BALANCE) + SUM(PURCHASE) + SUM(STOCK_REC) + SUM(STOCK_ADJUSTMENT) + SUM(SALE_RETURN) + SUM(PRODUCTION)
     ) - (
-      SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(STOCK_ADJUSTMENT) + SUM(CONSUMPTION) + SUM(DAMAGED_ITEMS * -1)
+      SUM(SALE * - 1) + SUM(STOCK_TRANSFER * - 1) + SUM(PURCH_RETURN * - 1) + SUM(CONSUMPTION) + SUM(DAMAGED_ITEMS * -1)
     ) STOCK_BALANCE 
     $sup
   FROM
@@ -677,9 +677,7 @@ FROM
         0 SALE,
         0 STOCK_TRANSFER,
         0 PURCH_RETURN,
-        -- Adjustments are signed ledger movements, while this column belongs
-        -- to STOCK OUT and is subtracted when calculating the balance.
-        QTY_BASE_UNIT_VALUE * -1 STOCK_ADJUSTMENT,
+        QTY_BASE_UNIT_VALUE STOCK_ADJUSTMENT,
         0 CONSUMPTION,
         0 DAMAGED_ITEMS
     FROM
@@ -999,8 +997,8 @@ $query = "WITH SALES_USAGE AS (
                             <th class="dtl-head" rowspan="2">Group</th>
                             <th class="dtl-head" rowspan="2">Product</th>
                             <th class="dtl-head" rowspan="2">UOM</th>
-                            <th class="dtl-head" colspan="6">STOCK IN</th>
-                            <th class="dtl-head" colspan="8">STOCK OUT</th>
+                            <th class="dtl-head" colspan="7">STOCK IN</th>
+                            <th class="dtl-head" colspan="7">STOCK OUT</th>
                             <th width="15%" class="dtl-head" rowspan="2">BALANCE</th>
                             <th class="dtl-head" rowspan="2">Average Price</th>
                             <th class="dtl-head" rowspan="2">Last Price</th>
@@ -1011,6 +1009,7 @@ $query = "WITH SALES_USAGE AS (
                             <td width="10%" class="dtl-head">Opening</td>
                             <td width="10%" class="dtl-head">Purchase</td>
                             <td width="10%" class="dtl-head">Stock Receive</td>
+                            <td width="10%" class="dtl-head">Stock Adjustment</td>
                             <td width="10%" class="dtl-head">Sale Return</td>
                             <td width="10%" class="dtl-head">Production</td>
                             <td width="10%" class="dtl-head">Total</td>
@@ -1018,7 +1017,6 @@ $query = "WITH SALES_USAGE AS (
                             <td width="10%" class="dtl-head"> Sale</td>
                             <td width="10%" class="dtl-head">Stock Transfer</td>
                             <td width="10%" class="dtl-head">Purchase Return</td>
-                            <td width="10%" class="dtl-head">Stock Adjustment</td>
                             <td width="10%" class="dtl-head">Consumption</td>
                             <td width="10%" class="dtl-head">Sales Consumption</td>
                             <td width="10%" class="dtl-head">Damaged Items</td>
@@ -1143,6 +1141,7 @@ $query = "WITH SALES_USAGE AS (
                                         <td class="text-right">{{number_format($item->opening_balance,0)}}</td>
                                         <td class="text-right">{{number_format($item->purchase,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_rec,0)}}</td>
+                                        <td class="text-right">{{number_format($item->stock_adjustment,0)}}</td>
                                         <td class="text-right">{{number_format($item->sale_return,0)}}</td>
                                         <td class="text-right">{{number_format($item->production,0)}}</td>
                                         <td class="text-right">{{number_format($item->total_stock_in,0)}}</td>
@@ -1150,7 +1149,6 @@ $query = "WITH SALES_USAGE AS (
                                         <td class="text-right">{{number_format($item->sale,0)}}</td>
                                         <td class="text-right">{{number_format($item->stock_transfer,0)}}</td>
                                         <td class="text-right">{{number_format($item->purch_return,0)}}</td>
-                                        <td class="text-right">{{number_format($item->stock_adjustment,0)}}</td>
                                         <td class="text-right">{{number_format($item->consumption,0)}}</td>
                                         <td class="text-right">{{number_format($item->sales_consumption,0)}}</td>
                                         <td class="text-right">{{number_format($item->damaged_items,0)}}</td>
@@ -1173,13 +1171,13 @@ $query = "WITH SALES_USAGE AS (
                                     <td class="text-right sale_type_color">{{number_format($tot_opening_balance,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purchase,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_rec,0)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_sale_return,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_production,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_stock_in,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_sale,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_stock_transfer,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_purch_return,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_consumption,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_sales_consumption,0)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($tot_damaged_items,0)}}</td>
@@ -1196,13 +1194,13 @@ $query = "WITH SALES_USAGE AS (
                                     <td class="text-right barnch_color">{{number_format($stot_opening_balance,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purchase,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_rec,0)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_sale_return,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_production,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_stock_in,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_sale,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_stock_transfer,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_purch_return,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_consumption,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_sales_consumption,0)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stot_damaged_items,0)}}</td>
