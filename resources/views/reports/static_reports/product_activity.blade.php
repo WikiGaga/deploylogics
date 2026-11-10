@@ -422,6 +422,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 $usage_date_field
                                             WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                             GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
+                                            HAVING COUNT(USAGE.ID) > 0
 
                                             ) STOCK
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
@@ -498,6 +499,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         $usage_date_field
                                     WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
                                     GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
+                                    HAVING COUNT(USAGE.ID) > 0
                                     ) STOCK_RESULT
                                     ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }

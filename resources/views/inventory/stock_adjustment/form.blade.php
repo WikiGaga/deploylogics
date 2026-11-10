@@ -94,23 +94,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">Stock Location:</label>
-                            <div class="col-lg-6">
-                                <div class="erp-select2 display_stock_location">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2 stock_location_id"  name="stock_location_id">
-                                        <option value="0">Select</option>
-                                        @if($case == 'edit')
-                                            @foreach($data['display_location'] as $display_location)
-                                                <option value="{{$display_location->display_location_id}}" data-branch="{{ $store->branch_id }}" {{$display_location->display_location_id == $stock_location_id?'selected':''}}>{{$display_location->display_location_name_string}}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="row form-group-block">
                     <div class="col-lg-8">
@@ -482,45 +465,6 @@
         var arr_hidden_field = ['product_id','product_barcode_id','uom_id'];
     </script>
     <script>
-        @if($case == 'new')
-            var storeid = '{{$storeid}}';
-            getStockLocations(storeid)
-        @endif
-        $('#store_id').change(function(event){
-            $('#stock_adjustment_form').find('.display_stock_location>.select2').addClass('pointerEventsNone')
-            var storeid = $(this).val();
-            getStockLocations(storeid)
-        });
-        function getStockLocations(storeid){
-            var formData = {
-                store_id : storeid,
-            }
-            var url = '{{action('Inventory\StockController@getLocationByStore',$type)}}';
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type        : 'POST',
-                url         : url,
-                dataType	: 'json',
-                data        : formData,
-                success: function(response) {
-                    if(response['status'] == 'success'){
-                        var option = '<option value="0">Select</option>';
-                        response['locations'].forEach(function(row){
-                            option += '<option value="'+row.display_location_id+'">'+row.display_location_name_string+'</option>';
-                        });
-                        $('#stock_adjustment_form').find('.stock_location_id').html(option);
-                        $('#stock_adjustment_form').find('.display_stock_location>.select2').removeClass('pointerEventsNone')
-                    }
-                    if(response['status'] == 'error'){
-                        var option = '<option value="0">Select</option>';
-                        $('#stock_adjustment_form').find('.stock_location_id').html(option);
-                        $('#stock_adjustment_form').find('.display_stock_location>.select2').removeClass('pointerEventsNone')
-                    }
-                },
-            })
-        }
         $(document).on('keyup','.tblGridPhysicalQty,.tblGrid_stockQty,.tblGridCal_rate',function(){
             var tr = $(this).parents('tr');
             if (typeof adjustmentQty === 'function') {
