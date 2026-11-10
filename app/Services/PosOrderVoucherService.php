@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Library\PosVoucherPayment;
 use App\Library\Utilities;
 use App\Models\TblAccoVoucher;
 use App\Models\TblDefiConfiguration;
@@ -105,35 +106,10 @@ class PosOrderVoucherService
         $walkInCustomerAc = '13425120060615';
         $cashInHandAc = $config->sale_cash_ac;
 
-        $ac = '';
-        $descrip = '';
-        $paymentMethod = '';
-
-        if ($saleInvoice->cash_sales > 0 && $saleInvoice->card_sales == 0 && $saleInvoice->credit_sales == 0 && $saleInvoice->delivery_partner_sales == 0) {
-            $ac = (int) $cashInHandAc;
-            $descrip = 'Cash';
-            $paymentMethod = 'cash';
-        }
-        if ($saleInvoice->cash_sales == 0 && $saleInvoice->card_sales > 0 && $saleInvoice->credit_sales == 0 && $saleInvoice->delivery_partner_sales == 0) {
-            $ac = $saleInvoice->bank_account;
-            $descrip = 'Card';
-            $paymentMethod = 'card';
-        }
-        if ($saleInvoice->cash_sales > 0 && $saleInvoice->card_sales > 0 && $saleInvoice->credit_sales == 0 && $saleInvoice->delivery_partner_sales == 0) {
-            $ac = $saleInvoice->bank_account;
-            $descrip = 'Cash and Card';
-            $paymentMethod = 'cash_card';
-        }
-        if ($saleInvoice->cash_sales == 0 && $saleInvoice->card_sales == 0 && $saleInvoice->credit_sales > 0 && $saleInvoice->delivery_partner_sales == 0) {
-            $ac = $saleInvoice->customer_account_id ?? $walkInCustomerAc;
-            $descrip = 'Customer Credit Credit';
-            $paymentMethod = 'credit';
-        }
-        if ($saleInvoice->cash_sales == 0 && $saleInvoice->card_sales == 0 && $saleInvoice->credit_sales == 0 && $saleInvoice->delivery_partner_sales > 0) {
-            $ac = $saleInvoice->partner_account_id;
-            $descrip = 'Delivery Partner - ' . $saleInvoice->partner_name;
-            $paymentMethod = 'delivery_partner';
-        }
+        $payment = PosVoucherPayment::resolve($saleInvoice, $cashInHandAc, $walkInCustomerAc);
+        $ac = $payment['account_id'];
+        $descrip = $payment['description'];
+        $paymentMethod = $payment['method'];
 
         if (empty($ac)) {
             return null;
@@ -141,7 +117,7 @@ class PosOrderVoucherService
 
         $voucherId = Utilities::uuid();
         $date = date('Y-m-d', strtotime($saleInvoice->order_date));
-        $netTotal = number_format((float) $saleInvoice->net_sales, 3);
+        $netTotal = round((float) $saleInvoice->net_sales, 3);
         $tableName = 'tbl_acco_voucher';
 
         $data = [
@@ -194,37 +170,37 @@ class PosOrderVoucherService
 
         $data['chart_account_id'] = $incomeChartAccountId;
         $data['voucher_debit'] = 0;
-        $data['voucher_credit'] = abs(number_format((float) $saleInvoice->items_amount, 3));
+        $data['voucher_credit'] = abs(round((float) $saleInvoice->items_amount, 3));
         $data['voucher_sr_no'] = 2;
         $this->insertVoucherLines($tableName, $data);
 
         $data['chart_account_id'] = $discountChartAccountId;
-        $data['voucher_debit'] = abs(number_format((float) $saleInvoice->discount_on_items, 3));
+        $data['voucher_debit'] = abs(round((float) $saleInvoice->discount_on_items, 3));
         $data['voucher_credit'] = 0;
         $data['voucher_sr_no'] = 3;
         $this->insertVoucherLines($tableName, $data);
 
         $data['chart_account_id'] = 65981926021315;
         $data['voucher_debit'] = 0;
-        $data['voucher_credit'] = abs(number_format((float) $saleInvoice->total_add_on_price, 3));
+        $data['voucher_credit'] = abs(round((float) $saleInvoice->total_add_on_price, 3));
         $data['voucher_sr_no'] = 4;
         $this->insertVoucherLines($tableName, $data);
 
         $data['chart_account_id'] = 11916726021355;
-        $data['voucher_debit'] = (abs(number_format((float) $saleInvoice->order_total_discounts, 3)) + abs(number_format((float) $saleInvoice->coupon_discount, 3)));
+        $data['voucher_debit'] = (abs(round((float) $saleInvoice->order_total_discounts, 3)) + abs(round((float) $saleInvoice->coupon_discount, 3)));
         $data['voucher_credit'] = 0;
         $data['voucher_sr_no'] = 5;
         $this->insertVoucherLines($tableName, $data);
 
         $data['chart_account_id'] = $vatPayableChartAccountId;
         $data['voucher_debit'] = 0;
-        $data['voucher_credit'] = abs(number_format((float) $saleInvoice->vat, 3));
+        $data['voucher_credit'] = abs(round((float) $saleInvoice->vat, 3));
         $data['voucher_sr_no'] = 6;
         $this->insertVoucherLines($tableName, $data);
 
         $data['chart_account_id'] = 58141426181811;
         $data['voucher_debit'] = 0;
-        $data['voucher_credit'] = abs(number_format((float) $saleInvoice->delivery_charges, 3));
+        $data['voucher_credit'] = abs(round((float) $saleInvoice->delivery_charges, 3));
         $data['voucher_sr_no'] = 7;
         $this->insertVoucherLines($tableName, $data);
 

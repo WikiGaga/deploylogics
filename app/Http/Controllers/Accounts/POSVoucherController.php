@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Accounts;
 
 use App\Http\Controllers\Controller;
+use App\Library\PosVoucherPayment;
 use App\Library\Utilities;
 use App\Models\Settings\TblDefiExpenseAccounts;
 use App\Models\TblAccoVoucher;
@@ -151,35 +152,6 @@ class POSVoucherController extends Controller
                         ->where('order_id', $sales->order_id)
                         ->first();
                         
-                        $ac = '';
-                        $payment_method = '';
-                        // 1 = Cash
-                        if($sale_invoice->cash_sales > 0 && $sale_invoice->card_sales == 0 && $sale_invoice->credit_sales == 0 && $sale_invoice->delivery_partner_sales == 0){
-                            $ac = (int)$cash_in_hand_ac;
-                            $descrip = 'Cash';
-                            $payment_method = 'cash';
-                        }
-                        if($sale_invoice->cash_sales == 0 && $sale_invoice->card_sales > 0 && $sale_invoice->credit_sales == 0 && $sale_invoice->delivery_partner_sales == 0){
-                            $ac = $sale_invoice->bank_account;
-                            $descrip = 'Card';
-                            $payment_method = 'card';
-                        }
-                        if($sale_invoice->cash_sales > 0 && $sale_invoice->card_sales > 0 && $sale_invoice->credit_sales == 0 && $sale_invoice->delivery_partner_sales == 0){
-                            $ac = $sale_invoice->bank_account;
-                            $descrip = 'Cash and Card';
-                            $payment_method = 'cash_card';
-                        }
-                        if($sale_invoice->cash_sales == 0 && $sale_invoice->card_sales == 0 && $sale_invoice->credit_sales > 0 && $sale_invoice->delivery_partner_sales == 0){
-                            $ac = $sale_invoice->customer_account_id ?? $walk_in_customer_ac;
-                            $descrip = 'Customer Credit Credit';
-                            $payment_method = 'credit';
-                        }
-                        if($sale_invoice->cash_sales == 0 && $sale_invoice->card_sales == 0 && $sale_invoice->credit_sales == 0 && $sale_invoice->delivery_partner_sales > 0){
-                            $ac = $sale_invoice->partner_account_id;
-                            $descrip = 'Delivery Partner - '.$sale_invoice->partner_name;
-                            $payment_method = 'delivery_partner';
-                        }
-
                         // Convert amounts to thousandths for comparison at 3 decimal places.
                         $toUnits = static function ($value) {
                             return (int) round((float) ($value ?? 0) * 1000);
@@ -213,15 +185,20 @@ class POSVoucherController extends Controller
                             $ac = (int) $cash_in_hand_ac;
                             $descrip = '100% Discount - Zero Cash';
                             $payment_method = 'fully_discounted';
+                        } else {
+                            $payment = PosVoucherPayment::resolve($sale_invoice, $cash_in_hand_ac, $walk_in_customer_ac);
+                            $ac = $payment['account_id'];
+                            $descrip = $payment['description'];
+                            $payment_method = $payment['method'];
                         }
                        
                         // "CADJ"
                         if(!empty($ac)){
                            // dump($sale_invoice->toArray());
                             $voucher_id = Utilities::uuid();
-                            $net_total = number_format((float)$sale_invoice->net_sales,3);
+                            $net_total = round((float)$sale_invoice->net_sales,3);
                             if($payment_method == 'cash'){
-                                $sum_net_total += number_format((float)$sale_invoice->cash_sales,3);
+                                $sum_net_total += round((float)$sale_invoice->cash_sales,3);
                             }
                             $data = [
                                 'voucher_id'            =>  $voucher_id,
@@ -279,14 +256,14 @@ class POSVoucherController extends Controller
                             // Food Sale
                             $data['chart_account_id'] = $income_chart_account_id;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = abs(number_format((float)$sale_invoice->items_amount,3));
+                            $data['voucher_credit'] = abs(round((float)$sale_invoice->items_amount,3));
                             $data['voucher_sr_no'] = 2;
                             // for debit entry disc_amount_total
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Discount
                             $data['chart_account_id'] = $discount_chart_account_id;
-                            $data['voucher_debit'] = abs(number_format((float)$sale_invoice->discount_on_items,3));
+                            $data['voucher_debit'] = abs(round((float)$sale_invoice->discount_on_items,3));
                             $data['voucher_credit'] = 0;
                             $data['voucher_sr_no'] = 3;
                             // for debit entry disc_amount_total
@@ -295,14 +272,14 @@ class POSVoucherController extends Controller
                             // Food Addons
                             $data['chart_account_id'] = 65981926021315;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = abs(number_format((float)$sale_invoice->total_add_on_price,3));
+                            $data['voucher_credit'] = abs(round((float)$sale_invoice->total_add_on_price,3));
                             $data['voucher_sr_no'] = 4;
                             // for credit entry amount_total
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Extra Discount
                             $data['chart_account_id'] = 11916726021355;
-                            $data['voucher_debit'] = (abs(number_format((float)$sale_invoice->order_total_discounts,3)));
+                            $data['voucher_debit'] = abs(round((float)$sale_invoice->order_total_discounts,3));
                             $data['voucher_credit'] = 0;
                             $data['voucher_sr_no'] = 5;
                             // for credit entry amount_total
@@ -311,7 +288,7 @@ class POSVoucherController extends Controller
                             // Food VAT
                             $data['chart_account_id'] = $vat_payable_chart_account_id;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = abs(number_format((float)$sale_invoice->vat,3));
+                            $data['voucher_credit'] = abs(round((float)$sale_invoice->vat,3));
                             $data['voucher_sr_no'] = 6;
                             // for credit entry vat_amount_total
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
@@ -319,7 +296,7 @@ class POSVoucherController extends Controller
                             // Delivery Voucher
                             $data['chart_account_id'] = 58141426181811;
                             $data['voucher_debit'] = 0;
-                            $data['voucher_credit'] = abs(number_format((float)$sale_invoice->delivery_charges,3));
+                            $data['voucher_credit'] = abs(round((float)$sale_invoice->delivery_charges,3));
                             $data['voucher_sr_no'] = 7;
                             // for credit entry delivery
                             $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
