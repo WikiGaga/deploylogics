@@ -36,3 +36,4 @@ storage/debugbar/*
 *.out
 nohup.out
 risen/
+docs/*
