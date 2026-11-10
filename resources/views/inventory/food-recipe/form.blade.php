@@ -489,7 +489,7 @@
                 'message': 'Please enter quantity for the item'
             },
         ];
-        var arr_hidden_field = ['id', 'name'];
+        var arr_hidden_field = ['product_id', 'uom_id', 'packing_id'];
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
