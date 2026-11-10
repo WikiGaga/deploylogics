@@ -234,7 +234,9 @@ class StockController extends Controller
                 }
 
                // dd($data['current']->toArray());
-                $data['display_location'] = ViewInveDisplayLocation::where('branch_id',$data['current']->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();
+                if ($type !== 'opening-stock') {
+                    $data['display_location'] = ViewInveDisplayLocation::where('branch_id',$data['current']->branch_id)->where('store_id',$data['current']->stock_store_from_id)->orderBy('display_location_name_string')->get();
+                }
                 $data['page_data']['print'] = '/stock/'.$type.'/print/'.$id;
                 $data['stock_code'] = $data['current']->stock_code;
                 if($type === 'stock-receiving' && !empty($data['current']->stock_request_id)){
@@ -273,7 +275,22 @@ class StockController extends Controller
             $data['stock_code'] = Utilities::documentCode($doc_data);
         }
         $data['rate_types'] = config('constants.rate_type');
-        $data['store'] = TblDefiStore::where(Utilities::currentBC())->get();
+        $storeQuery = TblDefiStore::where(Utilities::currentBC());
+        if ($type === 'opening-stock') {
+            $openingStockBranchId = isset($data['current'])
+                ? $data['current']->branch_id
+                : auth()->user()->branch_id;
+            $storeQuery->where('branch_id', $openingStockBranchId)
+                ->orderByDesc('store_default_value')
+                ->orderBy('store_name');
+            if (!isset($data['current'])) {
+                $storeQuery->where('store_entry_status', 1);
+            }
+        }
+        $data['store'] = $storeQuery->get();
+        if ($type === 'opening-stock' && !isset($data['current'])) {
+            $data['default_store_id'] = optional($data['store']->first())->store_id;
+        }
         $data['branch'] = TblSoftBranch::where(Utilities::currentBC())->where('branch_id','!=',auth()->user()->branch_id)->get();
         if ($type == 'stock-distribution') {
             $data['transfer_branches'] = TblSoftBranch::where(Utilities::currentBC())->orderBy('branch_name')->get();

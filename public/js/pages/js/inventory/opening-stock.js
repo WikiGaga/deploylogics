@@ -12,14 +12,10 @@ var KTFormWidgets = function() {
             // define validation rules
 
             rules: {
-                store_id: {
+                store: {
                     required: true,
                     valueNotEquals: "0"
-                },
-                /*stock_location_id: {
-                    required: true,
-                    valueNotEquals: "0"
-                }*/
+                }
             },
 
             //display error alert on form submit

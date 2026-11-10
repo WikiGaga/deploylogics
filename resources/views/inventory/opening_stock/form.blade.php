@@ -28,7 +28,6 @@
                 $code = $data['stock_code'];
                 $date =  date('d-m-Y');
                 $id = '';
-                $stock_location_id = 0;
                 $selected_rate_by = 'cost_rate';
             }
             if($case == 'edit'){
@@ -36,7 +35,6 @@
                 $code = $data['current']->stock_code;
                 $date = date('d-m-Y', strtotime(trim(str_replace('/','-',$data['current']->stock_date))));
                 $storeid = $data['current']->stock_store_from_id;
-                $stock_location_id = $data['current']->stock_location_id;
                 $remarks = $data['current']->stock_remarks;
                 $selected_rate_by = $data['current']->stock_rate_by;
                 $dtls = isset($data['current']->stock_dtls)? $data['current']->stock_dtls :[];
@@ -50,6 +48,8 @@
     <input type="hidden" name="stock_code_type" value='{{$data['stock_code_type']}}' id="form_type">
     <input type="hidden" name="stock_menu_id" value='{{$data['stock_menu_id']}}'>
     <input type="hidden" id="stock_id" name="stock_id" value="{{ isset($id) ? $id : '' }}">
+    <input type="hidden" id="new_branch_id" name="new_branch_id" value="{{ $case == 'edit' ? $data['current']->branch_id : auth()->user()->branch_id }}">
+    <input type="hidden" name="stock_location_id" value="{{ $case == 'edit' ? ($data['current']->stock_location_id ?? 0) : 0 }}">
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
         <div class="kt-portlet kt-portlet--mobile">
             <div class="kt-portlet__head kt-portlet__head--lg erp-header-sticky {{ (isset($staging_data) && $staging_data['has_staging']) ? 'has-staging' : '' }}">
@@ -89,28 +89,10 @@
                             <div class="col-lg-6">
                                 <div class="erp-select2">
                                     <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
-                                        <option value="0">Select</option>
-                                        @php $storeid = isset($storeid)?$storeid:'' @endphp
+                                        @php $storeid = isset($storeid) ? $storeid : ($data['default_store_id'] ?? ''); @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">Stock Location:</label>
-                            <div class="col-lg-6">
-                                <div class="erp-select2 display_stock_location">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2 stock_location_id" name="stock_location_id">
-                                        <option value="0">Select</option>
-                                        @if($case == 'edit')
-                                            @foreach($data['display_location'] as $display_location)
-                                                <option value="{{$display_location->display_location_id}}" {{$display_location->display_location_id == $stock_location_id?'selected':''}}>{{$display_location->display_location_name_string}}</option>
-                                            @endforeach
-                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -138,13 +120,7 @@
                             </div>
                         </div>
                     </div>
-                        @include('layouts.branchSelect')
                 </div>
-                {{--<div class="row">
-                    <div class="col-lg-12">
-                        <button type="button" id="openTree" class="btn btn-sm btn-primary"> Open Tree </button>
-                    </div>
-                </div>--}}
                 <div class="row">
                     <div class="col-lg-12 text-right">
                         <div class="data_entry_header">
@@ -403,108 +379,7 @@
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>
 
-    <!--tree-->
     <script>
-
-        $(document).ready(function() {
-            var $storeSelect = $('#store_id');
-            var $locationSelect = $('#opening_stock_form .stock_location_id');
-            var $allStoreOptions = $storeSelect.find('option').clone();
-            var initialStoreId = $storeSelect.val();
-            var initialLocationId = @json((string) $stock_location_id);
-            var initialLoad = true;
-            var readOnlyDocument = @json(($data['page_data']['type'] ?? '') === 'view');
-            var locationRequest = null;
-
-            function clearLocations() {
-                $locationSelect.empty().append($('<option>', { value: '0', text: 'Select' }))
-                    .val('0').trigger('change.select2');
-            }
-
-            function loadLocations() {
-                var storeId = $storeSelect.val();
-                if (locationRequest) locationRequest.abort();
-                var preserveInitial = initialLoad && storeId === initialStoreId;
-                initialLoad = false;
-                if (!preserveInitial) clearLocations();
-                if (!storeId || storeId === '0') return;
-                if (readOnlyDocument) return;
-
-                var $locationBlock = $('#opening_stock_form .display_stock_location>.select2');
-                $locationBlock.addClass('pointerEventsNone');
-                locationRequest = $.ajax({
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    type: 'POST',
-                    url: '{{action('Inventory\StockController@getLocationByStore',$type)}}',
-                    dataType: 'json',
-                    data: { store_id: storeId },
-                    success: function(response) {
-                        if ($storeSelect.val() !== storeId) return;
-                        clearLocations();
-                        (response.locations || []).forEach(function(row) {
-                            $locationSelect.append($('<option>', {
-                                value: row.display_location_id,
-                                text: row.display_location_name_string
-                            }));
-                        });
-                        if (storeId === initialStoreId && initialLocationId &&
-                            $locationSelect.find('option[value="' + initialLocationId + '"]').length) {
-                            $locationSelect.val(initialLocationId);
-                        }
-                        initialLocationId = '0';
-                        $locationSelect.trigger('change.select2');
-                    },
-                    error: function(xhr) {
-                        if (xhr.status !== 0) toastr.error('Unable to load stock locations for this store.');
-                    },
-                    complete: function() {
-                        $locationBlock.removeClass('pointerEventsNone');
-                        locationRequest = null;
-                    }
-                });
-            }
-
-            function filterStores(resetStore) {
-                var selectedBranchId = $('#new_branch_id').val();
-                var selectedStoreId = resetStore ? '0' : $storeSelect.val();
-                $storeSelect.empty().append($allStoreOptions.filter(function() {
-                    return !$(this).attr('data-branch') || $(this).attr('data-branch') == selectedBranchId;
-                }).clone());
-                $storeSelect.val(selectedStoreId);
-                if (!$storeSelect.val()) $storeSelect.val('0');
-                $storeSelect.trigger('change.select2');
-                loadLocations();
-            }
-
-            $storeSelect.on('change', loadLocations);
-            filterStores(false);
-            $('#new_branch_id').on('change', function() {
-                initialLocationId = '0';
-                filterStores(true);
-            });
-        });
-        $(document).on('click','#openTree',function(event){
-            event.preventDefault();
-            var formData = {
-                tree_case : 'stock_location',
-            }
-            $("#kt_modal_KTDatatable_local").modal('show');
-            var url = '{{action('Common\GetAllData@openTree')}}';
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type: "POST",
-                url: url,
-                dataType	: 'json',
-                data        : formData,
-                success: function(res) {
-                    var data = res.body;
-                    $('.modal-content').html(data);
-                },
-            })
-        });
-
         $(".date_inputmask").inputmask("99-99-9999", {
             "mask": "99-99-9999",
             "placeholder": "dd-mm-yyyy",

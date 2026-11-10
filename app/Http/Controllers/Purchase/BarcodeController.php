@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Purchase;
 
-use App\Helpers\Helper;
 use App\Http\Controllers\Common\GetAllData;
 use App\Models\Report\RptIvenBatchExpiry;
 use App\Models\TblPurcProduct;
@@ -958,7 +957,6 @@ class BarcodeController extends Controller
                     AND BUSINESS_ID = ?
                     AND COMPANY_ID = ?
                     AND BRANCH_ID = ?
-                    AND PRODUCT_BARCODE_ID = ?
                     AND SALES_STORE_ID = ?
                     AND POSTED = 1
                     AND DOCUMENT_DATE <= TO_DATE(?, 'YYYY-MM-DD')", [
@@ -966,7 +964,6 @@ class BarcodeController extends Controller
                 auth()->user()->business_id,
                 auth()->user()->company_id,
                 $branchId,
-                $data['current_product']->product_barcode_id,
                 $storeId,
                 $date,
             ])->qty;
@@ -977,28 +974,6 @@ class BarcodeController extends Controller
         /* End #1
          * */
 
-        /* start #2
-         * in opening stock, when add barcode (when login other than main branch)
-         * system should check that barcode already added in opening stock (in main branch) or no.
-         * if not exist then should show only message
-         * "this barcode not found in opening stock of main branch"
-         * */
-        $q = "select s.stock_code from TBL_INVE_STOCK s
-                    join TBL_INVE_STOCK_DTL sd on s.stock_id = sd.STOCK_ID
-                    where sd.product_id = '".$data['current_product']->product_id."' and lower(s.stock_code_type) = 'sa'
-                    and s.branch_id = ".Helper::$DefaultBranch." order by stock_code desc";
-        $getStock = DB::selectOne($q);
-
-        if(empty($getStock) && !isset($getStockCode->stock_code)){
-            if((int) Helper::$DefaultBranch === $branchId){
-                $data['product_exists'] =   false;
-            }else{
-                $data['product_exists'] =   true;
-            }
-            $data['product_exists_msg'] =   "This product not found in main branch";
-        };
-        /* End #2
-         * */
         return $data;
     }
 
