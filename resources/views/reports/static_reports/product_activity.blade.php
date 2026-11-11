@@ -263,12 +263,14 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $date_field2 = " AND (STOCK.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
                                 $date_field = " AND GRN.created_at <= to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')) + 1";
-                                $usage_report_date = "TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))";
+                                $usage_opening_date_field = " AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI'))";
+                                $usage_report_date = "USAGE.USAGE_DATE";
                             }else{
                                 $date_field2 = "AND (STOCK.DOCUMENT_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') and STOCK.DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1)";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE.USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
-                                $usage_report_date = "to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                                $usage_opening_date_field = " AND USAGE.USAGE_DATE < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
+                                $usage_report_date = "USAGE.USAGE_DATE";
                             }
 
 
@@ -303,6 +305,17 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     AND GRN.posted = 1
                                     $date_field";
                             $store_stock_item = DB::selectOne($store_stock_item_qry)->qty ?? 0;
+
+                            // Recipe usage is maintained outside the stock ledger. Include usage
+                            // before the report range in opening balance, then the dated rows below
+                            // reduce the running balance inside the selected period.
+                            $recipe_usage_opening_qry = "SELECT NVL(SUM(USAGE.PRODUCT_QUANTITY_USED), 0) qty
+                                FROM ORDER_RECIPE_USAGES USAGE
+                                WHERE USAGE.PRODUCT_ID = $productDtl->product_id
+                                    AND USAGE.RESTAURANT_ID in (".implode(",",$data['branch_ids']).")
+                                    $usage_opening_date_field";
+                            $recipe_usage_opening = DB::selectOne($recipe_usage_opening_qry)->qty ?? 0;
+                            $store_stock_item -= (float) $recipe_usage_opening;
 
                                $dt = '';
                                if(count($data['all_document_type']) != 0){
@@ -414,15 +427,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 NULL TRANSFER_FROM_BRANCH_ID,
                                                 NULL TRANSFER_TO_BRANCH_ID,
                                                 999999 SORTING_ID
-                                            FROM TBL_SOFT_BRANCH BRU
-                                            INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = ".$productDtl->product_id."
-                                            LEFT JOIN ORDER_RECIPE_USAGES USAGE
-                                                ON USAGE.RESTAURANT_ID = BRU.BRANCH_ID
-                                                AND USAGE.PRODUCT_ID = PROD.PRODUCT_ID
+                                            FROM ORDER_RECIPE_USAGES USAGE
+                                            INNER JOIN TBL_SOFT_BRANCH BRU
+                                                ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
+                                            INNER JOIN TBL_PURC_PRODUCT PROD
+                                                ON PROD.PRODUCT_ID = USAGE.PRODUCT_ID
+                                            WHERE USAGE.PRODUCT_ID = ".$productDtl->product_id."
+                                                AND USAGE.RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
                                                 $usage_date_field
-                                            WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
-                                            GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
-                                            HAVING COUNT(USAGE.ID) > 0
+                                            GROUP BY USAGE.USAGE_DATE, BRU.BRANCH_ID, BRU.BRANCH_NAME
 
                                             ) STOCK
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
@@ -491,15 +504,15 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         NULL TRANSFER_FROM_BRANCH_ID,
                                         NULL TRANSFER_TO_BRANCH_ID,
                                         999999 SORTING_ID
-                                    FROM TBL_SOFT_BRANCH BRU
-                                    INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = ".$productDtl->product_id."
-                                    LEFT JOIN ORDER_RECIPE_USAGES USAGE
-                                        ON USAGE.RESTAURANT_ID = BRU.BRANCH_ID
-                                        AND USAGE.PRODUCT_ID = PROD.PRODUCT_ID
+                                    FROM ORDER_RECIPE_USAGES USAGE
+                                    INNER JOIN TBL_SOFT_BRANCH BRU
+                                        ON BRU.BRANCH_ID = USAGE.RESTAURANT_ID
+                                    INNER JOIN TBL_PURC_PRODUCT PROD
+                                        ON PROD.PRODUCT_ID = USAGE.PRODUCT_ID
+                                    WHERE USAGE.PRODUCT_ID = ".$productDtl->product_id."
+                                        AND USAGE.RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
                                         $usage_date_field
-                                    WHERE BRU.BRANCH_ID IN (".implode(",",$data['branch_ids']).")
-                                    GROUP BY BRU.BRANCH_ID, BRU.BRANCH_NAME
-                                    HAVING COUNT(USAGE.ID) > 0
+                                    GROUP BY USAGE.USAGE_DATE, BRU.BRANCH_ID, BRU.BRANCH_NAME
                                     ) STOCK_RESULT
                                     ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }
