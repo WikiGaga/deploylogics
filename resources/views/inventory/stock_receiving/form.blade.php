@@ -373,6 +373,17 @@
             // 3. Run whenever the branch dropdown changes
             $('#new_branch_id').on('change', function() {
                 filterStores();
+
+                // A transfer is valid only for the branch it was sent to.
+                // Clear any transfer selected for the previous receiving branch.
+                $('#stock_transfer_code').val('');
+                $('#stock_from_id').val('');
+                $('#store').val('');
+                $('#branch_from_id').val('');
+                $('.erp_form__grid_body').empty();
+                if (typeof allCalcFunc === 'function') {
+                    allCalcFunc();
+                }
             });
         });
 

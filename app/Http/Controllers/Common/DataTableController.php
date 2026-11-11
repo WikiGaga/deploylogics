@@ -863,7 +863,7 @@ class DataTableController extends Controller
     }
 
     public function inlineHelpOpen(Request $request, $helpType, $str = null)
-    {   
+    {
         // dd($request->all(), $helpType, $str);
         $data['case'] = $helpType;
         if (isset($request['query']['generalSearch']) && !empty($request['query']['generalSearch'])) {
@@ -881,7 +881,7 @@ class DataTableController extends Controller
         }
         if (isset($request->unique_id)) {
             $unique_id = $request->unique_id;
-        } 
+        }
         if ($helpType == 'supplierHelp') {
             $data['show_name'] = 'supplier_name';
             $data['hideKeys'] = ['supplier_id'];
@@ -1597,7 +1597,7 @@ class DataTableController extends Controller
             }
             $data['show_name'] = 'stock_code';
             $data['hideKeys'] = ['stock_id', 'stock_store_from_id', 'stock_branch_from_id'];
-            $data['keys'] = ['stock_date', 'stock_code', 'stock_branch_to_name', 'stock_store_to_name'];
+            $data['keys'] = ['stock_date', 'stock_code', 'stock_store_from_name', 'stock_branch_to_name',  'stock_store_to_name'];
             $merge = array_merge($data['keys'], $data['hideKeys']);
             $query = DB::table('vw_inve_stock')->select($merge)
                 ->where('stock_code_type', 'st')
@@ -1610,7 +1610,7 @@ class DataTableController extends Controller
                 $query->whereRaw('lower(stock_code) like ?', ['%' . strtolower($str) . '%']);
             }
             $data['list'] = $query->distinct()->orderBy('stock_code', 'desc')->limit(50)->get();
-            $data['head'] = ['Date', 'Code', 'To Transfer Branch', 'To Store'];
+            $data['head'] = ['Date', 'Code', 'From Store','To Transfer Branch',  'To Store'];
         }
         if ($helpType == 'stockReceivingHelp') {
             $data['show_name'] = 'stock_code';
