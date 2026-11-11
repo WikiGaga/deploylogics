@@ -178,6 +178,7 @@ var KTFormWidgets = function() {
                         var unmatchedTotal = (unmatched.no_variation || 0)
                             + (unmatched.no_option_ids || 0)
                             + (unmatched.no_recipe || 0)
+                            + (unmatched.recipe_not_effective || 0)
                             + (unmatched.empty_recipe || 0)
                             + (unmatched.invalid_product || 0);
                         var message = response.inserted_rows > 0
@@ -188,8 +189,17 @@ var KTFormWidgets = function() {
                                 + ' (no variation: ' + (unmatched.no_variation || 0)
                                 + ', no option: ' + (unmatched.no_option_ids || 0)
                                 + ', no recipe: ' + (unmatched.no_recipe || 0)
+                                + ', recipe date after order date: ' + (unmatched.recipe_not_effective || 0)
                                 + ', empty recipe: ' + (unmatched.empty_recipe || 0)
                                 + ', invalid product ID: ' + (unmatched.invalid_product || 0) + ').';
+                        }
+                        if ((unmatched.recipe_not_effective_ids || []).length > 0) {
+                            message += ' Recipe option IDs with a later recipe date: '
+                                + unmatched.recipe_not_effective_ids.join(', ') + '.';
+                        }
+                        if ((unmatched.option_list_ids || []).length > 0) {
+                            message += ' Option IDs without a matching recipe: '
+                                + unmatched.option_list_ids.join(', ') + '.';
                         }
                         if (response.inserted_rows > 0 && unmatchedTotal === 0) {
                             toastr.success(message);

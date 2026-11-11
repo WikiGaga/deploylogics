@@ -264,13 +264,13 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $date_field = " AND GRN.created_at <= to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')) + 1";
                                 $usage_opening_date_field = " AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI'))";
-                                $usage_report_date = "USAGE.USAGE_DATE";
+                                $usage_report_date = "TRUNC(USAGE.USAGE_DATE)";
                             }else{
                                 $date_field2 = "AND (STOCK.DOCUMENT_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') and STOCK.DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1)";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE.USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                                 $usage_opening_date_field = " AND USAGE.USAGE_DATE < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
-                                $usage_report_date = "USAGE.USAGE_DATE";
+                                $usage_report_date = "TRUNC(USAGE.USAGE_DATE)";
                             }
 
 
@@ -435,7 +435,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             WHERE USAGE.PRODUCT_ID = ".$productDtl->product_id."
                                                 AND USAGE.RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
                                                 $usage_date_field
-                                            GROUP BY USAGE.USAGE_DATE, BRU.BRANCH_ID, BRU.BRANCH_NAME
+                                            GROUP BY TRUNC(USAGE.USAGE_DATE), BRU.BRANCH_ID, BRU.BRANCH_NAME
 
                                             ) STOCK
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
@@ -512,7 +512,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     WHERE USAGE.PRODUCT_ID = ".$productDtl->product_id."
                                         AND USAGE.RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
                                         $usage_date_field
-                                    GROUP BY USAGE.USAGE_DATE, BRU.BRANCH_ID, BRU.BRANCH_NAME
+                                    GROUP BY TRUNC(USAGE.USAGE_DATE), BRU.BRANCH_ID, BRU.BRANCH_NAME
                                     ) STOCK_RESULT
                                     ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }

@@ -39,9 +39,11 @@ class OrderRecipeUsageController extends Controller
             'no_variation' => 0,
             'no_option_ids' => 0,
             'no_recipe' => 0,
+            'recipe_not_effective' => 0,
             'empty_recipe' => 0,
             'invalid_product' => 0,
             'option_list_ids' => [],
+            'recipe_not_effective_ids' => [],
         ];
 
         $orderDetails = DB::table('order_details as od')
@@ -153,11 +155,17 @@ class OrderRecipeUsageController extends Controller
 
         foreach ($structuredDetails as $detail) {
             foreach ($detail['option_list_ids'] as $optionListId) {
+                $recipeGroup = $recipesByFood->get($optionListId);
                 $recipe = $this->pickRecipeAsOf($recipesByFood, $optionListId, $detail['order_date']);
 
                 if (!$recipe) {
-                    $unmatched['no_recipe']++;
-                    $unmatched['option_list_ids'][] = $optionListId;
+                    if ($recipeGroup && $recipeGroup->isNotEmpty()) {
+                        $unmatched['recipe_not_effective']++;
+                        $unmatched['recipe_not_effective_ids'][] = $optionListId;
+                    } else {
+                        $unmatched['no_recipe']++;
+                        $unmatched['option_list_ids'][] = $optionListId;
+                    }
                     continue;
                 }
 
@@ -214,6 +222,8 @@ class OrderRecipeUsageController extends Controller
 
         $unmatched['option_list_ids'] = array_values(array_unique($unmatched['option_list_ids']));
         $unmatched['option_list_ids'] = array_slice($unmatched['option_list_ids'], 0, 50);
+        $unmatched['recipe_not_effective_ids'] = array_values(array_unique($unmatched['recipe_not_effective_ids']));
+        $unmatched['recipe_not_effective_ids'] = array_slice($unmatched['recipe_not_effective_ids'], 0, 50);
 
         if (empty($rowsToPersist)) {
             return response()->json([
