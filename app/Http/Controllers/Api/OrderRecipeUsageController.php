@@ -114,16 +114,15 @@ class OrderRecipeUsageController extends Controller
         $optionListIds = array_values(array_unique(array_filter($optionListIds)));
 
         if (empty($optionListIds)) {
-            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
-
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'message' => 'No option list identifiers resolved from order variations.',
                 'inserted_rows' => 0,
-                'stale_rows_removed' => $deletedStale,
+                'stale_rows_removed' => 0,
+                'existing_usage_preserved' => true,
                 'unmatched' => $unmatched,
                 'data' => [],
-            ]);
+            ], 422);
         }
 
         $recipesByFood = FoodRecipe::with('dtls')
@@ -137,16 +136,16 @@ class OrderRecipeUsageController extends Controller
         if ($recipesByFood->isEmpty()) {
             $unmatched['no_recipe'] = count($optionListIds);
             $unmatched['option_list_ids'] = array_slice($optionListIds, 0, 50);
-            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
 
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'message' => 'No recipes found for the supplied option list identifiers.',
                 'inserted_rows' => 0,
-                'stale_rows_removed' => $deletedStale,
+                'stale_rows_removed' => 0,
+                'existing_usage_preserved' => true,
                 'unmatched' => $unmatched,
                 'data' => [],
-            ]);
+            ], 422);
         }
 
         $rowsToPersist = [];
@@ -217,16 +216,15 @@ class OrderRecipeUsageController extends Controller
         $unmatched['option_list_ids'] = array_slice($unmatched['option_list_ids'], 0, 50);
 
         if (empty($rowsToPersist)) {
-            $deletedStale = $this->deleteUsageForRange($branchId, $dateFrom, $dateTo);
-
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'message' => 'No ingredient usage rows were generated for persistence.',
                 'inserted_rows' => 0,
-                'stale_rows_removed' => $deletedStale,
+                'stale_rows_removed' => 0,
+                'existing_usage_preserved' => true,
                 'unmatched' => $unmatched,
                 'data' => [],
-            ]);
+            ], 422);
         }
 
         $summary = [];
