@@ -280,8 +280,12 @@ class StockController extends Controller
             $openingStockBranchId = isset($data['current'])
                 ? $data['current']->branch_id
                 : auth()->user()->branch_id;
-            $storeQuery->where('branch_id', $openingStockBranchId)
-                ->orderByDesc('store_default_value')
+            if (isset($data['current'])) {
+                $storeQuery->where('branch_id', $openingStockBranchId);
+            } else {
+                $storeQuery->whereIn('branch_id', $user_branches->pluck('branch_id')->unique()->values());
+            }
+            $storeQuery->orderByDesc('store_default_value')
                 ->orderBy('store_name');
             if (!isset($data['current'])) {
                 $storeQuery->where('store_entry_status', 1);
@@ -289,7 +293,7 @@ class StockController extends Controller
         }
         $data['store'] = $storeQuery->get();
         if ($type === 'opening-stock' && !isset($data['current'])) {
-            $data['default_store_id'] = optional($data['store']->first())->store_id;
+            $data['default_store_id'] = optional($data['store']->firstWhere('branch_id', auth()->user()->branch_id))->store_id;
         }
         $data['branch'] = TblSoftBranch::where(Utilities::currentBC())->where('branch_id','!=',auth()->user()->branch_id)->get();
         if ($type == 'stock-distribution') {

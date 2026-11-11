@@ -48,7 +48,6 @@
     <input type="hidden" name="stock_code_type" value='{{$data['stock_code_type']}}' id="form_type">
     <input type="hidden" name="stock_menu_id" value='{{$data['stock_menu_id']}}'>
     <input type="hidden" id="stock_id" name="stock_id" value="{{ isset($id) ? $id : '' }}">
-    <input type="hidden" id="new_branch_id" name="new_branch_id" value="{{ $case == 'edit' ? $data['current']->branch_id : auth()->user()->branch_id }}">
     <input type="hidden" name="stock_location_id" value="{{ $case == 'edit' ? ($data['current']->stock_location_id ?? 0) : 0 }}">
     <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
         <div class="kt-portlet kt-portlet--mobile">
@@ -83,6 +82,7 @@
                             </div>
                         </div>
                     </div>
+                    @include('layouts.branchSelect', ['user_branches' => $data['user_branches']])
                     <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label text-center">Store: <span class="required">*</span></label>
@@ -91,7 +91,7 @@
                                     <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
                                         @php $storeid = isset($storeid) ? $storeid : ($data['default_store_id'] ?? ''); @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{$store->branch_id}}" data-default="{{(int) $store->store_default_value}}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -296,6 +296,34 @@
     <script>
 
         var type = "{{ $type }}";
+        $(document).ready(function() {
+            var $storeSelect = $('#store_id');
+            var $allStoreOptions = $storeSelect.find('option').clone();
+
+            function filterOpeningStockStores() {
+                var selectedBranchId = $('#new_branch_id').val();
+                var selectedStoreId = $storeSelect.val();
+                $storeSelect.empty();
+
+                var $matchingStores = $allStoreOptions.filter(function() {
+                    return $(this).attr('data-branch') == selectedBranchId;
+                });
+                $storeSelect.append($matchingStores);
+
+                if ($storeSelect.find('option[value="' + selectedStoreId + '"]').length) {
+                    $storeSelect.val(selectedStoreId);
+                } else {
+                    var $defaultStore = $matchingStores.filter(function() {
+                        return $(this).attr('data-default') === '1';
+                    });
+                    $storeSelect.val($defaultStore.length ? $defaultStore.first().val() : ($matchingStores.first().val() || ''));
+                }
+                $storeSelect.trigger('change.select2');
+            }
+
+            filterOpeningStockStores();
+            $('#new_branch_id').on('change', filterOpeningStockStores);
+        });
         function voucher_posted(){
             var stock_id = $('#stock_id').val();
             erpVoucherPostedUpdateThenPost({

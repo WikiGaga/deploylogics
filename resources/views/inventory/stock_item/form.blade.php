@@ -131,7 +131,6 @@
                                 </div>
                             </div>
                         </div>
-                    @include('layouts.branchSelect')
                     </div>
            
                 <div class="row">
