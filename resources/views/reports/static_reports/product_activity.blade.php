@@ -306,33 +306,6 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     $date_field";
                             $store_stock_item = DB::selectOne($store_stock_item_qry)->qty ?? 0;
 
-                            // Temporary diagnostic: dump the raw recipe usage rows matching this
-                            // product and the report's selected branch/date filters.
-                            $recipeUsageDebugQry = "SELECT USAGE.ID, USAGE.PRODUCT_ID, USAGE.RESTAURANT_ID,
-                                    USAGE.USAGE_DATE, USAGE.PRODUCT_QUANTITY_USED
-                                FROM ORDER_RECIPE_USAGES USAGE
-                                WHERE USAGE.PRODUCT_ID = $productDtl->product_id
-                                    AND USAGE.RESTAURANT_ID IN (".implode(",", $data['branch_ids']).")
-                                    $usage_date_field
-                                ORDER BY USAGE.USAGE_DATE, USAGE.ID";
-                            dd([
-                                'diagnostic' => 'Product Activity Recipe Consumption rows matching current report filters',
-                                'product_id' => $productDtl->product_id,
-                                'branch_ids' => $data['branch_ids'],
-                                'date_time_wise' => $data['date_time_wise'],
-                                'from_date' => $data['from_date'] ?? null,
-                                'to_date' => $data['to_date'] ?? null,
-                                'time_from' => $data['time_from'] ?? null,
-                                'time_to' => $data['time_to'] ?? null,
-                                'usage_date_filter' => $usage_date_field,
-                                'matched_rows' => DB::select($recipeUsageDebugQry),
-                                'matched_total_qty' => DB::selectOne("SELECT NVL(SUM(USAGE.PRODUCT_QUANTITY_USED), 0) qty
-                                    FROM ORDER_RECIPE_USAGES USAGE
-                                    WHERE USAGE.PRODUCT_ID = $productDtl->product_id
-                                        AND USAGE.RESTAURANT_ID IN (".implode(",", $data['branch_ids']).")
-                                        $usage_date_field")->qty ?? 0,
-                            ]);
-
                             // Recipe usage is maintained outside the stock ledger. Include usage
                             // before the report range in opening balance, then the dated rows below
                             // reduce the running balance inside the selected period.
