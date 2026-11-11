@@ -374,8 +374,18 @@ class OrderRecipeUsageController extends Controller
 
         $decoded = json_decode($payload, true);
 
+        // Some POS clients store the variation payload double-encoded.
+        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
             return [];
+        }
+
+        // Other clients wrap the actual variation list in a `data` key.
+        if (isset($decoded['data']) && is_array($decoded['data'])) {
+            $decoded = $decoded['data'];
         }
 
         return $this->wrapAssociativeVariation($decoded);
@@ -399,53 +409,41 @@ class OrderRecipeUsageController extends Controller
         $ids = [];
 
         foreach ($variations as $variation) {
-            if (!is_array($variation)) {
-                continue;
-            }
-            $ids = array_merge($ids, $this->extractOptionListIds($variation));
+            $this->collectOptionListIds($variation, $ids);
         }
 
         return array_values(array_unique(array_filter($ids)));
     }
 
-    private function extractOptionListIds(array $variation)
+    /**
+     * POS variation structures differ between clients and versions. Walk the
+     * complete payload and collect recipe option identifiers wherever nested.
+     */
+    private function collectOptionListIds($value, array &$ids): void
     {
-        $ids = [];
-
-        if (!empty($variation['option_list_id'])) {
-            $ids[] = (int) $variation['option_list_id'];
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                return;
+            }
+            $value = $decoded;
         }
 
-        if (!empty($variation['options_list_id'])) {
-            $ids[] = (int) $variation['options_list_id'];
+        if (!is_array($value)) {
+            return;
         }
 
-        foreach (['values', 'options', 'variation_options'] as $listKey) {
-            if (empty($variation[$listKey]) || !is_array($variation[$listKey])) {
+        foreach ($value as $key => $nestedValue) {
+            if (($key === 'option_list_id' || $key === 'options_list_id')
+                && is_numeric($nestedValue) && (int) $nestedValue > 0) {
+                $ids[] = (int) $nestedValue;
                 continue;
             }
 
-            foreach ($variation[$listKey] as $value) {
-                if (is_string($value)) {
-                    $decodedValue = json_decode($value, true);
-                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedValue)) {
-                        $value = $decodedValue;
-                    }
-                }
-
-                if (!is_array($value)) {
-                    continue;
-                }
-
-                if (!empty($value['options_list_id'])) {
-                    $ids[] = (int) $value['options_list_id'];
-                }
-                if (!empty($value['option_list_id'])) {
-                    $ids[] = (int) $value['option_list_id'];
-                }
+            if (is_array($nestedValue) || is_string($nestedValue)) {
+                $this->collectOptionListIds($nestedValue, $ids);
             }
         }
-
-        return array_values(array_unique(array_filter($ids)));
     }
+
 }
