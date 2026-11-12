@@ -240,6 +240,19 @@
                         $pc_opening_date_field = " AND PC.record_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
                         $pc_period_date_field = " AND PC.record_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
                     }
+
+                    $recipeUsageOpeningDateFilter = $data['date_time_wise'] == 1
+                        ? "USAGE_DATE < TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI'))"
+                        : "USAGE_DATE < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
+                    $reportStoreIds = !empty($data['store'])
+                        ? implode(',', array_map('intval', $data['store']))
+                        : '';
+                    $ledgerStoreFilter = $reportStoreIds !== ''
+                        ? "AND SALES_STORE_ID IN ($reportStoreIds)"
+                        : '';
+                    $productionConsumptionStoreFilter = $reportStoreIds !== ''
+                        ? "AND ((LOWER(PC.STOCK_TYPE) = 'production' AND PC.TRANSFER_FROM IN ($reportStoreIds)) OR (LOWER(PC.STOCK_TYPE) = 'consumption' AND PC.TRANSFER_TO IN ($reportStoreIds)))"
+                        : '';
 /*
 $query = "select distinct  
     BRANCH_ID,
@@ -449,12 +462,12 @@ $query = "SELECT
     abc.BRANCH_NAME,
     abc.PRODUCT_NAME,
     abc.GROUP_ITEM_NAME,
-    abc.OPENING_BALANCE,
+    abc.OPENING_BALANCE - NVL(SALES_USAGE_OPENING.OPENING_CONSUMPTION, 0) OPENING_BALANCE,
     abc.PURCHASE,
     abc.STOCK_REC,
     abc.SALE_RETURN,
     abc.PRODUCTION,
-    abc.TOTAL_STOCK_IN,
+    abc.TOTAL_STOCK_IN - NVL(SALES_USAGE_OPENING.OPENING_CONSUMPTION, 0) TOTAL_STOCK_IN,
     abc.SALE,
     abc.STOCK_TRANSFER,
     abc.PURCH_RETURN,
@@ -463,11 +476,11 @@ $query = "SELECT
     NVL(SALES_USAGE.SALES_CONSUMPTION, 0) SALES_CONSUMPTION,
     abc.DAMAGED_ITEMS,
     abc.TOTAL_STOCK_OUT + NVL(SALES_USAGE.SALES_CONSUMPTION, 0) TOTAL_STOCK_OUT,
-    abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0) STOCK_BALANCE,
+    abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0) - NVL(SALES_USAGE_OPENING.OPENING_CONSUMPTION, 0) STOCK_BALANCE,
     NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_PRICE,
     NVL(LAST_INBOUND_RATE.BASE_UNIT_RATE, NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)) LAST_PRICE,
-    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0)) * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
-    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0)) * NVL(
+    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0) - NVL(SALES_USAGE_OPENING.OPENING_CONSUMPTION, 0)) * NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0) AVERAGE_AMOUNT,
+    (abc.STOCK_BALANCE - NVL(SALES_USAGE.SALES_CONSUMPTION, 0) - NVL(SALES_USAGE_OPENING.OPENING_CONSUMPTION, 0)) * NVL(
         LAST_INBOUND_RATE.BASE_UNIT_RATE,
         NVL(AVERAGE_RATE.BASE_UNIT_RATE, 0)
     ) LAST_PRICE_AMOUNT
@@ -716,6 +729,7 @@ FROM
         AND NVL(PC.STATUS, 0) = 1
         AND NVL(PC.CANCEL, 0) = 0
         $pc_opening_date_field
+        $productionConsumptionStoreFilter
     UNION ALL
     SELECT
         PC.BRANCH_ID,
@@ -743,6 +757,7 @@ FROM
         AND NVL(PC.STATUS, 0) = 1
         AND NVL(PC.CANCEL, 0) = 0
         $pc_period_date_field
+        $productionConsumptionStoreFilter
     UNION ALL
     SELECT
         PC.BRANCH_ID,
@@ -770,6 +785,7 @@ FROM
         AND NVL(PC.STATUS, 0) = 1
         AND NVL(PC.CANCEL, 0) = 0
         $pc_period_date_field
+        $productionConsumptionStoreFilter
     UNION ALL
     SELECT
         BRANCH_ID,
@@ -816,6 +832,9 @@ FROM
 LEFT JOIN SALES_USAGE
     ON SALES_USAGE.BRANCH_ID = abc.BRANCH_ID
     AND SALES_USAGE.PRODUCT_ID = abc.PRODUCT_ID
+LEFT JOIN SALES_USAGE_OPENING
+    ON SALES_USAGE_OPENING.BRANCH_ID = abc.BRANCH_ID
+    AND SALES_USAGE_OPENING.PRODUCT_ID = abc.PRODUCT_ID
 ORDER BY abc.BRANCH_NAME,
   abc.GROUP_ITEM_NAME,
   abc.PRODUCT_NAME,
@@ -865,7 +884,17 @@ $query = "WITH SALES_USAGE AS (
       AND BUSINESS_ID = ".auth()->user()->business_id."
       AND COMPANY_ID = ".auth()->user()->company_id."
       AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+      $ledgerStoreFilter
       ".$ledgerCteDateFilter."
+), SALES_USAGE_OPENING AS (
+    SELECT
+        RESTAURANT_ID BRANCH_ID,
+        PRODUCT_ID,
+        SUM(PRODUCT_QUANTITY_USED) OPENING_CONSUMPTION
+    FROM ORDER_RECIPE_USAGES
+    WHERE RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
+      AND $recipeUsageOpeningDateFilter
+    GROUP BY RESTAURANT_ID, PRODUCT_ID
 ), AVERAGE_RATE AS (
     SELECT
         BRANCH_ID,
