@@ -235,10 +235,10 @@
                         $pc_period_date_field = " AND PC.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')";
                     }else{
                         $date_field2 = "AND (document_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')
-                            OR (DOCUMENT_TYPE = 'OS' AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')))";
-                        $date_field = "AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                            OR (DOCUMENT_TYPE = 'OS' AND document_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND document_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1))";
+                        $date_field = "AND document_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND document_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                         $pc_opening_date_field = " AND PC.record_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
-                        $pc_period_date_field = " AND PC.record_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                        $pc_period_date_field = " AND PC.record_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND PC.record_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                     }
 
                     $recipeUsageOpeningDateFilter = $data['date_time_wise'] == 1
@@ -518,11 +518,7 @@ FROM
         BRANCH_ID,
         PRODUCT_ID,
         PRODUCT_BARCODE_ID,
-        CASE
-            WHEN DOCUMENT_TYPE IN ('OS', 'ST', 'STR')
-                THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
-            ELSE QTY_BASE_UNIT_VALUE
-        END OPENING_BALANCE,
+        NVL(QTY_BASE_UNIT_VALUE, 0) OPENING_BALANCE,
         0 PURCHASE,
         0 STOCK_REC,
         0 SALE_RETURN,
@@ -653,6 +649,50 @@ FROM
         AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field 
+    UNION ALL
+    SELECT
+        BRANCH_ID,
+        PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        QTY_BASE_UNIT_VALUE STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        0 STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION,
+        0 DAMAGED_ITEMS
+    FROM VW_PURC_STOCK_DTL
+    WHERE DOCUMENT_TYPE = 'SD'
+        AND QTY_BASE_UNIT_VALUE > 0
+        AND posted = 1
+        AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        $date_field
+    UNION ALL
+    SELECT
+        BRANCH_ID,
+        PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        0 STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        QTY_BASE_UNIT_VALUE STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION,
+        0 DAMAGED_ITEMS
+    FROM VW_PURC_STOCK_DTL
+    WHERE DOCUMENT_TYPE = 'SD'
+        AND QTY_BASE_UNIT_VALUE < 0
+        AND posted = 1
+        AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        $date_field
     UNION
     ALL 
     SELECT 
@@ -845,7 +885,7 @@ ORDER BY abc.BRANCH_NAME,
 // and scanning the ledger view separately for each UNION branch.
 $ledgerCteDateFilter = $data['date_time_wise'] == 1
     ? "AND CREATED_AT <= to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')"
-    : "AND DOCUMENT_DATE <= to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+    : "AND DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
 $salesUsageDateFilter = $data['date_time_wise'] == 1
     ? "TRUNC(USAGE_DATE) BETWEEN TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))"
     : "USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
@@ -1167,22 +1207,22 @@ $query = "WITH SALES_USAGE AS (
                                             <strong>{{$product_name_key}}</strong>
                                         </td>
                                         <td class="text-center">{{$item->uom_name ?? '-'}}</td>
-                                        <td class="text-right">{{number_format($item->opening_balance,0)}}</td>
-                                        <td class="text-right">{{number_format($item->purchase,0)}}</td>
-                                        <td class="text-right">{{number_format($item->stock_rec,0)}}</td>
-                                        <td class="text-right">{{number_format($item->stock_adjustment,0)}}</td>
-                                        <td class="text-right">{{number_format($item->sale_return,0)}}</td>
-                                        <td class="text-right">{{number_format($item->production,0)}}</td>
-                                        <td class="text-right">{{number_format($item->total_stock_in,0)}}</td>
+                                        <td class="text-right">{{number_format($item->opening_balance,3)}}</td>
+                                        <td class="text-right">{{number_format($item->purchase,3)}}</td>
+                                        <td class="text-right">{{number_format($item->stock_rec,3)}}</td>
+                                        <td class="text-right">{{number_format($item->stock_adjustment,3)}}</td>
+                                        <td class="text-right">{{number_format($item->sale_return,3)}}</td>
+                                        <td class="text-right">{{number_format($item->production,3)}}</td>
+                                        <td class="text-right">{{number_format($item->total_stock_in,3)}}</td>
 
-                                        <td class="text-right">{{number_format($item->sale,0)}}</td>
-                                        <td class="text-right">{{number_format($item->stock_transfer,0)}}</td>
-                                        <td class="text-right">{{number_format($item->purch_return,0)}}</td>
-                                        <td class="text-right">{{number_format($item->consumption,0)}}</td>
-                                        <td class="text-right">{{number_format($item->sales_consumption,0)}}</td>
-                                        <td class="text-right">{{number_format($item->damaged_items,0)}}</td>
-                                        <td class="text-right">{{number_format($item->total_stock_out,0)}}</td>
-                                        <td class="text-right">{{number_format($item->stock_balance,0)}}</td>
+                                        <td class="text-right">{{number_format($item->sale,3)}}</td>
+                                        <td class="text-right">{{number_format($item->stock_transfer,3)}}</td>
+                                        <td class="text-right">{{number_format($item->purch_return,3)}}</td>
+                                        <td class="text-right">{{number_format($item->consumption,3)}}</td>
+                                        <td class="text-right">{{number_format($item->sales_consumption,3)}}</td>
+                                        <td class="text-right">{{number_format($item->damaged_items,3)}}</td>
+                                        <td class="text-right">{{number_format($item->total_stock_out,3)}}</td>
+                                        <td class="text-right">{{number_format($item->stock_balance,3)}}</td>
                                         <td class="text-right">{{number_format($item->average_price,3)}}</td>
                                         <td class="text-right">{{number_format($item->last_price,3)}}</td>
                                         <td class="text-right">{{number_format($item->average_amount,3)}}</td>
@@ -1197,21 +1237,21 @@ $query = "WITH SALES_USAGE AS (
                             @endforeach
                                 <tr>
                                     <td class="text-right sale_type_color" colspan="3"><b>TOTAL : </b> </td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_opening_balance,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_purchase,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_rec,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sale_return,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_production,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_in,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sale,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_transfer,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_purch_return,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_consumption,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sales_consumption,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_damaged_items,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_out,0)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_balance,0)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_opening_balance,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_purchase,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_stock_rec,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_sale_return,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_production,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($total_stock_in,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_sale,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_stock_transfer,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_purch_return,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_consumption,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_sales_consumption,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($tot_damaged_items,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($total_stock_out,3)}}</td>
+                                    <td class="text-right sale_type_color">{{number_format($total_stock_balance,3)}}</td>
                                     <td class="text-center sale_type_color">-</td>
                                     <td class="text-center sale_type_color">-</td>
                                     <td class="text-right sale_type_color">{{number_format($total_average_amount,3)}}</td>
@@ -1220,21 +1260,21 @@ $query = "WITH SALES_USAGE AS (
                            @endforeach
                                 <tr>
                                     <td class="text-right barnch_color" colspan="4"><b>GRAND TOTAL : </b> </td>
-                                    <td class="text-right barnch_color">{{number_format($stot_opening_balance,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_purchase,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_rec,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sale_return,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_production,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_in,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sale,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_transfer,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_purch_return,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_consumption,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sales_consumption,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_damaged_items,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_out,0)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_balance,0)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_opening_balance,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_purchase,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_stock_rec,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_sale_return,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_production,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stotal_stock_in,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_sale,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_stock_transfer,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_purch_return,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_consumption,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_sales_consumption,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stot_damaged_items,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stotal_stock_out,3)}}</td>
+                                    <td class="text-right barnch_color">{{number_format($stotal_stock_balance,3)}}</td>
                                     <td class="text-center barnch_color">-</td>
                                     <td class="text-center barnch_color">-</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_average_amount,3)}}</td>
