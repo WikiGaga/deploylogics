@@ -33,7 +33,7 @@ class PosVoucherPayment
             return self::payment($saleInvoice->bank_account, 'Cash and Card', 'cash_card');
         }
         if ($cash == 0 && $card == 0 && $credit > 0 && $partner == 0) {
-            return self::payment($saleInvoice->customer_account_id ?? $walkInCustomerAc, 'Customer Credit ' . ($saleInvoice->customer_name ?? 'Walk-in Customer'), 'credit');
+            return self::payment($saleInvoice->customer_account_id ?? $walkInCustomerAc, 'Customer Credit - ' . ($saleInvoice->walk_customer_name ?? 'Walk-in Customer'), 'credit');
         }
         if ($cash == 0 && $card == 0 && $credit == 0 && $partner > 0) {
             return self::deliveryPartner($saleInvoice);
