@@ -9,9 +9,10 @@ class TblProductionConsumption extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $table = 'tblproductionconsumption';
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
+        'id',
         'code',
         'current_stg_id',
         'staging_apply',

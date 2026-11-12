@@ -16,6 +16,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class ProductionConsumptionController extends Controller
@@ -26,12 +27,12 @@ class ProductionConsumptionController extends Controller
     public static $menu_dtl_id = '336';
     public static $redirect_url = 'production-consumption';
 
-    protected function productionConsumptionBranchScope(): array
+    protected function productionConsumptionBranchScope(?int $branchId = null): array
     {
         return [
             ['business_id', auth()->user()->business_id],
             ['company_id', auth()->user()->company_id],
-            ['branch_id', auth()->user()->branch_id],
+            ['branch_id', $branchId ?? auth()->user()->branch_id],
         ];
     }
 
@@ -44,12 +45,27 @@ class ProductionConsumptionController extends Controller
         ];
     }
 
-    protected function findProductionConsumptionMaster(string $code): ?TblProductionConsumption
+    protected function findProductionConsumptionMaster(string $code, ?int $branchId = null): ?TblProductionConsumption
     {
-        $branchScope = $this->productionConsumptionBranchScope();
+        $query = TblProductionConsumption::where('code', $code)
+            ->where('business_id', auth()->user()->business_id)
+            ->where('company_id', auth()->user()->company_id);
+        if ($branchId !== null) {
+            $query->where('branch_id', $branchId);
+        } else {
+            $query->whereIn('branch_id', Utilities::userAccessibleBranchIds());
+            $preferredBranchMaster = (clone $query)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->where(function ($q) {
+                    $q->where('sr_no', 1)->orWhere('sr_no', '1');
+                })
+                ->first();
+            if ($preferredBranchMaster) {
+                return $preferredBranchMaster;
+            }
+        }
 
-        $master = TblProductionConsumption::where('code', $code)
-            ->where($branchScope)
+        $master = (clone $query)
             ->where(function ($q) {
                 $q->where('sr_no', 1)->orWhere('sr_no', '1');
             })
@@ -59,15 +75,33 @@ class ProductionConsumptionController extends Controller
             return $master;
         }
 
-        return TblProductionConsumption::where('code', $code)
-            ->where($branchScope)
+        return $query
             ->orderBy('sr_no')
             ->first();
     }
 
-    protected function captureProductionConsumptionStagingSnapshot(string $code): ?array
+    protected function resolveProductionConsumptionMaster(string $identifier, ?int $branchId = null): ?TblProductionConsumption
     {
-        $master = $this->findProductionConsumptionMaster($code);
+        $baseQuery = TblProductionConsumption::where('business_id', auth()->user()->business_id)
+            ->where('company_id', auth()->user()->company_id);
+
+        if (Schema::hasColumn('tblproductionconsumption', 'id')) {
+            $lineQuery = (clone $baseQuery)->where('id', $identifier);
+            if ($branchId !== null) {
+                $lineQuery->where('branch_id', $branchId);
+            }
+            $line = $lineQuery->first();
+            if ($line) {
+                return $this->findProductionConsumptionMaster((string) $line->code, (int) $line->branch_id);
+            }
+        }
+
+        return $this->findProductionConsumptionMaster($identifier, $branchId);
+    }
+
+    protected function captureProductionConsumptionStagingSnapshot(string $code, ?int $branchId = null): ?array
+    {
+        $master = $this->findProductionConsumptionMaster($code, $branchId);
         if (!$master || (int) ($master->staging_apply ?? 0) !== 1) {
             return null;
         }
@@ -94,7 +128,9 @@ class ProductionConsumptionController extends Controller
 
     protected function syncProductionConsumptionStagingRows($master, string $code): void
     {
-        $freshMaster = $this->findProductionConsumptionMaster($code);
+        $freshMaster = $master
+            ? $this->findProductionConsumptionMaster($code, (int) $master->branch_id)
+            : $this->findProductionConsumptionMaster($code);
         if (!$freshMaster) {
             if (!$master) {
                 return;
@@ -107,7 +143,7 @@ class ProductionConsumptionController extends Controller
 
         DB::table('tblproductionconsumption')
             ->where('code', $code)
-            ->where($this->productionConsumptionBranchScope())
+            ->where($this->productionConsumptionBranchScope((int) $freshMaster->branch_id))
             ->update([
                 'current_stg_id' => $freshMaster->current_stg_id,
                 'staging_apply' => $freshMaster->staging_apply,
@@ -125,20 +161,44 @@ class ProductionConsumptionController extends Controller
         $data['page_data']['create'] = '/' . self::$redirect_url . $this->prefixCreatePage;
         $data['menu_dtl_id'] = self::$menu_dtl_id;
         $data['menu_id'] = self::$menu_dtl_id;
+        $accessibleBranchIds = Utilities::userAccessibleBranchIds();
+        $data['user_branches'] = DB::table('tbl_soft_branch')
+            ->where(Utilities::currentBC())
+            ->whereIn('branch_id', $accessibleBranchIds)
+            ->orderBy('branch_name')
+            ->get(['branch_id', 'branch_name']);
 
         if (isset($id)) {
             $allowCrossBranchView = (string) $request->query('view') === '1';
-            $accessibleBranchIds = Utilities::userAccessibleBranchIds();
-
-            $documentExistsQuery = TblProductionConsumption::where('code', 'LIKE', $id)
-                ->where('business_id', auth()->user()->business_id)
+            $requestedBranchId = filter_var($request->query('branch_id'), FILTER_VALIDATE_INT);
+            $preferredBranchId = $requestedBranchId !== false
+                && in_array((int) $requestedBranchId, array_map('intval', $accessibleBranchIds), true)
+                    ? (int) $requestedBranchId
+                    : (int) auth()->user()->branch_id;
+            $documentQuery = TblProductionConsumption::where('business_id', auth()->user()->business_id)
                 ->where('company_id', auth()->user()->company_id);
-
-            if (!$allowCrossBranchView && !empty($accessibleBranchIds)) {
-                $documentExistsQuery->whereIn('branch_id', $accessibleBranchIds);
+            $documentLine = null;
+            $identifierQuery = function () use ($documentQuery, $id) {
+                $query = clone $documentQuery;
+                if (Schema::hasColumn('tblproductionconsumption', 'id')) {
+                    $query->where('id', $id);
+                    if ($query->exists()) {
+                        return $query;
+                    }
+                }
+                return (clone $documentQuery)->where('code', $id);
+            };
+            $preferredLineQuery = $identifierQuery()->where('branch_id', $preferredBranchId);
+            $documentLine = $preferredLineQuery->orderBy('sr_no')->first();
+            if (!$documentLine && $allowCrossBranchView) {
+                $documentLine = $identifierQuery()->orderBy('branch_id')->orderBy('sr_no')->first();
+            } elseif (!$documentLine && !empty($accessibleBranchIds)) {
+                $documentLine = $identifierQuery()->whereIn('branch_id', $accessibleBranchIds)->orderBy('branch_id')->orderBy('sr_no')->first();
             }
 
-            if ($documentExistsQuery->exists()) {
+            if ($documentLine) {
+                $documentBranchId = (int) $documentLine->branch_id;
+                $documentCode = (string) $documentLine->code;
                 $data['permission'] = [
                     self::$menu_dtl_id . '-edit',
                     self::$menu_dtl_id . '-view',
@@ -148,13 +208,10 @@ class ProductionConsumptionController extends Controller
                 }
 
                 $linesQuery = TblProductionConsumption::with(['barcode.product', 'barcode.uom'])
-                    ->where('code', $id)
+                    ->where('code', $documentCode)
                     ->where('business_id', auth()->user()->business_id)
-                    ->where('company_id', auth()->user()->company_id);
-
-                if (!$allowCrossBranchView && !empty($accessibleBranchIds)) {
-                    $linesQuery->whereIn('branch_id', $accessibleBranchIds);
-                }
+                    ->where('company_id', auth()->user()->company_id)
+                    ->where('branch_id', $documentBranchId);
 
                 $lines = $linesQuery->orderBy('sr_no')->get();
                 if ($lines->isEmpty()) {
@@ -169,7 +226,7 @@ class ProductionConsumptionController extends Controller
                     $canEdit ? Utilities::editForm() : Utilities::viewForm()
                 );
 
-                $data['id'] = $id;
+                $data['id'] = $data['current']->id ?? $data['current']->code;
                 $data['lines'] = $lines;
                 $data['document_code'] = $data['current']->code;
                 $data['page_data']['is_posted'] = isset($data['current']->posted) && (int) $data['current']->posted === 1;
@@ -182,19 +239,46 @@ class ProductionConsumptionController extends Controller
             $data['permission'] = self::$menu_dtl_id . '-create';
             $data['page_data'] = array_merge($data['page_data'], Utilities::newForm());
             $doc_data = [
-                'biz_type'    => 'branch',
+                // PC codes are company-wide so equal codes cannot exist in separate branches.
+                'biz_type'    => 'company',
                 'model'       => 'TblProductionConsumption',
                 'code_field'  => 'code',
                 'code_prefix' => strtoupper('pc'),
+                'branch_id'   => auth()->user()->branch_id,
             ];
             $data['document_code'] = Utilities::documentCode($doc_data);
         }
 
-        $data['store'] = TblDefiStore::select('store_id','store_name','store_default_value')->where('store_entry_status',1)->where(Utilities::currentBCB())->get();
+        $storeBranchIds = isset($data['current'])
+            ? [(int) $data['current']->branch_id]
+            : $data['user_branches']->pluck('branch_id')->map(function ($id) { return (int) $id; })->all();
+        $data['store'] = TblDefiStore::select('store_id', 'store_name', 'store_default_value', 'branch_id')
+            ->where('store_entry_status', 1)
+            ->where(Utilities::currentBC())
+            ->whereIn('branch_id', $storeBranchIds)
+            ->orderByDesc('store_default_value')
+            ->orderBy('store_name')
+            ->get();
+        $data['default_store_id'] = optional($data['store']->firstWhere('branch_id', auth()->user()->branch_id))->store_id;
         $data['rate_types'] = config('constants.rate_by');
         $data['legacy_rate_types'] = config('constants.rate_type');
 
         return view('inventory.production_consumption.form', compact('data'));
+    }
+
+    public function getDocumentCode(int $branchId)
+    {
+        abort_unless(in_array($branchId, array_map('intval', Utilities::userAccessibleBranchIds()), true), 403);
+
+        $docData = [
+            'biz_type' => 'company',
+            'model' => 'TblProductionConsumption',
+            'code_field' => 'code',
+            'code_prefix' => strtoupper('pc'),
+            'branch_id' => $branchId,
+        ];
+
+        return response()->json(['code' => Utilities::documentCode($docData)]);
     }
 
     public function store(Request $request, $id = null)
@@ -202,8 +286,8 @@ class ProductionConsumptionController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'record_date'       => 'required|date_format:d-m-Y',
-            'transfer_from'     => 'required|numeric|not_in:0',
-            'transfer_to'       => 'required|numeric|not_in:0',
+            'new_branch_id'     => 'required|integer',
+            'production_consumption_store' => 'required|numeric|not_in:0',
             'rate_type'         => 'required|in:cost_rate,last_purchase_rate,average_rate,item_last_net_tp,item_cost_rate,item_sale_rate',
             'rate_perc'         => 'nullable|numeric|between:-100,1000',
             'pd'           => 'required|array',
@@ -221,21 +305,42 @@ class ProductionConsumptionController extends Controller
             return $this->jsonErrorResponse($data, 'Validation Failed', 422);
         }
 
+        $branchId = (int) $request->input('new_branch_id');
+        $accessibleBranchIds = array_map('intval', Utilities::userAccessibleBranchIds());
+        if (!in_array($branchId, $accessibleBranchIds, true)) {
+            return $this->jsonErrorResponse($data, 'Selected branch is not accessible.', 422);
+        }
+        $storeExists = TblDefiStore::where('store_id', $request->input('production_consumption_store'))
+            ->where('branch_id', $branchId)
+            ->where('store_entry_status', 1)
+            ->where(Utilities::currentBC())
+            ->exists();
+        if (!$storeExists) {
+            return $this->jsonErrorResponse($data, 'Selected store must belong to the selected branch.', 422);
+        }
+
         DB::beginTransaction();
 
         try {
             $recordDate = date('Y-m-d', strtotime($request->record_date));
-            $branchScope = $this->productionConsumptionBranchScope();
+            $branchScope = $this->productionConsumptionBranchScope($branchId);
             $isNew = !isset($id);
             $preservedStaging = null;
+            $documentId = null;
 
             if (!$isNew) {
-                $master = $this->findProductionConsumptionMaster($id);
+                $master = $this->resolveProductionConsumptionMaster($id, $branchId);
                 if (!$master) {
                     throw new RuntimeException('Production & Consumption entry not found.', 404);
                 }
+                if ((int) $master->branch_id !== $branchId) {
+                    throw new RuntimeException('The branch of an existing Production & Consumption entry cannot be changed.', 422);
+                }
 
-                $formId = $id;
+                $code = (string) $master->code;
+                $documentId = (string) ($master->id ?? $id);
+                // Staging has historically keyed this document by its code.
+                $formId = $code;
                 $this->assertCanSaveWithStaging($request, self::$menu_dtl_id, $formId, false, $master);
 
                 if (!$this->stagingShouldPersistFormChanges($request, self::$menu_dtl_id, $formId, $master)) {
@@ -264,31 +369,33 @@ class ProductionConsumptionController extends Controller
 
                     DB::commit();
                     $data = array_merge($data, Utilities::returnJsonEditForm());
-                    $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $formId);
+                    $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $documentId);
                     return $this->jsonSuccessResponse($data, trans('message.update'), 200);
                 }
 
-                $preservedStaging = $this->captureProductionConsumptionStagingSnapshot($id);
+                $preservedStaging = $this->captureProductionConsumptionStagingSnapshot($code, $branchId);
 
                 DB::table('tblproductionconsumption')
-                    ->where('code', $id)
+                    ->where('code', $code)
                     ->where($branchScope)
                     ->delete();
-                $code = $id;
             } else {
                 $doc_data = [
-                    'biz_type'          => 'branch',
+                    'biz_type'          => 'company',
                     'model'             => 'TblProductionConsumption',
                     'code_field'        => 'code',
-                    'code_prefix'       => strtoupper('pc')
+                    'code_prefix'       => strtoupper('pc'),
+                    'branch_id'         => $branchId,
                 ];
                 $code = Utilities::documentCode($doc_data);
+                $documentId = (string) Str::uuid();
             }
 
             $rateHeader = $this->productionConsumptionRateColumns($request);
 
             $srNo = 1;
             foreach ($request->pd as $entry) {
+                $lineNo = $srNo;
                 $row = [
                     'code'          => $code,
                     'record_date'   => $recordDate,
@@ -301,32 +408,41 @@ class ProductionConsumptionController extends Controller
                     'amount'        => $entry['amount'],
                     'remarks'       => $request->remarks ?? null,
                     'user_id'       => auth()->user()->id,
-                    'transfer_from' => $request->transfer_from ?? null,
-                    'transfer_to'   => $request->transfer_to ?? null,
+                    'transfer_from' => $entry['stock_type'] === 'production' ? $request->production_consumption_store : null,
+                    'transfer_to'   => $entry['stock_type'] === 'consumption' ? $request->production_consumption_store : null,
                     'business_id'   => auth()->user()->business_id,
                     'company_id'    => auth()->user()->company_id,
-                    'branch_id'     => auth()->user()->branch_id,
+                    'branch_id'     => $branchId,
                     'status'        => 1,
                     'posted'        => 0,
                     'cancel'        => 0,
-                    'staging_apply' => 0,
-                    'current_stg_id'=> null,
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ];
 
+                if (Schema::hasColumn('tblproductionconsumption', 'id')) {
+                    $row['id'] = $lineNo === 1 ? $documentId : (string) Str::uuid();
+                }
+
+                $row = array_merge($row, [
+                    'staging_apply' => 0,
+                    'current_stg_id' => null,
+                ]);
+
                 $row = array_merge($row, $rateHeader);
 
                 if ($preservedStaging !== null) {
-                    $row['staging_apply'] = $preservedStaging['staging_apply'];
-                    $row['current_stg_id'] = $preservedStaging['current_stg_id'];
+                    $row = array_merge($row, [
+                        'staging_apply' => $preservedStaging['staging_apply'],
+                        'current_stg_id' => $preservedStaging['current_stg_id'],
+                    ]);
                     $row['posted'] = $preservedStaging['posted'];
                 }
 
                 DB::table('tblproductionconsumption')->insert($row);
             }
 
-            $master = $this->findProductionConsumptionMaster($code);
+            $master = $this->findProductionConsumptionMaster($code, $branchId);
             if (!$master) {
                 throw new RuntimeException('Unable to load saved Production & Consumption entry.', 500);
             }
@@ -337,23 +453,23 @@ class ProductionConsumptionController extends Controller
                 'posted_when_exempt' => 0,
                 'stg_log_posted_when_exempt' => 0,
                 'preserved_staging' => $preservedStaging,
-                'sync_after_save' => function ($model) use ($formId) {
-                    $this->syncProductionConsumptionStagingRows($model, $formId);
+                'sync_after_save' => function ($model) use ($code) {
+                    $this->syncProductionConsumptionStagingRows($model, $code);
                 },
             ]);
 
-            $this->syncProductionConsumptionStagingRows($master, $formId);
+            $this->syncProductionConsumptionStagingRows($master, $code);
 
             DB::commit();
 
             if (!$isNew) {
                 $data = array_merge($data, Utilities::returnJsonEditForm());
-                $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $formId);
+                $data['redirect'] = $this->documentFormStayRedirect('/' . self::$redirect_url, $documentId);
                 return $this->jsonSuccessResponse($data, trans('message.update'), 200);
             }
 
             $data = array_merge($data, Utilities::returnJsonNewForm());
-            $data['redirect'] = '/' . self::$redirect_url . $this->prefixCreatePage . '/' . $code;
+            $data['redirect'] = '/' . self::$redirect_url . $this->prefixCreatePage . '/' . $documentId;
             return $this->jsonSuccessResponse($data, trans('message.create'), 200);
 
         } catch (QueryException $e) {
@@ -382,7 +498,7 @@ class ProductionConsumptionController extends Controller
         DB::beginTransaction();
 
         try {
-            $master = $this->findProductionConsumptionMaster($id);
+            $master = $this->resolveProductionConsumptionMaster($id);
             if (!$master) {
                 DB::rollBack();
                 return $this->jsonErrorResponse($data, 'Production & Consumption entry not found.', 404);
@@ -398,7 +514,7 @@ class ProductionConsumptionController extends Controller
                 ->where('code', $id)
                 ->where('business_id', auth()->user()->business_id)
                 ->where('company_id', auth()->user()->company_id)
-                ->where('branch_id', auth()->user()->branch_id)
+                ->where('branch_id', $master->branch_id)
                 ->delete();
 
             if (!$deleted) {

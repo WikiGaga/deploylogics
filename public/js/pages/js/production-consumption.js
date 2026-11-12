@@ -12,11 +12,7 @@ var KTFormWidgets = function() {
                 record_date: {
                     required: true,
                 },
-                transfer_from: {
-                    required: true,
-                    valueNotEquals: '0',
-                },
-                transfer_to: {
+                production_consumption_store: {
                     required: true,
                     valueNotEquals: '0',
                 },

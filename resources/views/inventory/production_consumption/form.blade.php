@@ -14,6 +14,9 @@
     <!--begin::Form-->
     @php
             $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+            if($case == 'view'){
+                $case = 'edit';
+            }
             if($case == 'new'){
                 $code = $data['document_code'];
                 $date =  date('d-m-Y');
@@ -21,7 +24,7 @@
                 $rate_perc = '';
             }
             if($case == 'edit'){
-                $id = $data['current']->code;
+                $id = $data['current']->id ?? $data['current']->code;
                 $code = $data['current']->code;
                 $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->record_date))));
                 $product_barcode_id = $data['current']->item_code;
@@ -37,7 +40,6 @@
     @permission($data['permission'])
     <form id="formulation_form" class="kt-form" method="post" action="{{ action('Inventory\ProductionConsumptionController@store', isset($id)?$id:"") }}">
         <input type="hidden" value='{{$data['form_type']}}' id="form_type">
-        <input type="hidden" id="new_branch_id" value="{{ $case == 'edit' ? $data['current']->branch_id : auth()->user()->branch_id }}">
         @csrf
         <div class="kt-container  kt-container--fluid  kt-grid__item kt-grid__item--fluid">
             <div class="kt-portlet kt-portlet--mobile">
@@ -49,7 +51,7 @@
                         <div class="col-lg-4">
                             <div class="row">
                                 <div class="col-lg-6">
-                                    <div class="erp-page--title">
+                                    <div class="erp-page--title" id="voucher_no_div">
                                         {{isset($code)?$code:""}}
                                     </div>
                                 </div>
@@ -57,10 +59,10 @@
                         </div>
                     </div>
                     <div class="row form-group-block">
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label">Date:</label>
-                                <div class="col-lg-6">
+                                <label class="col-lg-5 erp-col-form-label">Date:</label>
+                                <div class="col-lg-7">
                                     <div class="input-group date">
                                         <input type="text" name="record_date" class="form-control erp-form-control-sm c-date-p" readonly value="{{isset($date)?$date:""}}" id="kt_datepicker_3" />
                                         <div class="input-group-append">
@@ -72,32 +74,31 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label text-center">Production Store: <span class="required">*</span></label>
-                                <div class="col-lg-6">
-                                    <div class="erp-select2">
-                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="transfer_from" name="transfer_from">
-                                            <option value="0">Select</option>
-                                            @php $transferFrom = isset($transferFrom)?$transferFrom:'' @endphp
-                                            @foreach($data['store'] as $store)
-                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferFrom?'selected':''}}>{{$store->store_name}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                <label class="col-lg-5 erp-col-form-label">Select Branch:</label>
+                                <div class="col-lg-7">
+                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" id="new_branch_id" name="new_branch_id" {{ $case == 'edit' ? 'disabled' : '' }} required>
+                                        @foreach($data['user_branches'] as $branch)
+                                            <option value="{{$branch->branch_id}}" {{ (int) ($case == 'edit' ? $data['current']->branch_id : auth()->user()->branch_id) === (int) $branch->branch_id ? 'selected' : '' }}>{{$branch->branch_name}}</option>
+                                        @endforeach
+                                    </select>
+                                    @if($case == 'edit')
+                                        <input type="hidden" name="new_branch_id" value="{{$data['current']->branch_id}}">
+                                    @endif
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-6">
                             <div class="row">
-                                <label class="col-lg-6 erp-col-form-label text-center">Consumption Store: <span class="required">*</span></label>
+                                <label class="col-lg-5 erp-col-form-label text-center">Store: <span class="required">*</span></label>
                                 <div class="col-lg-6">
                                     <div class="erp-select2">
-                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="transfer_to" name="transfer_to">
+                                        <select class="moveIndex form-control erp-form-control-sm kt-select2" id="production_consumption_store" name="production_consumption_store">
                                             <option value="0">Select</option>
-                                            @php $transferTo = isset($transferTo)?$transferTo:'' @endphp
+                                            @php $selectedStore = $transferFrom ?? $transferTo ?? ($data['default_store_id'] ?? '') @endphp
                                             @foreach($data['store'] as $store)
-                                                <option value="{{$store->store_id}}" {{$store->store_id == $transferTo ?'selected':''}}>{{$store->store_name}}</option>
+                                                <option value="{{$store->store_id}}" data-branch="{{$store->branch_id}}" data-default="{{(int) $store->store_default_value}}" {{$store->store_id == $selectedStore ?'selected':''}}>{{$store->store_name}}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -353,6 +354,60 @@
 
 @section('customJS')
 
+    <script>
+        var formcase = "{{ $case }}";
+        $(document).ready(function() {
+            var $branchSelect = $('#new_branch_id');
+            var $storeSelect = $('#production_consumption_store');
+            var allStoreOptions = {};
+
+            $storeSelect.each(function() {
+                allStoreOptions[this.id] = $(this).find('option').clone();
+            });
+
+            function filterProductionConsumptionStores() {
+                var branchId = $branchSelect.val();
+                $storeSelect.each(function() {
+                    var $select = $(this);
+                    var selectedStoreId = $select.val();
+                    var $allOptions = allStoreOptions[this.id];
+                    var $placeholder = $allOptions.filter(function() {
+                        return !$(this).attr('data-branch');
+                    });
+                    var $matchingStores = $allOptions.filter(function() {
+                        return $(this).attr('data-branch') == branchId;
+                    });
+
+                    $select.empty().append($placeholder).append($matchingStores);
+                    if ($select.find('option[value="' + selectedStoreId + '"]').length) {
+                        $select.val(selectedStoreId);
+                    } else {
+                        var $defaultStore = $matchingStores.filter(function() {
+                            return $(this).attr('data-default') === '1';
+                        });
+                        $select.val($defaultStore.length ? $defaultStore.first().val() : '0');
+                    }
+                    $select.trigger('change.select2');
+                });
+            }
+
+            function updateProductionConsumptionCode() {
+                if (formcase !== 'new') return;
+                $.get('/production-consumption/get-code/' + $branchSelect.val())
+                    .done(function(response) {
+                        if (response && response.code) {
+                            $('#voucher_no_div').text(response.code);
+                        }
+                    });
+            }
+
+            filterProductionConsumptionStores();
+            $branchSelect.on('change', function() {
+                filterProductionConsumptionStores();
+                updateProductionConsumptionCode();
+            });
+        });
+    </script>
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/production-consumption.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/table-calculations.js') }}" type="text/javascript"></script>

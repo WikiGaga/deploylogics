@@ -1348,6 +1348,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('print/{id}','Inventory\ItemFormulationController@print');
         });
         Route::prefix('production-consumption')->group(function () {
+            Route::get('get-code/{branchId}','Inventory\ProductionConsumptionController@getDocumentCode');
             Route::get('form/{id?}','Inventory\ProductionConsumptionController@create');
             Route::post('form/{id?}','Inventory\ProductionConsumptionController@store');
             Route::post('delete/{id}','Inventory\ProductionConsumptionController@destroy');

@@ -265,12 +265,24 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')) + 1";
                                 $usage_opening_date_field = " AND USAGE.USAGE_DATE < TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI'))";
                                 $usage_report_date = "TRUNC(USAGE.USAGE_DATE)";
+                                $production_consumption_date_field = " AND PC.CREATED_AT >= to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') AND PC.CREATED_AT <= to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')";
+                                $production_consumption_opening_date_field = " AND PC.CREATED_AT < to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')";
                             }else{
                                 $date_field2 = "AND (STOCK.DOCUMENT_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') and STOCK.DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1)";
                                 $date_field = " AND GRN.DOCUMENT_DATE <= to_date ('".$from_date."', 'yyyy/mm/dd')";
                                 $usage_date_field = " AND USAGE.USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE.USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                                 $usage_opening_date_field = " AND USAGE.USAGE_DATE < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
                                 $usage_report_date = "TRUNC(USAGE.USAGE_DATE)";
+                                $production_consumption_date_field = " AND PC.RECORD_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND PC.RECORD_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
+                                $production_consumption_opening_date_field = " AND PC.RECORD_DATE < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
+                            }
+
+                            $productionConsumptionStoreFilter = '';
+                            $productionConsumptionOpeningStoreFilter = '';
+                            if (!empty($data['store'])) {
+                                $selectedStoreIds = implode(',', array_map('intval', $data['store']));
+                                $productionConsumptionStoreFilter = " AND ((LOWER(PC.STOCK_TYPE) = 'production' AND PC.TRANSFER_FROM IN ($selectedStoreIds)) OR (LOWER(PC.STOCK_TYPE) = 'consumption' AND PC.TRANSFER_TO IN ($selectedStoreIds)))";
+                                $productionConsumptionOpeningStoreFilter = $productionConsumptionStoreFilter;
                             }
 
 
@@ -317,6 +329,26 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                             $recipe_usage_opening = DB::selectOne($recipe_usage_opening_qry)->qty ?? 0;
                             $store_stock_item -= (float) $recipe_usage_opening;
 
+                            // Production & Consumption is stored separately from the stock ledger.
+                            // Fold its posted movements into opening quantity before listing the period.
+                            $production_consumption_opening_qry = "SELECT NVL(SUM(CASE
+                                    WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1)
+                                    ELSE NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1) * -1
+                                END), 0) QTY
+                                FROM TBLPRODUCTIONCONSUMPTION PC
+                                INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+                                    ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+                                    AND PB.PRODUCT_ID = $productDtl->product_id
+                                WHERE PC.BRANCH_ID IN (".implode(',', array_map('intval', $data['branch_ids'])).")
+                                    AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+                                    AND PC.COMPANY_ID = ".auth()->user()->company_id."
+                                    AND NVL(PC.POSTED, 0) = 1
+                                    AND NVL(PC.STATUS, 0) = 1
+                                    AND NVL(PC.CANCEL, 0) = 0
+                                    $production_consumption_opening_date_field
+                                    $productionConsumptionOpeningStoreFilter";
+                            $store_stock_item += (float) (DB::selectOne($production_consumption_opening_qry)->qty ?? 0);
+
                                $dt = '';
                                if(count($data['all_document_type']) != 0){
                                    $dt .= "AND STOCK.DOCUMENT_TYPE in( '".implode("','",$data['all_document_type'])."') ";
@@ -324,6 +356,63 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                if(count($data['store']) != 0){
                                    $dt .= "AND STOCK.SALES_STORE_ID in( '".implode("','",$data['store'])."') ";
                                }
+
+                               $productionConsumptionMonthUnion = "SELECT PROD.PRODUCT_NAME, PB.PRODUCT_BARCODE_ID,
+                                    NVL(PB.PRODUCT_BARCODE_PACKING, 1) PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
+                                    PC.RECORD_DATE DOCUMENT_DATE, PC.ID DOCUMENT_ID,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN 'Production' ELSE 'Consumption' END DOCUMENT_TYPE,
+                                    BR.BRANCH_NAME, PC.CODE DOCUMENT_CODE,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_IN,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.RATE, 0) ELSE 0 END IN_RATE,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'consumption' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_OUT,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'consumption' THEN NVL(PC.RATE, 0) ELSE 0 END OUT_RATE,
+                                    NVL(PC.RATE, 0) BAL_RATE, 0 BONUS_QTY_IN,
+                                    PC.BRANCH_ID TRANSFER_FROM_BRANCH_ID, NULL TRANSFER_TO_BRANCH_ID, 999998 SORTING_ID
+                                FROM TBLPRODUCTIONCONSUMPTION PC
+                                INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+                                    ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+                                    AND PB.PRODUCT_ID = $productDtl->product_id
+                                INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = PB.PRODUCT_ID
+                                LEFT JOIN TBL_SOFT_BRANCH BR ON BR.BRANCH_ID = PC.BRANCH_ID
+                                WHERE PB.PRODUCT_ID = $productDtl->product_id
+                                    AND PC.BRANCH_ID IN (".implode(',', array_map('intval', $data['branch_ids'])).")
+                                    AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+                                    AND PC.COMPANY_ID = ".auth()->user()->company_id."
+                                    AND NVL(PC.POSTED, 0) = 1
+                                    AND NVL(PC.STATUS, 0) = 1
+                                    AND NVL(PC.CANCEL, 0) = 0
+                                    $production_consumption_date_field
+                                    $productionConsumptionStoreFilter";
+
+                               $productionConsumptionUnion = "SELECT PROD.PRODUCT_NAME, PB.PRODUCT_BARCODE_ID,
+                                    PB.PRODUCT_BARCODE_BARCODE, UOM.UOM_NAME,
+                                    NVL(PB.PRODUCT_BARCODE_PACKING, 1) PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
+                                    PC.RECORD_DATE DOCUMENT_DATE, PC.ID DOCUMENT_ID,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN 'Production' ELSE 'Consumption' END DOCUMENT_TYPE,
+                                    BR.BRANCH_NAME, PC.CODE DOCUMENT_CODE,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_IN,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.RATE, 0) ELSE 0 END IN_RATE,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'consumption' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_OUT,
+                                    CASE WHEN LOWER(PC.STOCK_TYPE) = 'consumption' THEN NVL(PC.RATE, 0) ELSE 0 END OUT_RATE,
+                                    NVL(PC.RATE, 0) BAL_RATE, 0 BONUS_QTY_IN,
+                                    PC.BRANCH_ID TRANSFER_FROM_BRANCH_ID, NULL TRANSFER_TO_BRANCH_ID, 999998 SORTING_ID
+                                FROM TBLPRODUCTIONCONSUMPTION PC
+                                INNER JOIN TBL_PURC_PRODUCT_BARCODE PB
+                                    ON PB.PRODUCT_BARCODE_BARCODE = PC.ITEM_CODE
+                                    AND PB.PRODUCT_ID = $productDtl->product_id
+                                INNER JOIN TBL_DEFI_UOM UOM ON UOM.UOM_ID = PB.UOM_ID
+                                INNER JOIN VW_PURC_PRODUCT PROD ON PROD.PRODUCT_ID = PB.PRODUCT_ID
+                                LEFT JOIN TBL_SOFT_BRANCH BR ON BR.BRANCH_ID = PC.BRANCH_ID
+                                WHERE PB.PRODUCT_ID = $productDtl->product_id
+                                    AND PC.BRANCH_ID IN (".implode(',', array_map('intval', $data['branch_ids'])).")
+                                    AND PC.BUSINESS_ID = ".auth()->user()->business_id."
+                                    AND PC.COMPANY_ID = ".auth()->user()->company_id."
+                                    AND NVL(PC.POSTED, 0) = 1
+                                    AND NVL(PC.STATUS, 0) = 1
+                                    AND NVL(PC.CANCEL, 0) = 0
+                                    $production_consumption_date_field
+                                    $productionConsumptionStoreFilter";
+
                                 if(isset($data['month_wise']) && $data['month_wise']){
                                     $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_ID, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                             SELECT PROD.PRODUCT_NAME , STOCK.PRODUCT_BARCODE_ID, NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING, STOCK.STOCK_EXPIRY,
@@ -437,6 +526,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 $usage_date_field
                                             GROUP BY TRUNC(USAGE.USAGE_DATE), BRU.BRANCH_ID, BRU.BRANCH_NAME
 
+                                            UNION ALL
+                                            $productionConsumptionMonthUnion
+
                                             ) STOCK
                                             ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
 
@@ -513,6 +605,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         AND USAGE.RESTAURANT_ID IN (".implode(",",$data['branch_ids']).")
                                         $usage_date_field
                                     GROUP BY TRUNC(USAGE.USAGE_DATE), BRU.BRANCH_ID, BRU.BRANCH_NAME
+
+                                    UNION ALL
+                                    $productionConsumptionUnion
                                     ) STOCK_RESULT
                                     ORDER BY DOCUMENT_DATE, SORTING_ID, DOCUMENT_CODE";
                                 }
@@ -612,6 +707,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 }
                                 $bg = in_array(strtolower(strtoupper($row->document_type)),['pos','rpos'])?'#faebd7':"";
                                 $isRecipeConsumption = strtolower(trim((string) $row->document_type)) === 'recipe consumption';
+                                $isProductionConsumption = in_array(strtolower(trim((string) $row->document_type)), ['production', 'consumption'], true);
                             @endphp
                             @php
                                 $rowBarcode = $productBarcodesById->get($row->product_barcode_id ?? null, '');
@@ -624,7 +720,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 <td class="text-center">{{date('d-m-Y', strtotime($row->document_date))}}</td>
                                 <td class="text-center">{{isset($row->document_type)? $row->document_type:''}}</td>
                                 <td class="text-center">{{isset($row->branch_name)? $row->branch_name:''}}</td>
-                                <td class="text-center"><span class="generate_report" data-id="{{$row->document_id}}" data-type="{{$row->document_type}}">{{isset($row->document_code)? $row->document_code:''}}</span></td>
+                                <td class="text-center"><span class="generate_report" data-id="{{$row->document_id}}" data-type="{{$row->document_type}}" @if($isProductionConsumption) data-branch-id="{{$row->transfer_from_branch_id}}" @endif>{{isset($row->document_code)? $row->document_code:''}}</span></td>
                                 <td class="text-center">{{$rowBarcode}}</td>
                                 <td style="font-size: 12px;">
                                     @if($isRecipeConsumption)
@@ -636,7 +732,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     @if($row->bonus_qty_in != null && abs($row->bonus_qty_in) != 0)
                                         <span style="color: #2196f3 !important; font-size: 12px;">FOC Qty :</span> {{$row->bonus_qty_in}} ,
                                     @endif
-                                    @if($row->transfer_from_branch_id != null && $row->transfer_from_branch_id != "" && $row->transfer_from_branch_id != 0)
+                                    @if(!$isProductionConsumption && $row->transfer_from_branch_id != null && $row->transfer_from_branch_id != "" && $row->transfer_from_branch_id != 0)
                                         @php
                                             $branch = \App\Models\TblSoftBranch::where('branch_id',$row->transfer_from_branch_id)->first(['branch_short_name']);
                                         @endphp

@@ -269,6 +269,7 @@
     $(".generate_report").click(function(e){
         var id = $(this).data('id');
         var type = $(this).data('type');
+        var branchId = $(this).data('branch-id');
         var path = '';
         var viewParam = '?view=1';
 
@@ -304,6 +305,9 @@
         if(typeUpper == 'SP'){path = '/stock/sample-items/form/'+id+viewParam;}
         if(typeUpper == 'DI'){path = '/stock/damaged-items/form/'+id+viewParam;}
         if(typeUpper == 'IST'){path = '/stock/internal-stock-transfer/form/'+id+viewParam;}
+        if(typeUpper == 'PRODUCTION' || typeUpper == 'CONSUMPTION'){
+            path = '/production-consumption/form/'+id+viewParam+(branchId ? '&branch_id='+branchId : '');
+        }
 
         if(path != ''){
             window.open(path, "_blank");
