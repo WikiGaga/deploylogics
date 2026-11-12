@@ -2161,25 +2161,45 @@ class StockController extends Controller
         }
 
         $stock->loadMissing('stock_dtls');
+        $requirementsByProduct = [];
         foreach ($stock->stock_dtls as $detail) {
-            $available = DB::table('VW_PURC_STOCK_DTL')
+            $productId = (string) $detail->product_id;
+            if (!isset($requirementsByProduct[$productId])) {
+                $packing = (float) $detail->stock_dtl_packing;
+                $requirementsByProduct[$productId] = [
+                    'detail' => $detail,
+                    'packing' => $packing > 0 ? $packing : 1,
+                    'required_base' => 0.0,
+                ];
+            }
+            $requirementsByProduct[$productId]['required_base'] += (float) $detail->stock_dtl_qty_base_unit;
+        }
+
+        foreach ($requirementsByProduct as $productId => $requirement) {
+            $detail = $requirement['detail'];
+            $packing = $requirement['packing'];
+            // Ledger quantities are already normalized to the product's base unit.
+            // Include every barcode/packing for this product before converting for display.
+            $availableBase = DB::table('VW_PURC_STOCK_DTL')
                 ->where('business_id', $stock->business_id)
                 ->where('company_id', $stock->company_id)
                 ->where('branch_id', $stock->branch_id)
                 ->where('sales_store_id', $stock->stock_store_from_id)
-                ->where('product_id', $detail->product_id)
-                ->where('product_barcode_id', $detail->product_barcode_id)
+                ->where('product_id', $productId)
                 ->where('posted', 1)
                 ->where('document_id', '<>', $stock->stock_id)
                 ->whereDate('document_date', '<=', $stock->stock_date)
                 ->sum('qty_base_unit_value');
 
-            $required = (float) $detail->stock_dtl_qty_base_unit;
-            if ((float) $available + 0.000001 < $required) {
+            $requiredBase = $requirement['required_base'];
+            if ((float) $availableBase + 0.000001 < $requiredBase) {
+                $availableSelectedPacking = (float) $availableBase / $packing;
+                $requiredSelectedPacking = $requiredBase / $packing;
                 throw new \RuntimeException(
                     'Insufficient stock for barcode '.$detail->product_barcode_barcode
-                    .'. Available base quantity: '.number_format((float) $available, 3, '.', '')
-                    .', required: '.number_format($required, 3, '.', '').'.',
+                    .'. Available quantity: '.number_format($availableSelectedPacking, 3, '.', '')
+                    .', required: '.number_format($requiredSelectedPacking, 3, '.', '')
+                    .' (in the selected barcode packing).',
                     422
                 );
             }
