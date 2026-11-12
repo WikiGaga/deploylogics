@@ -649,6 +649,50 @@ FROM
         AND posted = 1
         AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
         $date_field 
+    UNION ALL
+    SELECT
+        BRANCH_ID,
+        PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        QTY_BASE_UNIT_VALUE STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        0 STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION,
+        0 DAMAGED_ITEMS
+    FROM VW_PURC_STOCK_DTL
+    WHERE DOCUMENT_TYPE = 'SD'
+        AND QTY_BASE_UNIT_VALUE > 0
+        AND posted = 1
+        AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        $date_field
+    UNION ALL
+    SELECT
+        BRANCH_ID,
+        PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
+        0 OPENING_BALANCE,
+        0 PURCHASE,
+        0 STOCK_REC,
+        0 SALE_RETURN,
+        0 PRODUCTION,
+        0 SALE,
+        QTY_BASE_UNIT_VALUE STOCK_TRANSFER,
+        0 PURCH_RETURN,
+        0 STOCK_ADJUSTMENT,
+        0 CONSUMPTION,
+        0 DAMAGED_ITEMS
+    FROM VW_PURC_STOCK_DTL
+    WHERE DOCUMENT_TYPE = 'SD'
+        AND QTY_BASE_UNIT_VALUE < 0
+        AND posted = 1
+        AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+        $date_field
     UNION
     ALL 
     SELECT 
