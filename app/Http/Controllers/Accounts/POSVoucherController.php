@@ -130,7 +130,7 @@ class POSVoucherController extends Controller
                     $discount_chart_account_id = $config->sale_discount;
                     $income_chart_account_id = $config->sale_income;
                     $vat_payable_chart_account_id = $config->sale_vat_payable;
-                    $walk_in_customer_ac = '13425120060615';
+                    $walk_in_customer_ac = '20141125131500';
                     $cash_in_hand_ac = $config->sale_cash_ac;
                     $payment_receive_db = $config->payment_receive_dr_ac;
                     $payment_receive_cr = $config->payment_receive_cr_ac;
