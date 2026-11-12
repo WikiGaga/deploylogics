@@ -416,7 +416,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 if(isset($data['month_wise']) && $data['month_wise']){
                                     $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_ID, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                             SELECT PROD.PRODUCT_NAME , STOCK.PRODUCT_BARCODE_ID, NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING, STOCK.STOCK_EXPIRY,
-                                            STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
+                                            STOCK.DOCUMENT_DATE , TO_CHAR(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                             STOCK.DOCUMENT_CODE ,
                                             NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
                                             CASE
@@ -459,7 +459,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                                 union all
                                                 SELECT
                                                     PROD.PRODUCT_NAME ,CASE WHEN MIN(STOCK.PRODUCT_BARCODE_ID) = MAX(STOCK.PRODUCT_BARCODE_ID) THEN MIN(STOCK.PRODUCT_BARCODE_ID) END PRODUCT_BARCODE_ID, MAX(STOCK.PRODUCT_PACKING) PRODUCT_BARCODE_PACKING, MAX(STOCK.STOCK_EXPIRY) STOCK_EXPIRY ,
-                                                    MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , MAX(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,
+                                                    MAX(STOCK.DOCUMENT_DATE) DOCUMENT_DATE , TO_CHAR(MAX(STOCK.DOCUMENT_ID)) DOCUMENT_ID, STOCK.DOCUMENT_TYPE ,
                                                     MAX(BR.BRANCH_NAME) BRANCH_NAME ,
                                                     MAX(STOCK.DOCUMENT_CODE) DOCUMENT_CODE ,
                                                     SUM(NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0)) QTY_IN  ,
@@ -503,7 +503,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                             SELECT
                                                 MAX(PROD.PRODUCT_NAME) , NULL PRODUCT_BARCODE_ID, 1 PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
                                                 $usage_report_date DOCUMENT_DATE ,
-                                                NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
+                                                TO_CHAR(NVL(MIN(USAGE.ID), 0)) DOCUMENT_ID,
                                                 'Recipe Consumption' DOCUMENT_TYPE ,
                                                 BRU.BRANCH_NAME ,
                                                 'RECIPE-CONSUMPTION' DOCUMENT_CODE ,
@@ -536,7 +536,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     $query = "SELECT PRODUCT_NAME, PRODUCT_BARCODE_ID, PRODUCT_BARCODE_BARCODE, UOM_NAME, PRODUCT_BARCODE_PACKING, STOCK_EXPIRY, DOCUMENT_DATE, DOCUMENT_ID, DOCUMENT_TYPE, BRANCH_NAME, DOCUMENT_CODE, QTY_IN, IN_RATE, QTY_OUT, OUT_RATE, BAL_RATE, BONUS_QTY_IN, TRANSFER_FROM_BRANCH_ID, TRANSFER_TO_BRANCH_ID, SORTING_ID FROM (
                                         SELECT PROD.PRODUCT_NAME , STOCK.PRODUCT_BARCODE_ID, '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME ,  NVL(STOCK.PRODUCT_PACKING, 1) PRODUCT_BARCODE_PACKING ,STOCK.STOCK_EXPIRY,
-                                        STOCK.DOCUMENT_DATE , STOCK.DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
+                                        STOCK.DOCUMENT_DATE , TO_CHAR(STOCK.DOCUMENT_ID) DOCUMENT_ID, STOCK.DOCUMENT_TYPE , BR.BRANCH_NAME ,
                                         STOCK.DOCUMENT_CODE ,
                                         NVL (STOCK.QTY_IN, 0) +  NVL (STOCK.BONUS_QTY_IN, 0) QTY_IN  ,
                                         CASE
@@ -583,7 +583,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         MAX(PROD.PRODUCT_NAME) , NULL PRODUCT_BARCODE_ID, '' PRODUCT_BARCODE_BARCODE,
                                         '' UOM_NAME , 1 PRODUCT_BARCODE_PACKING , NULL STOCK_EXPIRY,
                                         $usage_report_date DOCUMENT_DATE ,
-                                        NVL(MIN(USAGE.ID), 0) DOCUMENT_ID,
+                                        TO_CHAR(NVL(MIN(USAGE.ID), 0)) DOCUMENT_ID,
                                         'Recipe Consumption' DOCUMENT_TYPE ,
                                         BRU.BRANCH_NAME ,
                                         'RECIPE-CONSUMPTION' DOCUMENT_CODE ,
