@@ -504,6 +504,11 @@ class ProductionConsumptionController extends Controller
                 return $this->jsonErrorResponse($data, 'Production & Consumption entry not found.', 404);
             }
 
+            if (!Utilities::documentBranchIsUserAccessible($master->branch_id)) {
+                DB::rollBack();
+                return $this->jsonErrorResponse($data, 'You cannot delete a record from a branch you cannot access.', 403);
+            }
+
             $posted = (int) ($master->posted ?? 0);
             if (in_array($posted, [1, 2], true)) {
                 DB::rollBack();
@@ -511,7 +516,7 @@ class ProductionConsumptionController extends Controller
             }
 
             $deleted = DB::table('tblproductionconsumption')
-                ->where('code', $id)
+                ->where('code', $master->code)
                 ->where('business_id', auth()->user()->business_id)
                 ->where('company_id', auth()->user()->company_id)
                 ->where('branch_id', $master->branch_id)
