@@ -279,10 +279,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
 
                             $productionConsumptionStoreFilter = '';
                             $productionConsumptionOpeningStoreFilter = '';
+                            $stockOpeningStoreFilter = '';
                             if (!empty($data['store'])) {
                                 $selectedStoreIds = implode(',', array_map('intval', $data['store']));
                                 $productionConsumptionStoreFilter = " AND ((LOWER(PC.STOCK_TYPE) = 'production' AND PC.TRANSFER_FROM IN ($selectedStoreIds)) OR (LOWER(PC.STOCK_TYPE) = 'consumption' AND PC.TRANSFER_TO IN ($selectedStoreIds)))";
                                 $productionConsumptionOpeningStoreFilter = $productionConsumptionStoreFilter;
+                                $stockOpeningStoreFilter = " AND GRN.SALES_STORE_ID IN ($selectedStoreIds)";
                             }
 
 
@@ -302,6 +304,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     AND GRN.COMPANY_ID = ".auth()->user()->company_id."
                                     AND  GRN.branch_id in( ".implode(",",$data['branch_ids']).")
                                     AND GRN.posted = 1
+                                    $stockOpeningStoreFilter
                                     $date_field";
 
                            // dd($store_qry);
@@ -315,6 +318,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     AND GRN.COMPANY_ID = ".auth()->user()->company_id."
                                     AND GRN.branch_id in( ".implode(",",$data['branch_ids']).")
                                     AND GRN.posted = 1
+                                    $stockOpeningStoreFilter
                                     $date_field";
                             $store_stock_item = DB::selectOne($store_stock_item_qry)->qty ?? 0;
 
