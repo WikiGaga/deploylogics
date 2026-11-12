@@ -253,15 +253,13 @@ class POSVoucherController extends Controller
                                 $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
                             }
 
-                            if(empty($sale_invoice->partner_id)){
-                                // Food Sale
-                                $data['chart_account_id'] = $income_chart_account_id;
-                                $data['voucher_debit'] = 0;
-                                $data['voucher_credit'] = abs(round((float)$sale_invoice->items_amount,3));
-                                $data['voucher_sr_no'] = 2;
-                                // for debit entry disc_amount_total
-                                $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
-                            }
+                            // Food Sale
+                            $data['chart_account_id'] = $income_chart_account_id;
+                            $data['voucher_debit'] = 0;
+                            $data['voucher_credit'] = abs(round((float)$sale_invoice->items_amount,3));
+                            $data['voucher_sr_no'] = 2;
+                            // for debit entry disc_amount_total
+                            $this->proAccoVoucherInsert($voucher_id,$action,$table_name,$data,$where_clause);
 
                             // Food Discount
                             $data['chart_account_id'] = $discount_chart_account_id;
