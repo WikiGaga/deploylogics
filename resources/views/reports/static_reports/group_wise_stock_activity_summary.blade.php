@@ -235,10 +235,10 @@
                         $pc_period_date_field = " AND PC.created_at between to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI') and to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')";
                     }else{
                         $date_field2 = "AND (document_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')
-                            OR (DOCUMENT_TYPE = 'OS' AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')))";
-                        $date_field = "AND document_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                            OR (DOCUMENT_TYPE = 'OS' AND document_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND document_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1))";
+                        $date_field = "AND document_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND document_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                         $pc_opening_date_field = " AND PC.record_date < to_date ('".$data['from_date']."', 'yyyy/mm/dd')";
-                        $pc_period_date_field = " AND PC.record_date between to_date ('".$data['from_date']."', 'yyyy/mm/dd') and to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+                        $pc_period_date_field = " AND PC.record_date >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND PC.record_date < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
                     }
 
                     $recipeUsageOpeningDateFilter = $data['date_time_wise'] == 1
@@ -841,7 +841,7 @@ ORDER BY abc.BRANCH_NAME,
 // and scanning the ledger view separately for each UNION branch.
 $ledgerCteDateFilter = $data['date_time_wise'] == 1
     ? "AND CREATED_AT <= to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')"
-    : "AND DOCUMENT_DATE <= to_date ('".$data['to_date']."', 'yyyy/mm/dd')";
+    : "AND DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
 $salesUsageDateFilter = $data['date_time_wise'] == 1
     ? "TRUNC(USAGE_DATE) BETWEEN TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))"
     : "USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
