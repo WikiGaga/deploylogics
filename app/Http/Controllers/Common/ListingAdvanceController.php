@@ -91,7 +91,13 @@ class ListingAdvanceController extends Controller
             $where = 'where ';
 
             // fix where
-            if ($case_name === 'food') {
+            if (strtolower((string) $case_name) === 'production-consumption') {
+                // PC rows belong to the currently selected branch. Do not let a
+                // business-wide Listing Studio configuration leak other branches.
+                $where .= '('.$tbl_1_alias.'business_id = '.(int) auth()->user()->business_id
+                    .' AND '.$tbl_1_alias.'company_id = '.(int) auth()->user()->company_id
+                    .' AND '.$tbl_1_alias.'branch_id = '.(int) auth()->user()->branch_id.')';
+            } elseif ($case_name === 'food') {
                 $where .= '('.$tbl_1_alias.'restaurant_id = '.(int) auth()->user()->branch_id.')';
             } elseif (strcasecmp($case_name, 'Employee-Attendance') === 0) {
                 // Attendance is always branch-owned. Keep this boundary enforced
