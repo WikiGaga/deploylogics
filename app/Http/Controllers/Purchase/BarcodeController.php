@@ -943,34 +943,59 @@ class BarcodeController extends Controller
             $data['product_exists'] =   false;
             $data['product_exists_msg'] =   "This product already exists in document No. $getStockCode->stock_code";
         };
-        $data['store_stock'] = 0;
-        // if(!isset($getStockCode->stock_code)){
-            $store_stock_qty = DB::selectOne("SELECT NVL(SUM(
-                    CASE
-                        WHEN UPPER(DOCUMENT_TYPE) IN ('OS', 'ST', 'STR', 'SA')
-                            THEN (NVL(QTY_IN, 0) - NVL(QTY_OUT, 0)) * NVL(PRODUCT_PACKING, 1)
-                        ELSE NVL(QTY_BASE_UNIT_VALUE, 0)
-                    END
-                ), 0) AS qty
-                FROM VW_PURC_STOCK_DTL
-                WHERE PRODUCT_ID = ?
-                    AND BUSINESS_ID = ?
-                    AND COMPANY_ID = ?
-                    AND BRANCH_ID = ?
-                    AND SALES_STORE_ID = ?
-                    AND POSTED = 1
-                    AND DOCUMENT_DATE <= TO_DATE(?, 'YYYY-MM-DD')", [
-                $data['current_product']->product_id,
-                auth()->user()->business_id,
-                auth()->user()->company_id,
-                $branchId,
-                $storeId,
-                $date,
-            ])->qty;
-            $packing    = isset($data['current_product']['product_barcode_packing']) && !empty($data['current_product']['product_barcode_packing'])?$data['current_product']['product_barcode_packing']:1;
-            $ss = $store_stock_qty / (float)$packing;
-            $data['store_stock'] = number_format($ss,3,'.','');
-        // }
+        $productId = $data['current_product']->product_id;
+        $businessId = auth()->user()->business_id;
+        $companyId = auth()->user()->company_id;
+
+        // Match the stock activity summary: aggregate signed base-unit ledger
+        // quantities for the selected branch/store through the selected date.
+        $ledgerBaseQty = DB::table('VW_PURC_STOCK_DTL')
+            ->where('PRODUCT_ID', $productId)
+            ->where('BUSINESS_ID', $businessId)
+            ->where('COMPANY_ID', $companyId)
+            ->where('BRANCH_ID', $branchId)
+            ->where('SALES_STORE_ID', $storeId)
+            ->where('POSTED', 1)
+            ->whereRaw("DOCUMENT_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1", [$date])
+            ->sum('QTY_BASE_UNIT_VALUE');
+
+        $productionConsumptionQuery = DB::table('TBLPRODUCTIONCONSUMPTION as PC')
+            ->join('TBL_PURC_PRODUCT_BARCODE as PB', 'PB.PRODUCT_BARCODE_BARCODE', '=', 'PC.ITEM_CODE')
+            ->where('PB.PRODUCT_ID', $productId)
+            ->where('PC.BRANCH_ID', $branchId)
+            ->where('PC.BUSINESS_ID', $businessId)
+            ->where('PC.COMPANY_ID', $companyId)
+            ->where('PC.POSTED', 1)
+            ->where('PC.STATUS', 1)
+            ->where('PC.CANCEL', 0)
+            ->whereRaw("PC.RECORD_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1", [$date]);
+        $productionConsumptionQuery->where(function ($query) use ($storeId) {
+            $query->where(function ($production) use ($storeId) {
+                $production->whereRaw("LOWER(PC.STOCK_TYPE) = 'production'")
+                    ->where('PC.TRANSFER_FROM', $storeId);
+            })->orWhere(function ($consumption) use ($storeId) {
+                $consumption->whereRaw("LOWER(PC.STOCK_TYPE) = 'consumption'")
+                    ->where('PC.TRANSFER_TO', $storeId);
+            });
+        });
+        $productionConsumptionBaseQty = $productionConsumptionQuery
+            ->selectRaw("NVL(SUM(CASE
+                WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1)
+                ELSE NVL(PC.QTY, 0) * NVL(PB.PRODUCT_BARCODE_PACKING, 1) * -1
+            END), 0) AS QTY")
+            ->first()->qty ?? 0;
+
+        $recipeUsageBaseQty = DB::table('ORDER_RECIPE_USAGES')
+            ->where('PRODUCT_ID', $productId)
+            ->where('RESTAURANT_ID', $branchId)
+            ->whereRaw("USAGE_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1", [$date])
+            ->sum('PRODUCT_QUANTITY_USED');
+
+        $packing = (float) ($data['current_product']->product_barcode_packing ?: 1);
+        $availableBaseQty = (float) $ledgerBaseQty
+            + (float) $productionConsumptionBaseQty
+            - (float) $recipeUsageBaseQty;
+        $data['store_stock'] = number_format($availableBaseQty / $packing, 3, '.', '');
         /* End #1
          * */
 
