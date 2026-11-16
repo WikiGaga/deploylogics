@@ -1237,46 +1237,18 @@ $query = "WITH SALES_USAGE AS (
                             @endforeach
                                 <tr>
                                     <td class="text-right sale_type_color" colspan="3"><b>TOTAL : </b> </td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_opening_balance,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_purchase,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_rec,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_adjustment,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sale_return,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_production,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_in,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sale,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_stock_transfer,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_purch_return,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_consumption,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_sales_consumption,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($tot_damaged_items,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_out,3)}}</td>
-                                    <td class="text-right sale_type_color">{{number_format($total_stock_balance,3)}}</td>
-                                    <td class="text-center sale_type_color">-</td>
-                                    <td class="text-center sale_type_color">-</td>
+                                    @for($column = 0; $column < 17; $column++)
+                                        <td class="text-right sale_type_color"></td>
+                                    @endfor
                                     <td class="text-right sale_type_color">{{number_format($total_average_amount,3)}}</td>
                                     <td class="text-right sale_type_color">{{number_format($total_last_price_amount,3)}}</td>
                                 </tr>
                            @endforeach
                                 <tr>
                                     <td class="text-right barnch_color" colspan="4"><b>GRAND TOTAL : </b> </td>
-                                    <td class="text-right barnch_color">{{number_format($stot_opening_balance,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_purchase,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_rec,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_adjustment,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sale_return,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_production,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_in,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sale,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_stock_transfer,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_purch_return,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_consumption,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_sales_consumption,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stot_damaged_items,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_out,3)}}</td>
-                                    <td class="text-right barnch_color">{{number_format($stotal_stock_balance,3)}}</td>
-                                    <td class="text-center barnch_color">-</td>
-                                    <td class="text-center barnch_color">-</td>
+                                    @for($column = 0; $column < 17; $column++)
+                                        <td class="text-right barnch_color"></td>
+                                    @endfor
                                     <td class="text-right barnch_color">{{number_format($stotal_average_amount,3)}}</td>
                                     <td class="text-right barnch_color">{{number_format($stotal_last_price_amount,3)}}</td>
                                 </tr>
