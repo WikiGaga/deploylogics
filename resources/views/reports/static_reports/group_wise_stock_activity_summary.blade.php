@@ -889,6 +889,9 @@ $ledgerCteDateFilter = $data['date_time_wise'] == 1
 $salesUsageDateFilter = $data['date_time_wise'] == 1
     ? "TRUNC(USAGE_DATE) BETWEEN TRUNC(to_date ('".$date_time_from."', 'yyyy/mm/dd HH24:MI')) AND TRUNC(to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI'))"
     : "USAGE_DATE >= to_date ('".$data['from_date']."', 'yyyy/mm/dd') AND USAGE_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
+$inboundDateFilter = $data['date_time_wise'] == 1
+    ? "AND CREATED_AT <= to_date ('".$date_time_to."', 'yyyy/mm/dd HH24:MI')"
+    : "AND DOCUMENT_DATE < to_date ('".$data['to_date']."', 'yyyy/mm/dd') + 1";
 $query = str_replace('VW_PURC_STOCK_DTL', 'STOCK_LEDGER', $query);
 $query = "WITH SALES_USAGE AS (
     SELECT
@@ -926,6 +929,30 @@ $query = "WITH SALES_USAGE AS (
       AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
       $ledgerStoreFilter
       ".$ledgerCteDateFilter."
+), INBOUND_LEDGER AS (
+    SELECT /*+ MATERIALIZE */
+        BRANCH_ID,
+        BUSINESS_ID,
+        COMPANY_ID,
+        PRODUCT_ID,
+        PRODUCT_BARCODE_ID,
+        DOCUMENT_ID,
+        DOCUMENT_TYPE,
+        QTY_IN,
+        BONUS_QTY_IN,
+        PRODUCT_PACKING,
+        STOCK_RATE,
+        DOCUMENT_ACT_RATE,
+        DOCUMENT_DATE,
+        CREATED_AT,
+        POSTED
+    FROM VW_PURC_STOCK_DTL
+    WHERE POSTED = 1
+      AND BUSINESS_ID = ".auth()->user()->business_id."
+      AND COMPANY_ID = ".auth()->user()->company_id."
+      AND BRANCH_ID IN (".implode(",",$data['branch_ids']).")
+      AND DOCUMENT_TYPE IN ('GRN', 'OS', 'STR')
+      ".$inboundDateFilter."
 ), SALES_USAGE_OPENING AS (
     SELECT
         RESTAURANT_ID BRANCH_ID,
@@ -955,7 +982,7 @@ $query = "WITH SALES_USAGE AS (
             NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0) INBOUND_PACK_QTY,
             (NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0))
                 * NVL(LEDGER.PRODUCT_PACKING, 1) INBOUND_BASE_QTY
-        FROM STOCK_LEDGER LEDGER
+        FROM INBOUND_LEDGER LEDGER
         LEFT JOIN TBL_PURC_GRN_DTL GRN_RATE
             ON GRN_RATE.GRN_ID = LEDGER.DOCUMENT_ID
             AND GRN_RATE.PRODUCT_ID = LEDGER.PRODUCT_ID
@@ -964,11 +991,12 @@ $query = "WITH SALES_USAGE AS (
             AND GRN_RATE.COMPANY_ID = LEDGER.COMPANY_ID
             AND GRN_RATE.BRANCH_ID = LEDGER.BRANCH_ID
             AND GRN_RATE.GRN_TYPE = 'GRN'
-        WHERE NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0) > 0
+        WHERE LEDGER.DOCUMENT_TYPE IN ('GRN', 'OS', 'STR')
+          AND NVL(LEDGER.QTY_IN, 0) + NVL(LEDGER.BONUS_QTY_IN, 0) > 0
           AND NVL(LEDGER.PRODUCT_PACKING, 0) > 0
           AND (
               (LEDGER.DOCUMENT_TYPE = 'GRN' AND NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) > 0)
-              OR (LEDGER.DOCUMENT_TYPE <> 'GRN'
+              OR (LEDGER.DOCUMENT_TYPE IN ('OS', 'STR')
                   AND NVL(NULLIF(LEDGER.STOCK_RATE, 0), LEDGER.DOCUMENT_ACT_RATE) > 0)
           )
     ) INBOUND_RATES
@@ -1063,33 +1091,33 @@ $query = "WITH SALES_USAGE AS (
                     <table width="100%" id="rep_group_wise_activity_summary_datatable" class="static_report_table table bt-datatable table-bordered">
                         <tr class="sticky-header">
                             <th class="dtl-head" rowspan="2">Branch</th>
-                            <th class="dtl-head" rowspan="2">Group</th>
-                            <th class="dtl-head" rowspan="2">Product</th>
+                            <th class="dtl-head" rowspan="2">Product Group</th>
+                            <th class="dtl-head" rowspan="2">Product Name</th>
                             <th class="dtl-head" rowspan="2">UOM</th>
-                            <th class="dtl-head" colspan="7">STOCK IN</th>
-                            <th class="dtl-head" colspan="7">STOCK OUT</th>
-                            <th width="15%" class="dtl-head" rowspan="2">BALANCE</th>
-                            <th class="dtl-head" rowspan="2">Average Price</th>
-                            <th class="dtl-head" rowspan="2">Last Price</th>
-                            <th class="dtl-head" rowspan="2">Average Amount</th>
-                            <th class="dtl-head" rowspan="2">Last Price Amount</th>
+                            <th class="dtl-head" colspan="7">STOCK IN (QTY)</th>
+                            <th class="dtl-head" colspan="7">STOCK OUT (QTY)</th>
+                            <th width="15%" class="dtl-head" rowspan="2">Closing Stock</th>
+                            <th class="dtl-head" rowspan="2">Weighted Avg. Cost</th>
+                            <th class="dtl-head" rowspan="2">Last Unit Cost</th>
+                            <th class="dtl-head" rowspan="2">Stock Value (Avg. Cost)</th>
+                            <th class="dtl-head" rowspan="2">Stock Value (Last Cost)</th>
                         </tr>
                         <tr class="sticky-header-to">
-                            <td width="10%" class="dtl-head">Opening</td>
-                            <td width="10%" class="dtl-head">Purchase</td>
-                            <td width="10%" class="dtl-head">Stock Receive</td>
-                            <td width="10%" class="dtl-head">Stock Adjustment</td>
-                            <td width="10%" class="dtl-head">Sale Return</td>
-                            <td width="10%" class="dtl-head">Production</td>
-                            <td width="10%" class="dtl-head">Total</td>
+                            <td width="10%" class="dtl-head">Opening Balance</td>
+                            <td width="10%" class="dtl-head">Purchases</td>
+                            <td width="10%" class="dtl-head">Transfers In</td>
+                            <td width="10%" class="dtl-head">Net Adjustments</td>
+                            <td width="10%" class="dtl-head">Sales Returns</td>
+                            <td width="10%" class="dtl-head">Production In</td>
+                            <td width="10%" class="dtl-head">Total Stock In</td>
 
-                            <td width="10%" class="dtl-head"> Sale</td>
-                            <td width="10%" class="dtl-head">Stock Transfer</td>
-                            <td width="10%" class="dtl-head">Purchase Return</td>
+                            <td width="10%" class="dtl-head">Sales</td>
+                            <td width="10%" class="dtl-head">Transfers Out</td>
+                            <td width="10%" class="dtl-head">Purchase Returns</td>
                             <td width="10%" class="dtl-head">Consumption</td>
                             <td width="10%" class="dtl-head">Sales Consumption</td>
-                            <td width="10%" class="dtl-head">Damaged Items</td>
-                            <td width="10%" class="dtl-head">Total</td>
+                            <td width="10%" class="dtl-head">Damaged Stock</td>
+                            <td width="10%" class="dtl-head">Total Stock Out</td>
                         </tr>
                         @foreach($list_branch as $branch_key=>$branch_row)
                             @php

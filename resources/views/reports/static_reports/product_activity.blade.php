@@ -70,11 +70,12 @@
                     AND STOCK.COMPANY_ID = $averagePriceCompanyId
                     AND STOCK.BRANCH_ID IN (" . implode(',', $averagePriceBranches) . ")
                     AND STOCK.POSTED = 1
+                    AND STOCK.DOCUMENT_TYPE IN ('GRN', 'OS', 'STR')
                     $dateFilter
                     AND NVL(STOCK.QTY_IN, 0) + NVL(STOCK.BONUS_QTY_IN, 0) > 0
                     AND NVL(STOCK.PRODUCT_PACKING, 0) > 0
                     AND ((STOCK.DOCUMENT_TYPE = 'GRN' AND NVL(GRN_RATE.TBL_PURC_GRN_DTL_RATE, 0) > 0)
-                        OR (STOCK.DOCUMENT_TYPE <> 'GRN'
+                        OR (STOCK.DOCUMENT_TYPE IN ('OS', 'STR')
                             AND NVL(NULLIF(STOCK.STOCK_RATE, 0), STOCK.DOCUMENT_ACT_RATE) > 0))";
                 return \Illuminate\Support\Facades\DB::selectOne($averagePriceQuery);
             };
@@ -363,7 +364,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
 
                                $productionConsumptionMonthUnion = "SELECT PROD.PRODUCT_NAME, PB.PRODUCT_BARCODE_ID,
                                     NVL(PB.PRODUCT_BARCODE_PACKING, 1) PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
-                                    PC.RECORD_DATE DOCUMENT_DATE, PC.ID DOCUMENT_ID,
+                                    PC.RECORD_DATE DOCUMENT_DATE, PC.CODE DOCUMENT_ID,
                                     CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN 'Production' ELSE 'Consumption' END DOCUMENT_TYPE,
                                     BR.BRANCH_NAME, PC.CODE DOCUMENT_CODE,
                                     CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_IN,
@@ -391,7 +392,7 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                $productionConsumptionUnion = "SELECT PROD.PRODUCT_NAME, PB.PRODUCT_BARCODE_ID,
                                     PB.PRODUCT_BARCODE_BARCODE, UOM.UOM_NAME,
                                     NVL(PB.PRODUCT_BARCODE_PACKING, 1) PRODUCT_BARCODE_PACKING, NULL STOCK_EXPIRY,
-                                    PC.RECORD_DATE DOCUMENT_DATE, PC.ID DOCUMENT_ID,
+                                    PC.RECORD_DATE DOCUMENT_DATE, PC.CODE DOCUMENT_ID,
                                     CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN 'Production' ELSE 'Consumption' END DOCUMENT_TYPE,
                                     BR.BRANCH_NAME, PC.CODE DOCUMENT_CODE,
                                     CASE WHEN LOWER(PC.STOCK_TYPE) = 'production' THEN NVL(PC.QTY, 0) ELSE 0 END QTY_IN,
@@ -676,7 +677,12 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                 $in_rate_per_item = (float)$InRate / $packing;
                                 $inAmount = (float)$qty_in * (float)$InRate;
                                 $totalInAmount += $inAmount;
-                                if ((float)$qty_in > 0 && (float)$InRate > 0) {
+                                $isEligibleAverageDocument = in_array(
+                                    strtoupper(trim((string)$row->document_type)),
+                                    ['GRN', 'OS', 'STR'],
+                                    true
+                                );
+                                if ($isEligibleAverageDocument && (float)$qty_in > 0 && (float)$InRate > 0) {
                                     $runningAverageAmount += $inAmount;
                                     $runningAverageBaseQty += (float)$qty_in * $packing;
                                 }

@@ -75,7 +75,7 @@
                     <div class="col-lg-12">
                         <div class="row">
                             <div class="col-lg-6">
-                                <div class="erp-page--title">
+                                <div class="erp-page--title" id="voucher_no_div">
                                     {{isset($code)?$code:""}}
                                 </div>
                             </div>
@@ -142,7 +142,7 @@
                                     <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
                                         @php $storeid = isset($store_id)?$store_id:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" data-default="{{ (int) $store->store_default_value }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -573,6 +573,7 @@
             // Function to filter stores based on selected branch
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
+                var selectedStoreId = $storeSelect.val();
 
                 // Reset the select element
                 $storeSelect.html('');
@@ -588,16 +589,42 @@
 
                 $storeSelect.append($matchingOptions);
 
+                var $defaultStore = $matchingOptions.filter(function() {
+                    return $(this).attr('data-default') === '1';
+                });
+                $storeSelect.val($storeSelect.find('option[value="' + selectedStoreId + '"]').length
+                    ? selectedStoreId
+                    : ($defaultStore.first().val() || $matchingOptions.first().val() || ''));
+
                 // CRITICAL: Trigger Select2 change to refresh its UI display
                 $storeSelect.trigger('change.select2');
             }
 
             // 2. Run immediately on page load to handle initial or saved state
             filterStores();
+            var codeRequestNumber = 0;
 
             // 3. Run whenever the branch dropdown changes
             $('#new_branch_id').on('change', function() {
                 filterStores();
+                if ("{{ $case }}" !== 'new') return;
+                var branchId = $(this).val();
+                var requestNumber = ++codeRequestNumber;
+                if (!branchId) {
+                    $('#voucher_no_div').text('');
+                    return;
+                }
+                $.get("{{ route('voucher.get-code') }}", {
+                    pre_code: "{{ $data['pre_code'] }}",
+                    branch_id: branchId,
+                    code_getter_type: "{{ $data['code_getter_type'] }}"
+                }).done(function(response) {
+                    if (requestNumber === codeRequestNumber && response && response.code) {
+                        $('#voucher_no_div').text(response.code);
+                    }
+                }).fail(function() {
+                    if (requestNumber === codeRequestNumber) toastr.error('Unable to refresh the document code.');
+                });
             });
         });
 
@@ -606,29 +633,7 @@
         }
         syncSdFormBranchField($('#new_branch_id').val());
         $('#new_branch_id').on('change', function() {
-            var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
-            var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
-            var branchId = $(this).val();
-            syncSdFormBranchField(branchId);
-            if (pre_code && branchId) {
-                $.ajax({
-                    url: "{{ route('voucher.get-code') }}",
-                    type: "GET",
-                    data: {
-                        pre_code: pre_code,
-                        branch_id: branchId,
-                        code_getter_type: code_getter_type
-                    },
-                    success: function(response) {
-                        $('#voucher_no_div').text(response.code);
-                    },
-                    error: function(xhr) {
-                        console.error("Something went wrong fetching the voucher code:", xhr.responseText);
-                    }
-                });
-            } else {
-                $('#voucher_no_div').text('');
-            }
+            syncSdFormBranchField($(this).val());
         });
 
         var type = "{{ $type }}";

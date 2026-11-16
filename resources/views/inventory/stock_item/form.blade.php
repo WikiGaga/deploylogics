@@ -53,7 +53,7 @@
                     <div class="col-lg-4">
                         <div class="row">
                             <div class="col-lg-6">
-                                <div class="erp-page--title">
+                                <div class="erp-page--title" id="voucher_no_div">
                                     {{isset($code)?$code:""}}
                                 </div>
                             </div>
@@ -76,7 +76,7 @@
                             </div>
                         </div>
                     </div>
-                    @include('layouts.branchSelect', ['user_branches' => $data['user_branches']])
+                    @include('layouts.branchSelect', ['user_branches' => $data['user_branches'], 'stockDocumentCodeLookup' => true])
                     <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label text-center">Store:<span class="required">*</span></label>
@@ -348,7 +348,7 @@
                 });
                 $storeSelect.append($matchingOptions);
                 var $defaultStore = $matchingOptions.filter(function() { return $(this).attr('data-default') === '1'; });
-                if ($storeSelect.find('option[value="' + selectedStoreId + '"]').length) {
+                if (selectedStoreId && selectedStoreId !== '0' && $storeSelect.find('option[value="' + selectedStoreId + '"]').length) {
                     $storeSelect.val(selectedStoreId);
                 } else if ($defaultStore.length) {
                     $storeSelect.val($defaultStore.first().val());
@@ -361,8 +361,27 @@
             }
 
             filterStores();
+            var codeRequestNumber = 0;
             $('#new_branch_id').on('change', function() {
                 filterStores();
+                if (formcase !== 'new') return;
+                var branchId = $(this).val();
+                var requestNumber = ++codeRequestNumber;
+                if (!branchId) {
+                    $('#voucher_no_div').text('');
+                    return;
+                }
+                $.get("{{ route('voucher.get-code') }}", {
+                    pre_code: "{{ $data['pre_code'] }}",
+                    branch_id: branchId,
+                    code_getter_type: "{{ $data['code_getter_type'] }}"
+                }).done(function(response) {
+                    if (requestNumber === codeRequestNumber && response && response.code) {
+                        $('#voucher_no_div').text(response.code);
+                    }
+                }).fail(function() {
+                    if (requestNumber === codeRequestNumber) toastr.error('Unable to refresh the document code.');
+                });
             });
         });
         var stockMenuId = "{{ $data['stock_menu_id'] }}";

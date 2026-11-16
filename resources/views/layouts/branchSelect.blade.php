@@ -45,12 +45,12 @@
         syncFormBranchField($('#new_branch_id').val());
 
         $('#new_branch_id').on('change', function() {
-            var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
-            var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
-            
             var branchId = $(this).val();
             syncFormBranchField(branchId);
 
+            @if(empty($stockDocumentCodeLookup))
+            var pre_code = "{{isset($data['pre_code']) ? $data['pre_code'] : ''}}";
+            var code_getter_type = "{{isset($data['code_getter_type']) ? $data['code_getter_type'] : ''}}";
             // Only run the AJAX if both fields have a selected value
             if (pre_code && branchId) {
                 $.ajax({
@@ -74,6 +74,7 @@
                 // Clear the target field if one of the dropdowns is reset to empty
                 $('#voucher_no_div').text('');
             }
+            @endif
         });
     });
 </script>

@@ -59,7 +59,7 @@
                     <div class="col-lg-4">
                         <div class="row">
                             <div class="col-lg-6">
-                                <div class="erp-page--title">
+                                <div class="erp-page--title" id="voucher_no_div">
                                     {{isset($code)?$code:""}}
                                 </div>
                             </div>
@@ -322,7 +322,45 @@
             }
 
             filterOpeningStockStores();
-            $('#new_branch_id').on('change', filterOpeningStockStores);
+            var codeRequestNumber = 0;
+
+            $('#new_branch_id').on('change', function() {
+                filterOpeningStockStores();
+
+                if (formcase !== 'new') {
+                    return;
+                }
+
+                var branchId = $(this).val();
+                var requestNumber = ++codeRequestNumber;
+                var $codeTitle = $('#voucher_no_div');
+
+                if (!branchId) {
+                    $codeTitle.text('');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('voucher.get-code') }}",
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        pre_code: "{{ $data['pre_code'] }}",
+                        branch_id: branchId,
+                        code_getter_type: "{{ $data['code_getter_type'] }}"
+                    },
+                    success: function(response) {
+                        if (requestNumber === codeRequestNumber && response && response.code) {
+                            $codeTitle.text(response.code);
+                        }
+                    },
+                    error: function() {
+                        if (requestNumber === codeRequestNumber) {
+                            toastr.error('Unable to refresh the document code for the selected branch.');
+                        }
+                    }
+                });
+            });
         });
         function voucher_posted(){
             var stock_id = $('#stock_id').val();

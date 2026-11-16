@@ -52,7 +52,7 @@
                     <div class="col-lg-4">
                         <div class="row">
                             <div class="col-lg-6">
-                                <div class="erp-page--title">
+                                <div class="erp-page--title" id="voucher_no_div">
                                     {{isset($code)?$code:""}}
                                 </div>
                             </div>
@@ -84,10 +84,10 @@
                                         <option value="0">Select</option>
                                         @php $storeid = isset($storeid)?$storeid:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            @if($case == 'new' && $store->store_default_value == 1)
+                                            @if($case == 'new' && $store->store_default_value == 1 && (int) $store->branch_id === (int) auth()->user()->branch_id)
                                                 @php $storeid = $store->store_id @endphp
                                             @endif
-                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" data-default="{{ (int) $store->store_default_value }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -129,7 +129,7 @@
                             </div>
                         </div>
                     </div>
-                     @include('layouts.branchSelect')
+                     @include('layouts.branchSelect', ['stockDocumentCodeLookup' => true])
                 </div>
                 <div class="row">
                     <div class="col-lg-12 text-right">
@@ -368,6 +368,7 @@
             // Function to filter stores based on selected branch
             function filterStores() {
                 var selectedBranchId = $('#new_branch_id').val();
+                var selectedStoreId = $storeSelect.val();
 
                 // Reset the select element
                 $storeSelect.html('');
@@ -383,16 +384,42 @@
 
                 $storeSelect.append($matchingOptions);
 
+                var $defaultStore = $matchingOptions.filter(function() {
+                    return $(this).attr('data-default') === '1';
+                });
+                $storeSelect.val(selectedStoreId && selectedStoreId !== '0' && $storeSelect.find('option[value="' + selectedStoreId + '"]').length
+                    ? selectedStoreId
+                    : ($defaultStore.first().val() || $matchingOptions.first().val() || '0'));
+
                 // CRITICAL: Trigger Select2 change to refresh its UI display
                 $storeSelect.trigger('change.select2');
             }
 
             // 2. Run immediately on page load to handle initial or saved state
             filterStores();
+            var codeRequestNumber = 0;
 
             // 3. Run whenever the branch dropdown changes
             $('#new_branch_id').on('change', function() {
                 filterStores();
+                if (formcase !== 'new') return;
+                var branchId = $(this).val();
+                var requestNumber = ++codeRequestNumber;
+                if (!branchId) {
+                    $('#voucher_no_div').text('');
+                    return;
+                }
+                $.get("{{ route('voucher.get-code') }}", {
+                    pre_code: "{{ $data['pre_code'] }}",
+                    branch_id: branchId,
+                    code_getter_type: "{{ $data['code_getter_type'] }}"
+                }).done(function(response) {
+                    if (requestNumber === codeRequestNumber && response && response.code) {
+                        $('#voucher_no_div').text(response.code);
+                    }
+                }).fail(function() {
+                    if (requestNumber === codeRequestNumber) toastr.error('Unable to refresh the document code.');
+                });
             });
         });
 
