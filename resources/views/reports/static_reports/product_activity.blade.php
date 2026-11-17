@@ -739,6 +739,9 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                     @if(strtolower((string) $row->document_type) === 'di')
                                         <span style="color: #2196f3 !important; font-size: 12px;">Damaged Items</span><br>
                                     @endif
+                                    @if(strtolower((string) $row->document_type) === 'sa')
+                                        <span style="color: #2196f3 !important; font-size: 12px;">Stock Adjustment</span><br>
+                                    @endif
                                     @if($row->bonus_qty_in != null && abs($row->bonus_qty_in) != 0)
                                         <span style="color: #2196f3 !important; font-size: 12px;">FOC Qty :</span> {{$row->bonus_qty_in}} ,
                                     @endif
@@ -746,11 +749,11 @@ $insert_data = "insert into  TBL_INVE_STOCK_dtl  (
                                         @php
                                             $branch = \App\Models\TblSoftBranch::where('branch_id',$row->transfer_from_branch_id)->first(['branch_short_name']);
                                         @endphp
-                                        @if(strtolower((string) $row->document_type) !== 'di')
+                                        @if(!in_array(strtolower((string) $row->document_type), ['di', 'sa'], true))
                                             <span style="color: #2196f3 !important; font-size: 12px;">Transfer From :</span> {{$branch->branch_short_name ?? ''}} <br>
                                         @endif
                                     @endif
-                                    @if($row->transfer_to_branch_id != null && $row->transfer_to_branch_id != "" && $row->transfer_to_branch_id != 0)
+                                    @if(strtolower((string) $row->document_type) !== 'sa' && $row->transfer_to_branch_id != null && $row->transfer_to_branch_id != "" && $row->transfer_to_branch_id != 0)
                                         @php
                                             $branch = \App\Models\TblSoftBranch::where('branch_id',$row->transfer_to_branch_id)->first(['branch_short_name']);
                                         @endphp
