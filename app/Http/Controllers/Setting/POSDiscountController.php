@@ -66,12 +66,17 @@ class POSDiscountController extends Controller
     public function store(Request $request, $id = null)
     {
         $data = [];
+        $isOrderDiscount = $request->boolean('is_order_discount');
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
                 Rule::unique('tbl_pos_discount_types', 'name')->ignore($id),
             ],
-            'default_discount' => 'required|numeric|min:0'
+            'default_discount' => 'required|numeric|min:0',
+            'is_order_discount' => 'nullable|boolean',
+            'max_discount' => $isOrderDiscount
+                ? 'required|numeric|min:0|max:999999999999.999'
+                : 'nullable',
         ]);
         if ($validator->fails()) {
             $data['validator_errors'] = $validator->errors();
@@ -85,14 +90,16 @@ class POSDiscountController extends Controller
             }else{
                 $setting = new TblPosDiscountType();
             }
-            $form_id = $setting->id;
             $setting->name = $request->name;
             $setting->default_discount = $request->default_discount;
+            $setting->is_order_discount = $isOrderDiscount;
+            $setting->max_discount = $isOrderDiscount ? $request->max_discount : null;
             $setting->status = $request->status == 'on' ? 1 : 0;
 
             $setting->business_id = auth()->user()->business_id;
             $setting->company_id = auth()->user()->company_id;
             $setting->save();
+            $form_id = $setting->id;
 
         }catch (QueryException $e) {
             DB::rollback();

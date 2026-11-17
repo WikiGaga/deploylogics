@@ -4,6 +4,20 @@ var KTFormWidgets = function () {
     // Private functions
     var validator;
     var formId = $( "#discount_type_form" )
+    var initDiscountScope = function () {
+        var toggle = formId.find('#is_order_discount');
+        var maxDiscount = formId.find('#max_discount');
+        var updateDiscountScope = function () {
+            var isOrderDiscount = toggle.prop('checked');
+            formId.find('#max_discount_group').toggle(isOrderDiscount);
+            maxDiscount.prop('disabled', !isOrderDiscount).prop('required', isOrderDiscount);
+        };
+        toggle.on('change', updateDiscountScope);
+        formId.on('reset', function () {
+            setTimeout(updateDiscountScope, 0);
+        });
+        updateDiscountScope();
+    };
     $.validator.addMethod("valueNotEquals", function(value, element, arg){
         return arg !== value;
     }, "This field is required");
@@ -16,6 +30,14 @@ var KTFormWidgets = function () {
                 },
                 default_discount: {
                     required: true,
+                },
+                max_discount: {
+                    required: function () {
+                        return formId.find('#is_order_discount').prop('checked');
+                    },
+                    number: true,
+                    min: 0,
+                    max: 999999999999.999
                 }
             },
 
@@ -76,6 +98,7 @@ var KTFormWidgets = function () {
     return {
         // public functions
         init: function() {
+            initDiscountScope();
             initValidation();
         }
     };

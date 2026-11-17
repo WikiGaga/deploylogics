@@ -16,5 +16,7 @@ class TblPosDiscountType extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'is_order_discount' => 'boolean',
+        'max_discount' => 'decimal:3',
     ];
 }

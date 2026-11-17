@@ -7,12 +7,16 @@
 @section('content')
     @php
         $case = isset($data['page_data']['type']) ? $data['page_data']['type'] : "";
+        $is_order_discount = false;
+        $max_discount = null;
         if($case == 'new'){}
         if($case == 'edit'){
             $id = $data['current']->id;
             $name = $data['current']->name;
             $default_discount = $data['current']->default_discount;
             $status = $data['current']->status;
+            $is_order_discount = $data['current']->is_order_discount ?? false;
+            $max_discount = $data['current']->max_discount;
         }
     @endphp
     @permission($data['permission'])
@@ -44,7 +48,30 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group-block row">    
+                        <div class="form-group-block row">
+                            <label class="col-lg-3 erp-col-form-label" for="is_order_discount">Apply Discount To:</label>
+                            <div class="col-lg-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="mr-3">Per Product</span>
+                                    <input type="hidden" name="is_order_discount" value="0">
+                                    <span class="kt-switch kt-switch--sm kt-switch--icon">
+                                        <label class="mb-0">
+                                            <input type="checkbox" id="is_order_discount" name="is_order_discount" value="1" aria-label="Apply discount to overall bill" aria-controls="max_discount_group" {{$is_order_discount ? 'checked' : ''}}>
+                                            <span></span>
+                                        </label>
+                                    </span>
+                                    <span class="ml-3">Overall Bill</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="max_discount_group" class="form-group-block row" @if(!$is_order_discount) style="display: none;" @endif>
+                            <label class="col-lg-3 erp-col-form-label" for="max_discount">Maximum Discount: <span class="required">*</span></label>
+                            <div class="col-lg-6">
+                                <input type="number" id="max_discount" name="max_discount" value="{{$max_discount}}" min="0" max="999999999999.999" step="0.001" class="form-control erp-form-control-sm" {{$is_order_discount ? 'required' : 'disabled'}} aria-describedby="max_discount_help">
+                                <small id="max_discount_help" class="form-text text-muted">Maximum discount amount allowed on the overall bill.</small>
+                            </div>
+                        </div>
+                        <div class="form-group-block row">
                             <label class="col-lg-3 erp-col-form-label">Status:</label>
                             <div class="col-lg-6">
                                 <span class="kt-switch kt-switch--sm kt-switch--icon">
@@ -74,5 +101,5 @@
 @endsection
 
 @section('customJS')
-    <script src="{{ asset('js/pages/js/setting/pos-discount-types.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/setting/pos-discount-types.js') }}?v=20261117" type="text/javascript"></script>
 @endsection
