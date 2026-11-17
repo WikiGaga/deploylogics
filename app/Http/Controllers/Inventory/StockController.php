@@ -2185,16 +2185,15 @@ class StockController extends Controller
             $packing = $requirement['packing'];
             // Ledger quantities are already normalized to the product's base unit.
             // Include every barcode/packing for this product before converting for display.
-            $availableBase = DB::table('VW_PURC_STOCK_DTL')
-                ->where('business_id', $stock->business_id)
-                ->where('company_id', $stock->company_id)
-                ->where('branch_id', $stock->branch_id)
-                ->where('sales_store_id', $stock->stock_store_from_id)
-                ->where('product_id', $productId)
-                ->where('posted', 1)
-                ->where('document_id', '<>', $stock->stock_id)
-                ->whereDate('document_date', '<=', $stock->stock_date)
-                ->sum('qty_base_unit_value');
+            $availableBase = app(\App\Services\ProductStockBalance::class)->baseQuantity(
+                $productId,
+                $stock->business_id,
+                $stock->company_id,
+                $stock->branch_id,
+                $stock->stock_store_from_id,
+                date('Y-m-d', strtotime((string) $stock->stock_date)),
+                $stock->stock_id
+            );
 
             $requiredBase = $requirement['required_base'];
             if ((float) $availableBase + 0.000001 < $requiredBase) {
