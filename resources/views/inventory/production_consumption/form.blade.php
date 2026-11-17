@@ -379,24 +379,37 @@
                     });
 
                     $select.empty().append($placeholder).append($matchingStores);
-                    if ($select.find('option[value="' + selectedStoreId + '"]').length) {
+                    if (selectedStoreId && selectedStoreId !== '0' && $select.find('option[value="' + selectedStoreId + '"]').length) {
                         $select.val(selectedStoreId);
                     } else {
                         var $defaultStore = $matchingStores.filter(function() {
                             return $(this).attr('data-default') === '1';
                         });
-                        $select.val($defaultStore.length ? $defaultStore.first().val() : '0');
+                        $select.val($defaultStore.first().val() || $matchingStores.first().val() || '0');
                     }
                     $select.trigger('change.select2');
                 });
             }
 
+            var codeRequestNumber = 0;
+
             function updateProductionConsumptionCode() {
                 if (formcase !== 'new') return;
-                $.get('/production-consumption/get-code/' + $branchSelect.val())
+                var branchId = $branchSelect.val();
+                var requestNumber = ++codeRequestNumber;
+                if (!branchId) {
+                    $('#voucher_no_div').text('');
+                    return;
+                }
+                $.get('/production-consumption/get-code/' + encodeURIComponent(branchId))
                     .done(function(response) {
-                        if (response && response.code) {
+                        if (requestNumber === codeRequestNumber && response && response.code) {
                             $('#voucher_no_div').text(response.code);
+                        }
+                    })
+                    .fail(function() {
+                        if (requestNumber === codeRequestNumber) {
+                            toastr.error('Unable to refresh the document code.');
                         }
                     });
             }

@@ -62,7 +62,7 @@
                     <div class="col-lg-12">
                         <div class="row">
                             <div class="col-lg-6">
-                                <div class="erp-page--title">
+                                <div class="erp-page--title" id="voucher_no_div">
                                     {{isset($code)?$code:""}}
                                 </div>
                             </div>
@@ -96,22 +96,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="row">
-                            <label class="col-lg-6 erp-col-form-label text-center">To Transfer Branch:</label>
-                            <div class="col-lg-6">
-                                <div class="erp-select2">
-                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" name="branch_to">
-                                        <option value="0">Select</option>
-                                        @php $transfer_to = isset($branch_to)?$branch_to:'' @endphp
-                                        @foreach($data['branch'] as $branch)
-                                            <option value="{{$branch->branch_id}}" {{$branch->branch_id == $transfer_to?'selected':''}}>{{$branch->branch_name}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @include('layouts.branchSelect', ['stockDocumentCodeLookup' => true])
                     <div class="col-lg-4">
                         <div class="row">
                             <label class="col-lg-6 erp-col-form-label">Store From:<span class="required">*</span></label>
@@ -120,7 +105,7 @@
                                     <select class="moveIndex form-control erp-form-control-sm kt-select2" id="store_id" name="store">
                                         @php $storeid = isset($store_id)?$store_id:'' @endphp
                                         @foreach($data['store'] as $store)
-                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
+                                            <option value="{{$store->store_id}}" data-branch="{{ $store->branch_id }}" data-default="{{ (int) $store->store_default_value }}" {{$store->store_id == $storeid?'selected':''}}>{{$store->store_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -272,7 +257,22 @@
                             </div>
                         </div>
                     </div>
-                    @include('layouts.branchSelect')
+                    <div class="col-lg-4">
+                        <div class="row">
+                            <label class="col-lg-6 erp-col-form-label text-center">To Transfer Branch:</label>
+                            <div class="col-lg-6">
+                                <div class="erp-select2">
+                                    <select class="moveIndex form-control erp-form-control-sm kt-select2" name="branch_to">
+                                        <option value="0">Select</option>
+                                        @php $transfer_to = isset($branch_to)?$branch_to:'' @endphp
+                                        @foreach($data['branch'] as $branch)
+                                            <option value="{{$branch->branch_id}}" {{$branch->branch_id == $transfer_to?'selected':''}}>{{$branch->branch_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-lg-4">
                         <div class="input-group">
@@ -545,42 +545,6 @@
     <script src="{{ asset('js/pages/js/table-calculations-new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
     <script>
-        $(document).ready(function() {
-            // 1. Keep a clone copy of all original store options in memory
-            var $storeSelect = $('#store_id');
-            var $allStoreOptions = $storeSelect.find('option').clone();
-
-            // Function to filter stores based on selected branch
-            function filterStores() {
-                var selectedBranchId = $('#new_branch_id').val();
-
-                // Reset the select element
-                $storeSelect.html('');
-
-                // Re-add the placeholder first if it exists
-                var $placeholder = $allStoreOptions.filter(function() { return !$(this).attr('data-branch'); });
-                $storeSelect.append($placeholder);
-
-                // Find options matching the selected branch and append them
-                var $matchingOptions = $allStoreOptions.filter(function() {
-                    return $(this).attr('data-branch') == selectedBranchId;
-                });
-
-                $storeSelect.append($matchingOptions);
-
-                // CRITICAL: Trigger Select2 change to refresh its UI display
-                $storeSelect.trigger('change.select2');
-            }
-
-            // 2. Run immediately on page load to handle initial or saved state
-            filterStores();
-
-            // 3. Run whenever the branch dropdown changes
-            $('#new_branch_id').on('change', function() {
-                filterStores();
-            });
-        });
-
         var type = "{{ $type }}";
         function voucher_posted(){
             var stock_id = $('#stock_id').val();
@@ -1086,5 +1050,65 @@
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/open-inline-help.js?v='.time()) }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>
+@endsection
+
+@section('customJSEnd')
+    @if($case === 'new')
+    <script>
+        $(function() {
+            var $branch = $('#stock_transfer_form #new_branch_id');
+            var $store = $('#stock_transfer_form #store_id');
+            var $destination = $('#stock_transfer_form select[name="branch_to"]');
+            var $allStores = $store.find('option').clone();
+            var codeRequestNumber = 0;
+
+            function selectBranchStore() {
+                var branchId = $branch.val();
+                var $matchingStores = $allStores.filter(function() {
+                    return $(this).attr('data-branch') === branchId;
+                });
+                var $defaultStore = $matchingStores.filter(function() {
+                    return $(this).attr('data-default') === '1';
+                });
+
+                $store.empty().append($matchingStores);
+                $store.val($defaultStore.first().val() || $matchingStores.first().val() || null);
+                $store.trigger('change.select2');
+
+                $destination.find('option').prop('disabled', false);
+                $destination.find('option[value="' + branchId + '"]').prop('disabled', true);
+                if ($destination.val() === branchId) {
+                    $destination.val('0');
+                }
+                $destination.trigger('change.select2');
+            }
+
+            selectBranchStore();
+            $(document).on('change.stockTransferBranch', '#stock_transfer_form #new_branch_id', function() {
+                selectBranchStore();
+                var branchId = $branch.val();
+                var currentRequest = ++codeRequestNumber;
+                if (!branchId) {
+                    $('#voucher_no_div').text('');
+                    return;
+                }
+
+                $.get("{{ route('voucher.get-code') }}", {
+                    pre_code: "{{ $data['pre_code'] }}",
+                    branch_id: branchId,
+                    code_getter_type: "{{ $data['code_getter_type'] }}"
+                }).done(function(response) {
+                    if (currentRequest === codeRequestNumber && response && response.code) {
+                        $('#voucher_no_div').text(response.code);
+                    }
+                }).fail(function() {
+                    if (currentRequest === codeRequestNumber) {
+                        toastr.error('Unable to refresh the document code.');
+                    }
+                });
+            });
+        });
+    </script>
+    @endif
 @endsection
 
