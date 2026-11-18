@@ -1455,7 +1455,12 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
             totalStockAmount();
         }
         if (['cost_rate', 'last_purchase_rate', 'average_rate'].includes($('#stock_adjustment_form #rate_type').val())) {
-            apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'sa');
+            apply_inventory_document_rate(tr, barcode['product_barcode_id'], 'sa',
+                formData.from_favorite ? function(loaded) {
+                    $(document).trigger('stockAdjustmentFavoriteRowReady', [loaded]);
+                } : null);
+        } else if (formData.from_favorite) {
+            $(document).trigger('stockAdjustmentFavoriteRowReady', [true]);
         }
     } else {
         var qty = 0;
@@ -1465,7 +1470,7 @@ function get_stock_adjustment_detail_detail(tr, response, formData){
 
 }
 
-function apply_inventory_document_rate(tr, barcodeId, formType) {
+function apply_inventory_document_rate(tr, barcodeId, formType, onComplete) {
     var formIds = { sa: '#stock_adjustment_form', st: '#stock_transfer_form', sd: '#stock_distribution_form', di: '#stock_item_form', 'production-consumption': '#formulation_form' };
     var $form = $(formIds[formType]);
     var branchId = $form.find('#new_branch_id').val();
@@ -1488,7 +1493,10 @@ function apply_inventory_document_rate(tr, barcodeId, formType) {
                 $form.find(rateFieldSelector).val() !== rateType ||
                 $form.find('#new_branch_id').val() != branchId ||
                 $form.find('input[name="' + dateFieldName + '"]').val() !== stockDate ||
-                $form.find('#rate_perc').val() !== ratePercentage) return;
+                $form.find('#rate_perc').val() !== ratePercentage) {
+                if (onComplete) onComplete(false);
+                return;
+            }
             if (response.data && response.data.found) {
                 update_rate(tr, response.data.rate);
             } else {
@@ -1497,8 +1505,12 @@ function apply_inventory_document_rate(tr, barcodeId, formType) {
             }
             if (formType === 'sa' && typeof totalStockAmount === 'function') totalStockAmount();
             else if (typeof total_amount === 'function') total_amount();
+            if (onComplete) onComplete(true);
         },
-        error: function() { toastr.error('Unable to load the selected rate.'); }
+        error: function() {
+            toastr.error('Unable to load the selected rate.');
+            if (onComplete) onComplete(false);
+        }
     });
 }
 
@@ -1836,6 +1848,7 @@ function get_stock_transfer_detail(selected_row) {
     var stock_from_id = selected_row.find('tr.d-none>td[data-field="stock_id"]').text();
     var stock_store_from_id = selected_row.find('tr.d-none>td[data-field="stock_store_from_id"]').text();
     var stock_branch_from_id = selected_row.find('tr.d-none>td[data-field="stock_branch_from_id"]').text();
+    var destination_store_id = selected_row.find('tr.d-none>td[data-field="destination_store_id"]').text();
 
     var receivingForm = $('#stock_transfer_receiving');
     var formBlock = receivingForm.length ? receivingForm : selected_row.parents('.erp_form___block');
@@ -1843,6 +1856,10 @@ function get_stock_transfer_detail(selected_row) {
     formBlock.find('#stock_from_id').val(stock_from_id);
     formBlock.find('#store').val(stock_store_from_id);
     formBlock.find('#branch_from_id').val(stock_branch_from_id);
+    if (receivingForm.length) {
+        receivingForm.find('#destination_store_id').val(destination_store_id);
+        if (destination_store_id) receivingForm.find('#store_id').val(destination_store_id).trigger('change.select2');
+    }
     if (receivingForm.length && stock_from_id) {
         if (typeof window.loadStockTransferData === 'function') {
             window.loadStockTransferData(true);

@@ -82,7 +82,9 @@
                             @if($case == 'edit')
                                 <div class="col-lg-6">
                                     <div class="erp-page--title">
-                                        @if($data['current']->stock_receive_status == 1)
+                                        @if(!empty($data['distribution_has_receiving']))
+                                             <span style="background: #ff5722;color: #fff;padding: 0px 30px;">Receiving document created for this distribution</span>
+                                        @elseif($data['current']->stock_receive_status == 1)
                                              <span style="background: #ff5722;color: #fff;padding: 0px 30px;">This stock have been received to other branch</span>
                                         @endif
                                     </div>

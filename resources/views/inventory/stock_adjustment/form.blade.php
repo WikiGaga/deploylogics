@@ -134,6 +134,8 @@
                 <div class="row">
                     <div class="col-lg-12 text-right">
                         <div class="data_entry_header">
+                            <button type="button" id="loadFavoriteBtn" class="btn btn-brand btn-elevate btn-circle btn-icon btn-sm" title="{{ __('message.load_favorite') }}" data-toggle="tooltip"><i class="la la-star"></i></button>
+                            <button type="button" id="saveFavoriteBtn" class="btn btn-brand btn-elevate btn-circle btn-icon btn-sm" title="{{ __('message.save_as_favorite') }}" data-toggle="tooltip"><i class="la la-star-o"></i></button>
                             <div class="hiddenFiledsCount" style="display: inline-block;"><span>0</span> fields hide</div>
                             <div class="dropdown dropdown-inline">
                                 <button type="button" class="btn btn-default btn-icon btn-sm btn-icon-md" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 15px; border: 0;">
@@ -501,6 +503,7 @@
     </script>
     <script src="{{ asset('js/pages/js/add-row-repeated_new.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/purchase/barcode-get-detail.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('js/pages/js/stock-adjustment-favorites.js') }}" type="text/javascript"></script>
     {{--<script src="{{ asset('js/pages/js/product-inline-ajax-detail.js') }}" type="text/javascript"></script>--}}
     <script src="{{ asset('js/pages/js/open-inline-help.js') }}" type="text/javascript"></script>
     <script src="{{ asset('js/pages/js/common/change-grid-item-rate.js') }}" type="text/javascript"></script>

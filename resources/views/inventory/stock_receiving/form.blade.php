@@ -116,6 +116,8 @@
                                                 <input type="text" value="{{isset($stock_transfer_code)?$stock_transfer_code:''}}" id="stock_transfer_code" name="stock_transfer_code" class="readonly form-control erp-form-control-sm moveIndex" placeholder="Enter here">
                                             @endif
                                             <input type="hidden" id="stock_from_id" name="stock_from_id" value="{{isset($stock_from_id)?$stock_from_id:''}}"/>
+                                            <input type="hidden" id="destination_store_id" value="{{isset($store_to)?$store_to:''}}"/>
+                                            <input type="hidden" id="source_type" value="{{isset($data['source_transfer'])?$data['source_transfer']->stock_code_type:''}}"/>
                                             <input type="hidden" id="store" name="store" value="{{isset($store_from)?$store_from:''}}"/>
                                             <input type="hidden" id="branch_from_id" name="branch_from_id" value="{{isset($branch_from)?$branch_from:''}}"/>
                                             <div class="input-group-append">
@@ -406,6 +408,8 @@
                 // Clear any transfer selected for the previous receiving branch.
                 $('#stock_transfer_code').val('');
                 $('#stock_from_id').val('');
+                $('#destination_store_id').val('');
+                $('#source_type').val('');
                 $('#store').val('');
                 $('#branch_from_id').val('');
                 $('.erp_form__grid_body').empty();
@@ -546,10 +550,21 @@
 
         $(document).on('input', '#stock_transfer_code', function() {
             $('#stock_from_id').val('');
+            $('#destination_store_id').val('');
+            $('#source_type').val('');
             $('#store').val('');
             $('#branch_from_id').val('');
             $('.erp_form__grid_body').empty();
             allCalcFunc();
+        });
+
+        $('#store_id').on('change', function () {
+            if ($('#source_type').val() !== 'sd' || !$('#stock_from_id').val()) return;
+            if ($(this).val() == $('#destination_store_id').val()) return;
+            $('#stock_transfer_code, #stock_from_id, #store, #branch_from_id, #destination_store_id, #source_type').val('');
+            $('.erp_form__grid_body').empty();
+            allCalcFunc();
+            toastr.info('Select a Stock Distribution for the new receiving store.');
         });
 
         window.loadStockTransferData = function(skipConfirm){
@@ -570,6 +585,7 @@
                             stock_id : val,
                             stock_code : code_val,
                             branch_id : $('#new_branch_id').val(),
+                            destination_store_id: receivingForm.find('#destination_store_id').val() || receivingForm.find('#store_id').val(),
                         };
                         $.ajax({
                             headers: {
@@ -585,6 +601,11 @@
                                     if(response.data && !valueEmpty(response.data.stock)){
                                         $('#stock_from_id').val(response.data.stock.stock_id);
                                         $('#stock_transfer_code').val(response.data.stock.stock_code);
+                                        $('#destination_store_id').val(response.data.receiving_store_id || '');
+                                        $('#source_type').val(response.data.stock.stock_code_type);
+                                        if (response.data.receiving_store_id) {
+                                            $('#store_id').val(response.data.receiving_store_id).trigger('change.select2');
+                                        }
                                         $('#store').val(response.data.stock.stock_store_from_id);
                                         $('#branch_from_id').val(response.data.stock.stock_branch_from_id);
                                         var stock = response.data.stock.stock_dtls || [];
@@ -682,7 +703,11 @@
             var thix = $(this);
             var val = thix.parents('.open-modal-group').find('#stock_from_id').val();
             if(val){
-                window.open("/stock/stock-transfer/from-stock-print/" + val,'_blank');
+                if ($('#source_type').val() === 'sd') {
+                    window.open('/stock/stock-distribution/form/' + val + '?view=1', '_blank');
+                } else {
+                    window.open('/stock/stock-transfer/from-stock-print/' + val, '_blank');
+                }
             }else{
                 alert('first select stock from')
             }

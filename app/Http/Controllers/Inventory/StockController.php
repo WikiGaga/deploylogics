@@ -241,11 +241,14 @@ class StockController extends Controller
                 $data['stock_code'] = $data['current']->stock_code;
                 if($type === 'stock-receiving' && !empty($data['current']->stock_request_id)){
                     $data['source_transfer'] = TblInveStock::where('stock_id', $data['current']->stock_request_id)
-                        ->where('stock_code_type', 'st')
+                        ->whereIn('stock_code_type', ['st', 'sd'])
                         ->where(Utilities::currentBC())
                         ->first();
                 }
-                if($type == 'stock-transfer' && (int) $data['current']->stock_receive_status > 0){
+                $data['distribution_has_receiving'] = $type === 'stock-distribution'
+                    && $this->distributionHasActiveReceiving($data['current']);
+                if(($type == 'stock-transfer' && (int) $data['current']->stock_receive_status > 0)
+                    || $data['distribution_has_receiving']){
                     $data['page_data']['action'] = '';
                 }
 
@@ -414,6 +417,13 @@ class StockController extends Controller
             $valid['pd.*.rate'] = 'required|numeric|min:0';
             $valid['pd.*.amount'] = 'required|numeric|min:0';
         }
+        if ($formType === 'sd' && !isset($id) && !$isWorkflowStagingAction) {
+            $valid['pd'] = 'required|array|min:1';
+            $valid['pd.*.product_id'] = 'required|numeric';
+            $valid['pd.*.product_barcode_id'] = 'required|numeric';
+            $valid['pd.*.quantity'] = 'required|numeric|gt:0';
+            $valid['pd.*.pd_packing'] = 'required|numeric|gt:0';
+        }
         if($formType == 'str'){
             $valid['store_to'] = 'required|numeric|not_in:0';
             $valid['stock_from_id'] = 'required|numeric';
@@ -539,6 +549,10 @@ class StockController extends Controller
                 if(isset($seen[$key])){
                     return $this->returnjsonerror("Duplicate product with same destination branch and store is not allowed.",201);
                 }
+                if (!isset($id) && !TblDefiStore::where('store_id', $storeTo)->where('branch_id', $branchTo)
+                    ->where(Utilities::currentBC())->exists()) {
+                    return $this->jsonErrorResponse($data, 'A destination store does not belong to its destination branch.', 422);
+                }
                 $seen[$key] = true;
             }
         }
@@ -555,6 +569,11 @@ class StockController extends Controller
                 if (empty($stock)) {
                     throw new ModelNotFoundException('Stock document not found.');
                 }
+                if ($formType === 'sd' && $this->distributionHasActiveReceiving($stock)) {
+                    throw ValidationException::withMessages([
+                        'stock_id' => 'A Stock Distribution with a receiving document cannot be modified.',
+                    ]);
+                }
                 if ($formType === 'st' && (int) $stock->stock_receive_status > 0) {
                     throw ValidationException::withMessages([
                         'stock_id' => 'A received stock transfer cannot be modified.',
@@ -566,15 +585,16 @@ class StockController extends Controller
                             'stock_from_id' => 'The source transfer of an existing receipt cannot be changed.',
                         ]);
                     }
-                    $stockTrans = TblInveStock::with('stock_dtls')
-                        ->where('stock_id', $stock->stock_request_id)
-                        ->where(Utilities::currentBC())
-                        ->where('stock_branch_to_id', $new_branch_id)
-                        ->whereIn('stock_receive_status', [1, 2])
-                        ->where('posted', 1)
-                        ->where('stock_code_type','st')
-                        ->lockForUpdate()
-                        ->first();
+                    $sourceType = TblInveStock::where('stock_id', $stock->stock_request_id)
+                        ->where(Utilities::currentBC())->value('stock_code_type');
+                    if ($sourceType === 'sd' && ((string) $request->store_to !== (string) $stock->stock_store_to_id
+                        || (string) $new_branch_id !== (string) $stock->branch_id)) {
+                        throw ValidationException::withMessages([
+                            'store_to' => 'The destination of an existing receipt cannot be changed.',
+                        ]);
+                    }
+                    $stockTrans = $this->receivingSourceForSave($stock->stock_request_id, $new_branch_id,
+                        $request->store_to, $stock->stock_id);
                     if (empty($stockTrans)) {
                         throw ValidationException::withMessages([
                             'stock_from_id' => 'The posted source transfer is no longer available.',
@@ -584,24 +604,23 @@ class StockController extends Controller
                 }
             }else{
                 if($formType == 'str'){
-                    $stockTrans = TblInveStock::with('stock_dtls')->where('stock_id',$request->stock_from_id)
-                        ->where(Utilities::currentBC())
-                        ->where('stock_branch_to_id', $new_branch_id)
-                        ->where('stock_receive_status',0)
-                        ->where('posted', 1)
-                        ->where('stock_code_type','st')
-                        ->lockForUpdate()
-                        ->first();
+                    $stockTrans = $this->receivingSourceForSave($request->stock_from_id, $new_branch_id,
+                        $request->store_to);
                     if(empty($stockTrans)){
                         DB::rollBack();
-                        return $this->returnjsonerror("Only a posted, unreceived stock transfer belonging to this branch can be received.",200);
+                        return $this->returnjsonerror("Only a posted, unreceived transfer for this branch and store can be received.",200);
                     }
                     $this->applySourceTransferToReceivingRequest($request, $stockTrans);
-                    $stockTrans->stock_receive_status =  2;
-                    $stockTrans->save();
+                    if ($stockTrans->stock_code_type === 'st') {
+                        $stockTrans->stock_receive_status = 2;
+                        $stockTrans->save();
+                    }
                 }
                 $stock = new TblInveStock();
                 $stock->stock_id =  Utilities::uuid();
+                if ($formType === 'sd') {
+                    $stock->stock_receive_required = 1;
+                }
                 $doc_data = [
                     'biz_type'          => 'branch',
                     'model'             => 'TblInveStock',
@@ -1723,10 +1742,17 @@ class StockController extends Controller
 
             $query = TblInveStock::with('stock_dtls')
                 ->where(Utilities::currentBC())
-                ->where('stock_code_type', 'st')
-                ->where('stock_branch_to_id', $receivingBranchId)
+                ->whereIn('stock_code_type', ['st', 'sd'])
                 ->where('posted', 1)
-                ->where('stock_receive_status', 0);
+                ->where(function ($query) use ($receivingBranchId) {
+                    $query->where(function ($query) use ($receivingBranchId) {
+                        $query->where('stock_code_type', 'st')
+                            ->where('stock_branch_to_id', $receivingBranchId)
+                            ->where('stock_receive_status', 0);
+                    })->orWhere(function ($query) {
+                        $query->where('stock_code_type', 'sd')->where('stock_receive_required', 1);
+                    });
+                });
 
             if (!empty($stockId)) {
                 $query->where('stock_id', $stockId);
@@ -1740,7 +1766,21 @@ class StockController extends Controller
             $stock = $query->first();
             if (empty($stock)) {
                 DB::rollback();
-                return $this->jsonErrorResponse($data, 'Stock Transfer document not found.', 200);
+                return $this->jsonErrorResponse($data, 'Unreceived stock source not found.', 200);
+            }
+
+            if ($stock->stock_code_type === 'sd') {
+                $storeId = $request->input('destination_store_id', $request->input('store_to'));
+                $details = $stock->stock_dtls->filter(function ($detail) use ($receivingBranchId, $storeId) {
+                    return (string) $detail->stock_dtl_branch_to_id === (string) $receivingBranchId
+                        && (string) $detail->stock_dtl_store_to_id === (string) $storeId;
+                })->values();
+                if ($details->isEmpty() || $this->distributionHasActiveReceiving($stock, $receivingBranchId, $storeId)) {
+                    DB::rollBack();
+                    return $this->jsonErrorResponse($data, 'This distribution destination is not available for receiving.', 422);
+                }
+                $stock->setRelation('stock_dtls', $details);
+                $data['receiving_store_id'] = $storeId;
             }
 
             $data['stock'] = $stock;
@@ -1847,6 +1887,9 @@ class StockController extends Controller
             }
             if (!auth()->user()->isAbleTo($this->menu_id . '-delete')) {
                 throw new Exception('You do not have permission to delete this document.');
+            }
+            if ($type === 'stock-distribution' && $this->distributionHasActiveReceiving($stock)) {
+                throw new Exception('Stock Distribution cannot be deleted because a receiving document exists.');
             }
             if ($type === 'stock-transfer') {
                 if ((int) $stock->stock_receive_status > 0) {
@@ -2038,6 +2081,53 @@ class StockController extends Controller
         dd('OK');
     }
 
+    protected function distributionHasActiveReceiving($source, $branchId = null, $storeId = null, $exceptId = null): bool
+    {
+        if (empty($source) || $source->stock_code_type !== 'sd'
+            || (int) ($source->stock_receive_required ?? 0) !== 1) {
+            return false;
+        }
+        return TblInveStock::where('stock_request_id', $source->stock_id)
+            ->where('stock_code_type', 'str')
+            ->where(Utilities::currentBC())
+            ->whereRaw('NVL(POSTED, 0) <> 2')
+            ->when($branchId !== null, function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->when($storeId !== null, function ($query) use ($storeId) {
+                $query->where('stock_store_to_id', $storeId);
+            })
+            ->when($exceptId !== null, function ($query) use ($exceptId) {
+                $query->where('stock_id', '<>', $exceptId);
+            })->exists();
+    }
+
+    protected function receivingSourceForSave($sourceId, $branchId, $storeId, $existingReceiptId = null)
+    {
+        $source = TblInveStock::with('stock_dtls')
+            ->where('stock_id', $sourceId)
+            ->where(Utilities::currentBC())
+            ->whereIn('stock_code_type', ['st', 'sd'])
+            ->where('posted', 1)
+            ->lockForUpdate()->first();
+        if (empty($source)) return null;
+        if ($source->stock_code_type === 'st') {
+            if ((string) $source->stock_branch_to_id !== (string) $branchId
+                || !in_array((int) $source->stock_receive_status,
+                    $existingReceiptId === null ? [0] : [1, 2], true)) return null;
+            return $source;
+        }
+        if ((int) ($source->stock_receive_required ?? 0) !== 1
+            || $this->distributionHasActiveReceiving($source, $branchId, $storeId, $existingReceiptId)) return null;
+        $details = $source->stock_dtls->filter(function ($detail) use ($branchId, $storeId) {
+            return (string) $detail->stock_dtl_branch_to_id === (string) $branchId
+                && (string) $detail->stock_dtl_store_to_id === (string) $storeId;
+        })->values();
+        if ($details->isEmpty()) return null;
+        $source->setRelation('stock_dtls', $details);
+        return $source;
+    }
+
     protected function applySourceTransferToReceivingRequest(Request $request, $stockTrans): void
     {
         $rows = [];
@@ -2144,6 +2234,9 @@ class StockController extends Controller
 
     protected function assertTransferNotReceived($row, string $action): void
     {
+        if (!empty($row) && $row->stock_code_type === 'sd' && $this->distributionHasActiveReceiving($row)) {
+            throw new \RuntimeException('Stock Distribution cannot be ' . $action . ' because a receiving document exists.', 422);
+        }
         if (!empty($row) && $row->stock_code_type === 'st') {
             if ((int) $row->stock_receive_status > 0) {
                 throw new \RuntimeException('A received stock transfer cannot be ' . $action . '.', 422);

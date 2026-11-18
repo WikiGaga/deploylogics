@@ -1596,10 +1596,11 @@ class DataTableController extends Controller
                 $receivingBranchId = $request->branch_id;
             }
             $data['show_name'] = 'stock_code';
-            $data['hideKeys'] = ['stock_id', 'stock_store_from_id', 'stock_branch_from_id'];
-            $data['keys'] = ['stock_date', 'stock_code', 'stock_store_from_name', 'stock_branch_to_name',  'stock_store_to_name'];
+            $data['hideKeys'] = ['stock_id', 'stock_store_from_id', 'stock_branch_from_id', 'destination_store_id'];
+            $data['keys'] = ['stock_date', 'stock_code', 'stock_store_from_name', 'stock_branch_to_name',  'stock_store_to_name', 'source_type'];
             $merge = array_merge($data['keys'], $data['hideKeys']);
-            $query = DB::table('vw_inve_stock')->select($merge)
+            $query = DB::table('vw_inve_stock')->select(array_diff($merge, ['source_type', 'destination_store_id']))
+                ->selectRaw("'Stock Transfer' AS SOURCE_TYPE, NULL AS DESTINATION_STORE_ID")
                 ->where('stock_code_type', 'st')
                 ->where('business_id', auth()->user()->business_id)
                 ->where('company_id', auth()->user()->company_id)
@@ -1609,8 +1610,37 @@ class DataTableController extends Controller
             if ($str) {
                 $query->whereRaw('lower(stock_code) like ?', ['%' . strtolower($str) . '%']);
             }
-            $data['list'] = $query->distinct()->orderBy('stock_code', 'desc')->limit(50)->get();
-            $data['head'] = ['Date', 'Code', 'From Store','To Transfer Branch',  'To Store'];
+            // An SD has destinations on its details, not on its header.
+            $distribution = DB::table('vw_inve_stock as S')
+                ->join('tbl_inve_stock as M', 'M.stock_id', '=', 'S.stock_id')
+                ->join('tbl_inve_stock_dtl as D', 'D.stock_id', '=', 'S.stock_id')
+                ->join('tbl_defi_store as DEST', 'DEST.store_id', '=', 'D.stock_dtl_store_to_id')
+                ->join('tbl_soft_branch as BR', 'BR.branch_id', '=', 'D.stock_dtl_branch_to_id')
+                ->selectRaw("S.STOCK_DATE, S.STOCK_CODE, S.STOCK_STORE_FROM_NAME,
+                    BR.BRANCH_NAME AS STOCK_BRANCH_TO_NAME, DEST.STORE_NAME AS STOCK_STORE_TO_NAME,
+                    'Stock Distribution' AS SOURCE_TYPE, S.STOCK_ID, S.STOCK_STORE_FROM_ID,
+                    S.STOCK_BRANCH_FROM_ID, D.STOCK_DTL_STORE_TO_ID AS DESTINATION_STORE_ID")
+                ->where('S.stock_code_type', 'sd')
+                ->where('M.stock_receive_required', 1)
+                ->where('S.business_id', auth()->user()->business_id)
+                ->where('S.company_id', auth()->user()->company_id)
+                ->where('S.posted', 1)
+                ->where('D.stock_dtl_branch_to_id', $receivingBranchId)
+                ->whereNotExists(function ($query) use ($receivingBranchId) {
+                    $query->select(DB::raw(1))->from('tbl_inve_stock as R')
+                        ->whereColumn('R.stock_request_id', 'S.stock_id')
+                        ->where('R.stock_code_type', 'str')
+                        ->where('R.branch_id', $receivingBranchId)
+                        ->whereColumn('R.stock_store_to_id', 'D.stock_dtl_store_to_id')
+                        ->whereRaw('NVL(R.POSTED, 0) <> 2');
+                });
+            if ($str) {
+                $distribution->whereRaw('lower(S.stock_code) like ?', ['%' . strtolower($str) . '%']);
+            }
+            $data['list'] = $query->distinct()->orderBy('stock_code', 'desc')->limit(50)->get()
+                ->concat($distribution->distinct()->orderBy('S.stock_code', 'desc')->limit(50)->get())
+                ->take(50)->values();
+            $data['head'] = ['Date', 'Code', 'From Store', 'To Transfer Branch', 'To Store', 'Source'];
         }
         if ($helpType == 'stockReceivingHelp') {
             $data['show_name'] = 'stock_code';
