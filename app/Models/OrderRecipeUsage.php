@@ -15,6 +15,7 @@ class OrderRecipeUsage extends Model
         'food_id',
         'option_list_id',
         'food_recipe_id',
+        'source_breakdown',
         'product_id',
         'order_quantity',
         'product_quantity',

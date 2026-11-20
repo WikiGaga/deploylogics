@@ -178,6 +178,7 @@ var KTFormWidgets = function() {
                         var unmatchedTotal = (unmatched.no_variation || 0)
                             + (unmatched.no_option_ids || 0)
                             + (unmatched.no_recipe || 0)
+                            + (unmatched.no_addon_recipe || 0)
                             + (unmatched.recipe_not_effective || 0)
                             + (unmatched.empty_recipe || 0)
                             + (unmatched.invalid_product || 0);
@@ -189,6 +190,7 @@ var KTFormWidgets = function() {
                                 + ' (no variation: ' + (unmatched.no_variation || 0)
                                 + ', no option: ' + (unmatched.no_option_ids || 0)
                                 + ', no recipe: ' + (unmatched.no_recipe || 0)
+                                + ', no add-on recipe: ' + (unmatched.no_addon_recipe || 0)
                                 + ', recipe date after order date: ' + (unmatched.recipe_not_effective || 0)
                                 + ', empty recipe: ' + (unmatched.empty_recipe || 0)
                                 + ', invalid product ID: ' + (unmatched.invalid_product || 0) + ').';

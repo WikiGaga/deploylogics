@@ -16,6 +16,7 @@ class FoodRecipe extends Model
     protected $fillable = [
         'id',
         'food_id',
+        'recipe_type',
         'recipe_date',
         'notes',
         'business_id',
@@ -33,6 +34,10 @@ class FoodRecipe extends Model
 
     public function option() {
         return $this->belongsTo(OptionsList::class, 'food_id');
+    }
+
+    public function addOn() {
+        return $this->belongsTo(AddOn::class, 'food_id');
     }
 
     public function dtls() {

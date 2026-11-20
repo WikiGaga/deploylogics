@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\OptionsList;
+use App\Models\AddOn;
 use App\Models\FoodRecipe;
 use App\Models\FoodRecipeDtl;
 use App\Models\TblPurcProduct;
@@ -36,7 +37,7 @@ class FoodRecipeController extends Controller
                 $data['permission'] = self::$menu_dtl_id . '-edit';
                 $data['page_data'] = array_merge($data['page_data'], Utilities::editForm());
                 $data['id'] = $id;
-                $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.uom', 'dtls.packing', 'option'])->where('id', $id)->first();
+                $data['current'] = FoodRecipe::with(['dtls.product', 'dtls.uom', 'dtls.packing', 'option', 'addOn'])->where('id', $id)->first();
                 foreach ($data['current']->dtls as $detail) {
                     $storedProductValue = trim((string) $detail->product_id);
                     $barcode = null;
@@ -109,6 +110,7 @@ class FoodRecipeController extends Controller
         $data = [];
         $validator = Validator::make($request->all(), [
             'formulation_date' => 'required|date_format:d-m-Y',
+            'recipe_type' => 'required|in:option,addon',
             'food_id' => 'required|numeric',
             'pd.*.product_id' => 'nullable|numeric|exists:tbl_purc_product,product_id',
             'pd.*.pd_barcode' => 'nullable|numeric',
@@ -122,6 +124,13 @@ class FoodRecipeController extends Controller
             return $this->jsonErrorResponse($data, 'Validation failed', 422);
         }
 
+        $targetExists = $request->recipe_type === 'addon'
+            ? AddOn::where('id', $request->food_id)->where('restaurant_id', auth()->user()->branch_id)->exists()
+            : OptionsList::where('id', $request->food_id)->exists();
+        if (!$targetExists) {
+            return $this->jsonErrorResponse($data, 'The selected recipe target is invalid for this branch.', 422);
+        }
+
         DB::beginTransaction();
         try {
             if (isset($id)) {
@@ -132,7 +141,10 @@ class FoodRecipeController extends Controller
             }
 
             $foodRecipe->food_id = $request->food_id;
-            $foodRecipe->food_name = $request->food_name;
+            $foodRecipe->recipe_type = $request->recipe_type;
+            $foodRecipe->food_name = $request->recipe_type === 'addon'
+                ? AddOn::where('id', $request->food_id)->value('name')
+                : OptionsList::where('id', $request->food_id)->value('name');
             $foodRecipe->recipe_date = date('Y-m-d', strtotime($request->formulation_date));
             $foodRecipe->notes = $request->formulation_remarks;
             $foodRecipe->business_id = auth()->user()->business_id;

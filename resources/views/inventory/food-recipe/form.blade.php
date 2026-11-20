@@ -23,7 +23,10 @@
             $code = $data['current']->id;
             $date = date('d-m-Y', strtotime(trim(str_replace('/', '-', $data['current']->recipe_date))));
             $option_id = $data['current']->food_id;
-            $option_name = $data['current']->option->name;
+            $recipe_type = $data['current']->recipe_type === 'addon' ? 'addon' : 'option';
+            $option_name = $recipe_type === 'addon'
+                ? optional($data['current']->addOn)->name
+                : optional($data['current']->option)->name;
             $remarks = $data['current']->notes;
             $dtls = isset($data['current']->dtls) ? $data['current']->dtls : [];
         }
@@ -40,6 +43,19 @@
                         @include('elements.page_header', ['page_data' => $data['page_data']])
                     </div>
                     <div class="kt-portlet__body">
+                        <div class="row form-group-block">
+                            <div class="col-lg-4">
+                                <div class="row">
+                                    <label class="col-lg-6 erp-col-form-label">Recipe Type:<span class="required">*</span></label>
+                                    <div class="col-lg-6">
+                                        <select id="recipe_type" name="recipe_type" class="form-control erp-form-control-sm">
+                                            <option value="option" {{ ($recipe_type ?? 'option') === 'option' ? 'selected' : '' }}>Food / Variation</option>
+                                            <option value="addon" {{ ($recipe_type ?? 'option') === 'addon' ? 'selected' : '' }}>Add-on</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row form-group-block">
                             <div class="col-lg-4">
                                 <div class="row">
@@ -71,7 +87,7 @@
                             </div>
                             <div class="col-lg-4">
                                 <div class="row">
-                                    <label class="col-lg-6 erp-col-form-label text-center"> Recipe for Food:<span
+                                    <label class="col-lg-6 erp-col-form-label text-center" id="recipe_target_label">Recipe for Food:<span
                                             class="required">*</span></label>
                                     <div class="col-lg-6">
                                         <div class="erp_form___block">
@@ -338,6 +354,21 @@
 
         $(document).ready(function() {
             updateFoodIdReadonly();
+            updateRecipeTarget();
+        });
+
+        function updateRecipeTarget() {
+            var isAddon = $('#recipe_type').val() === 'addon';
+            $('#recipe_target_label').html((isAddon ? 'Recipe for Add-on:' : 'Recipe for Food:') + '<span class="required">*</span>');
+            $('#food_id').attr('data-url', isAddon
+                ? "{{ action('Common\\DataTableController@inlineHelpOpen', 'AddOnRecipeHelp') }}"
+                : "{{ action('Common\\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}");
+        }
+
+        $(document).on('change', '#recipe_type', function() {
+            $('#food_id, #food_name').val('');
+            $('#food_id').prop('readonly', false);
+            updateRecipeTarget();
         });
 
         $(document).on('click', '#btn-minus-selected-data', function(e) {

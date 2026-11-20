@@ -39,6 +39,7 @@ class OrderRecipeUsageController extends Controller
             'no_variation' => 0,
             'no_option_ids' => 0,
             'no_recipe' => 0,
+            'no_addon_recipe' => 0,
             'recipe_not_effective' => 0,
             'empty_recipe' => 0,
             'invalid_product' => 0,
@@ -53,6 +54,7 @@ class OrderRecipeUsageController extends Controller
                 'od.order_id',
                 'od.quantity',
                 'od.variation',
+                'od.add_ons',
                 'od.food_id',
                 'o.restaurant_id',
                 'o.order_date',
@@ -84,19 +86,20 @@ class OrderRecipeUsageController extends Controller
         }
 
         $optionListIds = [];
+        $addOnIds = [];
         $structuredDetails = [];
 
         foreach ($orderDetails as $detail) {
             $variations = $this->decodeVariation($detail->variation);
-
-            if (empty($variations)) {
+            $addons = $this->extractAddOns($variations, $detail->add_ons);
+            if (empty($variations) && empty($addons)) {
                 $unmatched['no_variation']++;
                 continue;
             }
 
             $optionIds = $this->extractOptionListIdsFromVariations($variations);
 
-            if (empty($optionIds)) {
+            if (empty($optionIds) && empty($addons)) {
                 $unmatched['no_option_ids']++;
                 continue;
             }
@@ -107,15 +110,18 @@ class OrderRecipeUsageController extends Controller
                 'order_quantity'  => (float) $detail->quantity,
                 'food_id'         => (int) ($detail->food_id ?? 0),
                 'option_list_ids' => $optionIds,
+                'addons' => $addons,
                 'order_date'      => Carbon::parse($detail->order_date),
             ];
 
             $optionListIds = array_merge($optionListIds, $optionIds);
+            $addOnIds = array_merge($addOnIds, array_keys($addons));
         }
 
         $optionListIds = array_values(array_unique(array_filter($optionListIds)));
+        $addOnIds = array_values(array_unique(array_filter($addOnIds)));
 
-        if (empty($optionListIds)) {
+        if (empty($optionListIds) && empty($addOnIds)) {
             return response()->json([
                 'success' => false,
                 'message' => 'No option list identifiers resolved from order variations.',
@@ -127,16 +133,22 @@ class OrderRecipeUsageController extends Controller
             ], 422);
         }
 
-        $recipesByFood = FoodRecipe::with('dtls')
-            ->where('branch_id', $branchId)
-            ->whereIn('food_id', $optionListIds)
-            ->orderBy('recipe_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->groupBy('food_id');
+        $recipeQuery = function ($ids, $type) use ($branchId) {
+            if (empty($ids)) return collect();
+            return FoodRecipe::with('dtls')
+                ->where('branch_id', $branchId)
+                ->whereIn('food_id', $ids)
+                ->where('recipe_type', $type)
+                ->orderBy('recipe_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->get()->groupBy('food_id');
+        };
+        $recipesByFood = $recipeQuery($optionListIds, 'option');
+        $recipesByAddOn = $recipeQuery($addOnIds, 'addon');
 
-        if ($recipesByFood->isEmpty()) {
+        if ($recipesByFood->isEmpty() && $recipesByAddOn->isEmpty()) {
             $unmatched['no_recipe'] = count($optionListIds);
+            $unmatched['no_addon_recipe'] = count($addOnIds);
             $unmatched['option_list_ids'] = array_slice($optionListIds, 0, 50);
 
             return response()->json([
@@ -154,17 +166,30 @@ class OrderRecipeUsageController extends Controller
         $resolvedProductIds = [];
 
         foreach ($structuredDetails as $detail) {
+            $targets = [];
             foreach ($detail['option_list_ids'] as $optionListId) {
-                $recipeGroup = $recipesByFood->get($optionListId);
-                $recipe = $this->pickRecipeAsOf($recipesByFood, $optionListId, $detail['order_date']);
+                $targets[] = ['id' => $optionListId, 'type' => 'option', 'quantity' => $detail['order_quantity']];
+            }
+            foreach ($detail['addons'] as $addOnId => $quantity) {
+                $targets[] = ['id' => $addOnId, 'type' => 'addon', 'quantity' => $quantity];
+            }
+            foreach ($targets as $target) {
+                $optionListId = $target['id'];
+                $recipeGroups = $target['type'] === 'addon' ? $recipesByAddOn : $recipesByFood;
+                $recipeGroup = $recipeGroups->get($optionListId);
+                $recipe = $this->pickRecipeAsOf($recipeGroups, $optionListId, $detail['order_date']);
 
                 if (!$recipe) {
                     if ($recipeGroup && $recipeGroup->isNotEmpty()) {
                         $unmatched['recipe_not_effective']++;
                         $unmatched['recipe_not_effective_ids'][] = $optionListId;
                     } else {
-                        $unmatched['no_recipe']++;
-                        $unmatched['option_list_ids'][] = $optionListId;
+                        if ($target['type'] === 'addon') {
+                            $unmatched['no_addon_recipe']++;
+                        } else {
+                            $unmatched['no_recipe']++;
+                            $unmatched['option_list_ids'][] = $optionListId;
+                        }
                     }
                     continue;
                 }
@@ -179,7 +204,7 @@ class OrderRecipeUsageController extends Controller
                     $orderQty = (float) $detail['order_quantity'];
                     $productQty = (float) $component->quantity;
                     $packing = $this->packingMultiplier($component->packing_id);
-                    $productQtyUsed = round($productQty * $packing * $orderQty, 4);
+                    $productQtyUsed = round($productQty * $packing * $target['quantity'], 4);
                     $storedProductId = trim((string) $component->product_id);
                     if (!array_key_exists($storedProductId, $resolvedProductIds)) {
                         $resolvedProductIds[$storedProductId] = $this->resolveInventoryProductId($storedProductId);
@@ -196,7 +221,7 @@ class OrderRecipeUsageController extends Controller
                             'order_detail_id' => $detail['order_detail_id'],
                             'order_id'        => $detail['order_id'],
                             'restaurant_id'   => $branchId,
-                            'option_list_id'  => $optionListId,
+                            'option_list_id'  => $target['type'] === 'option' ? $optionListId : null,
                             'food_recipe_id'  => $recipe->id,
                             'food_id'         => $detail['food_id'],
                             'product_id'      => $productId,
@@ -205,20 +230,37 @@ class OrderRecipeUsageController extends Controller
                             'product_quantity_used'=> $productQtyUsed,
                             'usage_date'      => $detail['order_date']->toDateString(),
                             'measure_unit'    => $component->uom_id ?? null,
+                            '_sources'       => [],
                         ];
                     } else {
-                        $rowsToPersist[$rowKey]['product_quantity'] = round(
-                            $rowsToPersist[$rowKey]['product_quantity'] + ($productQty * $packing),
-                            4
-                        );
                         $rowsToPersist[$rowKey]['product_quantity_used'] = round(
                             $rowsToPersist[$rowKey]['product_quantity_used'] + $productQtyUsed,
                             4
                         );
                     }
+                    $sourceKey = $target['type'] . ':' . $optionListId . ':' . $recipe->id;
+                    if (!isset($rowsToPersist[$rowKey]['_sources'][$sourceKey])) {
+                        $rowsToPersist[$rowKey]['_sources'][$sourceKey] = [
+                            'type' => $target['type'],
+                            'target_id' => (int) $optionListId,
+                            'food_recipe_id' => (int) $recipe->id,
+                            'target_quantity' => (float) $target['quantity'],
+                            'recipe_quantity' => 0,
+                            'used_quantity' => 0,
+                        ];
+                    }
+                    $source = &$rowsToPersist[$rowKey]['_sources'][$sourceKey];
+                    $source['recipe_quantity'] = round($source['recipe_quantity'] + ($productQty * $packing), 4);
+                    $source['used_quantity'] = round($source['used_quantity'] + $productQtyUsed, 4);
+                    unset($source);
                 }
             }
         }
+
+        foreach ($rowsToPersist as &$row) {
+            $row = $this->finalizeUsageRow($row);
+        }
+        unset($row);
 
         $unmatched['option_list_ids'] = array_values(array_unique($unmatched['option_list_ids']));
         $unmatched['option_list_ids'] = array_slice($unmatched['option_list_ids'], 0, 50);
@@ -292,6 +334,23 @@ class OrderRecipeUsageController extends Controller
         return OrderRecipeUsage::where('restaurant_id', $branchId)
             ->whereBetween('usage_date', [$dateFrom->toDateString(), $dateTo->toDateString()])
             ->delete();
+    }
+
+    private function finalizeUsageRow(array $row): array
+    {
+        $sources = array_values($row['_sources']);
+        unset($row['_sources']);
+        $row['source_breakdown'] = json_encode($sources);
+        if (count($sources) !== 1) {
+            $row['option_list_id'] = null;
+            $row['food_recipe_id'] = null;
+        }
+        // Effective base quantity per ordered food item. The authoritative
+        // stock movement remains PRODUCT_QUANTITY_USED at four decimals.
+        $row['product_quantity'] = $row['order_quantity'] > 0
+            ? round($row['product_quantity_used'] / $row['order_quantity'], 4)
+            : $row['product_quantity_used'];
+        return $row;
     }
 
     /**
@@ -421,6 +480,43 @@ class OrderRecipeUsageController extends Controller
         }
 
         return array_values(array_unique(array_filter($ids)));
+    }
+
+    /** Add-on quantities in POS JSON are totals for the order line. */
+    private function extractAddOns(array $variations, $topLevelPayload): array
+    {
+        $nested = [];
+        foreach ($variations as $variation) {
+            if (is_array($variation) && isset($variation['addons'])) {
+                $this->collectAddOns($variation['addons'], $nested);
+            }
+        }
+
+        // Some clients also write order-level add_ons. Prefer variation values
+        // for the same ID, because they may duplicate the order-level snapshot.
+        $topLevel = [];
+        $this->collectAddOns($topLevelPayload, $topLevel);
+        foreach ($topLevel as $id => $quantity) {
+            if (!isset($nested[$id])) $nested[$id] = $quantity;
+        }
+        return $nested;
+    }
+
+    private function collectAddOns($payload, array &$quantities): void
+    {
+        if (is_string($payload)) {
+            $payload = json_decode($payload, true);
+        }
+        if (!is_array($payload)) return;
+
+        foreach ($payload as $addon) {
+            if (!is_array($addon) || !isset($addon['id']) || !is_numeric($addon['id'])
+                || !isset($addon['quantity']) || !is_numeric($addon['quantity'])) continue;
+            $id = (int) $addon['id'];
+            $quantity = (float) $addon['quantity'];
+            if ($id <= 0 || $quantity <= 0) continue;
+            $quantities[$id] = ($quantities[$id] ?? 0) + $quantity;
+        }
     }
 
     /**

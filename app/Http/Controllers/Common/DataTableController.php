@@ -1030,6 +1030,22 @@ class DataTableController extends Controller
             $data['head'] = ['ID', 'Name'];
         }
 
+        if ($helpType == 'AddOnRecipeHelp') {
+            $data['show_name'] = 'id';
+            $data['hideKeys'] = ['id', 'name'];
+            $data['keys'] = ['id', 'name'];
+            $query = DB::table('add_ons')->select('id', 'name')
+                ->where('restaurant_id', auth()->user()->branch_id);
+            if ($str) {
+                $query->where(function ($query) use ($str) {
+                    $query->where('id', 'like', '%' . $str . '%')
+                        ->orWhereRaw('UPPER(name) LIKE ?', ['%' . strtoupper($str) . '%']);
+                });
+            }
+            $data['list'] = $query->orderBy('name')->limit(50)->get();
+            $data['head'] = ['ID', 'Name'];
+        }
+
         //Formula Entry Help
         if ($helpType == 'formulationEntryHelp') {
             $data['show_name'] = 'item_formulation_code';
