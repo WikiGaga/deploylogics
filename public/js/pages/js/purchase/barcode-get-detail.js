@@ -2008,7 +2008,7 @@ function get_food_detail(selected_row) {
     var product_id = selected_row.find('tr.d-none>td[data-field="id"]').text();
 
     $('#food_name').val(product_name);
-    $('#food_id').val(product_id).prop('readonly', true);
+    $('#food_id').val(product_id).prop('readonly', $('#recipe_type').val() !== 'addon');
 
     $('#inLineHelp').remove();
     selected_row.parents('.erp_form___block').find('input').removeClass('open_inline__help__focus');

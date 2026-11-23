@@ -345,6 +345,10 @@
     <script>
         function updateFoodIdReadonly() {
             var foodId = $('#food_id');
+            if ($('#recipe_type').val() === 'addon') {
+                foodId.prop('readonly', false);
+                return;
+            }
             if (foodId.val() && foodId.val().trim() != '') {
                 foodId.prop('readonly', true);
             } else {
@@ -363,6 +367,7 @@
             $('#food_id').attr('data-url', isAddon
                 ? "{{ action('Common\\DataTableController@inlineHelpOpen', 'AddOnRecipeHelp') }}"
                 : "{{ action('Common\\DataTableController@inlineHelpOpen', 'FoodRecipeHelp') }}");
+            updateFoodIdReadonly();
         }
 
         $(document).on('change', '#recipe_type', function() {
@@ -393,9 +398,8 @@
         });
 
         $(document).on('input paste change', '#food_id', function() {
-            var foodId = $(this);
-            if (foodId.val() && foodId.val().trim() != '') {
-                // foodId.prop('readonly', true);
+            if ($('#recipe_type').val() === 'addon') {
+                $('#food_name').val('');
             }
         });
 
