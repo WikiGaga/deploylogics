@@ -56,6 +56,7 @@ class UserReportsController2 extends Controller
     public function create($reportType,$caseType, $id = null)
     {   // TblSoftReportingUserStudio
         $menu = TblSoftReports::select('parent_menu_id')->where('report_case',$caseType)->first();
+        $type = '';
         if($menu->parent_menu_id == 70){
            $type = 'sale';
         }
@@ -68,12 +69,16 @@ class UserReportsController2 extends Controller
         if($menu->parent_menu_id == 49){
             $type = 'purchase';
         }
+        $hrMenuDtlId = DB::table('TBL_SOFT_MENU_DTL')->where('menu_dtl_name', 'HR Reports')->value('menu_dtl_id');
+        if($menu->parent_menu_id == $hrMenuDtlId || $menu->parent_menu_id == 364 || $menu->parent_menu_id == 363){
+            $type = 'hr-reports';
+        }
         $data['page_data'] = [];
         $data['report_type'] = $reportType;
         $data['case_name'] = $caseType;
         $data['page_data']['title'] = self::$page_title;
         //$data['page_data']['path_index'] = $this->prefixIndexPage.self::$redirect_url;
-        $data['page_data']['path_index'] = '/reports/report-list/'.$type;
+        $data['page_data']['path_index'] = !empty($type) ? '/reports/report-list/'.$type : 'javascript:history.back()';
         if(isset($id)){
 
         }else{
@@ -625,6 +630,12 @@ class UserReportsController2 extends Controller
         }
         if($case_name == 'inventory'){
             $menu_dtl_id = 75;
+        }
+        if($case_name == 'hr-reports'){
+            $menu_dtl_id = DB::table('TBL_SOFT_MENU_DTL')->where('menu_dtl_name', 'HR Reports')->value('menu_dtl_id');
+            if(empty($menu_dtl_id)){
+                $menu_dtl_id = 364;
+            }
         }
         $data['case_name'] = $case_name;
         $data['list'] = TblSoftReports::where('report_entry_status',1)
