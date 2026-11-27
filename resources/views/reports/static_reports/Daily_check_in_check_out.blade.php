@@ -46,6 +46,7 @@
         .td-time { text-align: center; min-width: 90px; }
         .td-checkin  { color: #1a7f37; font-weight: 600; }
         .td-checkout { color: #c0392b; font-weight: 600; }
+        .td-interval { text-align: center; font-weight: 600; color: #2c3e50; min-width: 90px; }
 
         .no-data-row td { text-align: center; color: #888; font-style: italic; padding: 20px; }
     </style>
@@ -81,8 +82,11 @@
 
         // -------------------------------------------------------------------
         // 2. Query Raw Attendance Records (Sorted by Employee, Date, Branch, Time)
+        // Note: Querying until toDateStr + 1 day ensures night shift records
+        // ending between 12:00 AM and 05:00 AM on the following day are captured.
         // -------------------------------------------------------------------
         $rawRecords = [];
+        $queryToDateStr = date('Y-m-d', strtotime($toDateStr . ' +1 day'));
         try {
             $rawRecords = \Illuminate\Support\Facades\DB::select("
                 SELECT
@@ -98,7 +102,7 @@
                 LEFT JOIN TBL_SOFT_BRANCH   B ON A.BRANCH_ID = B.BRANCH_ID
                 WHERE (A.IS_DELETED = 0 OR A.IS_DELETED IS NULL)
                   AND TRUNC(A.ATTENDANCE_DATE) >= TO_DATE('{$fromDateStr}', 'YYYY-MM-DD')
-                  AND TRUNC(A.ATTENDANCE_DATE) <= TO_DATE('{$toDateStr}', 'YYYY-MM-DD')
+                  AND TRUNC(A.ATTENDANCE_DATE) <= TO_DATE('{$queryToDateStr}', 'YYYY-MM-DD')
                   {$branchWhere}
                 ORDER BY E.EMPLOYEE_NAME ASC, A.ATTENDANCE_DATE ASC, A.BRANCH_ID ASC, A.ATTENDANCE_TIME ASC
             ");
@@ -107,28 +111,71 @@
         }
 
         // -------------------------------------------------------------------
-        // 3. Group Records by [Employee + Date + Branch]
+        // 3. Night Shift Date Adjustment (12:00 AM - 05:00 AM Rule)
+        // Any punch recorded between 12:00 AM (00:00) and 05:00 AM (05:00)
+        // is attributed to the previous calendar date (date - 1 day).
         // -------------------------------------------------------------------
-        $groups = [];
+        $processedRecords = [];
         foreach ($rawRecords as $rec) {
-            $empId    = $rec->emp_id   ?? $rec->EMP_ID   ?? 0;
-            $dateStr  = $rec->attendance_date_str ?? $rec->ATTENDANCE_DATE_STR ?? '';
-            $branchId = $rec->branch_id ?? $rec->BRANCH_ID ?? 0;
+            $dateStr = $rec->attendance_date_str ?? $rec->ATTENDANCE_DATE_STR ?? '';
+            $timeRaw = trim((string)($rec->attendance_time ?? $rec->ATTENDANCE_TIME ?? ''));
 
             if (!$dateStr) continue;
+
+            $parts = explode(':', $timeRaw);
+            $hour = isset($parts[0]) && is_numeric($parts[0]) ? (int)$parts[0] : 0;
+            $min  = isset($parts[1]) && is_numeric($parts[1]) ? (int)$parts[1] : 0;
+            $sec  = isset($parts[2]) && is_numeric($parts[2]) ? (int)$parts[2] : 0;
+            $timeInSeconds = ($hour * 3600) + ($min * 60) + $sec;
+
+            $isNightAfterMidnight = ($timeInSeconds <= 18000); // 18000 seconds = 5:00:00 AM
+
+            if ($isNightAfterMidnight) {
+                $shiftDateStr = date('Y-m-d', strtotime($dateStr . ' -1 day'));
+                $sortTimeSec  = $timeInSeconds + 86400; // place after midnight punches chronologically after 11:59 PM
+            } else {
+                $shiftDateStr = $dateStr;
+                $sortTimeSec  = $timeInSeconds;
+            }
+
+            // Filter out records whose adjusted shift date falls outside the user's selected date range
+            if ($shiftDateStr < $fromDateStr || $shiftDateStr > $toDateStr) {
+                continue;
+            }
+
+            $rec->shift_date_str = $shiftDateStr;
+            $rec->sort_time_sec  = $sortTimeSec;
+            $rec->exact_timestamp = strtotime($dateStr . ' ' . sprintf('%02d:%02d:%02d', $hour, $min, $sec));
+
+            $processedRecords[] = $rec;
+        }
+
+        // -------------------------------------------------------------------
+        // 4. Group Records by [Employee + Shift Date + Branch]
+        // -------------------------------------------------------------------
+        $groups = [];
+        foreach ($processedRecords as $rec) {
+            $empId    = $rec->emp_id   ?? $rec->EMP_ID   ?? 0;
+            $dateStr  = $rec->shift_date_str;
+            $branchId = $rec->branch_id ?? $rec->BRANCH_ID ?? 0;
 
             $groupKey = "{$empId}_{$dateStr}_{$branchId}";
             $groups[$groupKey][] = $rec;
         }
 
         // -------------------------------------------------------------------
-        // 4. Pair Check-In with Check-Out per Group
+        // 5. Pair Check-In with Check-Out per Group & Calculate Time Interval
         // -------------------------------------------------------------------
         $displayRows = [];
         foreach ($groups as $records) {
+            // Sort records within group by chronological shift time
+            usort($records, function($a, $b) {
+                return ($a->sort_time_sec ?? 0) <=> ($b->sort_time_sec ?? 0);
+            });
+
             $empName    = $records[0]->employee_name ?? $records[0]->EMPLOYEE_NAME ?? '';
             $branchName = $records[0]->branch_name   ?? $records[0]->BRANCH_NAME   ?? 'Main Branch';
-            $dateStr    = $records[0]->attendance_date_str ?? $records[0]->ATTENDANCE_DATE_STR ?? '';
+            $dateStr    = $records[0]->shift_date_str;
 
             $i = 0;
             $totalInGroup = count($records);
@@ -139,8 +186,10 @@
 
                 if (!$isOut) {
                     // Check-In entry
-                    $checkIn  = $records[$i]->attendance_time ?? $records[$i]->ATTENDANCE_TIME ?? '';
-                    $checkOut = null;
+                    $checkIn      = $records[$i]->attendance_time ?? $records[$i]->ATTENDANCE_TIME ?? '';
+                    $checkInTs    = $records[$i]->exact_timestamp ?? null;
+                    $checkOut     = null;
+                    $checkOutTs   = null;
 
                     // Pair with immediately next record if it is a Check-Out
                     if ($i + 1 < $totalInGroup) {
@@ -148,26 +197,41 @@
                         $nextIsOut = (strpos($nextType, 'out') !== false || in_array($nextType, ['o', '2', 'exit', 'leave']));
 
                         if ($nextIsOut) {
-                            $checkOut = $records[$i + 1]->attendance_time ?? $records[$i + 1]->ATTENDANCE_TIME ?? '';
+                            $checkOut   = $records[$i + 1]->attendance_time ?? $records[$i + 1]->ATTENDANCE_TIME ?? '';
+                            $checkOutTs = $records[$i + 1]->exact_timestamp ?? null;
                             $i++; // Consume check-out
                         }
                     }
 
+                    // Calculate Time Interval
+                    $timeInterval = '0';
+                    if (!empty($checkIn) && !empty($checkOut) && !empty($checkInTs) && !empty($checkOutTs)) {
+                        $diffSec = $checkOutTs - $checkInTs;
+                        // Condition 2: If less than 5 minutes (300 seconds), treat and display as 0
+                        if ($diffSec >= 300) {
+                            $hours = floor($diffSec / 3600);
+                            $mins  = floor(($diffSec % 3600) / 60);
+                            $timeInterval = sprintf('%02d:%02d', $hours, $mins);
+                        }
+                    }
+
                     $displayRows[] = [
-                        'emp_name'    => $empName,
-                        'branch_name' => $branchName,
-                        'date'        => $dateStr,
-                        'check_in'    => $checkIn,
-                        'check_out'   => $checkOut,
+                        'emp_name'      => $empName,
+                        'branch_name'   => $branchName,
+                        'date'          => $dateStr,
+                        'check_in'      => $checkIn,
+                        'check_out'     => $checkOut,
+                        'time_interval' => $timeInterval,
                     ];
                 } else {
-                    // Standalone Check-Out (without prior Check-In)
+                    // Standalone Check-Out (without prior Check-In) -> Time Interval = 0
                     $displayRows[] = [
-                        'emp_name'    => $empName,
-                        'branch_name' => $branchName,
-                        'date'        => $dateStr,
-                        'check_in'    => null,
-                        'check_out'   => $records[$i]->attendance_time ?? $records[$i]->ATTENDANCE_TIME ?? '',
+                        'emp_name'      => $empName,
+                        'branch_name'   => $branchName,
+                        'date'          => $dateStr,
+                        'check_in'      => null,
+                        'check_out'     => $records[$i]->attendance_time ?? $records[$i]->ATTENDANCE_TIME ?? '',
+                        'time_interval' => '0',
                     ];
                 }
                 $i++;
@@ -220,12 +284,13 @@
                                 <th class="td-date">Date</th>
                                 <th class="td-time td-checkin">Check In</th>
                                 <th class="td-time td-checkout">Check Out</th>
+                                <th class="td-interval">Time Interval</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if(empty($displayRows))
                                 <tr class="no-data-row">
-                                    <td colspan="5">No attendance records found for the selected criteria.</td>
+                                    <td colspan="6">No attendance records found for the selected criteria.</td>
                                 </tr>
                             @else
                                 @foreach($displayRows as $row)
@@ -235,6 +300,7 @@
                                         <td class="td-date">{{ date('d/m/Y', strtotime($row['date'])) }}</td>
                                         <td class="td-time td-checkin">{{ $fmtTime($row['check_in']) }}</td>
                                         <td class="td-time td-checkout">{{ $fmtTime($row['check_out']) }}</td>
+                                        <td class="td-interval">{{ $row['time_interval'] }}</td>
                                     </tr>
                                 @endforeach
                             @endif

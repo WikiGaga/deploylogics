@@ -84,7 +84,21 @@
                                 </div>
                             </div>
                         </div>
-
+                        <div class="col-lg-4">
+                            <div class="row">
+                                <label class="col-lg-5 erp-col-form-label">Search Employee:</label>
+                                <div class="col-lg-7">
+                                    <div class="input-group">
+                                        <input type="text" id="employee_search_filter" class="form-control erp-form-control-sm" placeholder="Search employee..." autocomplete="off">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="clear_employee_search" style="cursor: pointer;" title="Clear search">
+                                                <i class="la la-times"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">
@@ -540,6 +554,28 @@
                     outsideBranch = $row.attr('data-original-outside');
                 }
                 $row.find('input[data-id="out_side_branch_display"]').val(outsideBranch == 1 ? 'Yes' : 'No');
+            });
+
+            // Employee search filter in grid
+            $('#employee_search_filter').on('input keyup', function () {
+                var term = $(this).val().toLowerCase().trim();
+                $('#AccForm tbody.erp_form__grid_body tr').each(function () {
+                    var $tr = $(this);
+                    if (!term) {
+                        $tr.show();
+                    } else {
+                        var empName = $tr.find('select[data-id="employee_select"] option:selected').text().toLowerCase();
+                        if (empName.indexOf(term) > -1) {
+                            $tr.show();
+                        } else {
+                            $tr.hide();
+                        }
+                    }
+                });
+            });
+
+            $('#clear_employee_search').on('click', function () {
+                $('#employee_search_filter').val('').trigger('input');
             });
         });
     </script>

@@ -121,7 +121,11 @@ class EmployeeAttendanceController extends Controller
                 ->first();
 
             if(!empty($Tbl_hr_attendence)){
-                $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')->where('att_id',$id)->orderByDesc('created_at')->get()
+                $Tbl_hr_attendence_dtl = DB::table('Tbl_hr_attendence_dtl')
+                    ->where('att_id',$id)
+                    ->orderBy('attendance_time', 'asc')
+                    ->orderBy('created_at', 'asc')
+                    ->get()
                     ->map(function ($attendance) {
                         $attendance->attendance_type = $this->normalizeAttendanceType($attendance->attendance_type);
                         return $attendance;
