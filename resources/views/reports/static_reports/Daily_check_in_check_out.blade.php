@@ -120,15 +120,25 @@
             $dateStr = $rec->attendance_date_str ?? $rec->ATTENDANCE_DATE_STR ?? '';
             $timeRaw = trim((string)($rec->attendance_time ?? $rec->ATTENDANCE_TIME ?? ''));
 
-            if (!$dateStr) continue;
+            if (!$dateStr || empty($timeRaw)) continue;
 
-            $parts = explode(':', $timeRaw);
-            $hour = isset($parts[0]) && is_numeric($parts[0]) ? (int)$parts[0] : 0;
-            $min  = isset($parts[1]) && is_numeric($parts[1]) ? (int)$parts[1] : 0;
-            $sec  = isset($parts[2]) && is_numeric($parts[2]) ? (int)$parts[2] : 0;
+            // Resolve exact timestamp accurately regardless of time format (e.g. "Y-m-d H:i:s", "H:i:s", "h:i A")
+            if (preg_match('/\d{4}-\d{2}-\d{2}/', $timeRaw)) {
+                $exactTimestamp = strtotime($timeRaw);
+            } else {
+                $exactTimestamp = strtotime($dateStr . ' ' . $timeRaw);
+            }
+
+            if ($exactTimestamp === false) continue;
+
+            // Determine time of day in seconds from the true timestamp
+            $hour = (int) date('H', $exactTimestamp);
+            $min  = (int) date('i', $exactTimestamp);
+            $sec  = (int) date('s', $exactTimestamp);
             $timeInSeconds = ($hour * 3600) + ($min * 60) + $sec;
 
-            $isNightAfterMidnight = ($timeInSeconds <= 18000); // 18000 seconds = 5:00:00 AM
+            // Night shift check: 12:00 AM (00:00:00) to 05:00 AM (05:00:00)
+            $isNightAfterMidnight = ($timeInSeconds <= 18000);
 
             if ($isNightAfterMidnight) {
                 $shiftDateStr = date('Y-m-d', strtotime($dateStr . ' -1 day'));
@@ -143,9 +153,9 @@
                 continue;
             }
 
-            $rec->shift_date_str = $shiftDateStr;
-            $rec->sort_time_sec  = $sortTimeSec;
-            $rec->exact_timestamp = strtotime($dateStr . ' ' . sprintf('%02d:%02d:%02d', $hour, $min, $sec));
+            $rec->shift_date_str  = $shiftDateStr;
+            $rec->sort_time_sec   = $sortTimeSec;
+            $rec->exact_timestamp = $exactTimestamp;
 
             $processedRecords[] = $rec;
         }
